@@ -20,7 +20,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'settings']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -145,7 +145,17 @@ test('the web\'s legal scene draws the legal page\'s own sections and layout, li
 
 test('the front door\'s settings are open in the web\'s scene by the page, not by the shot: a scene names the sheet, and the app draws the same sheet beside the door', () => {
   expect(web).toContain("document.querySelector<HTMLElement>('button[aria-label=\"Settings\"]')?.click()");
-  expect(app).toContain("scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />");
+  expect(app).toContain("scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></>");
+  // The scenes of the account in the settings are the same sheet over the same door, the account given by the scene's services on both sides.
+  expect(web).toContain('settings: (scene) => <Settled sheet={scene.sheet}><Home /></Settled>,');
+  expect(app).toContain('settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,');
+  expect(app).toContain('...sceneCloud(scene.name)');
+});
+
+test('the question of the life waiting in the account is open in its scene: the web\'s page presses the button that asks it, the phone\'s door is given it open', () => {
+  expect(web).toContain("scene.sheet === 'offer' ? <OfferPressed><Home /></OfferPressed>");
+  expect(web).toContain("useT('home')('accountLife')");
+  expect(app).toContain("scene.sheet === 'offer' ? <HomeOpened value={OFFER_OPEN}><Home /></HomeOpened>");
 });
 
 test('the page where a life is chosen has open, in a scene, what the scene says: the web\'s page presses the button that opens it, the phone\'s screen is given it as its initial state', () => {

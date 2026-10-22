@@ -712,11 +712,20 @@ export function useRanking(): 'yes' | 'offline' | 'no' {
  */
 export function useAccountSaves(): { status: CloudSaving; offer: AccountLife | null; takeOffer(): Promise<boolean>; declineOffer(): Promise<void> } {
   const { saves } = useCloud();
-  const { game } = useGameContext();
   const status = useSyncExternalStore(saves.subscribe, saves.status, () => 'off' as const);
+  return { status, ...useAccountOffer() };
+}
+
+/**
+ * The different life waiting in the account, and the two things a player can do about it: `useAccountSaves` without the status, for a screen that
+ * draws only the offer (the front door's), and is not drawn again as the account's copy goes and comes with every step of a life. (The phone's: the
+ * front door stays mounted under the screens of a life.)
+ */
+export function useAccountOffer(): { offer: AccountLife | null; takeOffer(): Promise<boolean>; declineOffer(): Promise<void> } {
+  const { saves } = useCloud();
+  const { game } = useGameContext();
   const offer = useSyncExternalStore(saves.subscribe, saves.offer, () => null);
   return {
-    status,
     offer,
     takeOffer: async () => {
       const taken = await saves.takeOffer();
@@ -726,6 +735,15 @@ export function useAccountSaves(): { status: CloudSaving; offer: AccountLife | n
     },
     declineOffer: () => saves.declineOffer(),
   };
+}
+
+/**
+ * Whether the account's copy stands as `is` says (a function made once, outside the screen): for a screen that draws only that (the account's block:
+ * out of reach, or still on its way), drawn again when the answer changes, not each time the copy goes and comes with a step of a life.
+ */
+export function useAccountSaving(is: (status: CloudSaving) => boolean): boolean {
+  const { saves } = useCloud();
+  return useSyncExternalStore(saves.subscribe, () => is(saves.status()), () => false);
 }
 
 /** Counts something the player did (`events.ts`): for the screens, at the moment it succeeded. */

@@ -140,6 +140,30 @@ test('the front door of a scene that names its settings is drawn with the sheet 
   expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull();
 });
 
+test('the scenes of the account are drawn over the account each names, which stays so: the settings of the door for a guest and a member, the account\'s life with its question open, a guest being taken in', async () => {
+  render(<SceneView name="settings-account-guest" />);
+  const guest = (await screen.findByRole('heading', { name: 'Settings' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(within(guest).getByRole('region', { name: 'Account' })).getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
+  expect(within(guest).queryByText('Your life saves itself after every step.')).toBeNull();
+  cleanup();
+  render(<SceneView name="settings-account-member" />);
+  const member = (await screen.findByRole('heading', { name: 'Settings' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(member).getByRole('region', { name: 'Account' }).textContent).toContain('Linked to Google');
+  expect(within(member).getByRole('region', { name: 'Account' }).textContent).toContain('an•••@example.com');
+  expect(within(member).getByRole('button', { name: 'Sign out' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="home-offer" />);
+  const offer = (await screen.findByRole('heading', { name: 'A life on another device' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(offer.textContent).toContain('Software engineer, age 30, in Madrid.');
+  expect(offer.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 26.');
+  expect(screen.getByRole('button', { name: /Pick up the life from your other device/ })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="home-account-taken" />);
+  expect((await screen.findByRole('status', {}, WAIT)).textContent).toBe('You already have an account. Signing you in…');
+  expect(screen.getByRole('link', { name: /Continue your life/ })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();
+});
+
 test('a life a newer version of the game wrote is told on the front door of its scene, and the front door has no life to continue', async () => {
   render(<SceneView name="home-lost-newer" />);
   expect((await screen.findByRole('status', {}, WAIT)).textContent).toContain('newer version of the game');

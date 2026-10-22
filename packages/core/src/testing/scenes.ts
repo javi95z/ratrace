@@ -107,6 +107,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'collection-items', locale: 'en' },
   { name: 'collection-badges', locale: 'en' },
   { name: 'profile-financed', locale: 'en', sheet: 'car_seat_ibiza' },
+  { name: 'settings-account-guest', locale: 'en', sheet: 'settings' },
+  { name: 'settings-account-member', locale: 'en', sheet: 'settings' },
+  { name: 'home-offer', locale: 'en', sheet: 'offer' },
+  { name: 'home-account-taken', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -271,6 +275,13 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   // profile-owned's round, with a car bought on instalments in the fifth (a share down, a loan for the rest): the profile, and the car's own sheet
   // over it, with what is still owed on it (ItemCost's wine note, its words and figure on one baseline).
   'profile-financed': { life: 'engineer', round: 5, stage: 'finance', then: [{ action: 'buy', items: ['car_seat_ibiza'], financed: true }, { action: 'play' }, { action: 'next' }], ends: 'news' },
+  // The account (`CLOUDS`): the settings of the front door open over home-continue's life, for a guest (the way into Google) and for a member (kept,
+  // the address cut, the way out); the life waiting in the account offered beside that one, its question open; and a guest being taken into the
+  // account their Google already has, said at the foot of the door.
+  'settings-account-guest': { life: 'nurse', round: 3, stage: 'news' },
+  'settings-account-member': { life: 'nurse', round: 3, stage: 'news' },
+  'home-offer': { life: 'nurse', round: 3, stage: 'news' },
+  'home-account-taken': { life: 'nurse', round: 3, stage: 'news' },
 };
 
 /**
@@ -389,6 +400,8 @@ const STILL: ReadonlySet<string> = new Set([
   // The ledger (play-resolve-r6) and the moments over it or over the news: the wheel of its title turns for ever, its lines rise one by one, its
   // figures count and its coins fly; a crisis's lamp pulses. Left out, the lines stand risen and the figures where they end, as a shot can see them.
   'play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis',
+  // The word that the player is being taken into their account blinks for as long as it is said.
+  'home-account-taken',
 ]);
 
 /**
@@ -615,7 +628,76 @@ export async function runScene(name: string, game: SceneGame): Promise<void> {
  * and clock the screens' tests use, so a life begun on the scene is the same on either client), and no tap ever too
  * soon. Nothing but memory: no database of the device, no cloud. A scene that names where its orders are kept (`sceneBasket`) has that basket.
  */
-export function sceneServices(store: MemoryStore, name?: string): { sessions: Sessions; store: PlayerStore; tapGuardMs: number; basket?: BasketKeep } {
+export function sceneServices(store: MemoryStore, name?: string): { sessions: Sessions; store: PlayerStore; tapGuardMs: number; basket?: BasketKeep } & SceneCloud {
   const basket = name === undefined ? undefined : sceneBasket(name);
-  return { sessions: fixedSessions(store), store, tapGuardMs: 0, ...(basket ? { basket } : {}) };
+  return { sessions: fixedSessions(store), store, tapGuardMs: 0, ...(basket ? { basket } : {}), ...(name === undefined ? {} : sceneCloud(name)) };
+}
+
+/** Who a scene's player is to the cloud: a guest (being taken into the account their Google already has, or not), or a member kept with Google. */
+type SceneWho = { readonly kind: 'guest'; readonly userId: string; readonly notice: 'joining' | null } | { readonly kind: 'member'; readonly userId: string; readonly email: string | null };
+/** The life a scene's account holds, lived on another device: offered beside the one on the device. */
+type SceneLife = { readonly gameId: string; readonly lifeId: string; readonly round: number; readonly cityId: string };
+
+const GUEST: SceneWho = { kind: 'guest', userId: 'scene-player', notice: null };
+const MEMBER: SceneWho = { kind: 'member', userId: 'scene-player', email: 'ana.garcia@example.com' };
+
+/** The account of a scene of the account, by the scene's name: who the player is, and the life waiting in the account, if one is. */
+const CLOUDS: Readonly<Record<string, { who: SceneWho; offer?: SceneLife }>> = {
+  'settings-account-guest': { who: GUEST },
+  'settings-account-member': { who: MEMBER },
+  // An engineer of the fifth round, in Madrid, left on another device.
+  'home-offer': { who: MEMBER, offer: { gameId: 'scene-elsewhere', lifeId: 'engineer', round: 4, cityId: 'madrid' } },
+  'home-account-taken': { who: { kind: 'guest', userId: 'scene-player', notice: 'joining' } },
+};
+
+/**
+ * What a scene's game is given of the cloud: for a scene of the account, an account that is who the scene says and stays so, and the account's copy,
+ * all saved, with the life it offers; nothing for any other (no cloud: nobody signed in). The cloud's own types are not the core's to name: these are
+ * the shapes of the clients' `Account` and `AccountSaves` (packages/online/src/types.ts), which both registries hand their game as they are. Nothing
+ * of it reaches a network, or changes: a scene is a picture.
+ */
+export interface SceneCloud {
+  account?: {
+    state(): SceneWho;
+    settled(): boolean;
+    subscribe(listener: () => void): () => void;
+    start(language: string): Promise<void>;
+    keepWithGoogle(): Promise<boolean>;
+    useExistingAccount(): Promise<boolean>;
+    dismissNotice(): void;
+    signOut(): Promise<boolean>;
+  };
+  saves?: {
+    status(): 'saved';
+    offer(): SceneLife | null;
+    subscribe(listener: () => void): () => void;
+    onDeviceChanged(listener: (what: 'game' | 'renamed' | 'runs') => void): () => void;
+    takeOffer(): Promise<boolean>;
+    declineOffer(): Promise<void>;
+  };
+}
+export function sceneCloud(name: string): SceneCloud {
+  const plan = CLOUDS[name];
+  if (plan === undefined) return {};
+  const still = () => () => undefined;
+  return {
+    account: {
+      state: () => plan.who,
+      settled: () => true,
+      subscribe: still,
+      start: async () => undefined,
+      keepWithGoogle: async () => false,
+      useExistingAccount: async () => false,
+      dismissNotice: () => undefined,
+      signOut: async () => false,
+    },
+    saves: {
+      status: () => 'saved',
+      offer: () => plan.offer ?? null,
+      subscribe: still,
+      onDeviceChanged: still,
+      takeOffer: async () => false,
+      declineOffer: async () => undefined,
+    },
+  };
 }

@@ -1,16 +1,22 @@
 import { CONTENT_VERSION, portraitArt } from '@ratrace/content';
 import { ageAt, portraitAge } from '@ratrace/core/game/present';
+import { maskEmail } from '@ratrace/core/lib/mask';
 import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { LOCALES } from '@ratrace/i18n';
 import type { Locale } from '@ratrace/i18n';
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import type { CloudSaving } from '@ratrace/online/types';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useBlink } from '../../ui/animations';
 import type { HostInstance } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
+import { GoogleMark } from '../../ui/GoogleMark';
+import { LinkText } from '../../ui/LinkText';
 import { CREAM, GOLD, WINE } from '../../ui/frames';
 import { Bar, Button, Notice, Panel, pressDown, Raised, Toggle, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
@@ -18,7 +24,7 @@ import { CYRILLIC_ALONE } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
 import { Language, PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
-import { useGame, useGuide, useSaving, useSettings, useWords } from '../context';
+import { useAccount, useAccountSaving, useGame, useGuide, useSaving, useSettings, useWords } from '../context';
 import { useT } from '../words';
 
 /** The languages the game speaks, each under its own name. */
@@ -153,12 +159,191 @@ export function Switches() {
   );
 }
 
+/** The account's copy out of reach, with what is played kept on the phone alone for now: the one thing of saving the block says. */
+const outOfReach = (status: CloudSaving): boolean => status === 'waiting';
+/** Something not yet in the account, which signing out would take off the phone with the rest. */
+const unsaved = (status: CloudSaving): boolean => status === 'sending' || status === 'waiting';
+
+/** What was last announced, and when: the block is drawn twice on the front door (at its foot, and in the settings over it), and says a thing once. */
+let lastSaid = { words: '', at: 0 };
+
+/**
+ * What the block comes to say of keeping the account (being taken into one, or that it did not work), told to VoiceOver as it comes: iOS has no live
+ * regions (TalkBack hears the block's own).
+ */
+function useAnnounced(words: string | null) {
+  useEffect(() => {
+    if (words === null || Platform.OS !== 'ios') return;
+    const now = Date.now();
+    if (lastSaid.words === words && now - lastSaid.at < 1_000) return;
+    lastSaid = { words, at: now };
+    AccessibilityInfo.announceForAccessibility(words);
+  }, [words]);
+}
+
+/**
+ * Who is playing, as the cloud knows them, and whether what they have is in their account yet (the web's `AccountBlock`). A guest can keep the account
+ * with Google, opened over the app (`online/browser.ts`): the button waits while the browser is open, and is back when it comes back with nothing. A
+ * Google account that is already a player's is taken, with a second trip to Google the player is told of. Nothing is shown at all where the game has
+ * no cloud behind it, or could not reach it. `signOut` offers to sign out: in the settings themselves, not at the foot of the front door.
+ */
+function AccountBlock({ compact = false, signOut: offerSignOut = false }: { compact?: boolean; signOut?: boolean }) {
+  const t = useT('account');
+  const { state, keepWithGoogle, dismissNotice } = useAccount();
+  const waiting = useAccountSaving(outOfReach);
+  const [leavingAccount, setLeavingAccount] = useState(false);
+  // A trip to Google under way: the browser is open over the app, and a second press must not start a second one.
+  const [travelling, setTravelling] = useState(false);
+  const notice = state.kind === 'guest' ? state.notice : null;
+  useAnnounced(notice === null ? null : t(notice));
+  if (state.kind === 'offline') return null;
+
+  const travel = () => {
+    setTravelling(true);
+    // Kept, the player is a member and the button is gone; anything else (closed, refused, broken on the way) and it is there to try again.
+    void keepWithGoogle().then(
+      (kept) => {
+        if (!kept) setTravelling(false);
+      },
+      () => setTravelling(false),
+    );
+  };
+
+  // The device always has everything. Saving to the account goes on unsaid, as it should; only an account out of reach, with things kept on the
+  // phone alone for now, is told.
+  const saved = waiting ? (
+    <View accessible role="status" accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View aria-hidden style={{ width: 8, height: 8, flexShrink: 0, backgroundColor: COLORS['gold-500'] }} />
+      <ReadText size={12} tone="ink-200">{t('waiting')}</ReadText>
+    </View>
+  ) : null;
+
+  return (
+    // A part of the panel it stands in, set off by a rule: never a box inside a box.
+    <View role="region" aria-label={t('title')} style={compact ? { gap: 8 } : { gap: 8, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 12 }}>
+      {state.kind === 'member' ? (
+        <>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <GoogleMark size={18} />
+            <PixelText size={16} tone="teal-300">{t('member')}</PixelText>
+            {state.email ? (
+              <ReadText size={13} tone="ink-300" numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>
+                {t('memberAs', { email: maskEmail(state.email) })}
+              </ReadText>
+            ) : null}
+          </View>
+          {saved}
+          {offerSignOut ? <SignOutLink onPress={() => setLeavingAccount(true)} /> : null}
+          <SignOutSheet open={leavingAccount} onClose={() => setLeavingAccount(false)} />
+        </>
+      ) : notice === 'joining' ? (
+        // Not a fault but good news: the player is already known, and is being taken into their account (Google opens again, for them).
+        <Joining words={t('joining')} />
+      ) : (
+        <>
+          {notice ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View accessible role="alert" accessibilityLiveRegion="assertive" style={{ flex: 1, minWidth: 0 }}>
+                <ReadText size={13} tone="wine-300" lineHeight={13 * SNUG}>{t(notice)}</ReadText>
+              </View>
+              <Button variant="quiet" size={14} onPress={dismissNotice}>
+                {t('dismiss')}
+              </Button>
+            </View>
+          ) : null}
+          <Button variant="secondary" wide disabled={travelling} onPress={travel}>
+            <GoogleMark />
+            {t('keep')}
+          </Button>
+          {saved}
+        </>
+      )}
+    </View>
+  );
+}
+
+/** Being taken into the account the player's Google already has: said, blinking, while Google opens again. */
+function Joining({ words }: { words: string }) {
+  const blink = useBlink();
+  return (
+    <View accessible role="status" accessibilityLiveRegion="polite">
+      <Animated.View style={blink}>
+        <PixelText size={15} tone="gold-200" lineHeight={15 * SNUG}>{words}</PixelText>
+      </Animated.View>
+    </View>
+  );
+}
+
+/** The way out of the account, small and plain, under it (the web's underlined `min-h-11` button): 44 high for a thumb. */
+function SignOutLink({ onPress }: { onPress: () => void }) {
+  const t = useT('account');
+  const press = usePress({ onPress });
+  return (
+    <Pressable accessibilityRole="button" onPress={press} style={({ pressed }) => ({ ...pressDown(pressed), minHeight: TOUCH, alignSelf: 'flex-start', justifyContent: 'center' })}>
+      <LinkText size={13} offset={4} tone="ink-300">{t('signOut')}</LinkText>
+    </Pressable>
+  );
+}
+
+/**
+ * Signing out, asked first. What has not reached the account yet would be lost with the phone's copy: the player is told to wait for it, and cannot
+ * sign out until it has. Signed out, the game starts again with a new guest, on the front door (`useAccount().signOut`).
+ */
+function SignOutSheet({ open, onClose }: { open: boolean; onClose(): void }) {
+  const t = useT('account');
+  const common = useT('common');
+  return (
+    <Sheet open={open} onClose={onClose} title={t('signOutTitle')} closeLabel={common('close')}>
+      <SignOutAsk onCancel={onClose} />
+    </Sheet>
+  );
+}
+function SignOutAsk({ onCancel }: { onCancel(): void }) {
+  const t = useT('account');
+  const common = useT('common');
+  const { signOut } = useAccount();
+  const pending = useAccountSaving(unsaved);
+  const [signingOut, setSigningOut] = useState(false);
+  return (
+    <>
+      <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('signOutAbout')}</ReadText>
+      {pending ? (
+        <ReadText size={13} tone="wine-300" lineHeight={13 * SNUG} style={{ marginTop: 8 }}>
+          {t('signOutUnsaved')}
+        </ReadText>
+      ) : null}
+      <View style={{ marginTop: 16, gap: 8 }}>
+        <Button variant="secondary" wide onPress={onCancel}>
+          {common('cancel')}
+        </Button>
+        <Button
+          variant="danger"
+          wide
+          disabled={signingOut || pending}
+          onPress={() => {
+            setSigningOut(true);
+            void signOut().then(
+              (done) => {
+                if (!done) setSigningOut(false);
+              },
+              () => setSigningOut(false),
+            );
+          }}
+        >
+          {t('signOut')}
+        </Button>
+      </View>
+    </>
+  );
+}
+
 /** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */
 export function Preferences() {
   return (
     <View style={{ gap: 8 }}>
       <LanguagePick />
       <Switches />
+      <AccountBlock signOut />
     </View>
   );
 }
@@ -173,20 +358,28 @@ export function Version() {
   );
 }
 
-/** What the settings of the front door hold: where things are kept, the language, the switches and the version. (The account's place, first, is the phone's when it has accounts.) */
+/** What the settings of the front door hold: the account, where things are kept, the language, the switches and the version. */
 export function HomeSettingsSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('settings');
-  const home = useT('home');
   const common = useT('common');
   return (
     <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
-      <View style={{ gap: 12 }}>
-        <ReadText size={13} tone="ink-300">{home('savedHere')}</ReadText>
-        <LanguagePick />
-        <Switches />
-        <Version />
-      </View>
+      <HomeSettings />
     </Sheet>
+  );
+}
+function HomeSettings() {
+  const home = useT('home');
+  const { state: account } = useAccount();
+  return (
+    <View style={{ gap: 12 }}>
+      {/* The account first: whether the game is kept in it, and the way into one. */}
+      <AccountBlock compact signOut />
+      {account.kind === 'offline' ? <ReadText size={13} tone="ink-300">{home('savedHere')}</ReadText> : null}
+      <LanguagePick />
+      <Switches />
+      <Version />
+    </View>
   );
 }
 
@@ -205,14 +398,16 @@ export function HomePreferences() {
 }
 
 /**
- * The same at the foot of the front door, as it always was: the account in sight (the phone has none yet), the player's
- * profile where there is one, and the settings a button below.
+ * The same at the foot of the front door, as it always was: the account in sight, with the way into Google, the player's profile where there is one,
+ * and the settings a button below.
  */
 export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
   const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
     <View style={{ gap: 8 }}>
+      <AccountBlock compact />
+      {/* The player's profile, next to the account it belongs to. */}
       {profile}
       <Button variant="secondary" wide onPress={() => setOpen(true)}>
         <Sprite id="icon.settings" />

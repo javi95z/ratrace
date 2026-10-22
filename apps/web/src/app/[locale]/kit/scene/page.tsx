@@ -13,7 +13,7 @@ import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { content } from '@ratrace/content';
-import { use, useCallback, useEffect, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GameProvider, useGame, useT, useWords } from '@/game/context';
 import type { Services } from '@/game/context';
@@ -322,6 +322,17 @@ function PressedWhenDrawn({ selector, children }: { selector: string | undefined
 }
 
 /** The collection opens on its badges: a scene of its things has the page press their tab, once the screen is drawn. The phone's Collection is given the tab (`tab`). */
+/**
+ * The front door has no initial state for the question of the life waiting in the account (`home-offer`) either: the page presses the button that
+ * asks it, found by its words, once the door is drawn. The account of the scene (`sceneCloud`, in its services) holds the life from the start. The
+ * phone's front door is given the question open (`HomeOpened`).
+ */
+function OfferPressed({ children }: { children: ReactNode }) {
+  const words = useT('home')('accountLife');
+  const selectors = useMemo(() => [() => [...document.querySelectorAll<HTMLElement>('main button')].find((button) => button.textContent?.startsWith(words)) ?? null], [words]);
+  return <PressedInTurn selectors={selectors}>{children}</PressedInTurn>;
+}
+
 const COLLECTION_TABS: Readonly<Record<string, string>> = {
   'collection-items': 'main [data-tab="items"]',
 };
@@ -331,7 +342,7 @@ const COLLECTION_TABS: Readonly<Record<string, string>> = {
  * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
  */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
-  home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
+  home: (scene) => (scene.sheet === undefined ? <Home /> : scene.sheet === 'offer' ? <OfferPressed><Home /></OfferPressed> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: (scene) => (scene.sheet === 'city' ? <><PlayScene scene={scene} /><CardCity /></> : <PlayScene scene={scene} />),
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <PressedInTurn selectors={financePresses(scene)}><PlayScene scene={scene} /></PressedInTurn>),
@@ -348,6 +359,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   rivals: () => <RivalsScene />,
   end: (scene) => <EndScene scene={scene} />,
   moment: (scene) => <PlayScene scene={scene} />,
+  settings: (scene) => <Settled sheet={scene.sheet}><Home /></Settled>,
 };
 
 /**

@@ -100,15 +100,21 @@ export const expoNetwork = {
   },
 };
 
-/** The system's browser, opened for Google: it keeps what it was opened with, and comes back as a test says (closed, unless told otherwise). */
+/** How the system's browser comes back: to an address, or closed (by the player, or for them: the system took it away). */
+export type BrowserAnswer = { type: 'success'; url: string } | { type: 'cancel' | 'dismiss' };
+/**
+ * The system's browser, opened for Google: it keeps what it was opened with, and comes back as a test says: with the answers `queued`, one to each
+ * opening in turn (a promise is a browser held open until the test settles it), and then with `answer` (closed, unless told otherwise).
+ */
 export const authBrowser = {
   opened: [] as Array<{ url: string; redirect: string }>,
-  answer: { type: 'cancel' } as { type: 'success'; url: string } | { type: 'cancel' | 'dismiss' },
+  answer: { type: 'cancel' } as BrowserAnswer,
+  queued: [] as Array<BrowserAnswer | Promise<BrowserAnswer>>,
 };
 export const expoWebBrowser = {
-  openAuthSessionAsync: async (url: string, redirect: string) => {
+  openAuthSessionAsync: async (url: string, redirect: string): Promise<BrowserAnswer> => {
     authBrowser.opened.push({ url, redirect });
-    return authBrowser.answer;
+    return authBrowser.queued.shift() ?? authBrowser.answer;
   },
 };
 
@@ -295,6 +301,7 @@ export function resetFakes(): void {
   network.listeners.clear();
   authBrowser.opened.length = 0;
   authBrowser.answer = { type: 'cancel' };
+  authBrowser.queued.length = 0;
   heard.length = 0;
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });

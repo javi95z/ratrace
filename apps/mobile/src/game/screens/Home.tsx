@@ -1,16 +1,19 @@
 import { CHALLENGE_ART, ratArt } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
+import { createContext, useContext, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
-import { Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
+import { Button, Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
+import { Sheet } from '../../ui/overlay';
 import { useBlink } from '../../ui/animations';
 import { adjustedRead } from '../../ui/fonts';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
-import { PixelText, ReadText } from '../../ui/text';
-import { useGame, useRuns, useSaving, useWords } from '../context';
+import { PixelText, ReadText, SNUG } from '../../ui/text';
+import { useAccountOffer, useGame, useRuns, useSaving, useWords } from '../context';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
@@ -103,6 +106,7 @@ export function Home() {
                 </ReadText>
               </Raised>
             ) : null}
+            <AccountLifeOffer endsLife={inProgress ? lifeId : null} endsRound={inProgress ? round : null} />
             <Raised
               role="link"
               tone={inProgress ? {} : GOLD}
@@ -167,6 +171,86 @@ export function Home() {
       {/* The small print, out of the way: only here, at the very foot. */}
       <SmallPrint label={legal('link')} onPress={() => router.push('/legal')} above={returning ? 16 : 20} />
     </Screen>
+  );
+}
+
+/**
+ * What the front door has open at the start, for a scene (`home-offer`: the question of the life waiting in the account), as a screen's initial state:
+ * a scene is shot from a link, which cannot tap. The web's page presses the button instead.
+ */
+export const HomeOpened = createContext<{ offer?: boolean }>({});
+
+/**
+ * The life waiting in the account, lived on another device: a button under the life in progress, and the question it opens. It is taken or ended
+ * only when the player says so. The question is about one life, by its id: it is never open for another one, and does not open by itself for a life
+ * the account brings later. A leaf of its own, with the offer alone: the front door is not drawn again as the account's copy goes and comes with each
+ * step of a life. `endsLife` and `endsRound` are the life on this phone that taking it would end, if there is one.
+ */
+function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; endsRound: number | null }) {
+  const t = useT('home');
+  const common = useT('common');
+  const { content, text, names } = useWords();
+  const { offer, takeOffer, declineOffer } = useAccountOffer();
+  const router = useRouter();
+  const opened = useContext(HomeOpened);
+  // The life in the account the player has asked about, by its id.
+  const [asking, setAsking] = useState<string | null>(() => (opened.offer ? (offer?.gameId ?? null) : null));
+  const [busy, setBusy] = useState(false);
+  const life = offer === null ? null : { life: text.lives[offer.lifeId]?.name ?? '', age: ageAt(content, offer.round), city: names.cities[offer.cityId] ?? '' };
+
+  // The sheet closes once the account has answered, and the game is opened once it has gone: a screen changed under a sheet still leaving is left with it.
+  const answer = (how: () => Promise<unknown>, then?: () => void) => () => {
+    setBusy(true);
+    void how()
+      .then(async () => {
+        setBusy(false);
+        setAsking(null);
+        if (!then) return;
+        await sheetsGone();
+        then();
+      })
+      .catch(() => {
+        setBusy(false);
+        setAsking(null);
+      });
+  };
+
+  return (
+    <>
+      {offer !== null && life !== null ? (
+        <Raised
+          bg="night-600"
+          style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => setAsking(offer.gameId)}
+        >
+          <PixelText size={16} tone="cream" style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>{t('accountLife')}</PixelText>
+          <ReadText size={adjustedRead(13)} tone="ink-200" lineHeight={13 * 1.1} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>
+            {t('continueDetail', life)}
+          </ReadText>
+        </Raised>
+      ) : null}
+      {/* Held while it closes, the life gone from under it or answered: a sheet taken away whole is not one that has left. */}
+      <Sheet open={offer !== null && asking === offer.gameId} onClose={() => setAsking(null)} title={t('accountLifeTitle')} closeLabel={common('close')}>
+        {life !== null ? (
+          <>
+            <ReadText size={15} tone="ink-200" lineHeight={15 * SNUG}>{t('accountLifeBody', life)}</ReadText>
+            {endsLife !== null && endsRound !== null ? (
+              <ReadText size={14} tone="wine-300" lineHeight={14 * SNUG} style={{ marginTop: 8 }}>
+                {t('accountLifeEnds', { life: text.lives[endsLife]?.name ?? '', age: ageAt(content, endsRound) })}
+              </ReadText>
+            ) : null}
+            <View style={{ marginTop: 16, gap: 12 }}>
+              <Button variant="primary" wide disabled={busy} onPress={answer(takeOffer, () => router.push('/play'))}>
+                {t('accountLifeTake')}
+              </Button>
+              <Button variant="danger" wide disabled={busy} onPress={answer(declineOffer)}>
+                {t('accountLifeEnd')}
+              </Button>
+            </View>
+          </>
+        ) : null}
+      </Sheet>
+    </>
   );
 }
 

@@ -1,6 +1,6 @@
 import { BADGE_RARITY, content, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
+import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,7 +15,7 @@ import { EndOpened } from '../game/screens/End';
 import { Collection } from '../game/screens/Collection';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Basket, CityPreview, FinanceOpened } from '../game/screens/Finance';
-import { Home } from '../game/screens/Home';
+import { Home, HomeOpened } from '../game/screens/Home';
 import { useShown } from '../game/screens/Hud';
 import { Legal } from '../game/screens/Legal';
 import { NewLife } from '../game/screens/NewLife';
@@ -204,13 +204,16 @@ function RivalsScene() {
  */
 const collectionTabOf = (scene: Scene): 'items' | 'badges' => (scene.name === 'collection-items' ? 'items' : 'badges');
 
+/** The front door with the question of the life waiting in the account open (`home-offer`), given as its initial state. */
+const OFFER_OPEN = { offer: true };
+
 /**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list. A moment of a life (`moment-*`) is
  * Play's own sheet, open over its stage as the game opens it (no initial state: nothing has taken it in yet): Play draws it.
  */
 export const SCENE_SCREENS: SceneScreens = {
-  home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
+  home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : scene.sheet === 'offer' ? <HomeOpened value={OFFER_OPEN}><Home /></HomeOpened> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: (scene) => (scene.sheet === 'city' ? <><PlayScene scene={scene} /><CardCity /></> : <PlayScene scene={scene} />),
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
@@ -227,16 +230,18 @@ export const SCENE_SCREENS: SceneScreens = {
   rivals: () => <RivalsScene />,
   end: (scene) => <EndOpened value={{ share: scene.sheet === 'share' }}><Play /></EndOpened>,
   moment: (scene) => <PlayScene scene={scene} />,
+  settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,
 };
 
 /**
  * What a scene is drawn with: its store behind the game's services, in the language it names whatever the phone speaks,
- * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; and where the scene names one, the place its
- * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on).
+ * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; where the scene names one, the place its
+ * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on); and for a scene of the account, the
+ * account it says, which stays so, with no network (`sceneCloud`, the web's page's too).
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
   const basket = sceneBasket(scene.name);
-  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW, ...(basket ? { basket } : {}) };
+  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW, ...(basket ? { basket } : {}), ...sceneCloud(scene.name) };
 }
 
 /** What a mistyped name gets: the scenes there are. */

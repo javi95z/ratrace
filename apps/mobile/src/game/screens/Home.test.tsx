@@ -4,10 +4,11 @@ import { MemoryStore } from '@ratrace/core/session/memory';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { messagesFor } from '@ratrace/i18n';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import type { AccountLife, AccountSaves, AccountState } from '@ratrace/online/types';
 import { afterEach, describe, expect, it } from 'vitest';
 import { GameProvider, useGame } from '../context';
 import { memoryServices, renderGame, router } from '../../testing/render';
-import { Counted, settled } from '../../testing/renders';
+import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { speaking } from '../../testing/memoryServices';
 import { adjustedRead } from '../../ui/fonts';
@@ -355,5 +356,188 @@ describe('what the front door is drawn again for', () => {
     // And another step.
     await settled(() => play!.leaveNews());
     expect(renders.count).toBe(before);
+  });
+});
+
+/** An account holding a different life, which remembers what it was asked and does it. */
+function accountWith(life: AccountLife | null, take: () => Promise<void> = async () => {}) {
+  let offered = life;
+  let status: 'saved' | 'sending' = 'saved';
+  const watching = new Set<() => void>();
+  const asked: string[] = [];
+  const told = () => {
+    for (const listener of [...watching]) listener();
+  };
+  const offer = (next: AccountLife | null) => {
+    offered = next;
+    told();
+  };
+  const saves: AccountSaves = {
+    status: () => status,
+    offer: () => offered,
+    subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)),
+    onDeviceChanged: () => () => {},
+    takeOffer: async () => {
+      asked.push('take');
+      await take();
+      offer(null);
+      return true;
+    },
+    declineOffer: async () => {
+      asked.push('decline');
+      offer(null);
+    },
+  };
+  /** The account's copy on its way and back, as it goes with every step of a life: nothing the front door draws. */
+  const sending = (next: 'saved' | 'sending') => {
+    status = next;
+    told();
+  };
+  return { saves, asked, offer, sending };
+}
+const elsewhere: AccountLife = { gameId: 'g-9', lifeId: 'engineer', round: 4, cityId: 'madrid' };
+const OFFER = { name: /Pick up the life from your other device/ };
+/** The sheet with this title. */
+const sheetTitled = (title: string) => screen.getByRole('heading', { name: title }).closest('[aria-modal="true"]') as HTMLElement;
+
+describe('the life waiting in the account', () => {
+  it('offers nothing from the account when it holds no other life', async () => {
+    renderGame(<Home />, memoryServices());
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('button', OFFER)).toBeNull();
+  });
+
+  it('offers the life waiting in the account, and asks before it ends the one on this phone', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    // Taking it puts the account's life on the phone, as the real thing does.
+    const other = memoryServices();
+    const { saves, asked } = accountWith(elsewhere, async () => {
+      await other.sessions.start('engineer');
+      await services.store.saveGame((await other.store.loadGame()) as never);
+    });
+    renderGame(<Home />, { ...services, saves });
+    const offer = await screen.findByRole('button', OFFER);
+    expect(offer.textContent).toContain('Software engineer · age 30 · Madrid');
+    // Nothing has been asked of the account yet, and the life on this phone is still the one to continue.
+    expect(asked).toEqual([]);
+    expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
+
+    fireEvent.click(offer);
+    const sheet = sheetTitled('A life on another device');
+    expect(sheet.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 22.');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Pick it up here' }));
+    // The sheet goes first, and the game is opened once it has gone.
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+    expect(asked).toEqual(['take']);
+    // The game on screen is the one that was taken.
+    expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');
+    expect(screen.queryByRole('button', OFFER)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull();
+  });
+
+  it('lets the player end the life in the account instead, and keeps the one on this phone', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const { saves, asked, offer } = accountWith(elsewhere);
+    renderGame(<Home />, { ...services, saves });
+    fireEvent.click(await screen.findByRole('button', OFFER));
+    fireEvent.click(within(sheetTitled('A life on another device')).getByRole('button', { name: 'End it' }));
+    expect(asked).toEqual(['decline']);
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull());
+    expect(screen.queryByRole('button', OFFER)).toBeNull();
+    expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
+    expect(router.push).not.toHaveBeenCalled();
+    // Another life offered later is offered: the question does not ask itself.
+    act(() => offer({ ...elsewhere, gameId: 'g-10', round: 7 }));
+    expect(screen.getByRole('button', OFFER).textContent).toContain('age 36');
+    expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull();
+  });
+
+  it('does not open the question by itself for another life, after the one it was asked about went away under it', async () => {
+    const { saves, offer } = accountWith(elsewhere);
+    renderGame(<Home />, { ...memoryServices(), saves });
+    fireEvent.click(await screen.findByRole('button', OFFER));
+    expect(sheetTitled('A life on another device')).toBeTruthy();
+    // The other device ends that life while the sheet is open.
+    act(() => offer(null));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull());
+    // Later the account brings another. It is offered; "End it" is not put in front of anyone unasked.
+    act(() => offer({ ...elsewhere, gameId: 'g-11', lifeId: 'nurse' }));
+    expect(screen.getByRole('button', OFFER).textContent).toContain('Nurse');
+    expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull();
+  });
+
+  it('shows the life the account brings after the front door has opened', async () => {
+    const { saves, offer } = accountWith(null);
+    renderGame(<Home />, { ...memoryServices(), saves });
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('button', OFFER)).toBeNull();
+    act(() => offer(elsewhere));
+    expect(screen.getByRole('button', OFFER)).toBeTruthy();
+  });
+
+  it('warns of nothing when no life is being lived on this phone', async () => {
+    const { saves } = accountWith(elsewhere);
+    renderGame(<Home />, { ...memoryServices(), saves }, 'es');
+    fireEvent.click(await screen.findByRole('button', { name: /Seguir la vida de tu otro dispositivo/ }));
+    const sheet = sheetTitled('Tienes una vida en otro dispositivo');
+    expect(sheet.textContent).toContain('Ingeniero de software, 30 años, en Madrid. La dejaste en otro dispositivo.');
+    expect(sheet.textContent).not.toContain('se acaba la que tienes');
+  });
+
+  it('is not drawn again, the front door, for the account\'s copy going and coming with each step', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const { saves, sending } = accountWith(null);
+    const renders: Renders = { count: 0 };
+    render(
+      <GameProvider services={speaking({ ...services, saves }, 'en')}>
+        <Counted into={renders}>
+          <Home />
+        </Counted>
+      </GameProvider>,
+    );
+    await screen.findByRole('link', { name: /Continue your life/ });
+    await steady(() => renders.count);
+    const before = renders.count;
+    await settled(() => sending('sending'));
+    await settled(() => sending('saved'));
+    expect(renders.count).toBe(before);
+  });
+});
+
+describe('the account at the foot of the front door', () => {
+  /** An account that only says who is playing. */
+  const accountAs = (state: AccountState) => ({
+    state: () => state,
+    subscribe: () => () => {},
+    start: async () => undefined,
+    keepWithGoogle: async () => false,
+    useExistingAccount: async () => false,
+    dismissNotice: () => undefined,
+    signOut: async () => false,
+  });
+
+  it('shows a guest the way into Google above the settings, and says where things are kept only for a phone with no account', async () => {
+    renderGame(<Home />, { ...memoryServices(), account: accountAs({ kind: 'guest', userId: 'u', notice: null }) });
+    await screen.findByRole('link', { name: 'New life' });
+    const foot = screen.getByRole('region', { name: 'Account' });
+    expect(within(foot).getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
+    // No way out of the account on the front door itself: that is in the settings.
+    expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
+    fireEvent.click(settingsButtons()[0]);
+    const sheet = sheetTitled('Settings');
+    expect(within(sheet).getByRole('region', { name: 'Account' })).toBeTruthy();
+    expect(within(sheet).queryByText('Your life saves itself after every step.')).toBeNull();
+  });
+
+  it('shows a member as kept, and offers to sign out in the settings', async () => {
+    renderGame(<Home />, { ...memoryServices(), account: accountAs({ kind: 'member', userId: 'u', email: 'ana.garcia@example.com' }) });
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain('Linked to Google');
+    expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
+    fireEvent.click(settingsButtons()[0]);
+    expect(within(sheetTitled('Settings')).getByRole('button', { name: 'Sign out' })).toBeTruthy();
   });
 });

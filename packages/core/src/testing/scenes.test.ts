@@ -9,7 +9,7 @@ import type { MemoryStore } from '../session/fixed';
 import { replay } from '../session/save';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
-import { GUIDE_READ, livesLived, withUnlocked, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
+import { GUIDE_READ, livesLived, withUnlocked, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneCloud, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
 import { FIRSTS, TIPS } from '../game/guide';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
@@ -168,7 +168,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail', 'profile-financed']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail', 'profile-financed', 'settings-account-guest', 'settings-account-member', 'home-offer']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -540,6 +540,10 @@ describe('the list of scenes', () => {
       'collection-items',
       'collection-badges',
       'profile-financed',
+      'settings-account-guest',
+      'settings-account-member',
+      'home-offer',
+      'home-account-taken',
     ]);
   });
 
@@ -572,7 +576,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'records', 'collection']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'records', 'collection', 'settings']));
   });
 });
 
@@ -905,5 +909,40 @@ describe('the records and the collection: three real lives, each played to its e
 
   it('opens on no life in progress, as the game does once a life\'s last screen is left', async () => {
     expect(await opened(await sceneStore('records-three'))).toMatchObject({ status: 'none', view: null });
+  });
+});
+
+describe('the scenes of the account', () => {
+  it('are the life of home-continue under an account that is who each says, and stays so: a picture, with nothing of a network', async () => {
+    for (const name of ['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken']) {
+      expect(await saveOf(await sceneStore(name)), name).toEqual(await saveOf(await sceneStore('home-continue')));
+      const { account, saves } = sceneCloud(name);
+      expect(account, name).toBeDefined();
+      // The same answer each time it is asked (a screen reads it as an external store), and never a change to hear of.
+      expect(account!.state(), name).toBe(account!.state());
+      expect(saves!.status(), name).toBe('saved');
+      await expect(account!.keepWithGoogle(), name).resolves.toBe(false);
+      await expect(account!.signOut(), name).resolves.toBe(false);
+      await expect(saves!.takeOffer(), name).resolves.toBe(false);
+    }
+    expect(sceneCloud('settings-account-guest').account!.state()).toEqual({ kind: 'guest', userId: 'scene-player', notice: null });
+    expect(sceneCloud('settings-account-member').account!.state()).toEqual({ kind: 'member', userId: 'scene-player', email: 'ana.garcia@example.com' });
+    expect(sceneCloud('home-account-taken').account!.state()).toEqual({ kind: 'guest', userId: 'scene-player', notice: 'joining' });
+    expect(sceneCloud('home-offer').saves!.offer()).toEqual({ gameId: 'scene-elsewhere', lifeId: 'engineer', round: 4, cityId: 'madrid' });
+    expect(sceneCloud('settings-account-member').saves!.offer()).toBeNull();
+    // The two of the settings open the front door's settings; the offer's question is open; the word of being taken in blinks, and is held still.
+    expect(SCENES.filter((scene) => scene.name.startsWith('settings-')).map((scene) => scene.sheet)).toEqual(['settings', 'settings']);
+    expect(SCENES.find((scene) => scene.name === 'home-offer')?.sheet).toBe('offer');
+    expect((await (await sceneStore('home-account-taken')).loadProfile()).settings.reducedMotion).toBe(true);
+  });
+
+  it('gives every other scene no cloud: nobody signed in, as before', async () => {
+    for (const { name } of SCENES.filter((scene) => !['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken'].includes(scene.name))) {
+      expect(sceneCloud(name), name).toEqual({});
+    }
+    const services = sceneServices(await sceneStore('home-offer'), 'home-offer');
+    expect(services.account?.state().kind).toBe('member');
+    expect(services.saves?.offer()?.lifeId).toBe('engineer');
+    expect(sceneServices(await sceneStore('home-continue'), 'home-continue').account).toBeUndefined();
   });
 });
