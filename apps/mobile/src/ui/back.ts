@@ -47,6 +47,8 @@ export function sheetsGone(): Promise<void> {
  * `sheetsGone` tells when they are gone. They may open again once the game has started again (`openSheetsAgain`): the screens drawn anew have none open.
  */
 let shutting = false;
+/** Who holds the sheets shut (a start of the game again, a tap on a notice): they open again once every one has let go. */
+const holders = new Set<symbol>();
 const shutListeners = new Set<() => void>();
 export const subscribeShut = (listener: () => void): (() => void) => {
   shutListeners.add(listener);
@@ -59,10 +61,23 @@ function setShutting(now: boolean): void {
   shutting = now;
   for (const listener of [...shutListeners]) listener();
 }
-/** Shuts every sheet there is, until `openSheetsAgain`. */
-export const closeEverySheet = (): void => setShutting(true);
-/** Lets the sheets open again, as their screens ask. */
-export const openSheetsAgain = (): void => setShutting(false);
+/**
+ * Shuts every sheet there is, until what it returns is called, and every other who shut them has let go too: a tap on a notice that lands while the
+ * game starts again does not open the sheets under the start (or the other way round).
+ */
+export function closeEverySheet(): () => void {
+  const holder = Symbol('shut');
+  holders.add(holder);
+  setShutting(true);
+  return () => {
+    if (holders.delete(holder)) setShutting(holders.size > 0);
+  };
+}
+/** Lets the sheets open again, whoever shut them: for a game taken away whole, and a test's teardown. */
+export const openSheetsAgain = (): void => {
+  holders.clear();
+  setShutting(false);
+};
 
 /**
  * The sheets taken away whole while they were shown, each holding its turn until its Modal has gone (overlay.tsx's `endTurnOnceGone`): what lets each

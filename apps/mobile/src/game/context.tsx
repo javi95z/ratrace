@@ -338,9 +338,9 @@ function Taps({ push }: { push: Push }): null {
     let live = true;
     const stop = push.onTap((path) => {
       const page = path.split('?')[0];
-      closeEverySheet();
+      const letGo = closeEverySheet();
       void sheetsGone().then(() => {
-        if (!live) return openSheetsAgain();
+        if (!live) return letGo();
         const same = shown.current === page;
         if (same) router.replace(path);
         else router.push(path);
@@ -349,7 +349,7 @@ function Taps({ push }: { push: Push }): null {
         const done = () => {
           if (waiting.current?.done === done) waiting.current = null;
           clearTimeout(clock.timer);
-          setTimeout(openSheetsAgain, 0);
+          setTimeout(letGo, 0);
         };
         if (same) return done();
         waiting.current = { page, done };
@@ -375,9 +375,12 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   const [started, setStarted] = useState<{ count: number; settings: Settings | null }>({ count: 0, settings: null });
   // The sheets open (the question of signing out, the settings under it) are shut first, and the game starts again once they have gone: a sheet
   // is never left presented while the screens under it are taken away (on iOS a view controller torn down so can be left half gone).
+  // What holds the sheets shut while the game starts again: let go once it is drawn anew (or the start failed).
+  const shutForStart = useRef<(() => void) | null>(null);
   const restart = useCallback(
     async (settings: Settings) => {
-      closeEverySheet();
+      shutForStart.current?.();
+      shutForStart.current = closeEverySheet();
       let ready = false;
       try {
         await sheetsGone();
@@ -385,7 +388,10 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
         ready = true;
       } finally {
         // A start that failed leaves the game as it was, and its sheets free to open again; one that did not lets them open once it is drawn.
-        if (!ready) openSheetsAgain();
+        if (!ready) {
+          shutForStart.current?.();
+          shutForStart.current = null;
+        }
       }
       setStarted((was) => ({ count: was.count + 1, settings }));
     },
@@ -400,7 +406,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   useEffect(() => {
     if (started.count === landed.current) return;
     landed.current = started.count;
-    openSheetsAgain();
+    shutForStart.current?.();
+    shutForStart.current = null;
     router.dismissTo('/');
   }, [started, router]);
   return (

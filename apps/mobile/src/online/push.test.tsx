@@ -6,7 +6,9 @@ import { noticeOf } from '../../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../../supabase/functions/_shared/notice.ts';
 import { Preferences } from '../game/screens/Settings';
 import { notices, pathname, tapOn } from '../testing/fakes';
-import { sheetOpened, sheetsShut } from '../ui/back';
+import { closeEverySheet, sheetOpened, sheetsGone, sheetsShut } from '../ui/back';
+import { GameProvider } from '../game/context';
+import { Play } from '../game/screens/Play';
 import { InFront } from '../ui/inFront';
 import { Sheet } from '../ui/overlay';
 import { memoryServices, renderGame, router } from '../testing/render';
@@ -242,6 +244,53 @@ describe('a tap on a notice', () => {
     await waitFor(() => expect(sheetsShut()).toBe(false), { timeout: 3_000 });
   });
 
+  it('hides a sheet of the profile for the screen it opens, and the same sheet is there again on coming back (the balance\'s line, as it was left)', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, { ...services, push: phonePush(memoryNote(), { platform: 'ios' }) });
+    await screen.findByRole('heading', { name: 'News' });
+    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
+    fireEvent.click(within(screen.getByLabelText('Balance sheet')).getByRole('button', { name: /^Cash/ }));
+    await screen.findByRole('heading', { name: 'Cash' });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+    expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull();
+    // Back (here, where no screen comes in front, once the tap has waited its while): the line's sheet, as it was, over the profile.
+    expect(await screen.findByRole('heading', { name: 'Cash' }, { timeout: 3_000 })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
+  });
+
+  it('lets a sheet hidden for a while come back without telling it it is gone; one its screen closes is', async () => {
+    const gone = vi.fn();
+    function Host({ asked }: { asked: boolean }) {
+      return (
+        <Sheet open={asked} onClose={() => undefined} onGone={gone} title="Kept" closeLabel="Close">
+          <></>
+        </Sheet>
+      );
+    }
+    const { rerender } = renderGame(<Host asked />, memoryServices());
+    await screen.findByRole('heading', { name: 'Kept' });
+    const letGo = closeEverySheet();
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Kept' })).toBeNull());
+    await sheetsGone();
+    expect(gone).not.toHaveBeenCalled();
+    act(() => letGo());
+    await screen.findByRole('heading', { name: 'Kept' });
+    rerender(<GameProvider services={memoryServices()}><Host asked={false} /></GameProvider>);
+    await waitFor(() => expect(gone).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps the sheets shut while anyone holds them so: a tap that lands as the game starts again opens none under the start', async () => {
+    const forStart = closeEverySheet();
+    const forTap = closeEverySheet();
+    forTap();
+    expect(sheetsShut()).toBe(true);
+    forStart();
+    expect(sheetsShut()).toBe(false);
+  });
+
   it('waits for a sheet still leaving (an iOS Modal dismissing) before it opens the screen', async () => {
     const push = phonePush(memoryNote(), { platform: 'ios' });
     renderGame(<Preferences />, { ...memoryServices(), push });
@@ -394,6 +443,51 @@ describe('the token, kept up to date with the account', () => {
     const sheet = (await screen.findByRole('heading', { name: 'Sign out?' })).closest('[aria-modal="true"]') as HTMLElement;
     fireEvent.click(within(sheet).getByRole('button', { name: 'Sign out' }));
     await waitFor(() => expect(asked).toEqual([`stop ${FIRST}`, `notify ${FIRST} ios en`]));
+  });
+
+  it('lets the player\'s last word win: a quick "off" while the start\'s claim is in flight waits for it, then has the account forget the phone', async () => {
+    notices.status = 'granted';
+    const { account } = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    let land: (kept: boolean) => void = () => undefined;
+    const { all, asked } = community({
+      notifyMe: (keys: object) => {
+        asked.push(`notify ${(keys as { expo: string }).expo}`);
+        return new Promise<boolean>((resolve) => {
+          land = (kept) => {
+            asked.push('claimed');
+            resolve(kept);
+          };
+        });
+      },
+    });
+    const note = memoryNote('on');
+    renderGame(<Preferences />, { ...memoryServices(), account, community: () => all, push: phonePush(note, { platform: 'ios' }) });
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST}`));
+    const toggle = await screen.findByRole('switch', { name: /Turn on notifications/ });
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(toggle);
+    await settle();
+    // The account is not told to forget the phone before the claim has landed (the market's switch reads what it is, beside).
+    const told = () => asked.filter((line) => !line.startsWith('read'));
+    expect(told()).toEqual([`notify ${FIRST}`]);
+    act(() => land(true));
+    await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('false'));
+    expect(told()).toEqual([`notify ${FIRST}`, 'claimed', `stop ${FIRST}`]);
+    expect(note.now?.state).toBe('off');
+  });
+
+  it('claims once when the player turns them on, for whoever is signed in: the account speaking again is nothing new', async () => {
+    notices.status = 'granted';
+    const signedIn = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const { all, asked } = community();
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, community: () => all, push: phonePush(memoryNote('off'), { platform: 'ios' }) });
+    const toggle = await screen.findByRole('switch', { name: /Turn on notifications/ });
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('true'));
+    act(() => signedIn.become({ kind: 'guest', userId: 'guest-1', notice: null }));
+    await settle();
+    await settle();
+    expect(asked.filter((line) => line.startsWith('notify'))).toEqual([`notify ${FIRST} ios en`]);
   });
 
   it('is not kept while the notices are off', async () => {

@@ -105,7 +105,7 @@ function endTurnOnceGone(id: number): void {
  *
  * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
  * can tell a screen that moves on after closing its sheets when they are gone. Every opening is a panel of its own,
- * so its rise plays from its first frame. `onGone` is told when a sheet that closed has gone, its Modal dismissed: a sheet
+ * so its rise plays from its first frame. `onGone` is told when a sheet its screen closed has gone, its Modal dismissed (not one only hidden a while): a sheet
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
@@ -132,6 +132,13 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
   // The latest opening, and who is told when a sheet has gone, as they are when the Modal says it has dismissed.
   const latest = useRef(opening);
   const told = useRef(onGone);
+  // Whether its screen still asks for it: a sheet hidden for a while (every sheet shut for a notice's tap, or its screen not in front) has not been
+  // closed, and its `onGone` is not told; it comes back as it was left.
+  const stillAsked = useRef(asked);
+  // Before the panel's own effects say it has gone (theirs run before this sheet's, being its children's).
+  useLayoutEffect(() => {
+    stillAsked.current = asked;
+  });
   useEffect(() => {
     latest.current = opening;
     told.current = onGone;
@@ -141,7 +148,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
     setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current));
     if (latest.current === opening) {
       endTurn(id);
-      told.current?.();
+      if (!stillAsked.current) told.current?.();
     }
   }, [opening, id]);
   // Closed while it waited for its turn: never shown, so nothing to wait for.
@@ -150,7 +157,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
     if (open || !waiting) return;
     endTurn(id);
     setHeld((current) => ({ ...current, mounted: false }));
-    told.current?.();
+    if (!stillAsked.current) told.current?.();
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>

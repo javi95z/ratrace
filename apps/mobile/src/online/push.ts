@@ -156,8 +156,16 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
   let asking: Promise<PushOn> | null = null;
   /** What the account was last told, or is being told: the token, whose and in which language. The same again is not sent. */
   let told: { token: string; userId: string | null; locale: string } | null = null;
-  /** Keeps the token with the account, as the latest `follow` does: for `resume`. */
+  /** Keeps the token with the account, as the latest `follow` does: for `resume`. And the account it follows, for whose the token is. */
   let again: (() => void) | null = null;
+  let following: Account | null = null;
+  /**
+   * The player's last word wins: each "off" is a new intent, and a claim begun before it (a start's, in flight) neither notes the notices on again
+   * when it lands, nor is left to land after the account forgot the phone (the "off" waits for it). While an "off" is under way, nothing is claimed.
+   */
+  let intent = 0;
+  let claiming: Promise<boolean> | null = null;
+  let stopping = false;
   /** The taps opened already, by the notice's id: the tap that opened the app is heard again by the listener on Android. */
   const opened = new Set<string>();
 
@@ -225,9 +233,14 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
    */
   const tell = async (community: Community, given: string, userId: string | null, locale: string): Promise<boolean> => {
     if (told !== null && told.token === given && told.userId === userId && told.locale === locale) return true;
+    if (stopping) return false;
+    const mine = intent;
     const before = told;
     told = { token: given, userId, locale };
-    const kept = await quietly(() => community.notifyMe({ expo: given, platform: kind }, locale), false);
+    const claim = quietly(() => community.notifyMe({ expo: given, platform: kind }, locale), false);
+    claiming = claim;
+    const kept = (await claim) && intent === mine;
+    if (claiming === claim) claiming = null;
     if (!kept) {
       if (told?.token === given && told.userId === userId && told.locale === locale) told = before;
       return false;
@@ -250,14 +263,22 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
       });
       return asking;
     },
-    register: async (community, locale) => (token === null ? false : tell(community, token, told?.userId ?? null, locale)),
+    register: async (community, locale) => (token === null ? false : tell(community, token, following ? whoIn(following) : null, locale)),
     pushOff: async (community) => {
-      // The token the account has: the one it was last given, or this phone's own.
-      const held = noted().token ?? token ?? (available() && (await allowed()) ? await fresh() : null);
-      if (held !== null && !(await quietly(() => community.stopNotifying({ expo: held }), false))) return false;
-      told = null;
-      note.write({ state: 'off', token: null });
-      return true;
+      intent += 1;
+      stopping = true;
+      try {
+        // A claim in flight lands first: the account forgets the phone after it, never before.
+        if (claiming !== null) await claiming;
+        // The token the account has: the one it was last given, or this phone's own.
+        const held = noted().token ?? token ?? (available() && (await allowed()) ? await fresh() : null);
+        if (held !== null && !(await quietly(() => community.stopNotifying({ expo: held }), false))) return false;
+        told = null;
+        note.write({ state: 'off', token: null });
+        return true;
+      } finally {
+        stopping = false;
+      }
     },
     release: async (community, patience = 5_000) => {
       const held = noted().token;
@@ -278,6 +299,7 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
     },
     follow: (account, community, locale) => {
       speaking = locale;
+      following = account;
       if (!available()) return () => undefined;
       let live = true;
       void channel();
