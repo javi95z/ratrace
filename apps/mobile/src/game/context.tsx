@@ -20,7 +20,7 @@ import type { Locale } from '@ratrace/i18n';
 import { offlineAccount } from '@ratrace/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@ratrace/online/types';
 import { getCalendars, getLocales } from 'expo-localization';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
@@ -314,13 +314,53 @@ function Place(): null {
   return null;
 }
 
+/** How long a tap waits for the screen it opened to be in front before the sheets may open again all the same. */
+const IN_FRONT_PATIENCE = 1_000;
+
 /**
- * A tap on one of the game's notices opens the screen it names, over whatever is shown: the tap that opened the app (once the router is there), and
- * each one while it runs. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
+ * A tap on one of the game's notices opens the screen it names: the tap that opened the app (once the router is there), and each one while it runs.
+ * The sheets open over whatever was shown are shut first, and the screen changes once they are gone (a screen pushed under a sheet still shown is left
+ * under it); they may open again once that screen is in front (a sheet of the screen under it stays hidden while it is not, ui/overlay.tsx). The
+ * screen in front already is opened anew in its place, never a second copy over it. Inside the router, round every screen, once for the app: a game
+ * started again does not open the same tap again.
  */
 function Taps({ push }: { push: Push }): null {
   const router = useRouter();
-  useEffect(() => push.onTap((path) => router.push(path)), [push, router]);
+  const pathname = usePathname();
+  // The screen in front, as the router last said, and the screen a tap is waiting to see in front (with how to stop waiting).
+  const shown = useRef(pathname);
+  shown.current = pathname;
+  const waiting = useRef<{ page: string; done: () => void } | null>(null);
+  useEffect(() => {
+    if (waiting.current?.page === pathname) waiting.current.done();
+  }, [pathname]);
+  useEffect(() => {
+    let live = true;
+    const stop = push.onTap((path) => {
+      const page = path.split('?')[0];
+      closeEverySheet();
+      void sheetsGone().then(() => {
+        if (!live) return openSheetsAgain();
+        const same = shown.current === page;
+        if (same) router.replace(path);
+        else router.push(path);
+        // The sheets may open again once the screen is in front (a turn later, for the one under it to have heard it is not), or after a while.
+        const clock: { timer?: ReturnType<typeof setTimeout> } = {};
+        const done = () => {
+          if (waiting.current?.done === done) waiting.current = null;
+          clearTimeout(clock.timer);
+          setTimeout(openSheetsAgain, 0);
+        };
+        if (same) return done();
+        waiting.current = { page, done };
+        clock.timer = setTimeout(done, IN_FRONT_PATIENCE);
+      });
+    });
+    return () => {
+      live = false;
+      stop();
+    };
+  }, [push, router]);
   return null;
 }
 
@@ -680,7 +720,7 @@ export function useAccountSettled(): boolean {
  * (`online/browser.ts`): the calls resolve once it has, as the web's resolve once the page has left for it.
  */
 export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
-  const { account, store, restart } = useCloud();
+  const { account, store, restart, push, community } = useCloud();
   const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
   return {
     state,
@@ -707,7 +747,12 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     // starts again, as the web's page is loaded again, and a new guest with it.
     signOut: async () => {
       const settings = (await store.loadProfile()).settings;
-      if (!(await account.signOut())) return false;
+      // The phone's notices are the account's no more: taken from it while it is still signed in (at best, and never in the way of signing out).
+      await push.release(community());
+      if (!(await account.signOut())) {
+        push.resume();
+        return false;
+      }
       await store.clearGame();
       for (const run of await store.listRuns()) await store.removeRun(run.runId);
       await store.saveProfile({ ...newProfile(), settings });

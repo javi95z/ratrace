@@ -1,14 +1,17 @@
 // @vitest-environment jsdom
 import type { Account, AccountState, Community } from '@ratrace/online/types';
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeOf } from '../../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../../supabase/functions/_shared/notice.ts';
 import { Preferences } from '../game/screens/Settings';
-import { notices, tapOn } from '../testing/fakes';
+import { notices, pathname, tapOn } from '../testing/fakes';
+import { sheetOpened, sheetsShut } from '../ui/back';
+import { InFront } from '../ui/inFront';
+import { Sheet } from '../ui/overlay';
 import { memoryServices, renderGame, router } from '../testing/render';
 import { pageOf, phonePush } from './push';
-import type { PushNote } from './push';
+import type { PushNote, PushNoted } from './push';
 
 /*
  * The phone's notices (online/push.ts): a tap opens the screen the notice names, at a cold start as while the app runs, and nothing but the app's own
@@ -29,8 +32,9 @@ afterEach(() => {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function memoryNote(start: ReturnType<PushNote['read']> = null): PushNote & { now: ReturnType<PushNote['read']> } {
-  const note = { now: start, read: () => note.now, write: (state: 'on' | 'off' | 'refused') => void (note.now = state) };
+/** A note kept in memory, as the phone's store keeps it (`kvPush`): notices on are on with the phone's first token, as the account was given it. */
+function memoryNote(state: 'on' | 'off' | 'refused' | null = null, token: string | null = state === 'on' ? 'ExponentPushToken[phone-1]' : null): PushNote & { now: PushNoted | null } {
+  const note = { now: state === null ? null : { state, token }, read: () => note.now, write: (noted: PushNoted) => void (note.now = noted) };
   return note;
 }
 
@@ -81,6 +85,12 @@ describe('the link a tap opens', () => {
     // What the screen does not read is left behind.
     ['theratrace://room?code=K7Q2XM&next=https://evil.example', '/room?code=K7Q2XM'],
     ['theratrace://room/?code=K7Q2XM', '/room?code=K7Q2XM'],
+    // Each name once: the first as written.
+    ['theratrace://room?code=K7Q2XM&code=AAAAAA', '/room?code=K7Q2XM'],
+    ['theratrace://rankings?tab=friends&tab=week', '/rankings?tab=friends'],
+    // A name the screen does not read is no way in, however it is spelled.
+    ['theratrace://room?constructor=x', '/room'],
+    ['theratrace://room?__proto__=x&hasOwnProperty=y', '/room'],
   ])('opens %s as %s', (url, path) => {
     expect(pageOf(url)).toBe(path);
   });
@@ -97,6 +107,13 @@ describe('the link a tap opens', () => {
     'theratrace://auth?code=abc',
     'theratrace://scene?name=home',
     'theratrace://dev',
+    // Pages that every object has: the list of pages is read for its own only.
+    'theratrace://constructor',
+    'theratrace://tostring',
+    'theratrace://hasownproperty',
+    // A room's code is six letters and digits.
+    'theratrace://room?code=K7Q2',
+    'theratrace://room?code=K7Q2XMAB',
     'theratrace://kit',
     'theratrace://perf',
     'theratrace://room/../dev',
@@ -142,6 +159,9 @@ describe('a tap on a notice', () => {
     const push = phonePush(memoryNote(), { platform: 'ios' });
     renderGame(<Preferences />, { ...memoryServices(), push });
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room?code=K7Q2XM'));
+    // Had, it is cleared: a reload of the app does not open it again.
+    expect(notices.cleared).toBe(1);
+    expect(notices.last).toBeNull();
     // Heard again (the listener that comes after the start hears the same tap on Android), it is not opened twice.
     act(() => notices.tap(tapOn('theratrace://room?code=K7Q2XM')));
     await settle();
@@ -180,9 +200,102 @@ describe('a tap on a notice', () => {
     vi.stubEnv('EXPO_PUBLIC_EAS_PROJECT_ID', '');
     notices.last = tapOn('theratrace://room');
     renderGame(<Preferences />, { ...memoryServices(), push: phonePush(memoryNote(), { platform: 'ios' }) });
+    await screen.findByRole('switch', { name: /^Sound/ });
     await settle();
     expect(notices.taps.size).toBe(0);
+    expect(notices.tokens.size).toBe(0);
+    expect(notices.cleared).toBe(0);
     expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('stops listening when the game is taken away', async () => {
+    notices.status = 'granted';
+    const { account } = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const { all } = community();
+    renderGame(<Preferences />, { ...memoryServices(), account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    await waitFor(() => expect(notices.tokens.size).toBe(1));
+    cleanup();
+    expect(notices.taps.size).toBe(0);
+    expect(notices.tokens.size).toBe(0);
+  });
+
+  it('shuts the sheets that are open first, and opens the screen once they are gone', async () => {
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(
+      <>
+        <Preferences />
+        <Sheet open onClose={() => undefined} title="Something open" closeLabel="Close">
+          <></>
+        </Sheet>
+      </>,
+      { ...memoryServices(), push },
+    );
+    await screen.findByRole('heading', { name: 'Something open' });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    let sheetWhenOpened: boolean | null = null;
+    router.push.mockImplementation(() => void (sheetWhenOpened = screen.queryByRole('heading', { name: 'Something open' }) !== null));
+    act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room'));
+    expect(sheetWhenOpened).toBe(false);
+    // The sheets may open again once the screen opened is in front (here, where no screen comes to the front, after a while).
+    await waitFor(() => expect(sheetsShut()).toBe(false), { timeout: 3_000 });
+  });
+
+  it('waits for a sheet still leaving (an iOS Modal dismissing) before it opens the screen', async () => {
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), push });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    // A sheet that has closed and whose Modal has not said it has gone yet.
+    const gone = sheetOpened();
+    act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
+    await settle();
+    await settle();
+    expect(sheetsShut()).toBe(true);
+    expect(router.push).not.toHaveBeenCalled();
+    act(() => gone());
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+  });
+
+  it('opens the screen in front anew in its place, never a second copy over it', async () => {
+    pathname.now = '/room';
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), push });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    act(() => notices.tap(tapOn('theratrace://room?code=K7Q2XM', 'notice-2')));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/room?code=K7Q2XM'));
+    expect(router.push).not.toHaveBeenCalled();
+    await waitFor(() => expect(sheetsShut()).toBe(false));
+  });
+});
+
+describe('a sheet of a screen that is not in front', () => {
+  it('is hidden while another screen is over it, and shown again as it was when its screen is back', async () => {
+    const listeners = { focus: new Set<() => void>(), blur: new Set<() => void>() };
+    let focused = true;
+    const navigation = {
+      isFocused: () => focused,
+      addListener: (event: 'focus' | 'blur', listener: () => void) => (listeners[event].add(listener), () => void listeners[event].delete(listener)),
+    };
+    const say = (event: 'focus' | 'blur') => {
+      focused = event === 'focus';
+      for (const listener of [...listeners[event]]) listener();
+    };
+    renderGame(
+      <InFront navigation={navigation}>
+        <Sheet open onClose={() => undefined} title="Under the room" closeLabel="Close">
+          <></>
+        </Sheet>
+      </InFront>,
+      memoryServices(),
+    );
+    await screen.findByRole('heading', { name: 'Under the room' });
+    act(() => say('blur'));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Under the room' })).toBeNull());
+    act(() => say('focus'));
+    expect(await screen.findByRole('heading', { name: 'Under the room' })).toBeTruthy();
+    cleanup();
+    expect(listeners.focus.size + listeners.blur.size).toBe(0);
   });
 });
 
@@ -195,6 +308,92 @@ describe('the token, kept up to date with the account', () => {
     await waitFor(() => expect(asked).toContain(`notify ${FIRST} android es`));
     // The channel the notices are shown in, named in the game's language (Android).
     expect(notices.channels).toEqual([{ id: 'default', name: 'Avisos del juego', importance: 5 }]);
+  });
+
+  it('is kept once at each start, however often the account speaks, and once more for a new language only', async () => {
+    notices.status = 'granted';
+    const signedIn = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const { all, asked } = community();
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) }, 'en');
+    // The account speaks again and again as it settles: the same player, in the same language.
+    act(() => signedIn.become({ kind: 'guest', userId: 'guest-1', notice: null }));
+    act(() => signedIn.become({ kind: 'guest', userId: 'guest-1', notice: null }));
+    // And iOS hands the token to its listener as the start asks Expo for it: the start's own, not a new one.
+    act(() => notices.newToken({ type: 'ios', data: 'apns-1' }));
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+    await settle();
+    await settle();
+    expect(asked.filter((line) => line.startsWith('notify'))).toEqual([`notify ${FIRST} ios en`]);
+    fireEvent.click(screen.getByRole('radio', { name: 'Español' }));
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios es`));
+    await settle();
+    expect(asked.filter((line) => line.startsWith('notify'))).toEqual([`notify ${FIRST} ios en`, `notify ${FIRST} ios es`]);
+    // The listener of the language before is gone: one listens.
+    await waitFor(() => expect(notices.tokens.size).toBe(1));
+  });
+
+  it('takes a token Expo changed while the app was closed: the market\'s choice goes with it, and the old one is forgotten', async () => {
+    notices.status = 'granted';
+    notices.token = SECOND;
+    const { account } = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const note = memoryNote('on', FIRST);
+    const { all, asked } = community();
+    // No screen that reads the market's switch: only what the start does.
+    renderGame(<></>, { ...memoryServices(), account, community: () => all, push: phonePush(note, { platform: 'ios' }) });
+    await waitFor(() => expect(asked).toContain(`stop ${FIRST}`));
+    expect(asked).toEqual([`notify ${SECOND} ios en`, `read ${FIRST}`, `set ${SECOND} true`, `stop ${FIRST}`]);
+    expect(note.now).toEqual({ state: 'on', token: SECOND });
+  });
+
+  it('is taken from the account a player signs out of, before the session goes, and given to the next one', async () => {
+    notices.status = 'granted';
+    const signedIn = accountAt({ kind: 'member', userId: 'member-1', email: null });
+    const { all, asked } = community();
+    (signedIn.account as { signOut(): Promise<boolean> }).signOut = async () => {
+      asked.push('signed out');
+      return true;
+    };
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) });
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+    asked.length = 0;
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
+    const sheet = (await screen.findByRole('heading', { name: 'Sign out?' })).closest('[aria-modal="true"]') as HTMLElement;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(asked).toContain('signed out'));
+    expect(asked.slice(0, 2)).toEqual([`stop ${FIRST}`, 'signed out']);
+    // The next player on the phone is given it, the notices still on.
+    act(() => signedIn.become({ kind: 'guest', userId: 'guest-2', notice: null }));
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+  });
+
+  it('signs out all the same where the account cannot forget the phone', async () => {
+    notices.status = 'granted';
+    const signedIn = accountAt({ kind: 'member', userId: 'member-1', email: null });
+    const { all, asked } = community({ stopNotifying: async () => Promise.reject(new Error('offline')) });
+    (signedIn.account as { signOut(): Promise<boolean> }).signOut = async () => {
+      asked.push('signed out');
+      return true;
+    };
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) });
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
+    const sheet = (await screen.findByRole('heading', { name: 'Sign out?' })).closest('[aria-modal="true"]') as HTMLElement;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(asked).toContain('signed out'));
+  });
+
+  it('is given back where the sign-out did not happen after all', async () => {
+    notices.status = 'granted';
+    const signedIn = accountAt({ kind: 'member', userId: 'member-1', email: null });
+    const { all, asked } = community();
+    (signedIn.account as { signOut(): Promise<boolean> }).signOut = async () => false;
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) });
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+    asked.length = 0;
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
+    const sheet = (await screen.findByRole('heading', { name: 'Sign out?' })).closest('[aria-modal="true"]') as HTMLElement;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(asked).toEqual([`stop ${FIRST}`, `notify ${FIRST} ios en`]));
   });
 
   it('is not kept while the notices are off', async () => {
@@ -280,12 +479,19 @@ describe('never a crash', () => {
     }
   });
 
-  it('turns off quietly where the account cannot be reached', async () => {
+  it('says it could not turn off where the account cannot be reached, and keeps them on', async () => {
     notices.status = 'granted';
     const note = memoryNote('on');
     const push = phonePush(note, { platform: 'ios' });
     const { all } = community({ stopNotifying: async () => Promise.reject(new Error('offline')) });
-    await expect(push.pushOff(all)).resolves.toBeUndefined();
-    expect(note.now).toBe('off');
+    await expect(push.pushOff(all)).resolves.toBe(false);
+    expect(note.now).toEqual({ state: 'on', token: FIRST });
+  });
+
+  it('lets a sign-out go on where the account does not answer: it waits a while at most', async () => {
+    notices.status = 'granted';
+    const push = phonePush(memoryNote('on'), { platform: 'ios' });
+    const { all } = community({ stopNotifying: () => new Promise<boolean>(() => undefined) });
+    await expect(push.release(all, 20)).resolves.toBeUndefined();
   });
 });

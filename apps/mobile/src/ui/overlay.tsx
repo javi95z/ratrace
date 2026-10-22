@@ -3,6 +3,7 @@ import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pre
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { holdingTurn, sheetOpened, sheetsShut, subscribeShut } from './back';
+import { ScreenInFront } from './inFront';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -53,6 +54,7 @@ interface Turn {
 const turns: Turn[] = [];
 /** The sheet a sheet is drawn inside: the one that presents it. */
 const SheetParent = createContext<number | null>(null);
+
 const within = (id: number, outer: number): boolean => {
   for (let at = turns.find((turn) => turn.id === id)?.parent ?? null; at !== null; at = turns.find((turn) => turn.id === at)?.parent ?? null) if (at === outer) return true;
   return false;
@@ -108,9 +110,10 @@ function endTurnOnceGone(id: number): void {
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
 export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
-  // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
+  // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`), or its screen is not the one in front.
   const shut = useSyncExternalStore(subscribeShut, sheetsShut, () => false);
-  const open = asked && !shut;
+  const inFront = useContext(ScreenInFront);
+  const open = asked && !shut && inFront;
   const [held, setHeld] = useState({ was: open, opening: open ? 1 : 0, mounted: open });
   let now = held;
   if (open !== held.was) {

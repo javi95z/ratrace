@@ -339,6 +339,8 @@ export const notices = {
   channels: [] as Array<{ id: string; name: string; importance: number }>,
   last: null as NoticeTap | null,
   cleared: 0,
+  /** How many times the library was loaded in this file of tests (`setup.ts`'s stand-in counts it): none, where the phone cannot be told. */
+  loads: 0,
   taps: new Set<(response: NoticeTap) => void>(),
   tokens: new Set<(token: { type: string; data: string }) => void>(),
   tap(response: NoticeTap) {
@@ -367,8 +369,8 @@ export const expoNotifications = {
     notices.channels.push({ id, name: channel.name, importance: channel.importance });
     return { id, ...channel };
   },
-  getLastNotificationResponseAsync: async () => notices.last,
-  clearLastNotificationResponseAsync: async () => {
+  getLastNotificationResponse: () => notices.last,
+  clearLastNotificationResponse: () => {
     notices.cleared += 1;
     notices.last = null;
   },

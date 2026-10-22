@@ -168,11 +168,14 @@ export function Switches() {
 function WeeklyNotice() {
   const t = useT('settings');
   const phone = useT('phone');
+  const rankings = useT('rankings');
   const { locale } = useSettings();
   const community = useCommunity();
   const push = usePush();
   const [on, setOn] = useState<boolean | null>(null);
   const [refused, setRefused] = useState(false);
+  // Turning them off did not reach the account: they still come, and the switch says so.
+  const [stuck, setStuck] = useState(false);
   // The phone gave no token after all: there is nothing to turn on here.
   const [gone, setGone] = useState(false);
   useEffect(() => {
@@ -184,6 +187,7 @@ function WeeklyNotice() {
   }, [push]);
   if (gone || !push.available() || community === null || on === null) return null;
   const change = async (want: boolean) => {
+    setStuck(false);
     if (want) {
       const got = await push.pushOn();
       if (got === 'unavailable') return setGone(true);
@@ -191,13 +195,16 @@ function WeeklyNotice() {
       setRefused(false);
       setOn(await push.register(community, locale));
     } else {
-      await push.pushOff(community);
-      setOn(false);
+      // Off only once the account has forgotten the phone: until then the notices still come, and the switch stays on.
+      const off = await push.pushOff(community);
+      setStuck(!off);
+      setOn(!off);
     }
   };
+  const hint = stuck ? rankings('followFailed') : refused ? phone('noticesBlocked') : t('weeklyNoticeHint');
   return (
     <>
-      <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? phone('noticesBlocked') : t('weeklyNoticeHint')} />
+      <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={hint} />
       {on ? <MarketNotice /> : null}
     </>
   );

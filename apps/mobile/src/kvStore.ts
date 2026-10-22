@@ -258,21 +258,28 @@ export const kvKeeping = {
   },
 };
 
-/** What the app remembers of the game's notices on this phone (`online/push.ts`): turned on, off, or refused by the player, who is never asked twice. */
+/**
+ * What the app remembers of the game's notices on this phone (`online/push.ts`): turned on, off, or refused by the player, who is never asked twice;
+ * and the token the account was last given. Anything else read there is nothing noted.
+ */
 const PUSH = 'ratrace:push';
 
 export const kvPush = {
-  read: (): 'on' | 'off' | 'refused' | null => {
+  read: (): { state: 'on' | 'off' | 'refused'; token: string | null } | null => {
     try {
-      const noted = Storage.getItemSync(PUSH);
-      return noted === 'on' || noted === 'off' || noted === 'refused' ? noted : null;
+      const text = Storage.getItemSync(PUSH);
+      const noted: unknown = text === null ? null : JSON.parse(text);
+      if (typeof noted !== 'object' || noted === null) return null;
+      const { state, token } = noted as { state?: unknown; token?: unknown };
+      if (state !== 'on' && state !== 'off' && state !== 'refused') return null;
+      return { state, token: typeof token === 'string' ? token : null };
     } catch {
       return null;
     }
   },
-  write: (state: 'on' | 'off' | 'refused'): void => {
+  write: (noted: { state: 'on' | 'off' | 'refused'; token: string | null }): void => {
     try {
-      Storage.setItemSync(PUSH, state);
+      Storage.setItemSync(PUSH, JSON.stringify({ state: noted.state, token: noted.token }));
     } catch {
       // A phone that keeps nothing: the notices are not kept on, and a refusal is the phone's own to remember (it does not ask again).
     }

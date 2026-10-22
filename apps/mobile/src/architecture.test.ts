@@ -312,11 +312,12 @@ describe('the wall between the phone\'s screens and the game', () => {
 
   it('lets one file only reach the phone\'s notices (expo-notifications), the push\'s (online/push.ts): what asks the player, holds the token and opens a tap\'s link', () => {
     // The library named however it is taken (an import, a type, a `require`, a late `import()`, a file of it).
-    const reachesNotices = (source: string): boolean => /['"]expo-notifications(\/[^'"]*)?['"]/.test(source);
+    const reachesNotices = (source: string): boolean => /['"`]expo-notifications(\/[^'"`]*)?['"`]/.test(source);
     expect(reachesNotices("import * as Notifications from 'expo-notifications';")).toBe(true);
     expect(reachesNotices("import type { NotificationResponse } from 'expo-notifications';")).toBe(true);
     expect(reachesNotices("const { getExpoPushTokenAsync } = require('expo-notifications');")).toBe(true);
     expect(reachesNotices("const tokens = await import('expo-notifications/build/getExpoPushTokenAsync');")).toBe(true);
+    expect(reachesNotices('const tokens = await import(`expo-notifications`);')).toBe(true);
     // A word that only names one is not one.
     expect(reachesNotices('// the notices come through expo-notifications, in online/push.ts')).toBe(false);
     const reaching = shipped.filter((path) => reachesNotices(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
@@ -325,6 +326,10 @@ describe('the wall between the phone\'s screens and the game', () => {
     // The push opens only what `pageOf` lets through, and takes no store of the phone's: its note is handed in by the game's context.
     const push = readFileSync(join(SRC, 'online/push.ts'), 'utf8');
     expect(push).toMatch(/const path = pageOf\(/);
+    // Loaded late, and only there: nothing of it is taken as the app loads (in Expo Go it warns as it loads), but its types.
+    expect(importsOf(join(SRC, 'online/push.ts')).filter((i) => i.from === 'expo-notifications' && !i.typeOnly).map((i) => i.names)).toEqual(['*']);
+    expect(push).toContain("import('expo-notifications')");
+    expect(push).not.toMatch(/require\(\s*['"]expo-notifications/);
     expect(importsOf(join(SRC, 'online/push.ts')).map((i) => i.from)).not.toContain('@/kvStore');
     expect(readFileSync(join(SRC, 'game/context.tsx'), 'utf8')).toContain('phonePush(kvPush)');
   });

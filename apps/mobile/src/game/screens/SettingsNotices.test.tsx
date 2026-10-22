@@ -4,7 +4,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { kvPush } from '../../kvStore';
 import { phonePush } from '../../online/push';
-import type { PushNote } from '../../online/push';
+import type { PushNote, PushNoted } from '../../online/push';
 import { expoConstants, expoDevice, notices } from '../../testing/fakes';
 import { memoryServices, renderGame } from '../../testing/render';
 import { Preferences } from './Settings';
@@ -25,9 +25,9 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** A note kept in memory, as the phone's store keeps it (`kvPush`). */
-function memoryNote(start: ReturnType<PushNote['read']> = null): PushNote & { now: ReturnType<PushNote['read']> } {
-  const note = { now: start, read: () => note.now, write: (state: 'on' | 'off' | 'refused') => void (note.now = state) };
+/** A note kept in memory, as the phone's store keeps it (`kvPush`): notices on are on with the phone's first token, as the account was given it. */
+function memoryNote(state: 'on' | 'off' | 'refused' | null = null, token: string | null = state === 'on' ? 'ExponentPushToken[phone-1]' : null): PushNote & { now: PushNoted | null } {
+  const note = { now: state === null ? null : { state, token }, read: () => note.now, write: (noted: PushNoted) => void (note.now = noted) };
   return note;
 }
 
@@ -74,7 +74,7 @@ describe('the notices in Settings, on the phone', () => {
     expect(notices.asked).toBe(1);
     expect(notices.tokenAsks).toEqual([{ projectId: PROJECT }]);
     expect(asked[0]).toBe(`notify ${TOKEN} ios es`);
-    expect(note.now).toBe('on');
+    expect(note.now?.state).toBe('on');
     // The market's own switch is there now, as the server says it stands.
     expect(await screen.findByRole('switch', { name: /Avisarme si se mueve mi mercado/ })).toBeTruthy();
     expect(asked).toContain(`read ${TOKEN}`);
@@ -97,7 +97,7 @@ describe('the notices in Settings, on the phone', () => {
     fireEvent.click(toggle);
     expect(await screen.findByText('Notices are blocked for this app: allow them in your phone\'s settings.')).toBeTruthy();
     expect(toggle.getAttribute('aria-checked')).toBe('false');
-    expect(note.now).toBe('refused');
+    expect(note.now?.state).toBe('refused');
     expect(asked).toEqual([]);
     // Pressed again, it is not asked again: it says so again.
     fireEvent.click(toggle);
@@ -154,7 +154,7 @@ describe('the notices in Settings, on the phone', () => {
     await waitFor(() => expect(notices.asked).toBe(1));
     await settle();
     expect(toggle.getAttribute('aria-checked')).toBe('false');
-    expect(note.now).not.toBe('on');
+    expect(note.now?.state).not.toBe('on');
     expect(market()).toBeNull();
   });
 
@@ -168,12 +168,49 @@ describe('the notices in Settings, on the phone', () => {
     fireEvent.click(toggle);
     await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('false'));
     expect(asked).toContain(`stop ${TOKEN}`);
-    expect(note.now).toBe('off');
+    expect(note.now?.state).toBe('off');
     expect(market()).toBeNull();
     // Turned off, it is not shown as on at the next start.
     cleanup();
     show({ note });
     expect((await weekly()).getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('turns off only once the account has forgotten the phone: a failure leaves the switch on, says so, and they still come', async () => {
+    notices.status = 'granted';
+    const note = memoryNote('on');
+    const { asked } = show({ note, over: { stopNotifying: async (target: { expo: string }) => (asked.push(`stop ${target.expo}`), false) } });
+    const toggle = await weekly();
+    fireEvent.click(toggle);
+    await waitFor(() => expect(asked).toContain(`stop ${TOKEN}`));
+    expect(await screen.findByRole('switch', { name: /That did not work\. Try again\./ })).toBe(toggle);
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    expect(note.now).toEqual({ state: 'on', token: TOKEN });
+    expect(market()).not.toBeNull();
+    // Tried again with the account there, it is off, and the words go.
+    cleanup();
+    const again = show({ note });
+    const back = await weekly();
+    fireEvent.click(back);
+    await waitFor(() => expect(back.getAttribute('aria-checked')).toBe('false'));
+    expect(again.asked).toContain(`stop ${TOKEN}`);
+    expect(screen.queryByText(/That did not work/)).toBeNull();
+    expect(note.now?.state).toBe('off');
+  });
+
+  it('turns off offline as it can: the token the account was given is the one forgotten, with no question to Expo, and a failure keeps it on', async () => {
+    notices.status = 'granted';
+    notices.tokenFails = true;
+    const note = memoryNote('on');
+    show({ note, over: { stopNotifying: async () => Promise.reject(new Error('offline')) } });
+    const toggle = await weekly();
+    // On, as the phone noted it, with nothing asked of the network.
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    expect(notices.tokenAsks).toEqual([]);
+    fireEvent.click(toggle);
+    await screen.findByRole('switch', { name: /That did not work/ });
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    expect(note.now?.state).toBe('on');
   });
 
   it('shows the switch off where the phone no longer lets the app notify, whatever was noted', async () => {
@@ -213,40 +250,43 @@ describe('the notices in Settings, on the phone', () => {
   });
 
   describe('hides what cannot be used: no switch where the phone cannot be told', () => {
-    it('with no Expo project in the build', async () => {
-      vi.stubEnv('EXPO_PUBLIC_EAS_PROJECT_ID', '');
-      const { push } = show();
-      expect(await push.pushOn()).toBe('unavailable');
+    /** The settings drawn whole (their first switch is there), with no switch of the notices among them, nothing listened to and nothing asked. */
+    async function hidden(push: ReturnType<typeof phonePush>) {
+      await screen.findByRole('switch', { name: /^Sound/ }, LONG);
       await settle();
       expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull();
+      expect(notices.taps.size).toBe(0);
+      expect(notices.tokens.size).toBe(0);
+      expect(await push.pushOn()).toBe('unavailable');
       expect(notices.asked).toBe(0);
+      expect(notices.tokenAsks).toEqual([]);
+    }
+
+    it('with no Expo project in the build', async () => {
+      vi.stubEnv('EXPO_PUBLIC_EAS_PROJECT_ID', '');
+      await hidden(show().push);
     });
 
     it('on a simulator', async () => {
       expoDevice.isDevice = false;
-      const { push } = show();
-      expect(await push.pushOn()).toBe('unavailable');
-      await settle();
-      expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull();
+      await hidden(show().push);
     });
 
     it('in Expo Go, which has no remote notices', async () => {
       (expoConstants.default as { executionEnvironment?: string }).executionEnvironment = 'storeClient';
-      show();
-      await settle();
-      expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull();
+      await hidden(show().push);
     });
 
     it('on anything but a phone', async () => {
-      show({ platform: 'web' });
-      await settle();
-      expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull();
+      await hidden(show({ platform: 'web' }).push);
     });
 
-    it('with nobody signed in', async () => {
+    it('with nobody signed in, on a phone that could be told', async () => {
       const push = phonePush(memoryNote(), { platform: 'ios' });
       renderGame(<Preferences />, { ...memoryServices(), push }, 'en');
+      await screen.findByRole('switch', { name: /^Sound/ }, LONG);
       await settle();
+      expect(push.available()).toBe(true);
       expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull();
     });
 
@@ -256,7 +296,7 @@ describe('the notices in Settings, on the phone', () => {
       fireEvent.click(await weekly());
       await waitFor(() => expect(screen.queryByRole('switch', { name: /Turn on notifications/ })).toBeNull());
       expect(asked).toEqual([]);
-      expect(note.now).not.toBe('on');
+      expect(note.now?.state).not.toBe('on');
     });
   });
 });
