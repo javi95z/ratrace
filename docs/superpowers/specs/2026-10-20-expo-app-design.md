@@ -1,7 +1,7 @@
 # The Rat Race as a native app (Expo)
 
 Status: design, for review. Branch `expo` only, app in `apps/mobile`. Phase 0 (spike) passed on
-2026-10-20.
+2026-10-20, phase 1 (foundations) ended the same day, phase 2 (solo game) on 2026-10-22.
 
 ## Intent
 
@@ -156,6 +156,33 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
    resolve), end, records, collection, profile and rat, settings. Ends when a whole life can be
    played by hand in the app, every screen passing the parity check, and the first internal build
    installs on the simulator (and on the Android emulator once installed).
+
+   **Done, 2026-10-22** (report: `docs/superpowers/reports/2026-10-21-phase-2-parity.md`). Every
+   solo screen of the web is ported to `apps/mobile/src/game/screens/` (each with its web twin's name,
+   exports and props; the legal notice and two small pieces are the phone's own), behind the same architecture rules, with the web's tests ported and
+   a render-count test per screen. Sixty-five scenes (one game state drawn by both clients) compare
+   pixel by pixel on the iPhone 16 Pro simulator: forty-six clean, seventeen within a recorded and
+   explained residual, two in the phone's own words; two full runs exit 0. A whole first life was
+   played by hand in the release build, from the front door to the end and its shared picture,
+   then a second life to round 3, with the app killed at the finances (the basket kept), the iOS
+   back gesture, Russian mid-life, every finance tab and the records and collection; the two faults
+   found were fixed with tests. The release build (Hermes bytecode, no timing probe in it) meets
+   every budget on the simulator: cold start, home to play, every stage change, the finance tabs and
+   the sheets. Older rules ride in the app (`apps/web/public/rules`, evaluated on Hermes); a life
+   under newer rules waits. Online pieces are stand-ins that answer "no account" (`game/offline.ts`),
+   so each screen draws what the web draws for a guest with no connection. Not done here: Android
+   was never run (the emulator, ≈6–8 GB, waits for the user's approval); the flings of the long lists
+   drop a frame at a time on the simulator and are to be measured on a device; the legal notice's
+   wording on the phone is the user's to settle.
+
+   **Phase 3 starts from** that app: the stand-ins of `game/offline.ts` (`useRanking`,
+   `useCommunity`, `useInRoom`, `useRoom`, `useAccountSaves`, `useTrack`, `useCanSignIn`) are the
+   seams where the account, cloud saves, ranked lives, the weekly challenge's attempts, rankings,
+   friends, rooms and analytics plug in, through `@ratrace/online` wired as the web's
+   `online/index.ts` wires it; the screens that hide online pieces today show them by the web's own
+   conditions once those answer. It needs, first: a development build (EAS) with native Google
+   sign-in and push, the Android emulator for both, the Firebase project and the Google OAuth client
+   (the user's to create), and the legal notice's words for an app that sends data.
 3. **Online.** Guest account, Google sign-in, cloud saves, ranked lives, the weekly challenge,
    rankings, friends, games with others (Realtime), push, analytics (the eight events to the game's own Supabase), error reports. Ends when a
    life begun on the web is finished in the app and the reverse.

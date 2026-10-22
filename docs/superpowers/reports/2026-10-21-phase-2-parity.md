@@ -908,7 +908,7 @@ a load of 40; `simctl` is now tried again where it fails, f4df504. One run found
 | profile-r6 | 30 | 0.67 | the career bar's lit lamps bleed a device-pixel sliver into the first dark one on the web (phase 1's class) |
 | balance-r6 | 1469 | (phone words) | the phone's "Net worth, after inflation" is longer than the key the web shows; its glyphs past the web's line box are in no window of the text check |
 | end-bankrupt | 5 | 0.33 | five pixels of a gold edge on the last row compared (839.67 pt), antialiased at a fractional place on the web |
-| end-share | 5084, 5085 (record 5100) | 0.67 | the picture to share is a picture: Skia's glyphs (no kerning) against the canvas's, each smoothing the 1080-wide card into 270 points its own way; the web's own picture changed in 677 pixels between two shots of the same page |
+| end-share | 5084, 5085 (record 5090) | 0.67 | the picture to share is a picture: Skia's glyphs (no kerning) against the canvas's, each smoothing the 1080-wide card into 270 points its own way; the web's own picture changed in 677 pixels between two shots of the same page |
 | end-ru | 168 | 0.67 | the prized badge's confetti centred in a panel a fraction taller in Russian: on another device pixel, their pieces at the foot cut a pixel apart |
 
 The records of Tasks 6 to 10 were tightened to what this pass measured (`new-locked` 1267 → 738, `new-replace` 1159 → 310, `play-news-r1` 1446 → 1443,
@@ -1317,3 +1317,191 @@ need the store's work to pass, but the store's work is gone from the step all th
 
 The first press after the app opened (546 ms in the before build, a 423 ms UI frame) is the first resolve page of the process (its fonts and canvases
 made); not counted in either median, and not seen in the after build's first press (130), which came after ten round-6 presses.
+
+## Phase 2's exit (Task 20): a whole life by hand, every scene final, the release build measured
+
+Branch `expo`, from 5fd3b02. iPhone 16 Pro simulator, iOS 18.0, on this Mac. Android was not run (below).
+
+### A whole life by hand
+
+Played in the **plain release build** (`npx expo prebuild --platform ios --clean`, then `npx expo run:ios --configuration Release`; the app
+uninstalled first, so a first life on a fresh phone), driven as a player drives it: taps, card swipes and the iOS edge swipe, through the
+simulator, never the store.
+
+- **The first life**, the nurse in Madrid, all twenty rounds to the end: cards pressed and swiped (two-choice cards both ways, three-choice cards
+  pressed), every outcome, the finances each round, the ledger, the moments, a move of city (Mexico City by round 15), the end. Along the way:
+  - **Killed at the finances with orders in the basket** (round 8: a fund bought and a monthly plan, "2 orders"): `simctl terminate`, then
+    launched again. The front door said "Continue your life"; the life opened at the finances of round 8 with both orders in the basket and
+    the cash after the round as before.
+  - **The iOS back gesture** (the edge swipe, Android's Back on an iPhone) from Play, at the finances and at the news: the front door, the
+    life kept; Continue took it up at the same stage. From the records and the collection: back to the front door.
+  - **Russian mid-life** (round 8, Settings, Русский): the HUD, the finance tabs, the glance, the basket and a buy sheet all in Russian
+    and nothing clipped; then English again.
+  - **Every finance tab** opened: portfolio, market, property, business, debt, lifestyle, shop, taxes. **The profile** from the portrait,
+    **a balance line** (investments, its sheet), **a thing** (the Tesla Model 3's sheet), a fund's buy sheet with its slider.
+  - **The end**: its figures, the life line, the badges, the legendary badge's cheer. **Share this life**: the iOS share sheet with the
+    picture (`rat-race-nurse-247.png`) and the invite. **Save the picture**: the photos prompt, Allow, "Saved to your photos."
+  - **After the life**: the records (the life at the top, its sheet opened) and the collection (badges 12 of 63, things 7 of 67).
+- **A second life**, the delivery rider in Bangkok (unlocked by the first), to round 3, then on to round 7 in the probe build while
+  measuring (below).
+
+**Faults found, and fixed** (each in its screen, with a test written first and seen to fail):
+
+| # | where | what | cause | fix |
+|---|---|---|---|---|
+| 1 | NewLife | on a fresh phone, "Start this life" pressed: for the moment before Play replaced the page, the bar said "This ends the life you have in progress." of the life just begun, and the button was live again | the notice and the question follow `inProgress`, which the life just started makes true while the page is still on screen | the page knows its life is begun: no notice, no second press (d37db7b; `NewLife.test`: "does not warn of a life in progress for the life it is beginning…") |
+| 2 | End | "A legendary badge: Lunch with Bufé!" ran on one line past the frame, cut under the right confetti | the web's words are a flex item that gives way and wraps; the phone's line did not shrink | the line shrinks and wraps between the confetti (e2892f8; `End.test`: the cheer's line has `flexShrink: 1`) |
+
+Seen and not a fault: after the end, Home offers no "See how your last life ended" (the end lets its life go once left, `closeFinished`, as
+the web's does); the round's cash on the HUD at the finances is the cash after the basket (the web's `useShown`).
+
+### Every scene, final
+
+The four scenes the escape's age changed (ddd6cc4: the age a life left the rat race is the age of the round it got out in, on both clients)
+were shot first: `moment-escape` and `end-escaped` clean, `end-share` 5084 (record 5090) and `end-ru` 168 (record kept), within their
+records. `PENDING_SHOTS` is empty. Then **two full runs** of all sixty-five scenes on the final code (Metro started with its cache cleared,
+Expo Go opened twice on it; the web's own `next dev`), no edit during either: **run A** exit 0 (load 4.5 → 5.2), **run B** exit 0 (load
+11.3 → 2.6, started straight after run A). Both: **46 clean, 17 accepted, 2 in the phone's words**
+(`home-lost-newer` layout clean, `legal` not comparable), 0 differ. They differ by one pixel in `end-share` (5084/5085, the web's own picture)
+and `play-pageturn` (3896/3897, the turning page's ring). The shots and numbers committed are run B's (431a866).
+
+Run B, scene by scene (shape = pixels a point away that are not text; worst text = the farthest a judged line stands; far = the judged lines
+beyond a point):
+
+| scene | verdict | raw % | shape (px) | of which blended | text lines | worst text (pt) | far | run A, where it differs |
+|---|---|---|---|---|---|---|---|---|
+| home-new | clean | 3.62 | 0 | 0 | 15 (0 unmeasured) | 0.67 | — |  |
+| home-continue | accepted | 2.93 | 1 | 1 | 15 (0 unmeasured) | 0.67 | — |  |
+| home-settings | clean | 2.31 | 0 | 0 | 29 (15 unmeasured) | 0.33 | — |  |
+| home-lost-newer | phone words, layout clean | 4.11 | 0 | 0 | 17 (0 unmeasured, 2 phone words) | 0.67 | — |  |
+| new-first | accepted | 3.28 | 738 | 148 | 25 (1 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-unlocked | accepted | 3.22 | 738 | 148 | 32 (1 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-locked | accepted | 5.9 | 738 | 148 | 65 (9 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-replace | accepted | 2 | 310 | 1 | 31 (26 unmeasured) | 1 | — |  |
+| play-news-r1 | accepted | 3.78 | 1443 | 1443 | 42 (4 unmeasured) | 0.67 | — |  |
+| play-cards-r1 | clean | 4.87 | 0 | 0 | 42 (0 unmeasured) | 0.67 | — |  |
+| play-cards-legendary | accepted | 5.42 | 1 | 0 | 35 (0 unmeasured) | 0.67 | — |  |
+| play-cards-three | clean | 5.24 | 0 | 0 | 40 (0 unmeasured) | 0.33 | — |  |
+| play-cards-ru-360 | clean | 5.23 | 0 | 0 | 37 (0 unmeasured) | 0.67 | — |  |
+| play-finance-r6 | clean | 4.33 | 0 | 0 | 52 (8 unmeasured) | 0.67 | — |  |
+| play-outcome-r1 | clean | 3.66 | 0 | 0 | 31 (0 unmeasured) | 0.67 | — |  |
+| play-resolve-r6 | clean | 4.45 | 0 | 0 | 41 (8 unmeasured) | 0.67 | — |  |
+| play-news-r6 | accepted | 4.21 | 1443 | 1443 | 41 (4 unmeasured) | 0.67 | — |  |
+| play-guide-r1 | accepted | 6.18 | 3453 | 1979 | 42 (5 unmeasured) | 1.33 | New regulator created to regulate the re 1.33 |  |
+| play-fault | clean | 3.02 | 0 | 0 | 6 (0 unmeasured) | 1 | — |  |
+| play-pageturn | accepted | 3.93 | 3897 | 3878 | 51 (8 unmeasured) | 0.67 | — | A: accepted 3896 0.67 |
+| finance-basket | clean | 1.52 | 0 | 0 | 56 (49 unmeasured) | 0.33 | — |  |
+| finance-pension | clean | 2.51 | 0 | 0 | 68 (52 unmeasured) | 0.67 | — |  |
+| finance-tabs-ru-360 | clean | 4.05 | 0 | 0 | 51 (4 unmeasured) | 0.67 | — |  |
+| finance-market | clean | 3.78 | 0 | 0 | 61 (8 unmeasured) | 0.67 | — |  |
+| finance-buy-stock | accepted | 2.91 | 149 | 149 | 83 (61 unmeasured) | 1 | — |  |
+| finance-property | clean | 6.13 | 0 | 0 | 40 (2 unmeasured) | 0.67 | — |  |
+| finance-debt | clean | 3.56 | 0 | 0 | 36 (0 unmeasured) | 1 | — |  |
+| hud-news-r1 | clean | 2.87 | 0 | 0 | 20 (0 unmeasured) | 0.67 | — |  |
+| hud-cash | clean | 1.26 | 0 | 0 | 30 (20 unmeasured) | 0.33 | — |  |
+| hud-flow | clean | 1.28 | 0 | 0 | 32 (19 unmeasured) | 0.67 | — |  |
+| hud-race | clean | 2.23 | 0 | 0 | 36 (20 unmeasured) | 0.33 | — |  |
+| hud-status-ru | clean | 2.17 | 0 | 0 | 44 (20 unmeasured) | 0.67 | — |  |
+| hud-jailed | clean | 3.38 | 0 | 0 | 33 (21 unmeasured) | 0.67 | — |  |
+| hud-crisis | clean | 3.1 | 0 | 0 | 21 (0 unmeasured) | 0.33 | — |  |
+| hud-crisis-details | clean | 2.66 | 0 | 0 | 33 (21 unmeasured) | 0.67 | — |  |
+| amount-savings | clean | 1.57 | 0 | 0 | 30 (19 unmeasured) | 0.67 | — |  |
+| celebrate-legendary | clean | 1.21 | 0 | 0 | 24 (19 unmeasured) | 0.67 | — |  |
+| celebrate-earned | clean | 3.42 | 0 | 0 | 27 (0 unmeasured) | 0.67 | — |  |
+| challenge-practice | clean | 4.21 | 0 | 0 | 15 (0 unmeasured) | 0.67 | — |  |
+| legal | phone words, not comparable | 14.42 | 39721 | 215 | 34 (0 unmeasured, 27 phone words) | 0.67 | — |  |
+| finance-lifestyle | clean | 4.31 | 0 | 0 | 47 (4 unmeasured) | 0.67 | — |  |
+| finance-move | clean | 1.88 | 0 | 0 | 72 (47 unmeasured) | 0.67 | — |  |
+| play-cards-city | clean | 2.68 | 0 | 0 | 50 (37 unmeasured) | 0.67 | — |  |
+| work-panel | clean | 2.46 | 0 | 0 | 33 (0 unmeasured) | 0.67 | — |  |
+| finance-shop | clean | 3.81 | 0 | 0 | 50 (6 unmeasured) | 0.67 | — |  |
+| finance-item | clean | 3.05 | 0 | 0 | 71 (50 unmeasured) | 0.67 | — |  |
+| finance-taxes | accepted | 4.01 | 31 | 31 | 48 (4 unmeasured) | 0.67 | — |  |
+| finance-business | accepted | 4.77 | 35 | 1 | 58 (7 unmeasured) | 0.67 | — |  |
+| profile-r6 | accepted | 2.14 | 30 | 0 | 77 (42 unmeasured) | 0.67 | — |  |
+| profile-owned | clean | 1.53 | 0 | 0 | 85 (77 unmeasured) | 0.67 | — |  |
+| balance-r6 | clean | 1.85 | 0 | 0 | 90 (77 unmeasured) | 0.67 | — |  |
+| rivals-r6 | clean | 2.77 | 0 | 0 | 20 (0 unmeasured) | 0.33 | — |  |
+| end-escaped | clean | 3.09 | 0 | 0 | 24 (0 unmeasured) | 0.33 | — |  |
+| end-bankrupt | accepted | 3.15 | 5 | 5 | 25 (1 unmeasured) | 0.33 | — |  |
+| end-share | accepted | 1.33 | 5085 | 4267 | 29 (25 unmeasured) | 1 | — | A: accepted 5084 1 |
+| end-ru | accepted | 4.27 | 168 | 54 | 25 (0 unmeasured) | 0.67 | — |  |
+| moment-escape | clean | 4.73 | 0 | 0 | 52 (40 unmeasured) | 0.67 | — |  |
+| moment-bankrupt | clean | 2.44 | 0 | 0 | 54 (39 unmeasured) | 0.67 | — |  |
+| moment-crisis | clean | 2.94 | 0 | 0 | 56 (42 unmeasured) | 1 | — |  |
+| records-empty | clean | 2.61 | 0 | 0 | 3 (0 unmeasured) | 0.33 | — |  |
+| records-three | clean | 3.48 | 0 | 0 | 28 (0 unmeasured) | 0.67 | — |  |
+| records-detail | clean | 2.29 | 0 | 0 | 42 (28 unmeasured) | 0.67 | — |  |
+| collection-items | clean | 4.05 | 0 | 0 | 14 (0 unmeasured) | 0.67 | — |  |
+| collection-badges | clean | 5.23 | 0 | 0 | 29 (0 unmeasured) | 0.67 | — |  |
+| profile-financed | clean | 2.47 | 0 | 0 | 95 (77 unmeasured) | 1 | — |  |
+
+### The device checks, all passes together
+
+| check | where | result |
+|---|---|---|
+| the card swipe and its threshold; a short drag springs back | batch pass 1; again by hand here (six swipes measured) | ok: 60 UI frames a second through every swipe, one second with one frame missed |
+| a three-choice card refuses the swipe; a double tap makes one move | batch pass 1 | ok |
+| the app killed at the finances, the basket kept | here, release build, round 8 with two orders | ok |
+| the iOS back gesture from Play, a list page | here | ok: home, the life kept; back from records and collection |
+| Android's Back (sheet, Play, Home) | tests only (`Play.test`, `overlay.test`) | not run on a device: no Android here |
+| Russian mid-life; a Russian 360-pt phone | here; `play-cards-ru-360`, `finance-tabs-ru-360` scenes | ok |
+| two sheets opened together (iOS presents one Modal at a time) | batch pass 2 (fixed: the kit's sheets take turns) | ok |
+| a toast over an open sheet | batch pass 2 | ok |
+| share the card; save the picture (photos prompt, refusal, saved) | batch pass 2; again by hand here | ok |
+| the AmountSheets re-keyed, the slider in a sheet, the sticky header's scroll, list windowing | batch pass 1 | ok |
+| greyed badges, the 40 at a list's foot, `profile-owned`/`end-ru`, things → a thing, business → invest | batch pass 1 | ok |
+| a fresh install's first life (locked lives, the first unlock) | here | ok, with fault 1 above |
+| the plain release bundle holds no timing probe | here, both plain builds (the one played, and the one rebuilt and left installed after the measures) | ok: `main.jsbundle` 14.4 MB (Hermes bytecode), 0 matches each of `127.0.0.1:8095`, `perfProbe`, `timedStore`, `putSceneLife`, `putSceneRuns`, `slowFrame`, `settledMs`; the probe's build has them |
+| screen readers, the tablet's shelf | not run | left (no VoiceOver pass, no iPad simulator) |
+
+### Performance: the final table
+
+A release build with the timing probe (`EXPO_PUBLIC_PERF=1`, the same sources as the plain one), installed over the plain one (its data
+kept: the two lives of the play above, then the probe's own lives). Measured once, on a quiet Mac: the 1-minute load 3.9 to 5.2 throughout
+(the 15-minute 8 to 11, falling, from the shot runs before). Each the median of five unless more are given; *settled* (the budgets are judged
+on it): from the touch let go to two UI frames in a row at the display's pace.
+
+| budget | what | settled, ms | median | drawn (median) | verdict |
+|---|---|---|---|---|---|
+| cold start ≤ 2000 | `simctl launch` to the front door drawn | 1477, 1246, 1453, 1210, 1200 | **1246** | — | pass |
+| Home → Play ≤ 300 | Continue → the round's news (the first is the process's first Play) | 295, 192, 189, 163, 114 | **189** | 74 | pass |
+| stage ≤ 200 | news → cards | 103, 81, 47, 95, 80 | **81** | 37 | pass |
+| stage ≤ 200 | cards → outcome, pressed (n 13) | 46 to 79 | **62** | 46 | pass |
+| stage ≤ 200 | cards → outcome, swiped (n 6) | 62, 64, 80, 63, 64, 48 | **64** | 47 | pass |
+| stage ≤ 200 | outcome → next card (n 14) | 45 to 97 | **47** | 30 | pass |
+| stage ≤ 200 | outcome → finances | 92, 62, 78, 178, 60 | **78** | 50 | pass |
+| stage ≤ 200 | finances → resolve, the rider's rounds 3 to 7 | 161, 160, 178, 147, 97 | **160** | 103 | pass |
+| stage ≤ 200 | finances → resolve, round 6 (`perf?life=play-finance-r6`) | 98, 126, 218, 162, 113 | **126** | 66 | pass |
+| stage ≤ 200 | finances → resolve, the round that ends a life (`perf?life=moment-escape&last=1`, 7 lives kept) | 163, 132, 96, 114, 128 | **128** | 64 | pass |
+| stage ≤ 200 | resolve → news | 97, 129, 110, 96, 80 | **97** | 31 | pass |
+| stage ≤ 200 | resolve → the end | 140, 163, 129, 128, 114 | **129** | 51 | pass |
+| tab ≤ 150 | portfolio (n 10) | 32 to 178 | **62** | 30 | pass |
+| tab ≤ 150 | market | 146, 201, 131, 112, 97 | **131** | 68 | pass |
+| tab ≤ 150 | property | 112, 96, 48, 178, 113 | **112** | 52 | pass |
+| tab ≤ 150 | business | 46, 45, 29, 45, 47 | **45** | 28 | pass |
+| tab ≤ 150 | debt | 44, 46, 42, 67, 45 | **45** | 29 | pass |
+| tab ≤ 150 | lifestyle: on screen / every panel in | 181, 113, 112, 178, 111 / 328, 212, 212, 345, 212 | **113** / 212 | 48 / 180 | pass on screen (as judged since batch pass 1) |
+| tab ≤ 150 | shop: on screen / every shelf in | 146, 114, 145, 105, 99 / 462, 430, 445, 389, 415 | **114** / 430 | 48 / 393 | pass on screen; the last shelves come in behind, as before |
+| tab ≤ 150 | taxes | 113, 79, 113, 97, 80 | **97** | 58 | pass |
+| sheet ≤ 150 | a Sheet opened (the cash's) | 109, 46, 46, 46, 46 | **46** | 30 | pass |
+| swipe 60 fps | the six swipes above, UI frames a second round each | 60 every second but one (59, one frame of 33 ms) | — | — | pass |
+| fling, no drop | Records with 65 lives, three flings down and three back | 12 frames missed in all (6, 2, 1, 3), the longest 41 ms | — | — | over, as before (below) |
+
+Every budget passes. Against batch pass 2 (finances → resolve 121 at round 6 and 122 at the last round, cold start 1186 to 1244): the same
+within the run-to-run spread. The single settled values above the budget (201 for one market tab, 218 for one round 6, 178 for one
+outcome → finances) are one long UI frame each (112, 150, 118 ms), not a slow commit (drawn 99, 81, 122 ms).
+
+**The flings still drop frames**: twelve over six flings of a list of 65 lives, one or two at a time; the rows' canvases are made as they come
+in, on this simulator through Metal's XPC driver. Left as in batch pass 1, to be measured on a device.
+
+### What is left for later phases
+
+- **Android was never run.** No Android SDK, emulator or device on this Mac; the emulator (≈6–8 GB) waits for the user's approval of the
+  download. Android's Back, the predictive back gesture (turned off in `app.json`), the blocked read permissions and every budget are tested
+  or configured, not seen.
+- **A device measure of the flings** (Records, the collection's badges), and of every budget, on a phone: the simulator's JS thread is the
+  Mac's, its canvases go through Metal's simulator driver.
+- **The legal notice's wording** on the phone (it says what phase 2's app does: kept on this phone, no account, nothing sent): the user's
+  call, before an app that sends anything ships.
+- Screen readers (VoiceOver, TalkBack) were not walked through; the tablet's shelf not seen (no iPad simulator).
