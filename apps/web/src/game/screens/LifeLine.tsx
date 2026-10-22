@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { chapters } from '@ratrace/core/game/epilogue';
 import { useStill } from '@/game/motion';
-import { ageAt, portraitAge } from '@ratrace/core/game/present';
+import { ageAt, milestoneAge, milestoneRound, portraitAge } from '@ratrace/core/game/present';
 import { Bare, Panel, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
@@ -107,7 +107,7 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
           <span
             key={i}
             className="absolute -top-[92px] -ml-4 animate-light"
-            style={{ left: at(m.round), animationDelay: still ? '0ms' : `${Math.round((m.round / last) * RUN_MS)}ms` }}
+            style={{ left: at(milestoneRound(m)), animationDelay: still ? '0ms' : `${Math.round((milestoneRound(m) / last) * RUN_MS)}ms` }}
           >
             <Bare className="size-8">
               <Sprite id={iconOf(m)} />
@@ -135,7 +135,7 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
         <ol className="mt-3 flex flex-col gap-1.5">
           {told.map((m, i) => (
             <li key={i} className="flex items-center gap-2 text-[13px]">
-              <span className="pixel w-9 shrink-0 text-right text-gold-500">{ageAt(content, m.round)}</span>
+              <span className="pixel w-9 shrink-0 text-right text-gold-500">{milestoneAge(content, m)}</span>
               <span className="min-w-0 text-ink-200">{label(m)}</span>
             </li>
           ))}

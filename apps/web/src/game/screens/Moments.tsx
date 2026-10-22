@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { momentsOf } from '@ratrace/core/game/moments';
 import type { Moment } from '@ratrace/core/game/moments';
-import { ageAt } from '@ratrace/core/game/present';
+import { ageAt, escapeAge } from '@ratrace/core/game/present';
 import { Button, Row } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -42,7 +42,7 @@ function Body({ moment, view }: { moment: Moment; view: GameView }) {
       const escape = escapeProgress(content, view);
       return (
         <>
-          <p className="text-[15px] leading-snug">{t('escape.body', { age })}</p>
+          <p className="text-[15px] leading-snug">{t('escape.body', { age: escapeAge(content, moment.round) })}</p>
           <div className="frame bg-night-900 px-3 py-1">
             <Row left={t('escape.passive')} right={<span className="text-teal-300">{t('perYear', { amount: fmt.money(Math.floor(escape.passiveAfterTax / years)) })}</span>} />
             <Row left={t('escape.costs')} right={t('perYear', { amount: fmt.money(Math.floor(escape.outgoings / years)) })} />

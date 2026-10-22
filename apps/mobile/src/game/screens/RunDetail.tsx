@@ -1,4 +1,4 @@
-import { ageAt } from '@ratrace/core/game/present';
+import { escapeAge } from '@ratrace/core/game/present';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { ScrollView, View } from 'react-native';
 import { webLine } from '../../ui/fonts';
@@ -25,7 +25,7 @@ export function RunDetail({ run, tags = true }: { run: FinishedRun; tags?: boole
       ) : null}
       <ReadText size={13} tone="ink-300">{`${fmt.day(run.finishedAt)} · ${run.cities.map((city) => names.cities[city] ?? city).join(' · ')}`}</ReadText>
       <ReadText size={14} tone={run.escapedAtRound === null ? 'ink-200' : 'teal-300'}>
-        {`${run.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, run.escapedAtRound) })} · ${t('badges', { count: run.badges.length })}`}
+        {`${run.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, run.escapedAtRound) })} · ${t('badges', { count: run.badges.length })}`}
       </ReadText>
       {/* The score and the worth on one baseline, under a line (the web's `items-baseline border-t-2 border-night-900 pt-2`), placed from the browser's
           baselines: a native row on its texts' baselines stood the worth's column apart from the web's (the kit moves glyphs inside their boxes). */}

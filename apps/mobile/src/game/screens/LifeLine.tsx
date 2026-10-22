@@ -2,7 +2,7 @@ import { careerArt, cityIcon, GIFT_ART, HANDOVER_ART, portraitArt, RETIRED_ART }
 import type { Milestone } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import { chapters } from '@ratrace/core/game/epilogue';
-import { ageAt, portraitAge } from '@ratrace/core/game/present';
+import { ageAt, milestoneAge, milestoneRound, portraitAge } from '@ratrace/core/game/present';
 import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -139,7 +139,7 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
     <Panel title={t('lifeLine')} label={t('lifeLine')}>
       <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ marginHorizontal: 24, marginBottom: 28, marginTop: 96, height: 4, backgroundColor: COLORS['night-900'] }}>
         {told.map((m, i) => (
-          <Mark key={i} icon={iconOf(m)} left={at(m.round)} delayMs={still ? 0 : Math.round((m.round / last) * RUN_MS)} />
+          <Mark key={i} icon={iconOf(m)} left={at(milestoneRound(m))} delayMs={still ? 0 : Math.round((milestoneRound(m) / last) * RUN_MS)} />
         ))}
         {/* The player walks the line, as they look at the end of it. */}
         <Walker steps={Math.max(8, last * 2)} portrait={portraitArt(lifeId, portraitAge(ageAt(content, view.round)))} />
@@ -154,7 +154,7 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
         <View role="list" style={{ marginTop: 12, gap: 6 }}>
           {told.map((m, i) => (
             <View role="listitem" key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <PixelText size={13} tone="gold-500" style={{ width: 36, flexShrink: 0, textAlign: 'right' }}>{String(ageAt(content, m.round))}</PixelText>
+              <PixelText size={13} tone="gold-500" style={{ width: 36, flexShrink: 0, textAlign: 'right' }}>{String(milestoneAge(content, m))}</PixelText>
               <ReadText size={13} tone="ink-200" style={{ flexShrink: 1, minWidth: 0 }}>{label(m)}</ReadText>
             </View>
           ))}

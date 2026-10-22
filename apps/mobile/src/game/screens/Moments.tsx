@@ -1,7 +1,7 @@
 import { momentArt } from '@ratrace/content';
 import { momentsOf } from '@ratrace/core/game/moments';
 import type { Moment } from '@ratrace/core/game/moments';
-import { ageAt } from '@ratrace/core/game/present';
+import { ageAt, escapeAge } from '@ratrace/core/game/present';
 import { escapeProgress, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState, type ReactNode } from 'react';
@@ -94,7 +94,7 @@ function Body({ moment, view }: { moment: Moment; view: GameView }) {
       const escape = escapeProgress(content, view);
       return (
         <>
-          {said(t('escape.body', { age }))}
+          {said(t('escape.body', { age: escapeAge(content, moment.round) }))}
           <Figures>
             <Row left={t('escape.passive')} right={<Figure tone="teal-300">{t('perYear', { amount: fmt.money(Math.floor(escape.passiveAfterTax / years)) })}</Figure>} />
             <Row left={t('escape.costs')} right={t('perYear', { amount: fmt.money(Math.floor(escape.outgoings / years)) })} />

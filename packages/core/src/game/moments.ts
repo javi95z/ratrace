@@ -1,5 +1,5 @@
 import type { Milestone } from '@ratrace/content';
-import type { GameView } from '@ratrace/engine';
+import type { GameEvent, GameView } from '@ratrace/engine';
 import type { RoundState } from './store';
 
 /**
@@ -8,7 +8,8 @@ import type { RoundState } from './store';
  */
 export type Moment =
   | { key: string; kind: 'bankrupt'; proceeds: number; debtsCleared: number }
-  | { key: string; kind: 'escape' }
+  /** `round`: the round the life got out in (the `escaped` event's), whose age the moment tells. */
+  | { key: string; kind: 'escape'; round: number }
   | { key: string; kind: 'million' }
   | { key: string; kind: 'crisis'; crisisId: string; rounds: number };
 
@@ -34,7 +35,8 @@ export function momentsOf({ stage, view, resolved, story }: Seen): Moment[] {
     for (const event of resolved.events) {
       if (event.kind === 'bankrupt') moments.push({ key: `${at}:bankrupt`, kind: 'bankrupt', proceeds: event.proceeds, debtsCleared: event.debtsCleared });
     }
-    if (resolved.events.some((event) => event.kind === 'escaped')) moments.push({ key: `${at}:escape`, kind: 'escape' });
+    const out = resolved.events.find((event): event is Extract<GameEvent, { kind: 'escaped' }> => event.kind === 'escaped');
+    if (out) moments.push({ key: `${at}:escape`, kind: 'escape', round: out.round });
     if (firstMillion(story, view)) moments.push({ key: `${at}:million`, kind: 'million' });
   }
 

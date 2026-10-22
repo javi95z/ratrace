@@ -52,7 +52,8 @@ describe('the epilogue', () => {
       { round: 4, kind: 'career', careerId: 'finance' },
       { round: 9, kind: 'crisis', crisisId: 'crash' },
       { round: 12, kind: 'worth', mark: 100_000_000 },
-      { round: 14, kind: 'escaped' },
+      // Written once round 14 is played, as the game writes it: the life got out in round 14, at 50.
+      { round: 15, kind: 'escaped' },
     ];
     expect(tell('nurse', story)[1]).toBe(
       'At 28 you packed your bags for London. At 30 you left it all for another career: Finance. At 40 The Great Crash found you. At 46 you were a millionaire. At 50 you left the rat race: your income paid for your life without you.',

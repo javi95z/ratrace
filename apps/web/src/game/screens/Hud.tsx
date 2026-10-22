@@ -9,7 +9,7 @@ import type { GameView } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import { characterName } from '@ratrace/core/game/characters';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
-import { ageAt, cityLight, portraitAge } from '@ratrace/core/game/present';
+import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
 import { Bar, Row, Stat, Tag, Well, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sparks } from '@/ui/Sparks';
@@ -149,7 +149,7 @@ function RatRace({ shown }: { shown: GameView }) {
   const bad = (cents: number) => <span className="text-wine-300">{fmt.signed(-cents)}</span>;
   const total = 'mt-1 border-t-2 border-night-900 pt-2';
   const state = escaped
-    ? t('wayOut.escaped', { age: ageAt(content, p.escapedAtRound ?? 0), multiplier: fmt.factor(escapeMultiplier(p.escapedAtRound, content.rounds, content.scoring)) })
+    ? t('wayOut.escaped', { age: escapeAge(content, p.escapedAtRound ?? 0), multiplier: fmt.factor(escapeMultiplier(p.escapedAtRound, content.rounds, content.scoring)) })
     : gap <= 0 && p.passiveStreak >= 1
       ? t('wayOut.oneMore')
       : t('wayOut.worth', { multiplier: fmt.factor(escapeMultiplier(shown.round, content.rounds, content.scoring)) });
@@ -354,7 +354,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
 
       <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block min-h-11 w-full text-left">
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
-          <span className="pixel">{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
+          <span className="pixel">{escaped ? t('escaped', { age: escapeAge(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
           <span className="pixel text-[14px] text-ink-200">
             {fmt.compact(Math.floor(escape.passiveAfterTax / years))} / {fmt.compact(Math.floor(escape.outgoings / years))}
           </span>

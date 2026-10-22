@@ -1,7 +1,7 @@
 import type { LifeDef, Milestone } from '@ratrace/content';
 import { netWorth, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { ageAt } from './present';
+import { ageAt, milestoneAge, milestoneRound } from './present';
 import type { Translate, Words } from './present';
 
 /** How many milestones the middle of an epilogue tells. A life is a few turns, not a list. */
@@ -43,7 +43,7 @@ function weight(m: Milestone): number {
 
 /** One milestone as a sentence. `t` translates the `epilogue.told` section. */
 function sentence(m: Milestone, { content, text, names }: Words, t: Translate): string {
-  const age = ageAt(content, m.round);
+  const age = milestoneAge(content, m);
   switch (m.kind) {
     case 'promoted':
       return t(m.top ? 'top' : 'promoted', { age, title: text.careers[m.careerId].levels[m.level] });
@@ -72,7 +72,8 @@ export function chapters(story: readonly Milestone[]): Milestone[] {
   const ranked = kept.map((m, at) => ({ m, at })).sort((a, b) => weight(b.m) - weight(a.m) || a.at - b.at);
   return ranked
     .slice(0, TOLD)
-    .sort((a, b) => a.at - b.at)
+    // By the round each is told at: the way out, won in the round just played, before what that round's end brought.
+    .sort((a, b) => milestoneRound(a.m) - milestoneRound(b.m) || a.at - b.at)
     .map((entry) => entry.m);
 }
 

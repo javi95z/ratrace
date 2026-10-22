@@ -1,7 +1,7 @@
 'use client';
 
 import { useT, useWords } from '@/game/context';
-import { ageAt } from '@ratrace/core/game/present';
+import { escapeAge } from '@ratrace/core/game/present';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
 import { WorthGraph } from './WorthGraph';
@@ -23,7 +23,7 @@ export function RunDetail({ run, tags = true }: { run: FinishedRun; tags?: boole
         {fmt.day(run.finishedAt)} · {run.cities.map((city) => names.cities[city] ?? city).join(' · ')}
       </p>
       <p className={`text-[14px] ${run.escapedAtRound === null ? 'text-ink-200' : 'text-teal-300'}`}>
-        {run.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, run.escapedAtRound) })} · {t('badges', { count: run.badges.length })}
+        {run.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, run.escapedAtRound) })} · {t('badges', { count: run.badges.length })}
       </p>
       <div className="flex items-baseline justify-between gap-3 border-t-2 border-night-900 pt-2">
         <span className="pixel text-[18px] text-gold-500">{t('score', { score: fmt.number(run.score) })}</span>

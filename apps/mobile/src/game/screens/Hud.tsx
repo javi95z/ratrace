@@ -1,7 +1,7 @@
 import { Fill, Path } from '@shopify/react-native-skia';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
-import { ageAt, cityLight, portraitAge } from '@ratrace/core/game/present';
+import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
 import { ratOutfit } from '@ratrace/core/game/quips';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
@@ -232,7 +232,7 @@ function RatRace({ shown }: { shown: GameView }) {
   const good = (cents: number) => <Coloured tone="teal-300">{fmt.signed(cents)}</Coloured>;
   const bad = (cents: number) => <Coloured tone="wine-300">{fmt.signed(-cents)}</Coloured>;
   const state = escaped
-    ? t('wayOut.escaped', { age: ageAt(content, p.escapedAtRound ?? 0), multiplier: fmt.factor(escapeMultiplier(p.escapedAtRound, content.rounds, content.scoring)) })
+    ? t('wayOut.escaped', { age: escapeAge(content, p.escapedAtRound ?? 0), multiplier: fmt.factor(escapeMultiplier(p.escapedAtRound, content.rounds, content.scoring)) })
     : gap <= 0 && p.passiveStreak >= 1
       ? t('wayOut.oneMore')
       : t('wayOut.worth', { multiplier: fmt.factor(escapeMultiplier(shown.round, content.rounds, content.scoring)) });
@@ -583,7 +583,7 @@ function HudFigures({ open }: { open?: HudOpen }) {
         </StatRow>
         <Pressable accessibilityRole="button" accessibilityHint={t('ratRaceHint')} onPress={wayOut} style={{ minHeight: TOUCH, justifyContent: 'center' }}>
           <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <PixelText size={13} style={{ marginTop: labelTop }}>{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</PixelText>
+            <PixelText size={13} style={{ marginTop: labelTop }}>{escaped ? t('escaped', { age: escapeAge(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</PixelText>
             <PixelText size={14} tone="ink-200" style={{ marginTop: figuresTop }}>
               {`${fmt.compact(Math.floor(escape.passiveAfterTax / years))} / ${fmt.compact(Math.floor(escape.outgoings / years))}`}
             </PixelText>

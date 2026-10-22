@@ -10,7 +10,7 @@ import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, 
 import { epilogue } from '@ratrace/core/game/epilogue';
 import { useCountUp } from '@/game/motion';
 import { obituary } from '@ratrace/core/game/quips';
-import { ageAt, endingOf, prizedBadge } from '@ratrace/core/game/present';
+import { ageAt, endingOf, escapeAge, prizedBadge } from '@ratrace/core/game/present';
 import { bestsOf } from '@ratrace/core/game/records';
 import { shareCard } from '@ratrace/core/game/share';
 import type { Best } from '@ratrace/core/game/records';
@@ -132,7 +132,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const dead = obituary(content, view, bankruptcies);
   const standing = useStanding(lifeId, score.total);
   const prized = prizedBadge(earned.filter(isNew));
-  const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
+  const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, p.escapedAtRound) });
   const counted = useCountUp(score.total);
   // The picture to share says what this screen says, in the figures the engine gave.
   const picture = useMemo(
@@ -141,7 +141,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
         title: meta('title').toUpperCase(),
         life: lifeName,
         where: `${t('age', { age: ageAt(content, view.round) })} · ${names.cities[p.cityId]}`,
-        outcome: p.escapedAtRound === null ? share('never') : share('escapedAt', { age: ageAt(content, p.escapedAtRound) }),
+        outcome: p.escapedAtRound === null ? share('never') : share('escapedAt', { age: escapeAge(content, p.escapedAtRound) }),
         escaped,
         portrait: portraitArt(lifeId, 58),
         scoreLabel: t('score'),
@@ -286,7 +286,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
             <div className="grid grid-cols-2 gap-2">
               <Figure label={t('netWorth')} value={fmt.compact(netWorth(p))} sub={t('realShort', { amount: fmt.compact(realNetWorth(view)) })} />
               <Figure label={t('peak')} value={fmt.compact(peak.worth)} sub={t('peakAge', { age: ageAt(content, peak.round) })} />
-              <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(ageAt(content, p.escapedAtRound))} />
+              <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(escapeAge(content, p.escapedAtRound))} />
               <Figure label={t('badgesCount')} value={String(earned.length)} sub={fresh > 0 ? t('badgesNew', { n: fresh }) : undefined} />
             </div>
             <div className="mt-3">

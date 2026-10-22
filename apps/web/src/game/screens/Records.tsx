@@ -4,7 +4,7 @@ import { LifeFace } from './LifeFace';
 
 import { useState } from 'react';
 import { useRuns, useT, useWords } from '@/game/context';
-import { ageAt } from '@ratrace/core/game/present';
+import { escapeAge } from '@ratrace/core/game/present';
 import { recordsOf } from '@ratrace/core/game/records';
 import { Link } from '@/i18n/navigation';
 import type { FinishedRun } from '@ratrace/core/session/types';
@@ -57,7 +57,7 @@ export function Records() {
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {best(t('bestScore'), records.bestScore, (run) => fmt.number(run.score))}
               {best(t('richest'), records.richest, (run) => fmt.money(run.netWorth))}
-              {best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: ageAt(content, run.escapedAtRound ?? 0) }))}
+              {best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: escapeAge(content, run.escapedAtRound ?? 0) }))}
               {best(t('mostStatus'), records.mostStatus, (run) => fmt.number(run.status))}
             </ul>
             <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-ink-200">

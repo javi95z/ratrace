@@ -1,5 +1,5 @@
 import { badges, businessArt, headlineVoice, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
-import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
+import type { BadgeDef, CityLight, ContentText, Ending, Milestone, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { CardDef, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '../lib/format';
@@ -16,6 +16,23 @@ export interface Words {
 }
 
 export const ageAt = (content: Content, round: number): number => START_AGE + round * content.yearsPerRound;
+
+/**
+ * The age a life left the rat race at: the age of the round it got out in (`escapedAtRound`, the second of two rounds that
+ * covered its life), as the rules count it (the badges' `escapedAtAge`, and the score's rounds left). The round is played
+ * by the time the game says so, so the life is a round older then: the escape is still told at this age, everywhere.
+ */
+export const escapeAge = (content: Content, escapedAtRound: number): number => ageAt(content, escapedAtRound);
+
+/**
+ * The round a milestone of the story is told at. A milestone is written with the round the game stands at once its step is
+ * taken; the way out of the rat race is won in the round just played (the `escaped` event's round, one before), and is told
+ * there, at `escapeAge`. The stories already saved keep what they hold: this only reads them.
+ */
+export const milestoneRound = (m: Milestone): number => (m.kind === 'escaped' ? Math.max(0, m.round - 1) : m.round);
+
+/** The age a milestone of the story is told at. */
+export const milestoneAge = (content: Content, m: Milestone): number => ageAt(content, milestoneRound(m));
 
 /** Which of the four portraits of a life to show at an age. */
 export function portraitAge(age: number): 22 | 32 | 45 | 58 {

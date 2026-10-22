@@ -2,7 +2,7 @@ import { badgeArt, endingArt, GIFT_ART, lives, portraitArt, rarityOf } from '@ra
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { epilogue } from '@ratrace/core/game/epilogue';
-import { ageAt, endingOf, prizedBadge } from '@ratrace/core/game/present';
+import { ageAt, endingOf, escapeAge, prizedBadge } from '@ratrace/core/game/present';
 import { obituary } from '@ratrace/core/game/quips';
 import { bestsOf } from '@ratrace/core/game/records';
 import type { Best } from '@ratrace/core/game/records';
@@ -146,7 +146,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const told = useMemo(() => (life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : []), [life, words, tale, view, story, score.total, bankruptcies]);
   const dead = obituary(content, view, bankruptcies);
   const prized = prizedBadge(earned.filter(isNew));
-  const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
+  const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave. Worked out here, drawn only when the player asks for it.
   const picture = useMemo(
     () =>
@@ -154,7 +154,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
         title: meta('title').toUpperCase(),
         life: lifeName,
         where: `${t('age', { age: ageAt(content, view.round) })} · ${names.cities[p.cityId]}`,
-        outcome: p.escapedAtRound === null ? share('never') : share('escapedAt', { age: ageAt(content, p.escapedAtRound) }),
+        outcome: p.escapedAtRound === null ? share('never') : share('escapedAt', { age: escapeAge(content, p.escapedAtRound) }),
         escaped,
         portrait: portraitArt(lifeId, 58),
         scoreLabel: t('score'),
@@ -314,7 +314,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
                 <Figure label={t('peak')} value={fmt.compact(peak.worth)} sub={t('peakAge', { age: ageAt(content, peak.round) })} />
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(ageAt(content, p.escapedAtRound))} />
+                <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(escapeAge(content, p.escapedAtRound))} />
                 <Figure label={t('badgesCount')} value={String(earned.length)} sub={fresh > 0 ? t('badgesNew', { n: fresh }) : undefined} />
               </View>
             </View>

@@ -32,7 +32,7 @@ describe('the moments that stop the game', () => {
     const events: GameEvent[] = [{ kind: 'escaped', round: 5 }, { kind: 'bankrupt', proceeds: 700, debtsCleared: 900 }];
     expect(momentsOf(seen({ stage: 'resolve', resolved: resolved(events), story: [million] }))).toEqual([
       { key: '5:bankrupt', kind: 'bankrupt', proceeds: 700, debtsCleared: 900 },
-      { key: '5:escape', kind: 'escape' },
+      { key: '5:escape', kind: 'escape', round: 5 },
       { key: '5:million', kind: 'million' },
     ]);
     // The same events are not a moment before their round is on screen, nor after it.

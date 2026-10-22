@@ -1,4 +1,4 @@
-import { ageAt } from '@ratrace/core/game/present';
+import { escapeAge } from '@ratrace/core/game/present';
 import { recordsOf } from '@ratrace/core/game/records';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -148,7 +148,7 @@ export function Records({ opened }: { opened?: string } = {}) {
           <View role="list" style={{ gap: 8 }}>
             {best(t('bestScore'), records.bestScore, (run) => fmt.number(run.score))}
             {best(t('richest'), records.richest, (run) => fmt.money(run.netWorth))}
-            {best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: ageAt(content, run.escapedAtRound ?? 0) }))}
+            {best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: escapeAge(content, run.escapedAtRound ?? 0) }))}
             {best(t('mostStatus'), records.mostStatus, (run) => fmt.number(run.status))}
           </View>
           <View style={{ marginTop: 8, flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4 }}>
