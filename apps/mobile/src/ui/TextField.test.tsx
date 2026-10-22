@@ -12,7 +12,24 @@ import { Language } from './text';
 import { COLORS, EXTRA } from './theme';
 import { cleanField, TextField, type FieldKind } from './TextField';
 
-afterEach(cleanup);
+// Records the props every native field is given (react-native-web drops what only a phone reads: the caret's and the selection's colours), and
+// the platform is the test's to say.
+const fields = vi.hoisted(() => [] as Array<Record<string, unknown>>);
+const platform = vi.hoisted(() => ({ OS: 'web' }));
+vi.mock('react-native', async (orig) => {
+  const rn = (await orig()) as typeof import('react-native');
+  const Recorded = (props: Record<string, unknown>) => {
+    fields.push(props);
+    return <rn.TextInput {...(props as Record<string, unknown>)} />;
+  };
+  return { ...rn, TextInput: Recorded, Platform: { ...rn.Platform, get OS() { return platform.OS; } } };
+});
+
+afterEach(() => {
+  cleanup();
+  fields.length = 0;
+  platform.OS = 'web';
+});
 
 const rgb = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
@@ -141,7 +158,11 @@ test('a room code is the web\'s: letters and digits only, upper-cased, six at mo
   render(<Held kind="room" onChange={onChange} />);
   fireEvent.change(input(), { target: { value: 'k7-q2 xm9' } });
   expect(onChange).toHaveBeenLastCalledWith('K7Q2XM');
-  expect(input().maxLength).toBe(6);
+  // Cleaned, then cut: the phone's own `maxLength` would cut a paste first ('k7-q2 ' and nothing more), so a room's field leaves it to the cleaning.
+  expect(input().maxLength).toBe(-1);
+  expect(fields.at(-1)!.maxLength).toBeUndefined();
+  fireEvent.change(input(), { target: { value: 'K7Q2XMA' } });
+  expect(onChange).toHaveBeenLastCalledWith('K7Q2XM');
   expect(input().style.fontFamily).toContain('Jersey15_400Regular');
   expect(parseFloat(input().style.fontSize)).toBeCloseTo((22 * PIXEL_X_HEIGHT) / X_HEIGHT.Jersey15_400Regular, 3);
   expect(parseFloat(input().style.letterSpacing)).toBeCloseTo(22 * 0.3, 5);
@@ -209,4 +230,15 @@ test('the field stands where its parent places it (a share of a row, beside a bu
   let outer: HTMLElement | null = input();
   while (outer && outer.style.flexGrow !== '1') outer = outer.parentElement;
   expect(outer).not.toBeNull();
+});
+
+test('the caret is cream on both platforms; iOS tints the selection cream as well, Android, whose highlight is opaque under cream text, a cream it can be read through', () => {
+  platform.OS = 'ios';
+  render(<TextField label="Field" value="Ratty" onChangeText={() => {}} />);
+  expect(fields.at(-1)).toMatchObject({ selectionColor: COLORS.cream });
+  cleanup();
+  platform.OS = 'android';
+  render(<TextField label="Field" value="Ratty" onChangeText={() => {}} />);
+  expect(fields.at(-1)).toMatchObject({ cursorColor: COLORS.cream, selectionColor: EXTRA.selection });
+  expect(EXTRA.selection).toBe('rgba(244,241,228,0.35)');
 });

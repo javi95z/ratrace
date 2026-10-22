@@ -1,5 +1,5 @@
 import { useContext, useState, type ReactNode } from 'react';
-import { TextInput, View, type ReturnKeyTypeOptions, type ViewStyle } from 'react-native';
+import { Platform, TextInput, View, type ReturnKeyTypeOptions, type ViewStyle } from 'react-native';
 import { Framed } from './Frame';
 import { oneFace } from './fonts';
 import { Language } from './text';
@@ -79,7 +79,9 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
           accessibilityLabel={label}
           value={value}
           onChangeText={(text) => onChangeText(cleanField(kind, text, max))}
-          maxLength={max}
+          // A room's code is cleaned, then cut (`cleanField`): the phone's own limit would cut a paste first ('k7-q2 xm' to 'k7-q2 '), and its
+          // code would come out short. The web's `maxLength={6}` does the same; holding the cut back is the phone's improvement on it.
+          maxLength={kind === 'room' ? undefined : max}
           placeholder={placeholder}
           placeholderTextColor={look.placeholder}
           autoCapitalize={kind === 'text' ? 'none' : 'characters'}
@@ -92,9 +94,10 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
           editable={editable}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
-          // The caret in the text's colour, as the browser's (`caret-color: auto`).
-          cursorColor={COLORS.cream}
-          selectionColor={COLORS.cream}
+          // The caret in the text's colour, as the browser's (`caret-color: auto`). iOS's `selectionColor` is the caret's colour and the selection's
+          // tint, which it lightens itself; Android's is the selection's highlight, opaque under the cream text, so there it is a cream the text
+          // can be read through (`EXTRA.selection`) and the caret is its own `cursorColor`.
+          {...(Platform.OS === 'android' ? { cursorColor: COLORS.cream, selectionColor: EXTRA.selection } : { selectionColor: COLORS.cream })}
           style={{
             minHeight: TOUCH,
             paddingHorizontal: 12,

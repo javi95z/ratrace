@@ -234,6 +234,11 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
  * fallback (not the web's) draws what that font lacks. The face the kit's runs give the text, where they give one (a Latin name is Chakra's on
  * a Russian page too, as the web draws it); where they would give several, the first face of the language's stack that draws every character
  * (Exo 2 for a Russian name with digits, Oswald for a Russian pixel text), at its run's scale; else the first run's. Empty, the stack's first.
+ *
+ * Two trade-offs of one native font, both accepted:
+ * - On an English or Spanish page a text mixing Latin and Cyrillic is set in Arial whole (the first of their stack that draws both), where the web
+ *   draws its Latin in Chakra and only its Cyrillic in Arial. A name of the kind is refused anyway (`NAME` is Latin only).
+ * - The face follows what is typed: a field turns from Chakra to Exo 2 (or to Arial) whole at the first Cyrillic letter, and back when it is gone.
  */
 export function oneFace(text: string, role: Role, weight: Weight, language = 'en'): Run {
   const stack = stackOf(role, weight, language);

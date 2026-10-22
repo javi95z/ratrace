@@ -16,6 +16,19 @@ export const PHASE_3_SECTIONS: readonly Section[] = ['forms'];
  */
 export const PENDING_SECTIONS: ReadonlySet<Section> = new Set<Section>(['forms']);
 
+/**
+ * Which sections of a run are compared, and which are shot and left unjudged: a pending section is compared only where `--only` names it (the batch
+ * pass shooting it); a whole run shoots it and says so, with no numbers that could be read as a result, as `scene-shots.ts` does a pending scene.
+ */
+export function judgedOf(sections: readonly Section[], only: readonly Section[] | undefined): { judged: Section[]; unjudged: Section[] } {
+  const judged = (section: Section) => !PENDING_SECTIONS.has(section) || (only?.includes(section) ?? false);
+  return { judged: sections.filter(judged), unjudged: sections.filter((section) => !judged(section)) };
+}
+
+/** The line a run prints for a section it leaves unjudged. */
+export const unjudgedSection = (section: Section): string =>
+  `${section.padEnd(11)} unjudged: not shot yet, waiting for its batch pass (PENDING_SECTIONS); --only=${section} compares it`;
+
 /** The folder under `docs/superpowers/reports` that has a section's picture and its numbers: the report of the phase that added it. */
 export const reportFolder = (section: Section): 'phase-1-parity' | 'phase-2-parity' | 'phase-3-parity' =>
   PHASE_3_SECTIONS.includes(section) ? 'phase-3-parity' : PHASE_2_SECTIONS.includes(section) ? 'phase-2-parity' : 'phase-1-parity';

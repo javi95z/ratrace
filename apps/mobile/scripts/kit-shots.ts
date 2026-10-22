@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { compareShots, reportFolder, SECTIONS, verdictOf, wrongPage, type Section, type TextBox } from './kitCompare';
+import { compareShots, judgedOf, reportFolder, SECTIONS, unjudgedSection, verdictOf, wrongPage, type Section, type TextBox } from './kitCompare';
 import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
 
 /**
@@ -49,7 +49,9 @@ async function main() {
   if (all || steps.includes('compare')) {
     const sharp: unknown = fromWeb('sharp');
     const results: Array<Awaited<ReturnType<typeof compareShots>>> = [];
-    for (const section of sections) {
+    // A section waiting for its batch pass (`PENDING_SECTIONS`) is shot and not compared, unless `--only` names it.
+    const { judged, unjudged } = judgedOf(sections, only);
+    for (const section of judged) {
       const a = join(raw, `${section}-web.png`);
       const b = join(raw, `${section}-app.png`);
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${section}`);
@@ -68,6 +70,7 @@ async function main() {
       const merged = [...kept, ...now].sort((x, y) => SECTIONS.indexOf(x.section as Section) - SECTIONS.indexOf(y.section as Section));
       writeFileSync(file, `${JSON.stringify(merged, null, 2)}\n`);
     }
+    for (const section of unjudged) console.log(unjudgedSection(section));
     for (const r of results) {
       const worst = r.texts.reduce((m, t) => (t.unmeasured ? m : Math.max(m, t.apart)), 0);
       const unmeasured = r.texts.filter((t) => t.unmeasured).length;

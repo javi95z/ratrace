@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { blendedEdges, differences, groundOf, inkOf, PENDING_SECTIONS, PHASE_2_SECTIONS, PHASE_3_SECTIONS, reportFolder, SECTIONS, textSummary, verdictOf, wrongPage, type Image, type Result } from './kitCompare';
+import { blendedEdges, differences, groundOf, inkOf, judgedOf, PENDING_SECTIONS, unjudgedSection, PHASE_2_SECTIONS, PHASE_3_SECTIONS, reportFolder, SECTIONS, textSummary, verdictOf, wrongPage, type Image, type Result } from './kitCompare';
 
 const NIGHT = [0x14, 0x1b, 0x33];
 const GOLD = [0xf2, 0xc1, 0x4e];
@@ -197,4 +197,15 @@ test('a comparison is clean when no shape differs, no text is in one shot only, 
   expect(verdictOf(resultOf({ texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 1.01 }] }))).toBe('differs');
   expect(verdictOf(resultOf({ texts: [{ text: 'a', web: [0, 0, 1, 1], app: null, apart: Infinity }] }))).toBe('differs');
   expect(verdictOf(resultOf({ rawPercent: 76, shape: 0 }))).toBe('wrong page');
+});
+
+test('a run compares a pending section only where `--only` names it; otherwise it is shot and said to be unjudged, as a pending scene is', () => {
+  // A whole run: every section shot, forms not compared.
+  const all = judgedOf(SECTIONS, undefined);
+  expect(all.unjudged).toEqual(['forms']);
+  expect(all.judged).toEqual(SECTIONS.filter((s) => s !== 'forms'));
+  // Named, it is compared: the batch pass shooting it.
+  expect(judgedOf(['forms'], ['forms'])).toEqual({ judged: ['forms'], unjudged: [] });
+  expect(judgedOf(['buttons', 'forms'], ['buttons'])).toEqual({ judged: ['buttons'], unjudged: ['forms'] });
+  expect(unjudgedSection('forms')).toBe('forms       unjudged: not shot yet, waiting for its batch pass (PENDING_SECTIONS); --only=forms compares it');
 });

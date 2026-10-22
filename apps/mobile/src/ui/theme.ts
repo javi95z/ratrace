@@ -66,6 +66,8 @@ export const EXTRA = {
   glint: 'rgba(255,255,255,0.4)',
   /** A field's placeholder: Tailwind's preflight gives it the text's colour at half (`color-mix(in oklab, currentcolor 50%, transparent)`), cream's. */
   placeholder: 'rgba(244,241,228,0.5)',
+  /** Selected text's highlight on Android, where it lies opaque under the cream text: cream faint enough to read cream through (iOS lightens its own). */
+  selection: 'rgba(244,241,228,0.35)',
   /** The common badge's rim (RARITY_TONE.common). */
   bronze: '#c98a4b',
   /** The glow round a badge card, as the CSS box-shadow the web's frame draws under its strips (rarityStyle.ts), and `Glow` draws on the phone. */
