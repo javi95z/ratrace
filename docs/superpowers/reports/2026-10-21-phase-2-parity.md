@@ -1125,3 +1125,42 @@ The one-device-pixel antialiased ring on a transformed edge and the smooth chart
 and motion-2's residual) are accepted by the user on 2026-10-22 as a residual class: the records that rest on it (`play-pageturn`,
 `finance-buy-stock`, `play-cards-legendary`) stand as they are.
 
+
+### 5. One finished life per key on the phone (the controller's ruling)
+
+**The change.** `KvStore` (apps/mobile/src/kvStore.ts) keeps each finished life under `ratrace:run:<runId>`, with the ids in `ratrace:runs:index`,
+oldest first, where it kept them all in one value (`ratrace:runs`) read and written whole each time a life ended. `addRun` writes the life, then the
+index (not again for a life it already names: the step that ends a life saves it twice); `removeRun` takes the life's key away, then its id from the
+index; `listRuns` reads the index and the lives. The lives read once are held: the step that ends a life calls `listRuns` after `addRun` (the profile
+counts the lives, `tellProfile`; the rank, `settleRank`; the provider, as a life ends), and each of those reads only the index, to see that no other
+store on the phone wrote meanwhile (the timing probe's route puts lives with a store of its own); the lives are read again only when it changed. Calls
+about lives are made one at a time; one that fails lets go of what is held. A life that cannot be read is left out of the list and kept.
+
+**The move from the one value**, on the first read: every life to its own key, then the index (the old value's ids, with any the index named), then
+the old value taken away, last. Killed at any write, the old value is still there and the next read does it again: nothing lost, nothing twice. A
+write cut short is mended on the next start: an id with no life (a removal cut between its two writes) is left out of the index; a life no id names
+(an addition cut between its two) is taken in, after the others.
+
+**Tests** (`kvStore.test.ts`, RED before: 10 of 14): add, add again, remove, a bad record, the list's order; the move, and the move killed before each
+of its five writes; an addition and a removal cut short; the lives held (a second `listRuns` reads the index only), another store's writes seen,
+copies handed out; and the guard: 63 lives on the phone, a nurse played by the saver to the last round of her life, and the step that ends it writes
+that life (again with each save of the step) and the index once, nothing that holds any of the 63, and reads none of them. Real finished lives are 3 to
+5 KB each (`records-three`'s: 3177, 4960, 5003 bytes): 63 of them were some 250 KB read and written on that step.
+
+**Measured** (release build with the probe, iPhone 16 Pro simulator, iOS 18.0; 63 or 64 finished lives on the phone; the finances of the round that
+ends `moment-escape`'s life, `perf?life=moment-escape&last=1`, then "Play the round" pressed; the store's calls as the probe times them, wall clock on
+the JS thread; *before* is HEAD's store, built the same way minutes apart):
+
+| | before (one value) | after (a key each) |
+|---|---|---|
+| `addRun` on the step (its first, with the game's save) | 16 to 95 ms, median 23.7 (n 10) | 1.2 to 18 ms, median 3.4 (n 13) |
+| `listRuns` on the step (the profile's count) | 2 to 6 ms | 0.8 to 15 ms (the index only) |
+| `listRuns` as the life ends (the provider's, after the commit) | 28 to 81 ms | 39 to 99 ms: queued behind the step's own JS work on the clock, not the store's (it reads the index) |
+| finances → resolve, settled | 224, 190, 162, 231, 198, 184, 180, 230, 171, 197: **median 194** | 261, 210, 214, 262, 173, 147, 148, 115, 255, 260 (load 7 to 12): **median 212**; then 298, 176, 164 (load 3 to 5) |
+| the move of 64 lives from the one value (once, at the start after the update) | — | 165 ms, with the front door drawn after it |
+
+The write is off the step (some 20 ms less on it), as the ruling meant. The step itself did not come out faster on this Mac: its time is the commit
+(the engine's last round and score, the resolve page: 61 to 189 ms) and the UI thread's frames after it (the longest 35 to 165 ms), which the store
+does not touch, and it moved with the Mac's load more than with the change (the after set was taken at a load of 7 to 12, the before set at 3 to 6).
+The measures were cut short when the simulator's window could no longer be pressed (the desktop moved it to another Space). The step's budget is
+for Task 20 to settle, on a quiet machine and on a device.

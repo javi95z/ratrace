@@ -65,6 +65,7 @@ export const expoKeyValueStore = {
     getItem: (key: string) => Promise.resolve(kv.get(key) ?? null),
     setItem: (key: string, value: string) => Promise.resolve(void kv.set(key, value)),
     removeItem: (key: string) => Promise.resolve(kv.delete(key)),
+    getAllKeys: () => Promise.resolve([...kv.keys()]),
     getItemSync: (key: string) => kv.get(key) ?? null,
     setItemSync: (key: string, value: string) => void kv.set(key, value),
     removeItemSync: (key: string) => kv.delete(key),
