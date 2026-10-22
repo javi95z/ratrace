@@ -302,7 +302,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
 
       {/* The panels under the first screen, once the first are on it (ui/drawnFirst.ts): the figures, the map, the rivals, the line of the life and
           its badges are some thirty pictures and charts, and all of the page at once kept the end from the screen for them (measured, the parity
-          report's performance part). */}
+          report's performance part). The share card and the ways out under them come with them: put in before them, they would be pushed down
+          by the panels put in above them, on a screen tall enough to show them at first. */}
       {rest ? (
         <>
           {/* The life in a few figures, and the line of its wealth from the first day to the last. */}
@@ -337,19 +338,19 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
               <PixelText size={15} tone="ink-200" style={{ textAlign: 'center' }}>{t('collection')}</PixelText>
             </Raised>
           </Panel>
+
+          <View style={{ gap: 12, paddingTop: 8 }}>
+            <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} opened={opened.share === true} />
+            {/* Another life takes the place of this screen; the front door is wherever it stands in the stack. */}
+            <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.replace('/new')}>
+              <PixelText size={19} tone="ink-900" style={{ textAlign: 'center' }}>{t('again')}</PixelText>
+            </Raised>
+            <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.dismissTo('/')}>
+              <PixelText size={17} style={{ textAlign: 'center' }}>{t('home')}</PixelText>
+            </Raised>
+          </View>
         </>
       ) : null}
-
-      <View style={{ gap: 12, paddingTop: 8 }}>
-        <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} opened={opened.share === true} />
-        {/* Another life takes the place of this screen; the front door is wherever it stands in the stack. */}
-        <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.replace('/new')}>
-          <PixelText size={19} tone="ink-900" style={{ textAlign: 'center' }}>{t('again')}</PixelText>
-        </Raised>
-        <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.dismissTo('/')}>
-          <PixelText size={17} style={{ textAlign: 'center' }}>{t('home')}</PixelText>
-        </Raised>
-      </View>
     </Screen>
   );
 }

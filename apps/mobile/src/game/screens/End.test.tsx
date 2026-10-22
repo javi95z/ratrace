@@ -18,7 +18,28 @@ import { Home } from './Home';
 import { Play } from './Play';
 import { RankGain } from './RankCard';
 
-afterEach(cleanup);
+// The panels under the first screen, held back by a test until it lets them in (`drawn.hold`); otherwise as ui/drawnFirst.ts puts them in.
+const drawn = vi.hoisted(() => ({ hold: false, release: () => {} }));
+vi.mock('../../ui/drawnFirst', async (original) => {
+  const real = await original<typeof import('../../ui/drawnFirst')>();
+  const { useEffect, useState } = await import('react');
+  return {
+    ...real,
+    useDrawnFirst: () => {
+      const shown = real.useDrawnFirst();
+      const [free, setFree] = useState(!drawn.hold);
+      useEffect(() => {
+        if (!free) drawn.release = () => setFree(true);
+      }, [free]);
+      return shown && free;
+    },
+  };
+});
+
+afterEach(() => {
+  drawn.hold = false;
+  cleanup();
+});
 
 const { text } = textFor('en');
 
@@ -193,6 +214,25 @@ describe('what the life did for the rat\'s rank', () => {
     expect(screen.queryByText(/New rank/)).toBeNull();
     expect(screen.getAllByText(/^\+/)).toHaveLength(1);
     expect(heard).not.toContain('promote');
+  });
+});
+
+describe('the page as it comes', () => {
+  it('puts nothing in above what is on screen: the share card and the ways out come with the panels under the first screen, under them', async () => {
+    const { services } = await aWholeLife();
+    drawn.hold = true;
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    // The first screen alone: none of what stands under the panels put in second, which would be pushed down by them on a screen tall enough.
+    expect(screen.queryByLabelText('Your life on one line')).toBeNull();
+    for (const [role, name] of [['button', 'Share this life'], ['link', 'Live another life'], ['link', 'Home']] as const) expect(screen.queryByRole(role, { name }), name).toBeNull();
+    await act(async () => drawn.release());
+    const badges = await screen.findByLabelText('Badges of this life');
+    // Then every one of them, under the last panel.
+    for (const [role, name] of [['button', 'Share this life'], ['link', 'Live another life'], ['link', 'Home']] as const) {
+      const action = screen.getByRole(role, { name });
+      expect(badges.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING, name).toBeTruthy();
+    }
   });
 });
 
