@@ -15,11 +15,15 @@ export function useAskedWhenShown<T>(ask: (() => Promise<T>) | null, initial: T,
     useCallback(() => {
       if (ask === null) return;
       let live = true;
-      void ask().then((found) => {
-        if (!live || same(found, drawn.current)) return;
-        drawn.current = found;
-        setAnswer(found);
-      });
+      ask().then(
+        (found) => {
+          if (!live || same(found, drawn.current)) return;
+          drawn.current = found;
+          setAnswer(found);
+        },
+        // An ask that fails says nothing: the answer drawn stays, and it is asked again when the screen is shown again.
+        () => undefined,
+      );
       return () => {
         live = false;
       };

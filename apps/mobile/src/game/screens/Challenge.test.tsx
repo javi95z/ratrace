@@ -333,6 +333,18 @@ describe('the weekly challenge page, for a player signed in', () => {
     expect(await screen.findByText("You have played today's attempt. Your best this week: 512 points.")).toBeTruthy();
     expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
   });
+
+  it('keeps today\'s attempt as had when the account, asked again, cannot say: the attempt is not offered again', async () => {
+    let entry: { entered: boolean; score: number | null } | null = { entered: true, score: 512 };
+    const services = memoryServices();
+    const community = { challengeEntry: async () => entry } as unknown as Community;
+    renderGame(<WeeklyChallenge />, { ...services, account: accountAs(guest), community: () => community });
+    await screen.findByText("You have played today's attempt. Your best this week: 512 points.");
+    entry = null;
+    await act(async () => focus.again());
+    expect(screen.getByText("You have played today's attempt. Your best this week: 512 points.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
+  });
 });
 
 describe('a ranked attempt with a ranked life in progress on another device', { timeout: 60_000 }, () => {

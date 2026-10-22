@@ -285,8 +285,8 @@ function RankingsLink() {
 }
 
 /**
- * Friend requests waiting on the player, as a line that leads to them: there only when there are any, for someone signed in. Asked once as the front
- * door opens, and again whenever who is signed in changes.
+ * Friend requests waiting on the player, as a line that leads to them: there only when there are any, for someone signed in. Asked each time the
+ * front door is shown (`useAskedWhenShown`), and again whenever who is signed in changes.
  */
 function FriendRequests() {
   const t = useT('home');

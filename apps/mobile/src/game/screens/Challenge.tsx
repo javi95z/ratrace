@@ -49,6 +49,8 @@ const keptUnlessKnown = (found: boolean | null, drawn: boolean | null): boolean 
 /** Two answers of the player's attempt alike: today's had or not, and the same best. */
 const sameEntry = (a: ChallengeEntryAnswer, b: ChallengeEntryAnswer): boolean => a === b || (a !== null && b !== null && a.entered === b.entered && a.score === b.score);
 type ChallengeEntryAnswer = { entered: boolean; score: number | null } | null;
+/** As `keptUnlessKnown`, for the page: an attempt the account cannot tell of (asked again and failed) leaves the one known drawn. */
+const keptEntry = (found: ChallengeEntryAnswer, drawn: ChallengeEntryAnswer): boolean => found === null || sameEntry(found, drawn);
 
 /** The places of a challenge's ranking that are in its best tenth: the first, at least. */
 export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
@@ -131,7 +133,7 @@ export function WeeklyChallenge() {
   const [attempt, setAttempt] = useState(false);
   // Asked each time the page is shown (it stays drawn under the rankings opened from it).
   const ask = useMemo(() => (week === null || community === null ? null : () => community.challengeEntry(week.week)), [week, community]);
-  const entry = useAskedWhenShown(ask, null, sameEntry);
+  const entry = useAskedWhenShown(ask, null, keptEntry);
   if (week === null) return null;
   const rule = ruleText(week.rule);
   const lifeName = text.lives[week.lifeId]?.name ?? week.lifeId;
