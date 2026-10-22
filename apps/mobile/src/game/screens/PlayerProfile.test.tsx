@@ -50,6 +50,10 @@ function profile({ refuses = false }: { refuses?: boolean } = {}) {
 const member: AccountState = { kind: 'member', userId: 'u-1', email: null };
 const show = (state: AccountState, community: Community | null, services = memoryServices()) => renderGame(<PlayerProfile />, { ...services, account: accountAs(state), community: () => community });
 
+/** What react-native-web keeps of a view's onLayout: calling it is what its observer does once the view is laid out. */
+type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
+const layout = (node: Element, width: number) => (node as Laid).__reactLayoutHandler?.({ nativeEvent: { layout: { x: 0, y: 0, width, height: 300 } } });
+
 /** A radio's state, as react-native-web writes it. */
 const checked = (radio: HTMLElement) => radio.getAttribute('aria-checked');
 
@@ -98,12 +102,17 @@ describe('the player\'s profile', () => {
     expect(suit()).toBe(suitBefore);
     // A crown is for the highest rank of rat: until then it says how it is won, and nothing is kept.
     const crown = within(hats()).getByRole('radio', { name: 'Crown' });
-    expect(crown.querySelector('[data-sprite="icon.locked"]')).not.toBeNull();
+    expect(crown.getAttribute('data-locked')).toBe('true');
     fireEvent.click(crown);
     expect(await screen.findByText(/^Unlocked on reaching /)).toBeTruthy();
     expect(asked).toHaveLength(1);
-    // Nothing worn is marked as such.
-    expect(within(hats()).getByRole('radio', { name: 'None' }).textContent).toBe('✕');
+    // Nothing worn is marked as such, over its picture, once the tab is laid out: a cross for each part that may be left off.
+    expect(screen.queryByText('✕')).toBeNull();
+    await act(async () => {
+      layout(screen.getByRole('tabpanel'), 380);
+      screen.getAllByRole('radiogroup').forEach((grid) => layout(grid, 380));
+    });
+    expect(screen.getAllByText('✕')).toHaveLength(3);
     // And the colour of the ground, kept with the hat.
     fireEvent.click(screen.getByRole('tab', { name: 'Backdrop' }));
     const other = given.colour === 'teal' ? 'gold' : 'teal';

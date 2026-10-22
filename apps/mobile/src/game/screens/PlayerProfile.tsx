@@ -61,8 +61,8 @@ function NameButton({ name, label, onPress }: { name: string; label: string; onP
 
 /**
  * How the others see the player: the rat they play as, in rooms and rankings, and the name under
- * it. Only for someone signed in, whose profile the server keeps. `copied` is the friend code just copied, its toast up from the start (a
- * scene's initial state; the player copies it by a tap).
+ * it. Only for someone signed in, whose profile the server keeps. `copied` is the friend code just copied, its toast up from the start and held
+ * there (a scene's initial state, for its shot; the player copies it by a tap).
  */
 export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   const t = useT('player');
@@ -77,6 +77,8 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   const [problem, setProblem] = useState<'invalid' | 'taken' | 'refused' | 'failed' | null>(null);
   const [busy, setBusy] = useState(false);
   const [told, setTold] = useState<string | null>(() => (copied ? t('copied') : null));
+  // A scene's toast stays up for its shot: it would leave after its 2.6 s, perhaps before the shot is taken.
+  const [held] = useState(copied);
   const [editing, setEditing] = useState(false);
   const runs = useRuns();
   const profile = useProfile();
@@ -85,7 +87,9 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   // How far the page has scrolled, on the UI thread, and its column: the rat's editor keeps its rat and tabs at the top while its choices scroll.
   const scrollY = useSharedValue(0);
   const column = useAnimatedRef<View>();
-  const scrolling = useMemo(() => ({ scrollY, column, top: SCREEN_TOP }), [scrollY, column]);
+  // Moved on each time the column is laid out again (anything in it grew or shrank): the editor's stuck row is measured again then.
+  const laid = useSharedValue(0);
+  const scrolling = useMemo(() => ({ scrollY, column, top: SCREEN_TOP, laid }), [scrollY, column, laid]);
 
   useEffect(() => {
     if (community === null) return;
@@ -103,8 +107,8 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   const userId = state.kind === 'member' ? state.userId : null;
   const page = (children: ReactNode) => (
     <PageScroll.Provider value={scrolling}>
-      <Screen scrollY={scrollY} contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => setTold(null)} />}>
-        <Animated.View ref={column} collapsable={false} style={{ gap: 16 }}>
+      <Screen scrollY={scrollY} contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => (held ? undefined : setTold(null))} />}>
+        <Animated.View ref={column} collapsable={false} onLayout={() => void (laid.value = laid.value + 1)} style={{ gap: 16 }}>
           <Head title={t('title')} />
           {children}
         </Animated.View>
@@ -180,7 +184,18 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
             </View>
             {editing ? (
               <View style={{ alignSelf: 'stretch', gap: 8 }}>
-                <TextField label={ranks('name')} value={name} onChangeText={setName} maxLength={16} autoFocus returnKeyType="done" onSubmitEditing={() => void rename()} />
+                <TextField
+                  label={ranks('name')}
+                  value={name}
+                  onChangeText={setName}
+                  maxLength={16}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    // The web's form is not sent while its button is held back: nor is a second name, from the keyboard, while the first is asked.
+                    if (!busy) void rename();
+                  }}
+                />
                 {problem ? (
                   <View accessibilityRole="alert">
                     <ReadText size={13} tone="wine-300">{ranks(problem)}</ReadText>

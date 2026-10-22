@@ -4,24 +4,40 @@ import type { RatLook } from '@ratrace/core/game/avatar';
 import type { RankId } from '@ratrace/content';
 import type { Account, Community } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { createElement, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSpritesWith } from '../../ui/spriteImages';
-import { memoryServices, renderGame, spriteRenders } from '../../testing/render';
+import { memoryServices, renderGame } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { PlayerProfile } from './PlayerProfile';
 import { RatEditor } from './RatEditor';
 
-/** Every canvas drawn, by its size, in the order drawn: the rat above the choices is 44 square, a choice's as wide as the page lays it out (none here). */
-const canvases = vi.hoisted(() => ({ drawn: [] as string[] }));
+/**
+ * Every canvas drawn, by its size, in the order drawn, and every canvas mounted (a view of its own on the phone): the rat above the choices is 44
+ * square, a tab's choices one canvas as large as the tab.
+ */
+const canvases = vi.hoisted(() => ({ drawn: [] as string[], mounted: [] as string[] }));
 vi.mock('../../ui/Canvas', async (original) => {
   const real = await original<typeof import('../../ui/Canvas')>();
+  function Counted(props: ComponentProps<typeof real.Canvas>) {
+    const style = props.style as { width?: number; height?: number } | undefined;
+    const size = `${style?.width}x${style?.height}`;
+    canvases.drawn.push(size);
+    useEffect(() => void canvases.mounted.push(size), []); // eslint-disable-line react-hooks/exhaustive-deps
+    return createElement(real.Canvas, props);
+  }
+  return { Canvas: Counted };
+});
+/** The choices drawn, each time one is: what is pressed of a choice is its raised frame, the only one with its 4 of padding. */
+const tiles = vi.hoisted(() => ({ drawn: 0 }));
+vi.mock('../../ui/Frame', async (original) => {
+  const real = await original<typeof import('../../ui/Frame')>();
   return {
-    Canvas: (props: ComponentProps<typeof real.Canvas>) => {
-      const style = props.style as { width?: number; height?: number } | undefined;
-      canvases.drawn.push(`${style?.width}x${style?.height}`);
-      return createElement(real.Canvas, props);
+    ...real,
+    Framed: (props: ComponentProps<typeof real.Framed>) => {
+      if (props.kind === 'raised' && (props.style as { padding?: number } | undefined)?.padding === 4) tiles.drawn += 1;
+      return createElement(real.Framed, props);
     },
   };
 });
@@ -39,13 +55,30 @@ vi.mock('../../sprites/sources', () => ({
 beforeEach(() => {
   loadSpritesWith(async (source) => ({ src: String(source), width: () => 8, height: () => 8, dispose: () => {} }) as never);
   canvases.drawn.length = 0;
+  canvases.mounted.length = 0;
+  tiles.drawn = 0;
 });
 afterEach(cleanup);
 
 const LOOK: RatLook = { colour: 'sky', body: 'grey', face: 'calm', outfit: null, hat: null, eyes: null, backdrop: null };
 const PREVIEW = '44x44';
-const CHOICE = '0x0';
+/** The tab as the phone lays it out here: 380 wide, each part's grid 400 below the last. Its choices are then 71.2 square (5 to a row, 6 apart). */
+const WIDTH = 380;
 const count = (size: string) => canvases.drawn.filter((drawn) => drawn === size).length;
+/** What react-native-web keeps of a view's onLayout: calling it is what its observer does once the view is laid out. */
+type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
+const layout = (node: Element, x: number, y: number, width: number, height: number) =>
+  (node as Laid).__reactLayoutHandler?.({ nativeEvent: { layout: { x, y, width, height } } });
+/** The tab laid out, as the phone does once it is drawn: its width, and where each part's grid stands in it. */
+async function layOut() {
+  await act(async () => {
+    layout(screen.getByRole('tabpanel'), 0, 0, WIDTH, 1200);
+    screen.getAllByRole('radiogroup').forEach((grid, i) => layout(grid, 0, 30 + i * 400, WIDTH, 300));
+  });
+  await settled();
+}
+/** The canvas of the tab's choices, once laid out. */
+const choicesCanvas = () => [...document.querySelectorAll('[data-skia="Canvas"]')].find((canvas) => canvas.getAttribute('data-size') !== PREVIEW);
 
 /** The editor over a rat it keeps itself, as the profile does: what it is told, and the rat as it now is. */
 function editor({ earned = {}, rank = 'sewer', tab }: { earned?: Record<string, unknown>; rank?: RankId; tab?: 'body' | 'wear' | 'scene' } = {}) {
@@ -98,20 +131,34 @@ describe('the rat, a part at a time', () => {
     await settled();
   });
 
-  it('opens on the tab it is given, for a scene', async () => {
+  it('draws a tab\'s pictures on one canvas once it is laid out, each choice in its own box of it: the piece on the plain rat, a backdrop alone, a colour its ground', async () => {
     editor({ tab: 'scene' });
     expect(screen.getByRole('tab', { name: 'Backdrop' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(['Backdrop', 'Colour']);
-    // A backdrop is shown alone, its picture filling the choice.
-    expect(spriteRenders.get('rat.backdrop.stars')).toBeGreaterThan(0);
+    // Nothing is drawn before the tab is laid out: no canvas at a size of nothing, to be drawn again.
     await settled();
+    expect(choicesCanvas()).toBeUndefined();
+    await layOut();
+    const canvas = choicesCanvas()!;
+    // As large as the tab: as wide, and down to the foot of its last grid (two rows of 71.2, 6 apart, 430 down).
+    expect(canvas.getAttribute('data-size')).toBe(`${WIDTH}x${430 + 2 * 71.2 + 6}`);
+    // Every backdrop, and no rat: a backdrop is shown alone. The three a new rat has not reached the rank for are under a lock.
+    expect(imagesOf(canvas).filter((src) => src !== 'src:icon.locked')).toEqual(['stars', 'city', 'coins', 'chart', 'cheese', 'confetti', 'wheel', 'beach'].map((id) => `src:rat.backdrop.${id}`));
+    expect(imagesOf(canvas).filter((src) => src === 'src:icon.locked')).toHaveLength(3);
+    // A box for each of the nine backdrops and the eight colours, each on its ground; the first, nothing at all, 6 into its choice.
+    const boxes = canvas.querySelectorAll(':scope > [data-skia="Group"]');
+    expect(boxes).toHaveLength(17);
+    expect(JSON.parse(boxes[0].getAttribute('data-props') ?? '{}').clip).toEqual({ x: 6, y: 36, width: 59.2, height: 59.2 });
+    // The cross of nothing worn, over its picture.
+    expect(screen.getByText('✕')).toBeTruthy();
   });
 
   it('never wears a prize not won yet: it says how it is won, and the rat is as it was', async () => {
     const told = editor({ tab: 'wear' });
+    await layOut();
     const hats = screen.getByRole('radiogroup', { name: 'Headwear' });
     const crown = within(hats).getByRole('radio', { name: 'Crown' });
-    expect(crown.querySelector('[data-sprite="icon.locked"]')).not.toBeNull();
+    expect(crown.getAttribute('data-locked')).toBe('true');
     fireEvent.click(crown);
     expect(told.locked).toEqual(['Unlocked on reaching rank king']);
     const gold = within(screen.getByRole('radiogroup', { name: 'Clothes' })).getByRole('radio', { name: 'Gold jacket' });
@@ -119,9 +166,12 @@ describe('the rat, a part at a time', () => {
     expect(told.locked.at(-1)).toBe('Earned with the badge "badge escaped"');
     expect(told.picked).toEqual([]);
     expect(crown.getAttribute('aria-checked')).toBe('false');
-    // Drawn grey, under a lock.
-    expect(spriteRenders.get('icon.locked')).toBeGreaterThan(0);
-    await settled();
+    // Drawn grey and faint, under a lock, on the tab's canvas: a lock for each prize the player has not won.
+    const canvas = choicesCanvas()!;
+    const locks = imagesOf(canvas).filter((src) => src === 'src:icon.locked');
+    expect(locks).toHaveLength(screen.getAllByRole('radio').filter((radio) => radio.getAttribute('data-locked') === 'true').length);
+    expect(locks.length).toBeGreaterThan(0);
+    expect(canvas.querySelectorAll('[data-skia="Group"][data-props*=\'"layer":{"element"\']')).toHaveLength(locks.length);
   });
 
   it('wears a prize once it is won', async () => {
@@ -131,36 +181,46 @@ describe('the rat, a part at a time', () => {
     expect(told.locked).toEqual([]);
     expect(told.picked).toEqual([{ ...LOOK, hat: 'crown' }, { ...LOOK, hat: 'crown', outfit: 'gold' }]);
     expect(within(screen.getByRole('radiogroup', { name: 'Clothes' })).getByRole('radio', { name: 'Gold jacket' }).getAttribute('aria-checked')).toBe('true');
+    for (const name of ['Crown', 'Gold jacket']) expect(screen.getByRole('radio', { name }).getAttribute('data-locked'), name).toBeNull();
     await settled();
   });
 
-  it('draws again, on a pick, only the rat above the choices: the same canvas, with the piece picked on it', async () => {
+  it('draws again, on a pick, only the rat above the choices and the two choices it moves between: the same canvas, with the piece picked on it', async () => {
     editor({ tab: 'wear' });
-    await settled();
+    await layOut();
     const canvas = preview();
     expect(imagesOf(canvas)).toEqual(['src:rat.body.grey', 'src:rat.face.calm']);
-    const [choices, rat] = [count(CHOICE), count(PREVIEW)];
+    const pictures = choicesCanvas()!;
+    const [drawn, rat, choices] = [canvases.drawn.length, count(PREVIEW), tiles.drawn];
     fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Headwear' })).getByRole('radio', { name: 'Beanie' }));
     await settled();
     expect(preview()).toBe(canvas);
     expect(imagesOf(canvas)).toEqual(['src:rat.body.grey', 'src:rat.face.calm', 'src:rat.hat.beanie']);
     expect(count(PREVIEW)).toBeGreaterThan(rat);
-    // Each choice shows its piece on a plain rat of its own: none of them is drawn again.
-    expect(count(CHOICE)).toBe(choices);
+    // Only the rat above: each choice shows its piece on a plain rat of its own, and their canvas is not drawn again.
+    expect(canvases.drawn.slice(drawn).every((size) => size === PREVIEW)).toBe(true);
+    expect(choicesCanvas()).toBe(pictures);
+    // And of what is pressed, the hat let go of and the one put on: none of the forty others.
+    expect(tiles.drawn - choices).toBe(2);
   });
 
-  it('draws, on another tab, only that tab\'s choices: the rat above them is not drawn again', async () => {
+  it('mounts one canvas for a tab, and no other: the rat above them is not drawn again for another tab', async () => {
     editor();
-    await settled();
-    const rat = count(PREVIEW);
-    const drawn = canvases.drawn.length;
-    fireEvent.click(screen.getByRole('tab', { name: 'Clothes' }));
-    await settled();
+    await layOut();
+    const [rat, mounted] = [count(PREVIEW), canvases.mounted.length];
+    expect(canvases.mounted).toEqual([PREVIEW, expect.stringMatching(/^380x/)]);
+    for (const tab of ['Clothes', 'Backdrop', 'Body']) {
+      const before = canvases.mounted.length;
+      fireEvent.click(screen.getByRole('tab', { name: tab }));
+      await layOut();
+      // One canvas at most for the tab's forty-odd choices (or sixteen, or seventeen), where there was one a choice: none where the tab's canvas
+      // stays and is only drawn again (a tab shown again, its pictures already read).
+      expect(canvases.mounted.length - before, tab).toBeLessThanOrEqual(1);
+      expect(choicesCanvas(), tab).toBeDefined();
+    }
     expect(count(PREVIEW)).toBe(rat);
-    // Nothing but the choices of the tab: a canvas each for the clothes, the hats and the eyes (and each again once its pictures are read).
-    expect(canvases.drawn.slice(drawn).every((size) => size === CHOICE)).toBe(true);
-    const shown = screen.getAllByRole('radio').length;
-    expect(canvases.drawn.length - drawn).toBeGreaterThanOrEqual(shown);
+    expect(canvases.mounted.length).toBeLessThanOrEqual(mounted + 3);
+    expect(canvases.mounted.filter((size) => size === PREVIEW)).toHaveLength(1);
   });
 });
 

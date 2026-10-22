@@ -7,10 +7,18 @@ import type { ReactNode } from 'react';
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
+/** A piece given another as a prop (a group's `layer`, a paint) says what it was given by its kind and props: the element itself holds React's own. */
+function elementsNamed(_key: string, value: unknown): unknown {
+  if (value === null || typeof value !== 'object' || !('$$typeof' in value)) return value;
+  const element = value as unknown as { type: unknown; props: Record<string, unknown> };
+  const type = typeof element.type === 'string' ? element.type : ((element.type as { name?: string }).name ?? 'element');
+  return { element: type, props: element.props };
+}
+
 const node =
   (kind: string) =>
   ({ children, ...props }: Props) => (
-    <div data-skia={kind} data-props={JSON.stringify(props)}>
+    <div data-skia={kind} data-props={JSON.stringify(props, elementsNamed)}>
       {children}
     </div>
   );
@@ -121,6 +129,7 @@ export function skiaFake() {
     LinearGradient: node('LinearGradient'),
     DashPathEffect: node('DashPathEffect'),
     BlurMask: node('BlurMask'),
+    Paint: node('Paint'),
     ColorMatrix: node('ColorMatrix'),
     vec: (x: number, y: number) => ({ x, y }),
     rect: (x: number, y: number, width: number, height: number): Rect => ({ x, y, width, height }),

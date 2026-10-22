@@ -1,15 +1,15 @@
 import { mayWear, prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@ratrace/core/game/avatar';
 import type { RankId } from '@ratrace/content';
 import type { RatColour, RatLayer, RatLook } from '@ratrace/core/game/avatar';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
-import { pressDown, usePress } from '../../ui/kit';
+import { reach, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Tabs } from '../../ui/overlay';
 import { RAT_GROUND } from '../../ui/rat';
-import { RatLayers, type RatPlace } from '../../ui/RatAvatar';
-import { Sprite } from '../../ui/Sprite';
+import { PerfDrawn } from '../../ui/perf';
+import { RatChoices, RatLayers, type RatChoice, type RatPlace } from '../../ui/RatAvatar';
 import { spriteOf } from '../../ui/sprites';
 import { StickyPart } from '../../ui/Sticky';
 import { PixelText, ReadText } from '../../ui/text';
@@ -107,8 +107,10 @@ export function RatEditor({
 }) {
   const t = useT('player');
   const [group, setGroup] = useState<RatGroup>(first);
-  // How wide a choice's picture is: the page's column, laid out, shared by the five of a row. Kept across the tabs, so a tab's choices are drawn once.
-  const [side, setSide] = useState(0);
+  // How wide the tab is, laid out (five choices to a row of it), and how far down it each part's grid stands: where the tab's canvas draws each
+  // choice. Kept across the tabs, so a tab shown again is drawn where it was at once.
+  const [width, setWidth] = useState(0);
+  const [tops, setTops] = useState<Partial<Record<Part, number>>>({});
 
   /** The pieces of a layer that are drawn, and whether the player may wear each. */
   const piecesOf = (layer: RatLayer) =>
@@ -155,6 +157,16 @@ export function RatEditor({
     now.onPick({ ...now.look, [part]: value } as RatLook);
   }, []);
 
+  // The choices of the tab, part by part, and the one canvas their pictures are drawn on: each choice's box where the grid lays it out, five to a
+  // row of the tab's width, each part's grid as far down the tab as it was laid out. Nothing is drawn until both are known.
+  const parts = GROUPS[group].map((part) => ({ part, choices: choices(part) }));
+  const tile = width > 0 ? (width - (COLUMNS - 1) * GAP) / COLUMNS : 0;
+  const side = Math.max(0, tile - AROUND);
+  const placed = tile > 0 && parts.every(({ part }) => tops[part] !== undefined);
+  const pictures: RatChoice[] = placed ? parts.flatMap(({ part, choices: list }) => list.map((choice, i) => pictureOf(part, choice, i, tops[part] as number, tile))) : [];
+  const height = placed ? Math.max(...parts.map(({ part, choices: list }) => (tops[part] as number) + heightOf(list.length, tile))) : 0;
+  const laid = (part: Part, y: number) => setTops((was) => (was[part] === y ? was : { ...was, [part]: y }));
+
   return (
     <StickyPart
       gap={12}
@@ -173,35 +185,95 @@ export function RatEditor({
         </View>
       }
     >
-      <View
-        role="tabpanel"
-        accessibilityLabel={t(`groups.${group}`)}
-        onLayout={(event) => setSide(Math.max(0, (event.nativeEvent.layout.width - (COLUMNS - 1) * GAP) / COLUMNS - AROUND))}
-        style={{ gap: 12 }}
-      >
-        {GROUPS[group].map((part) => (
-          // Each part of the tab under its own name, its choices beneath.
-          <View key={part} style={{ gap: 6 }}>
-            <PixelText size={13} tone="ink-300" style={{ textTransform: 'uppercase', letterSpacing: 13 * 0.05 }}>{t(`layers.${part}`)}</PixelText>
-            <ChoicesOf part={part} label={t(`layers.${part}`)} choices={choices(part)} chosen={(key) => chosen(part, key)} side={side} onChoose={choose} />
-          </View>
+      <PerfDrawn name={`player: ${group}`} />
+      {/* Each part of the tab under its own name, its choices beneath: the names and the grids side by side in the panel, so each grid says where it
+          stands in it. Over them the one canvas of their pictures, which takes no touch: a press reaches the choice under it. */}
+      <View role="tabpanel" accessibilityLabel={t(`groups.${group}`)} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+        {parts.map(({ part, choices: list }, at) => (
+          <Fragment key={part}>
+            <PixelText size={13} tone="ink-300" style={{ marginTop: at === 0 ? 0 : 12, textTransform: 'uppercase', letterSpacing: 13 * 0.05 }}>{t(`layers.${part}`)}</PixelText>
+            <ChoicesOf part={part} label={t(`layers.${part}`)} choices={list} chosen={(key) => chosen(part, key)} tile={tile} onChoose={choose} onLaid={laid} />
+          </Fragment>
         ))}
+        {placed ? <RatChoices width={width} height={height} choices={pictures} /> : null}
+        {/* Nothing worn is said with a cross, over its picture: the rat without the piece looks much like the rest. */}
+        {placed
+          ? parts.flatMap(({ part, choices: list }) =>
+              list[0]?.key === 'none' ? [<NoneMark key={`none-${part}`} left={FRAMED + side - 2 - NONE_MARK} top={(tops[part] as number) + FRAMED + 2} />] : [],
+            )
+          : null}
       </View>
       <ByChance label={t('byChance')} onPress={() => onPick(byChance())} />
     </StickyPart>
   );
 }
 
-/** The choices of one part, five to a row, each the rat as it would be with it. */
-function ChoicesOf({ part, label, choices, chosen, side, onChoose }: { part: Part; label: string; choices: Choice[]; chosen: (key: string) => boolean; side: number; onChoose: (part: Part, key: string, locked: string | null) => void }) {
+/** How far into a choice its picture starts: the web's `p-1` and the picture's `border-2`. */
+const FRAMED = 4 + 2;
+/** The cross of nothing worn: the web's `size-5`. */
+const NONE_MARK = 20;
+
+/** How tall a part's grid of `count` choices is, each `tile` square, in rows of five `GAP` apart. */
+const heightOf = (count: number, tile: number): number => {
+  const rows = Math.ceil(count / COLUMNS);
+  return rows * tile + Math.max(0, rows - 1) * GAP;
+};
+
+/**
+ * A choice's picture on the tab's canvas: in its box (the choice's place in its grid, inside its frame and border), on its ground: the piece on the
+ * plain rat (closer on what is worn), a backdrop alone, or a colour's ground only; faint and locked where it is a prize not won yet.
+ */
+function pictureOf(part: Part, choice: Choice, index: number, top: number, tile: number): RatChoice {
+  const shown = shownOf(part, choice.key);
+  const side = tile - AROUND;
+  const locked = choice.locked !== null;
+  return {
+    x: (index % COLUMNS) * (tile + GAP) + FRAMED,
+    y: top + Math.floor(index / COLUMNS) * (tile + GAP) + FRAMED,
+    side,
+    ground: RAT_GROUND[shown.colour],
+    rat: part === 'colour' || part === 'backdrop' ? null : { look: shown, place: placeOf(part, side) },
+    backdrop: part === 'backdrop' ? shown.backdrop : null,
+    faint: locked,
+    locked,
+  };
+}
+
+/** The cross on the picture of nothing worn (the web's `absolute right-0.5 top-0.5 size-5 bg-night-900/85`, a bold ✕ of 13 in cream). */
+function NoneMark({ left, top }: { left: number; top: number }) {
+  return (
+    <View aria-hidden pointerEvents="none" style={{ position: 'absolute', left, top, width: NONE_MARK, height: NONE_MARK, alignItems: 'center', justifyContent: 'center', backgroundColor: EXTRA.label, pointerEvents: 'none' }}>
+      <ReadText size={13} weight={600} tone="cream" lineHeight={13}>{'✕'}</ReadText>
+    </View>
+  );
+}
+
+/** The choices of one part, five to a row: what is pressed, framed, with nothing of the pictures (the tab's canvas lies over them). */
+function ChoicesOf({
+  part,
+  label,
+  choices,
+  chosen,
+  tile,
+  onChoose,
+  onLaid,
+}: {
+  part: Part;
+  label: string;
+  choices: Choice[];
+  chosen: (key: string) => boolean;
+  tile: number;
+  onChoose: (part: Part, key: string, locked: string | null) => void;
+  onLaid: (part: Part, y: number) => void;
+}) {
   const rows: Choice[][] = [];
   for (let at = 0; at < choices.length; at += COLUMNS) rows.push(choices.slice(at, at + COLUMNS));
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ gap: GAP }}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} onLayout={(event) => onLaid(part, event.nativeEvent.layout.y)} style={{ marginTop: 6, gap: GAP }}>
       {rows.map((row) => (
         <View key={row[0].key} style={{ flexDirection: 'row', gap: GAP }}>
           {row.map((choice) => (
-            <ChoiceTile key={choice.key} part={part} choiceKey={choice.key} label={choice.label} locked={choice.locked} on={chosen(choice.key)} side={side} onChoose={onChoose} />
+            <ChoiceTile key={choice.key} part={part} choiceKey={choice.key} label={choice.label} locked={choice.locked} on={chosen(choice.key)} tile={tile} onChoose={onChoose} />
           ))}
           {/* A short last row leaves its other places empty, as the web's grid does: its choices are no wider. */}
           {Array.from({ length: COLUMNS - row.length }, (_, i) => (
@@ -214,14 +286,13 @@ function ChoicesOf({ part, label, choices, chosen, side, onChoose }: { part: Par
 }
 
 /**
- * A choice: the piece on the plain rat (a colour only the ground, a backdrop only itself), a prize not won yet grey and faint under a lock, nothing
- * worn marked with a cross, the one chosen ringed in gold (the web's `outline-2 outline-offset-2 outline-gold-500`). Drawn again only when it is
- * chosen or let go, or its prize is won, never for a pick of another: its picture is the plain rat's, whatever the player's rat is.
+ * A choice, as it is pressed and said: its frame and the border of its picture (the picture itself is the tab's canvas's), the one chosen ringed in
+ * gold (the web's `outline-2 outline-offset-2 outline-gold-500`), a prize not won yet said as such. Its touch box is the 44 a thumb needs whatever
+ * the width of the phone (`reach`). Drawn again only when it is chosen or let go, or its prize is won, never for a pick of another.
  */
-const ChoiceTile = memo(function ChoiceTile({ part, choiceKey, label, locked, on, side, onChoose }: { part: Part; choiceKey: string; label: string; locked: string | null; on: boolean; side: number; onChoose: (part: Part, key: string, locked: string | null) => void }) {
-  const shown = useMemo(() => shownOf(part, choiceKey), [part, choiceKey]);
+const ChoiceTile = memo(function ChoiceTile({ part, choiceKey, label, locked, on, tile, onChoose }: { part: Part; choiceKey: string; label: string; locked: string | null; on: boolean; tile: number; onChoose: (part: Part, key: string, locked: string | null) => void }) {
   const press = usePress({ onPress: () => onChoose(part, choiceKey, locked) });
-  const faint = locked !== null ? { opacity: 0.4 } : null;
+  const touch = reach(tile, { above: GAP / 2, below: GAP / 2 });
   return (
     <Pressable
       accessibilityRole="radio"
@@ -231,41 +302,13 @@ const ChoiceTile = memo(function ChoiceTile({ part, choiceKey, label, locked, on
       accessibilityState={{ checked: on, disabled: locked !== null }}
       aria-checked={on}
       onPress={press}
-      style={({ pressed }) => ({ ...pressDown(pressed), flex: 1, minWidth: 0 })}
+      {...{ dataSet: locked === null ? undefined : { locked: 'true' } }}
+      style={[{ flex: 1, minWidth: 0 }, touch.style]}
     >
       <Framed kind="raised" style={{ backgroundColor: COLORS['night-700'], padding: 4 }}>
-        {/* The picture says which it is; the name is there for a screen reader. */}
-        <View
-          aria-hidden
-          importantForAccessibility="no-hide-descendants"
-          style={{ width: '100%', aspectRatio: 1, overflow: 'hidden', borderWidth: 2, borderColor: COLORS['night-900'], backgroundColor: COLORS[RAT_GROUND[shown.colour]] }}
-        >
-          {/* A colour is only the ground, and a backdrop only itself: each shown alone. Anything else, on the plain rat. */}
-          {part === 'colour' ? null : part === 'backdrop' ? (
-            shown.backdrop === null ? null : (
-              <View style={faint}>
-                <Sprite id={ratSprite('backdrop', shown.backdrop)} fallback={{ w: 128, h: 128 }} size={{ w: side, h: side }} grey={locked !== null} />
-              </View>
-            )
-          ) : (
-            <View style={faint}>
-              <RatLayers look={shown} size={side} place={placeOf(part, side)} grey={locked !== null} />
-            </View>
-          )}
-          {locked !== null ? (
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-              <Sprite id="icon.locked" />
-            </View>
-          ) : null}
-          {/* Nothing worn: said with a cross, as the rat without the piece looks much like the rest. */}
-          {choiceKey === 'none' ? (
-            <View style={{ position: 'absolute', right: 2, top: 2, width: 20, height: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: EXTRA.label }}>
-              <ReadText size={13} weight={600} tone="cream" lineHeight={13}>{'✕'}</ReadText>
-            </View>
-          ) : null}
-        </View>
+        <View style={{ width: '100%', aspectRatio: 1, borderWidth: 2, borderColor: COLORS['night-900'] }} />
       </Framed>
-      {on ? <View pointerEvents="none" style={{ position: 'absolute', top: -4, left: -4, right: -4, bottom: -4, borderWidth: 2, borderColor: COLORS['gold-500'], pointerEvents: 'none' }} /> : null}
+      {on ? <View pointerEvents="none" style={{ position: 'absolute', top: touch.top - 4, left: -4, right: -4, bottom: touch.bottom - 4, borderWidth: 2, borderColor: COLORS['gold-500'], pointerEvents: 'none' }} /> : null}
     </Pressable>
   );
 });

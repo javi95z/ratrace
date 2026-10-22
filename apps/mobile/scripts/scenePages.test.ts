@@ -339,7 +339,7 @@ test('the player\'s own profile is drawn signed in on both sides, with the same 
   for (const source of [web, app]) {
     expect(source).toContain("import { sceneCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';");
     expect(source).toContain("player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : ");
-    expect(source).toContain("const community = cloud.community as unknown as Community;\n  return { account: cloud.account, community: () => community };");
+    expect(source).toContain("const used: Pick<Community, 'me' | 'rename' | 'setAvatar'> = cloud.community;\n  const community = used as Community;\n  return { account: cloud.account, community: () => community };");
   }
   // The web's page presses the tab and the code, which its screens have no initial state for; the phone's screens are given them.
   expect(web).toContain('<PressedInTurn selectors={tab === \'body\' ? [] : [`main [data-tab="${tab}"]`]}>');

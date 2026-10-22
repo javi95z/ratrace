@@ -25,17 +25,26 @@ vi.mock('react-native-reanimated', async () => {
 const { default: Animated, useSharedValue } = await import('react-native-reanimated');
 const { PageScroll, StickyPart } = await import('./Sticky');
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  Object.assign(boxes.part, { pageY: 400, height: 600 });
+});
+
+/** What react-native-web keeps of a view's onLayout, on its node: calling it is what its observer does once the view is laid out again. */
+type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
+/** The part laid out again (its row's first box up): as the phone tells it when a tab of other choices is shown. */
+const relay = () => act(() => (screen.getByTestId('head').parentElement?.parentElement as Laid).__reactLayoutHandler?.({ nativeEvent: { layout: { x: 0, y: 0, width: 300, height: boxes.part.height } } }));
 
 /** How far the row is moved down, as react-native-web writes it. */
 const shift = () => (screen.getByTestId('head').parentElement as HTMLElement).style.transform;
 
 function Page({ scroll }: { scroll: { set?: (y: number) => void } }) {
   const scrollY = useSharedValue(0);
+  const laid = useSharedValue(0);
   const column = useRef(null) as never;
   scroll.set = (y) => void (scrollY.value = y);
   return (
-    <PageScroll.Provider value={{ scrollY, column, top: 16 }}>
+    <PageScroll.Provider value={{ scrollY, column, top: 16, laid }}>
       <Animated.View ref={column} testID="column">
         <StickyPart head={<View testID="head"><Text>tabs</Text></View>}>
           <Text>choices</Text>
@@ -69,4 +78,23 @@ test('a part drawn on a page of its own, outside a page that scrolls it, is its 
   );
   expect(shift()).toBe('translateY(0px)');
   expect(screen.getByText('choices')).toBeTruthy();
+});
+
+test('a part laid out again while its row is stuck moves the row where it now belongs, with no scroll: another tab, shorter or longer', () => {
+  const scroll: { set?: (y: number) => void } = {};
+  render(<Page scroll={scroll} />);
+  act(() => scroll.set?.(600));
+  expect(shift()).toBe('translateY(284px)');
+  // A shorter tab: the row may go no further than its new foot, 200 - 50, at once.
+  boxes.part.height = 200;
+  relay();
+  expect(shift()).toBe('translateY(150px)');
+  // A longer one again: the row is back where the scroll puts it.
+  boxes.part.height = 600;
+  relay();
+  expect(shift()).toBe('translateY(284px)');
+  // And a part that moved down the column (a form opened above it): measured again, it starts further down.
+  boxes.part.pageY = 450;
+  relay();
+  expect(shift()).toBe('translateY(234px)');
 });

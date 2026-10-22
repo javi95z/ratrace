@@ -451,8 +451,9 @@ type Community = NonNullable<ReturnType<NonNullable<Services['community']>>>;
 function cloudOf(name: string): Pick<Services, 'account' | 'community'> {
   const cloud = sceneCloud(name);
   if (cloud === null) return {};
-  // What a scene's screen asks of the other players: what the server keeps of the member. The rest it never asks.
-  const community = cloud.community as unknown as Community;
+  // What a scene's screen asks of the other players: what the server keeps of the member. Only what is drawn is answered, and checked against the game's own shapes: the rest is never asked.
+  const used: Pick<Community, 'me' | 'rename' | 'setAvatar'> = cloud.community;
+  const community = used as Community;
   return { account: cloud.account, community: () => community };
 }
 
