@@ -94,48 +94,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
  * call, 2026-10-21): the batch passes shoot every one of these, compare them and fix what differs, and take each out of this list as it is judged.
  * A scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a result. Batch pass 1 shot and judged the
- * thirty-nine of Tasks 11 to 19 and the merge. Waiting since, for the next batch pass: the scenes the user's decisions after it changed on both
- * sides (the parity report's "Decisions after batch pass 1"): the badges' glow, the balance's net worth after inflation, the buttons a screen sizes,
- * the picture's sheet with its way to save.
+ * thirty-nine of Tasks 11 to 19 and the merge; batch pass 2 the twenty-seven the user's decisions after it changed on both sides (the badges' glow,
+ * the balance's net worth after inflation, the buttons a screen sizes, the guide's ring, the picture's sheet with its way to save). None waits.
  * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
-  // The rarity's glow round a badge's card, drawn now on the web (its frame's `--glow`) and on the phone (`Glow`).
-  'celebrate-earned',
-  'celebrate-legendary',
-  // The net worth after inflation in the web's words on both sides (`end.realNetWorth`): the web showed the key, the phone words of its own. Its
-  // button sizes too (below).
-  'balance-r6',
-  // A Button a screen gives its own size (the web's Button takes it now, and the phone draws it): the guide's two (15 and 14), the basket's
-  // (14, 12 in) and the savings' two (13, 8 in). Every scene that draws one of them, found by drawing each scene on the phone. The guide's note
-  // stands in its gold ring since batch pass 2 too (the web's `--glow` under its bevel, the phone's ring): every scene with the note is here
-  // (balance-r6, the moments, play-cards-r1, play-finance-r6, play-guide-r1, play-resolve-r6, the profiles: found by the web's shots' text).
-  'play-cards-r1',
-  'play-finance-r6',
-  'play-resolve-r6',
-  'play-guide-r1',
-  'finance-basket',
-  'finance-pension',
-  'finance-tabs-ru-360',
-  'finance-market',
-  'finance-buy-stock',
-  'finance-property',
-  'finance-debt',
-  'finance-lifestyle',
-  'finance-move',
-  'finance-shop',
-  'finance-item',
-  'finance-taxes',
-  'finance-business',
-  'profile-r6',
-  'profile-owned',
-  'profile-financed',
-  'moment-escape',
-  'moment-bankrupt',
-  'moment-crisis',
-  // The picture's sheet: the phone saves the picture to its photos, under Share, as the web's link saves its file (and is no longer hidden there).
-  'end-share',
-]);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
 
 /**
  * The scenes with lines in the phone's own words (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:

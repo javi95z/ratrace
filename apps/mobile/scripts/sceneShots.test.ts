@@ -94,36 +94,8 @@ test('every screen is the real one on the app (phase 1\'s stand-ins are retired)
   for (const name of ['records-three', 'collection-badges']) expect(isJudged(SCENES.find((scene) => scene.name === name)!), name).toBe(true);
 });
 
-test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after batch pass 1, those the user\'s decisions changed', () => {
-  expect([...PENDING_SHOTS]).toEqual([
-    'celebrate-earned',
-    'celebrate-legendary',
-    'balance-r6',
-    'play-cards-r1',
-    'play-finance-r6',
-    'play-resolve-r6',
-    'play-guide-r1',
-    'finance-basket',
-    'finance-pension',
-    'finance-tabs-ru-360',
-    'finance-market',
-    'finance-buy-stock',
-    'finance-property',
-    'finance-debt',
-    'finance-lifestyle',
-    'finance-move',
-    'finance-shop',
-    'finance-item',
-    'finance-taxes',
-    'finance-business',
-    'profile-r6',
-    'profile-owned',
-    'profile-financed',
-    'moment-escape',
-    'moment-bankrupt',
-    'moment-crisis',
-    'end-share',
-  ]);
+test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after batch pass 2, none waits', () => {
+  expect([...PENDING_SHOTS]).toEqual([]);
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
   for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
   for (const name of PENDING_SHOTS) expect(hasPhoneWords(name), name).toBe(false);
@@ -473,7 +445,7 @@ describe('what is accepted of a scene, and no more', () => {
     // The verdicts a run can end in, and which of them fail it.
     const lines = SCENES.map((scene) => (isJudged(scene) ? lineOf(scene, scene.name in ACCEPTED ? measured(scene.name) : hasPhoneWords(scene.name) ? result(scene.name, { shape: PAGE_BASELINE[scene.name]?.shape ?? 0, texts: [] }) : result(scene.name, { shape: 0, texts: [] })) : unjudgedLine(scene)));
     expect(differing(lines)).toEqual([]);
-    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, not comparable', 'unjudged']));
+    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, not comparable', ...(PENDING_SHOTS.size > 0 ? ['unjudged'] : [])]));
   });
 });
 

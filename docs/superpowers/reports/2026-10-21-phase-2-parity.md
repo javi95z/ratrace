@@ -1164,3 +1164,156 @@ The write is off the step (some 20 ms less on it), as the ruling meant. The step
 does not touch, and it moved with the Mac's load more than with the change (the after set was taken at a load of 7 to 12, the before set at 3 to 6).
 The measures were cut short when the simulator's window could no longer be pressed (the desktop moved it to another Space). The step's budget is
 for Task 20 to settle, on a quiet machine and on a device.
+
+## Batch pass 2: every scene shot again, and judged line by line
+
+**The rule changed first** (8fb816a). An `ACCEPTED` record's text bound was a scene-wide maximum (`worstPt`): every line of a scene could stand as
+far off as its worst one. A record now names its lines (`lines`, by the first forty letters the web's text check gives them) with a bound each, and
+every other line of the scene is held to the point. Of the seventeen records, four named a line beyond the point: the dice of a new life
+(`🎲 At random`, 2 pt: the emoji, Apple Color Emoji 2 pt lower on iOS than on macOS Chrome) in `new-first`, `new-unlocked` and `new-locked`; and the
+headline under the guide's note in `play-guide-r1` (4/3 pt: the note's foot on a whole CSS pixel on the web, a device pixel on the phone). The other
+thirteen bounds were within the point and are gone. Recomputed from batch pass 1's shots, the new rule found one line the old one hid:
+`finance-tabs-ru-360`'s tab title "Твои инвестиции", 1.33 pt narrower on the phone (under that scene's old bound of 3).
+
+**Lines in the phone's own words** (`PHONE_WORDS`) are named too, by the web's words for them, and only they are left out: `home-lost-newer` judges
+every line but the notice (the web says to reload the page, the phone to update the app), `legal` its way back, title and first section (the same
+words on both) and holds its other words to their baseline. Each line judged beyond the point is written in the report's JSON (`far`).
+
+**What differed, and was fixed**:
+
+| scene | what | cause | fix |
+|---|---|---|---|
+| finance-tabs-ru-360 | the tab title "Твои инвестиции" 1.33 pt narrower | the web adds `:lang(ru) .pixel`'s word spacing (−0.16 em) to whatever letter spacing the element has (the tab's 0.1 em); the phone took it off the pixel face's 0.03 em, whatever the style said | the space takes the style's spacing (6d9e122; `text.test`) |
+| the eleven scenes with the guide's note (`play-guide-r1`, the moments, the profiles…) | no gold ring round the note, on either side | the web's note named a 3 px gold ring as `shadow-[…]`, which its bevel's box-shadow, later in the stylesheet, took the place of; the phone copied the loss | under the user's decision 4 (the web's own bugs fixed on `expo`): the web's `bevel` and `frame-raised` draw `--glow` under their strips (as `frame` since 9de0a33); the note and a room's shout name theirs; the phone's note stands in its ring (e9e478c). Seen in the shots: the ring on both |
+
+**The twenty-seven waiting** (the badges' glow, the balance's words, the buttons a screen sizes, the guide's ring, the picture's sheet) were shot first:
+26 clean or within their records, `finance-tabs-ru-360` differed (above). The records kept while they waited are confirmed at the numbers they had:
+`play-guide-r1` 3453, `finance-buy-stock` 149, `finance-taxes` 31, `finance-business` 35, `profile-r6` 30, `end-share` 5084/5085 (record 5100).
+`celebrate-earned` and `celebrate-legendary` are clean with their glow; `balance-r6` is clean in the web's words ("After inflation" on both);
+`finance-tabs-ru-360` is clean (its savings line whole beside buttons of 13). `PENDING_SHOTS` is empty.
+
+Seen with my own eyes in the shots (side by side): the legendary badge's teal glow and the common one's none, the guide's gold ring round its bevel,
+the basket's "No orders" at 14 and the savings' Save/Withdraw at 13, "After inflation" on the balance, the picture's sheet with Share and "Save the
+picture" on both.
+
+**Two full runs**, every scene on both clients, from scratch on the final code (Metro restarted with its cache cleared after the last change), the
+web's `next dev` its own: **run A** exit 0 (load 5.9 → 4.9), **run B** exit 0 (load 4.1 → 2.9): 46 clean, 17 accepted, `home-lost-newer` phone words
+layout clean, `legal` phone words not comparable, in both; the only number that moved is `end-share`'s shape, 5084 then 5085 (the web's own picture,
+known). Two earlier runs were stopped by this pass's own edits, not by a difference: a core file saved while `next dev` served the web's pages
+reloaded them, and two web shots came out blank or half-drawn (`finance-lifestyle`, `hud-status-ru`); no edit was made during the two final runs.
+
+Run B, scene by scene (shape = pixels a point away that are not text; worst text = the farthest a judged line stands; far = the judged lines beyond a
+point, by their words):
+
+| scene | verdict | raw % | shape (px) | of which blended | text lines | worst text (pt) | far | run A, where it differs |
+|---|---|---|---|---|---|---|---|---|
+| home-new | clean | 3.62 | 0 | 0 | 15 (0 unmeasured) | 0.67 | — |  |
+| home-continue | accepted | 2.93 | 1 | 1 | 15 (0 unmeasured) | 0.67 | — |  |
+| home-settings | clean | 2.31 | 0 | 0 | 29 (15 unmeasured) | 0.33 | — |  |
+| home-lost-newer | phone words, layout clean | 4.11 | 0 | 0 | 17 (0 unmeasured, 2 phone words) | 0.67 | — |  |
+| new-first | accepted | 3.28 | 738 | 148 | 25 (1 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-unlocked | accepted | 3.22 | 738 | 148 | 32 (1 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-locked | accepted | 5.9 | 738 | 148 | 65 (9 unmeasured) | 2 | 🎲 At random 2 |  |
+| new-replace | accepted | 2 | 310 | 1 | 31 (26 unmeasured) | 1 | — |  |
+| play-news-r1 | accepted | 3.78 | 1443 | 1443 | 42 (4 unmeasured) | 0.67 | — |  |
+| play-cards-r1 | clean | 4.87 | 0 | 0 | 42 (0 unmeasured) | 0.67 | — |  |
+| play-cards-legendary | accepted | 5.42 | 1 | 0 | 35 (0 unmeasured) | 0.67 | — |  |
+| play-cards-three | clean | 5.24 | 0 | 0 | 40 (0 unmeasured) | 0.33 | — |  |
+| play-cards-ru-360 | clean | 5.23 | 0 | 0 | 37 (0 unmeasured) | 0.67 | — |  |
+| play-finance-r6 | clean | 4.33 | 0 | 0 | 52 (8 unmeasured) | 0.67 | — |  |
+| play-outcome-r1 | clean | 3.66 | 0 | 0 | 31 (0 unmeasured) | 0.67 | — |  |
+| play-resolve-r6 | clean | 4.45 | 0 | 0 | 41 (8 unmeasured) | 0.67 | — |  |
+| play-news-r6 | accepted | 4.21 | 1443 | 1443 | 41 (4 unmeasured) | 0.67 | — |  |
+| play-guide-r1 | accepted | 6.19 | 3453 | 1979 | 42 (5 unmeasured) | 1.33 | New regulator created to regulate the re 1.33 |  |
+| play-fault | clean | 3.02 | 0 | 0 | 6 (0 unmeasured) | 1 | — |  |
+| play-pageturn | accepted | 3.93 | 3897 | 3878 | 51 (8 unmeasured) | 0.67 | — |  |
+| finance-basket | clean | 1.52 | 0 | 0 | 56 (49 unmeasured) | 0.33 | — |  |
+| finance-pension | clean | 2.51 | 0 | 0 | 68 (52 unmeasured) | 0.67 | — |  |
+| finance-tabs-ru-360 | clean | 4.05 | 0 | 0 | 51 (4 unmeasured) | 0.67 | — |  |
+| finance-market | clean | 3.78 | 0 | 0 | 61 (8 unmeasured) | 0.67 | — |  |
+| finance-buy-stock | accepted | 2.91 | 149 | 149 | 83 (61 unmeasured) | 1 | — |  |
+| finance-property | clean | 6.13 | 0 | 0 | 40 (2 unmeasured) | 0.67 | — |  |
+| finance-debt | clean | 3.56 | 0 | 0 | 36 (0 unmeasured) | 1 | — |  |
+| hud-news-r1 | clean | 2.87 | 0 | 0 | 20 (0 unmeasured) | 0.67 | — |  |
+| hud-cash | clean | 1.26 | 0 | 0 | 30 (20 unmeasured) | 0.33 | — |  |
+| hud-flow | clean | 1.28 | 0 | 0 | 32 (19 unmeasured) | 0.67 | — |  |
+| hud-race | clean | 2.23 | 0 | 0 | 36 (20 unmeasured) | 0.33 | — |  |
+| hud-status-ru | clean | 2.17 | 0 | 0 | 44 (20 unmeasured) | 0.67 | — |  |
+| hud-jailed | clean | 3.38 | 0 | 0 | 33 (21 unmeasured) | 0.67 | — |  |
+| hud-crisis | clean | 3.1 | 0 | 0 | 21 (0 unmeasured) | 0.33 | — |  |
+| hud-crisis-details | clean | 2.66 | 0 | 0 | 33 (21 unmeasured) | 0.67 | — |  |
+| amount-savings | clean | 1.57 | 0 | 0 | 30 (19 unmeasured) | 0.67 | — |  |
+| celebrate-legendary | clean | 1.21 | 0 | 0 | 24 (19 unmeasured) | 0.67 | — |  |
+| celebrate-earned | clean | 3.42 | 0 | 0 | 27 (0 unmeasured) | 0.67 | — |  |
+| challenge-practice | clean | 4.21 | 0 | 0 | 15 (0 unmeasured) | 0.67 | — |  |
+| legal | phone words, not comparable | 14.42 | 39721 | 215 | 34 (0 unmeasured, 27 phone words) | 0.67 | — |  |
+| finance-lifestyle | clean | 4.31 | 0 | 0 | 47 (4 unmeasured) | 0.67 | — |  |
+| finance-move | clean | 1.88 | 0 | 0 | 72 (47 unmeasured) | 0.67 | — |  |
+| play-cards-city | clean | 2.68 | 0 | 0 | 50 (37 unmeasured) | 0.67 | — |  |
+| work-panel | clean | 2.46 | 0 | 0 | 33 (0 unmeasured) | 0.67 | — |  |
+| finance-shop | clean | 3.81 | 0 | 0 | 50 (6 unmeasured) | 0.67 | — |  |
+| finance-item | clean | 3.05 | 0 | 0 | 71 (50 unmeasured) | 0.67 | — |  |
+| finance-taxes | accepted | 4.01 | 31 | 31 | 48 (4 unmeasured) | 0.67 | — |  |
+| finance-business | accepted | 4.77 | 35 | 1 | 58 (7 unmeasured) | 0.67 | — |  |
+| profile-r6 | accepted | 2.14 | 30 | 0 | 77 (42 unmeasured) | 0.67 | — |  |
+| profile-owned | clean | 1.53 | 0 | 0 | 85 (77 unmeasured) | 0.67 | — |  |
+| balance-r6 | clean | 1.85 | 0 | 0 | 90 (77 unmeasured) | 0.67 | — |  |
+| rivals-r6 | clean | 2.77 | 0 | 0 | 20 (0 unmeasured) | 0.33 | — |  |
+| end-escaped | clean | 3.09 | 0 | 0 | 24 (0 unmeasured) | 0.33 | — |  |
+| end-bankrupt | accepted | 3.15 | 5 | 5 | 25 (1 unmeasured) | 0.33 | — |  |
+| end-share | accepted | 1.33 | 5085 | 4267 | 29 (25 unmeasured) | 1 | — | A: accepted 5084 1 |
+| end-ru | accepted | 4.27 | 168 | 54 | 25 (0 unmeasured) | 0.67 | — |  |
+| moment-escape | clean | 4.75 | 0 | 0 | 52 (40 unmeasured) | 0.67 | — |  |
+| moment-bankrupt | clean | 2.44 | 0 | 0 | 54 (39 unmeasured) | 0.67 | — |  |
+| moment-crisis | clean | 2.94 | 0 | 0 | 56 (42 unmeasured) | 1 | — |  |
+| records-empty | clean | 2.61 | 0 | 0 | 3 (0 unmeasured) | 0.33 | — |  |
+| records-three | clean | 3.48 | 0 | 0 | 28 (0 unmeasured) | 0.67 | — |  |
+| records-detail | clean | 2.29 | 0 | 0 | 42 (28 unmeasured) | 0.67 | — |  |
+| collection-items | clean | 4.05 | 0 | 0 | 14 (0 unmeasured) | 0.67 | — |  |
+| collection-badges | clean | 5.23 | 0 | 0 | 29 (0 unmeasured) | 0.67 | — |  |
+| profile-financed | clean | 2.47 | 0 | 0 | 95 (77 unmeasured) | 1 | — |  |
+
+## Batch pass 2: the device checks
+
+On the iPhone 16 Pro simulator (iOS 18.0). Save Image in the release build (it reads the app's own Info.plist); the two sheets and the toast in Expo
+Go on Metro with `EXPO_PUBLIC_PERF=1` (for the probe's route), after the fixture was added to it.
+
+| # | check | how | result |
+|---|---|---|---|
+| 1 | Two Modals at once: a round that leaves the rat race and earns a legendary badge (the moment's sheet and the badge's) | `perf?escape=early` (new: the influencer of a fixed seed at the finances of round 7, whose round, played with no orders, leaves the rat race at 38 and earns `escaped_before_40` and the first million); "Play the round" | **finding, fixed**: only the badge's sheet was shown; the moment's never was, before or after it. The simulator's log: `[UIKit:Presentation] Attempt to present <RCTFabricModalHostViewController> … which is already presenting <RCTFabricModalHostViewController>`. iOS presents one Modal at a time from a view controller. *Fix* (92feb98): the kit's `Sheet` takes turns (`overlay.tsx`): a sheet holds its turn from when it opens until its Modal has gone; a sheet drawn inside another is presented by it at once; of sheets opened together the last opened shows first, as the web's last portal is on top. Checked again: "Out of the rat race!", then "Your first million" (the Moments' one sheet, one moment after the other), then the legendary "Out before 40", each whole; no UIKit error in the log. Tests: `overlay.test` (four), `Moments.test` (the round itself) |
+| 2 | A toast over an open sheet: an order refused while a sheet is open | `perf?life=play-finance-r6`, the shop: a watch bought ($118K left), then the Porsche 911's sheet and "Buy for $200,098" | ok: the sheet stays open and the toast "Not possible: You do not have enough cash." rises inside it, 112 over its foot, over its words (the web's toast stands over its sheets, z 60 over 50) |
+| 3 | Save Image: the permission prompt, the picture in Photos, a refusal | Release build, `xcrun simctl privacy … reset photos-add`; the end of `moment-escape`'s life, Share this life, Save the picture | ok. The prompt: "“The Rat Race” Would Like to Add to Your Photos" / "The Rat Race saves the picture of your life to your photos." / Don't Allow, Allow. Don't Allow: "The Rat Race may not add to your photos. You can allow it in Settings." under the buttons, nothing saved. Allowed (iOS ends the app when a privacy setting changes; opened again from "See how your last life ended"): "Saved to your photos."; the picture is `DCIM/100APPLE/IMG_0007.PNG`, 1080 × 1348, the card shown. The built Info.plist has `NSPhotoLibraryAddUsageDescription` and no other usage description (no microphone, no background mode since 0dc7e6f) |
+
+## Batch pass 2: performance (release build)
+
+**Builds.** Two release builds with the probe (`EXPO_PUBLIC_PERF=1`), each from `npx expo prebuild --platform ios --clean`: *before* is the sources of
+07c8544 (where this pass began: `apps/mobile/src` and `packages/core/src` checked out from it for the build, then put back), *after* is 33e1546
+(every change of this pass to the stores, the resolve page and the end; the sheet turns, 92feb98, came later and do not touch these steps). Each installed fresh (no data), 63 finished lives put with `perf?runs=records-three&copies=21`, the app opened
+again so it starts with them. Ten presses each of "Play the round", after one press not counted; the load average (`uptime`, 1 min) with every set.
+
+| step | before (07c8544) | after | load |
+|---|---|---|---|
+| finances → resolve, round 6 (`perf?life=play-finance-r6`), settled | 104, 160, 54, 65, 181, 147, 116, 214, 130, 163: **median 138** | 113, 148, 112, 111, 113, 129, 162, 212, 129, 67: **median 121** | 3.6 to 4.8; 3.6 to 5.4 |
+| … drawn / commit | 72 / 53 | 71 / 53 | |
+| finances → resolve, round 20, the round that ends the life (`perf?life=moment-escape&last=1`), 63 lives kept, settled | 161, 113, 130, 146, 96, 146, 117, 99, 97, 130: **median 124** (the press before them: 546, a 423 ms UI frame, the first after the app opened) | 113, 112, 131, 162, 130, 130, 82, 96, 111, 130: **median 122** (the press before: 130) | 3.8 to 4.6; 4.4 to 5.3 |
+| … drawn / commit | 73 / 54 | 68 / 54 | |
+| cold start to the front door, 64 lives kept (ten launches) | 1173 (1748, 1170, 1142, 1170, 1236, 1175, 1180, 1132, 1156, 1183) | 1244 (1285 … 1318) and again 1186 (1612, 1149, 1231, 1162, 1134, 1168, 1165, 1204, 1283, 1239) | 4.3 to 6.7 |
+
+Both steps are within the 200 ms budget in both builds on this quieter Mac (load 4 to 5; the decisions' 212 was at load 7 to 12). The budget did not
+need the store's work to pass, but the store's work is gone from the step all the same:
+
+- **What the round that ends a life does to the store**, before → after (the probe's `device` layer is the phone's KvStore, `saved` the resilient
+  store the game asks): `addRun` + `saveGame`, then the second `addRun` **and a second `saveGame` of the unchanged game** (local.ts: the run written
+  again with the gallery's badges) → the second `saveGame` gone (33e1546). The step's `listRuns` (the profile's count) is still read on the step that
+  ends a life (the rank needs the lives): 2.5 to 6.6 ms, each life parsed anew from its text, and no copy over it in the resilient store
+  (`freshReads`). On a step that does not end a life: `listRuns` before (0.6 to 1.4 ms, plus the resilient store's JSON copy of every life, not timed
+  then) → `runIds` after (0.2 to 0.8 ms, the index only); `kvStore.test` holds that with 63 lives such a step lists none and reads no life's key.
+- **The provider's `listRuns` after the commit** (31 to 52 ms in both builds) is the read queued behind the JS thread's work of drawing the page, not
+  the store's own: it reads the index, and the lives only after another store wrote.
+- **What the step is made of**: the commit (the engine's round and the resolve page, ~53 ms in both) and the UI thread's frames after it (the longest
+  33 to 106 ms). Neither is the store's.
+- **Cold start with 64 lives** reads every life once (one `getItem` a life and `getAllKeys`): 35 to 65 ms, while the front door is drawn; the front
+  door at 1.19 to 1.24 s, within the 2 s budget, the same as before.
+
+The first press after the app opened (546 ms in the before build, a 423 ms UI frame) is the first resolve page of the process (its fonts and canvases
+made); not counted in either median, and not seen in the after build's first press (130), which came after ten round-6 presses.
