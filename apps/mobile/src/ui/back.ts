@@ -63,3 +63,17 @@ function setShutting(now: boolean): void {
 export const closeEverySheet = (): void => setShutting(true);
 /** Lets the sheets open again, as their screens ask. */
 export const openSheetsAgain = (): void => setShutting(false);
+
+/**
+ * The sheets taken away whole while they were shown, each holding its turn until its Modal has gone (overlay.tsx's `endTurnOnceGone`): what lets each
+ * go. Kept here, where nothing is imported, so that a test's teardown reaches it without loading the kit.
+ */
+const holding = new Set<() => void>();
+export const holdingTurn = (letGo: () => void): (() => void) => {
+  holding.add(letGo);
+  return () => void holding.delete(letGo);
+};
+/** Lets every turn held by a sheet already taken away go at once. For a test's teardown only (testing/setup.ts): the next test's sheets wait for none. */
+export function letHeldTurnsGo(): void {
+  for (const letGo of [...holding]) letGo();
+}

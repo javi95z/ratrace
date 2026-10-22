@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { sheetOpened, sheetsShut, subscribeShut } from './back';
+import { holdingTurn, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -77,6 +77,23 @@ function endTurn(id: number): void {
   const at = turns.findIndex((turn) => turn.id === id);
   if (at >= 0) changeTop(() => void turns.splice(at, 1));
 }
+/**
+ * How long a sheet taken away whole while it is shown keeps its turn, by platform: its screen gone from under it (a room started or left), its Modal is
+ * still being dismissed on the phone, and no other may be presented until it has gone. An unmounted Modal can say nothing of its dismissal (its
+ * `onDismiss` has gone with it), so the turn is held for as long as iOS takes (`DISMISS_MS`), and a moment on Android; react-native-web's is gone at once.
+ */
+const ANDROID_GONE_MS = 100;
+function endTurnOnceGone(id: number): void {
+  const wait = Platform.OS === 'ios' ? DISMISS_MS : Platform.OS === 'android' ? ANDROID_GONE_MS : undefined;
+  if (wait === undefined || !turns.some((turn) => turn.id === id && turn.shown)) return endTurn(id);
+  const letGo = () => {
+    clearTimeout(timer);
+    stop();
+    endTurn(id);
+  };
+  const timer = setTimeout(letGo, wait);
+  const stop = holdingTurn(letGo);
+}
 
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet): the backdrop closes it,
@@ -107,7 +124,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
   useLayoutEffect(() => {
     if (open) takeTurn(id, parent);
   }, [open, id, parent]);
-  useLayoutEffect(() => () => endTurn(id), [id]);
+  useLayoutEffect(() => () => endTurnOnceGone(id), [id]);
   const turn = useSyncExternalStore(subscribeTop, () => hasTurn(id), () => false);
   // The latest opening, and who is told when a sheet has gone, as they are when the Modal says it has dismissed.
   const latest = useRef(opening);
@@ -150,6 +167,8 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
   const shown = useRef(onShown);
   useLayoutEffect(() => {
     shown.current();
+    // No sheet opens under the page's keyboard: a field focused on the page (a room's code) would keep it over the sheet on iOS, its buttons under it.
+    Keyboard.dismiss();
   }, []);
   const { height } = useWindowDimensions();
   const rise = useRise();
@@ -215,17 +234,18 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
             onPress={onClose}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
           />
-          <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH }, rise]}>
+          {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
+          <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
             <Framed
               kind="bevel"
               tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
-              style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88 }}
+              style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
             >
               <ScrollView
                 // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
                 keyboardShouldPersistTaps="handled"
                 bounces={false}
-                style={{ flexGrow: 0 }}
+                style={{ flexGrow: 0, flexShrink: 1 }}
                 contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: Math.max(12, inset.bottom) }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>

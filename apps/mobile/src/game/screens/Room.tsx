@@ -38,7 +38,7 @@ import { NAME } from './Rankings';
 /** The refusals the server gives in words of its own. Any other is told as a refusal with no reason. */
 const REFUSALS = new Set(['unknown-room', 'started', 'full', 'other-version', 'in-a-room', 'locked-life', 'cannot-room', 'unreachable', 'alone', 'not-host', 'not-over']);
 /** Seconds as a clock reads them: 1:30; hours and minutes for a round of a day, 23h 05m. */
-export const clock = (seconds: number) =>
+const clock = (seconds: number) =>
   seconds >= 3_600 ? `${Math.floor(seconds / 3_600)}h ${String(Math.floor((seconds % 3_600) / 60)).padStart(2, '0')}m` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 /** A round of a day is a day; one of hours, its hours; a quick one, its clock. */
 const DAY = 86_400;
@@ -463,7 +463,7 @@ function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; o
   );
 }
 
-/** The link to a room, the web's own (`/<locale>/room?code=`): opened on a phone with the app, it opens the app's room (`theratrace://room?code=`'s route). */
+/** The link to a room, the web's own (`/<locale>/room?code=`): it opens the web's game, wherever it is opened. The app's own room opens by `theratrace://room?code=`. */
 const linkTo = (locale: string, code: string): string => `${SITE_URL.origin}/${locale}/room?code=${code}`;
 
 /** How long a public lobby has to start by itself, counted down: a leaf of its own, so that only the clock is drawn again each second. */

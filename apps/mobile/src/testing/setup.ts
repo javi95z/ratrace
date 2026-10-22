@@ -53,5 +53,8 @@ resetAlso(forgetConnection);
 // And every sheet free to open again, should a test end while the game was shutting them to start again.
 const { openSheetsAgain } = await import('../ui/back');
 resetAlso(openSheetsAgain);
+// And no turn held by a sheet a test took away while it was shown (on iOS or Android, `endTurnOnceGone`): the next test's sheets wait for none.
+const { letHeldTurnsGo } = await import('../ui/back');
+resetAlso(letHeldTurnsGo);
 
 afterEach(resetFakes);

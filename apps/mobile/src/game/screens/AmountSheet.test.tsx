@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
+import { letHeldTurnsGo } from '../../ui/back';
 
 // The slider's gesture is the phone's (the gesture handler's native side cannot be loaded here, and the kit's own test drives it): a stand-in
 // that keeps what the sheet hands it, and draws the adjustable a screen reader finds.
@@ -160,6 +161,8 @@ describe('an amount on a slider', () => {
       slide(2_000);
       expect(said).not.toHaveBeenCalled();
       cleanup();
+      // The sheet taken away holds its turn while iOS dismisses it: the next is drawn once it has gone.
+      letHeldTurnsGo();
       // TalkBack hears the live region; nothing is said over it.
       Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
       renderGame(<Example confirmed={() => {}} start={1_000} />, memoryServices());

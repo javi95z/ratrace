@@ -7,7 +7,7 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { roomServer } from '../../../../web/src/testing/roomServer';
 import { clipboard } from '../../testing/fakes';
-import { memoryServices, renderGame, router } from '../../testing/render';
+import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { COLORS } from '../../ui/theme';
@@ -334,6 +334,25 @@ describe('opening and joining a room', () => {
   });
 });
 
+describe('a room on other rules', () => {
+  it('says a started game on rules the app lacks cannot be played here, in the phone\'s words, and offers to leave it', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    // The game is on newer rules than this app: it was begun on a version the app is not on yet.
+    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    expect(await screen.findByText('This game plays another version. Update the app to play it.')).toBeTruthy();
+    // Never the web's words, and never the life: no round to play, no news to read.
+    expect(screen.queryByText(/Reload the page/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'See what life brings' })).toBeNull();
+    press(button('Leave the game'));
+    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
+    expect((await server.ask(HOST, { action: 'mine' })).body.room).toBeNull();
+  });
+});
+
 describe('a public game', () => {
   it('takes a seat from the door, says how long until it starts and that rats fill it, and anyone may start it now', async () => {
     const { server, services, counted } = inRooms();
@@ -402,6 +421,9 @@ describe('a public game', () => {
     await steady(() => rats.size);
     const before = renders.count;
     const seats = [...rats.values()];
+    // The life everyone lives, in the lobby's own panel: drawn again only if the lobby is.
+    const portrait = document.querySelector('[data-sprite^="portrait."]')!.getAttribute('data-sprite')!;
+    const lobbyDrawn = spriteRenders.get(portrait);
     const shown = timer.textContent;
     // A tenth of a second at a time, each drawn as it ends (`act` draws what it was told at its end): a clock told every frame is drawn every time.
     for (let tenth = 0; tenth < 23; tenth++) {
@@ -414,6 +436,7 @@ describe('a public game', () => {
     expect(renders.count - before).toBeGreaterThanOrEqual(1);
     expect(renders.count - before).toBeLessThanOrEqual(5);
     expect([...rats.values()]).toEqual(seats);
+    expect(spriteRenders.get(portrait)).toBe(lobbyDrawn);
   });
 });
 
