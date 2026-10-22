@@ -15,6 +15,7 @@ import type { GameSession, SavedGame } from '@ratrace/core/session/types';
 import { rankedServer } from '@/testing/rankedServer';
 import { roomServer } from '@/testing/roomServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
+import { styleOf } from '@/testing/stylesheet';
 import { COMPARE_MIN } from './End';
 import { Play } from './Play';
 
@@ -303,6 +304,26 @@ describe('the play screen', () => {
     // The card offers the life it unlocked, and "Try it now" starts it.
     await user.click(within(screen.getByRole('region', { name: 'A new life is open' })).getByRole('button', { name: 'Try it now' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+  });
+
+  it('stands the guide\'s note out in a gold ring, under its gold bevel: both drawn, as the stylesheet compiles them', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    const tip = await screen.findByRole('note', { name: 'Guide' });
+    const style = await styleOf(tip.className);
+    // The bevel's outline and its lit and shaded edges in gold, then the ring of three under the outline (a 'shadow-*' beside the bevel lost to it).
+    expect(style.get('box-shadow')).toBe(
+      [
+        '0 -2px 0 0 var(--color-gold-900)',
+        '0 2px 0 0 var(--color-gold-900)',
+        '-2px 0 0 0 var(--color-gold-900)',
+        '2px 0 0 0 var(--color-gold-900)',
+        'inset 2px 2px 0 0 var(--color-gold-200)',
+        'inset -2px -2px 0 0 var(--color-gold-700)',
+        '0 0 0 3px var(--color-gold-500)',
+      ].join(', '),
+    );
   });
 
   it('guides a first life: one tip a stage, each read once, and remembered', async () => {

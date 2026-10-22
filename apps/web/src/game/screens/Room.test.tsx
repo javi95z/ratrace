@@ -8,6 +8,7 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { roomServer } from '@/testing/roomServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
+import { styleOf } from '@/testing/stylesheet';
 import { Home } from './Home';
 import { Room } from './Room';
 
@@ -358,6 +359,20 @@ describe('a round in a room', () => {
     await waitFor(() => expect(server.db.members.find((m) => m.user_id === HOST)?.shout).toBe(6));
     // The player sees what they shouted, as the others do.
     await waitFor(() => expect(screen.getAllByRole('status').map((status) => status.textContent)).toContain('Rat AAAAWell played!'), { timeout: 3_000 });
+    // Gold on the night, raised, with its shadow under it: both drawn, as the stylesheet compiles them (a 'shadow-*' beside the frame lost to it).
+    const shout = screen.getByText('Well played!').closest<HTMLElement>('.frame-raised')!;
+    expect((await styleOf(shout.className)).get('box-shadow')).toBe(
+      [
+        '0 -2px 0 0 var(--color-gold-900)',
+        '0 2px 0 0 var(--color-gold-900)',
+        '-2px 0 0 0 var(--color-gold-900)',
+        '2px 0 0 0 var(--color-gold-900)',
+        'inset 0 2px 0 0 var(--color-gold-200)',
+        'inset 0 -3px 0 0 var(--color-gold-700)',
+        '0 6px 0 -2px var(--color-gold-900)',
+        '4px 4px 0 rgb(0 0 0/0.5)',
+      ].join(', '),
+    );
     // Again at once: the sheet says to wait.
     await user.click(screen.getByRole('button', { name: 'Say something' }));
     expect(within(screen.getByRole('dialog', { name: 'Say something' })).getByText(/^You can say something again in \d+ s$/)).toBeTruthy();

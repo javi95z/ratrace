@@ -107,7 +107,9 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   // button sizes too (below).
   'balance-r6',
   // A Button a screen gives its own size (the web's Button takes it now, and the phone draws it): the guide's two (15 and 14), the basket's
-  // (14, 12 in) and the savings' two (13, 8 in). Every scene that draws one of them, found by drawing each scene on the phone.
+  // (14, 12 in) and the savings' two (13, 8 in). Every scene that draws one of them, found by drawing each scene on the phone. The guide's note
+  // stands in its gold ring since batch pass 2 too (the web's `--glow` under its bevel, the phone's ring): every scene with the note is here
+  // (balance-r6, the moments, play-cards-r1, play-finance-r6, play-guide-r1, play-resolve-r6, the profiles: found by the web's shots' text).
   'play-cards-r1',
   'play-finance-r6',
   'play-resolve-r6',

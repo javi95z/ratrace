@@ -19,9 +19,9 @@ import { useGame, useGuide, useRuns, useT, useWords } from '../context';
  * A tip stays until it is read, so one that was passed by is there the next time. Reading one
  * does not bring up the next in line: that waits for the next visit to the stage.
  *
- * Its frame is the web's `bevel frame-gold`: the web's class list also names a 3-pixel gold ring, which the bevel's own box-shadow
- * takes the place of in its stylesheet (measured on the web's page: no ring is drawn), so none is drawn here either. With no keyboard,
- * nothing is handed the focus when the note goes.
+ * Its frame is the web's `bevel frame-gold`, standing in a 3-pixel gold ring under the frame (the web's `--glow`: its class list named
+ * the ring as a `shadow-*`, which the bevel's own box-shadow took the place of, until batch pass 2 put it under the bevel's). With no
+ * keyboard, nothing is handed the focus when the note goes.
  */
 export function Guide() {
   const t = useT('guide');
@@ -76,6 +76,9 @@ function Note({ title, label, text, gotIt, skip, onRead, onSkip }: { title: stri
   return (
     // A note in the flow of the page and nothing more: a shade over the screen made the sticky bars look to jump as the page scrolled.
     <Animated.View role="note" aria-label={label} style={[{ marginBottom: 12 }, rise]}>
+      {/* The ring of three under the frame (the web's `0 0 0 3px` gold shadow): the frame's two-point strips are drawn over all but its outer point
+          and the frame's open corners, and the note's own ground over its inside. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: -3, left: -3, right: -3, bottom: -3, backgroundColor: COLORS['gold-500'] }} />
       <Framed kind="bevel" tone={GOLD} style={{ backgroundColor: COLORS['night-700'], padding: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
           {/* The rat, thinking it over with the player. */}

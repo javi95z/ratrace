@@ -801,8 +801,8 @@ function Heard({ room }: { room: RoomState }) {
         const name = member ? nameOf(member) : '';
         const face = shout.n < SHOUT_FACES.length;
         return (
-          // Gold on the night, with a shadow under it: it sits over the game, and says someone is talking.
-          <div key={shout.key} className="frame-raised frame-gold flex w-full max-w-sm animate-rise items-center gap-3 bg-night-600 px-3 py-2.5 shadow-[4px_4px_0_rgb(0_0_0/0.5)]">
+          // Gold on the night, with a shadow under it (under its frame: `--glow`, globals.css): it sits over the game, and says someone is talking.
+          <div key={shout.key} className="frame-raised frame-gold flex w-full max-w-sm animate-rise items-center gap-3 bg-night-600 px-3 py-2.5 [--glow:4px_4px_0_rgb(0_0_0/0.5)]">
             {member ? <MemberRat member={member} size="md" /> : null}
             <span className="min-w-0 flex-1">
               <span className="pixel block truncate text-[12px] uppercase tracking-wider text-gold-200">{name}</span>

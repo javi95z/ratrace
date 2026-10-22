@@ -13,6 +13,7 @@ import { memoryServices, pressBack, renderGame, router, spriteRenders } from '..
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
 import { painted } from '../../ui/testing/skia';
+import { COLORS } from '../../ui/theme';
 import { GameProvider, TAP_GUARD_MS, useGame } from '../context';
 import type { Services } from '../context';
 import { phoneBasket } from '../phoneBasket';
@@ -318,6 +319,20 @@ describe('the guide of a first life', () => {
     });
     expect(sizeOf(within(tip).getByRole('button', { name: 'Got it' }))).toEqual({ words: '15px', sides: '16px' });
     expect(sizeOf(within(tip).getByRole('button', { name: 'Skip the guide' }))).toEqual({ words: '14px', sides: '16px' });
+  });
+
+  it('stands in a gold ring of three under its gold bevel, as the web\'s note does', async () => {
+    const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    const tip = await screen.findByRole('note', { name: 'Guide' });
+    const [ring, frame] = [...tip.children] as HTMLElement[];
+    expect([ring.style.position, ring.style.top, ring.style.left, ring.style.right, ring.style.bottom]).toEqual(['absolute', '-3px', '-3px', '-3px', '-3px']);
+    expect(ring.style.backgroundColor).toBe(rgb(COLORS['gold-500']));
+    // Under the frame, which is drawn after it, on the note's own ground.
+    expect(frame.style.backgroundColor).toBe(rgb(COLORS['night-700']));
+    expect(ring.textContent).toBe('');
   });
 
   it('gives one tip a stage, each read once, and remembered', async () => {

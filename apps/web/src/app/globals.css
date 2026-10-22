@@ -369,7 +369,8 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
 
 /*
  * The colours a frame is drawn in: its outline, its lit edge, its shaded edge, and the ring of a
- * double frame; and the glow a plain frame stands in. They belong to the element that names them
+ * double frame; and what a frame stands in, drawn under it (`--glow`: a badge's glow, the guide's
+ * ring, a shout's shadow). They belong to the element that names them
  * and to nothing inside it. Left to inherit, a gold panel would gild every button it holds.
  */
 @property --frame {
@@ -427,7 +428,8 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
 /*
  * The frame of a surface that lies on the page: lit along the top and left, shaded along the
  * bottom and right, as if the light came from the top left like it does in the art.
- * `--hi` and `--lo` are the two edges; a surface of another colour names its own.
+ * `--hi` and `--lo` are the two edges; a surface of another colour names its own. Under them,
+ * what the element names (`--glow`), as under a plain frame.
  */
 @utility bevel {
   box-shadow:
@@ -436,7 +438,8 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
     -2px 0 0 0 var(--frame, var(--color-night-900)),
     2px 0 0 0 var(--frame, var(--color-night-900)),
     inset 2px 2px 0 0 var(--hi, var(--color-night-500)),
-    inset -2px -2px 0 0 var(--lo, var(--color-night-900));
+    inset -2px -2px 0 0 var(--lo, var(--color-night-900)),
+    var(--glow, 0 0 #0000);
 }
 
 /* A surface sunk into the page, for things that are shown and not pressed: a sprite, a gauge, a track. */
@@ -448,7 +451,7 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
 
 /*
  * The frame of something that can be pressed: lit on top, shaded underneath, and standing off the
- * page on a hard shadow.
+ * page on a hard shadow. Under them, what the element names (`--glow`), as under a plain frame.
  */
 @utility frame-raised {
   box-shadow:
@@ -458,7 +461,8 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
     2px 0 0 0 var(--frame, var(--color-night-900)),
     inset 0 2px 0 0 var(--hi, var(--color-night-500)),
     inset 0 -3px 0 0 var(--lo, var(--color-night-800)),
-    0 6px 0 -2px var(--frame, var(--color-night-900));
+    0 6px 0 -2px var(--frame, var(--color-night-900)),
+    var(--glow, 0 0 #0000);
 }
 
 @utility frame-gold {

@@ -1,13 +1,12 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { badges, rarityOf } from '@ratrace/content';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { compile } from 'tailwindcss';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '@/testing/render';
+import { styleOf } from '@/testing/stylesheet';
 import { Celebrations } from './Celebrations';
 import { RARITY_GLOW } from './rarityStyle';
 
@@ -19,36 +18,6 @@ vi.mock('@/game/context', async (original) => {
 
 afterEach(cleanup);
 const idOf = (rarity: string) => badges.find((badge) => rarityOf(badge.id) === rarity)!.id;
-
-/**
- * The style the browser gives an element of these classes, as far as the game's own stylesheet says it: globals.css compiled by Tailwind for
- * them, its utilities applied in the order the stylesheet writes them (they are all of one layer and one weight, so the later wins), and the
- * frame's variables put in. The colours of the palette are left as their names (`var(--color-gold-900)`).
- */
-async function styleOf(classes: string): Promise<Map<string, string>> {
-  const require = createRequire(join(__dirname, 'here.js'));
-  const css = readFileSync(join(__dirname, '../../app/globals.css'), 'utf8');
-  const compiler = await compile(css, {
-    base: '.',
-    loadStylesheet: async (id: string) => {
-      const path = require.resolve(id === 'tailwindcss' ? 'tailwindcss/index.css' : id);
-      return { path, base: path, content: readFileSync(path, 'utf8') };
-    },
-  });
-  const built = compiler.build(classes.split(/\s+/));
-  const layer = built.slice(built.indexOf('@layer utilities {'));
-  const style = new Map<string, string>();
-  for (const [, body] of layer.matchAll(/\n {2}\.[^\n{]+\{\n([^}]*)\n {2}\}/g)) {
-    for (const declaration of body.split(';\n')) {
-      const at = declaration.indexOf(':');
-      if (at > 0) style.set(declaration.slice(0, at).trim(), declaration.slice(at + 1).trim().replace(/;$/, '').replace(/\s+/g, ' '));
-    }
-  }
-  // The frame's own variables, each to what the element sets it to or to its fallback (no further: the palette keeps its names).
-  const put = (value: string) => value.replace(/var\((--(?:frame|glow)), ((?:[^()]|\([^()]*\))*)\)/g, (_, name: string, fallback: string) => style.get(name) ?? fallback);
-  for (const [name, value] of style) style.set(name, put(value));
-  return style;
-}
 
 /** The gold frame's four hard strips, as box-shadows. */
 const GOLD_FRAME = ['0 -2px 0 0 var(--color-gold-900)', '0 2px 0 0 var(--color-gold-900)', '-2px 0 0 0 var(--color-gold-900)', '2px 0 0 0 var(--color-gold-900)'];

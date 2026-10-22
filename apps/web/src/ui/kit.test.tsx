@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { rulesOf } from '@/testing/stylesheet';
 import { Bar, Button, Panel, Segmented, Toggle } from './kit';
 
 afterEach(cleanup);
@@ -43,6 +46,21 @@ describe('Button', () => {
     for (const className of ['mt-2', 'flex-1', 'w-full', 'max-sm:hidden', 'sm:px-2 sm:text-[13px]', 'text-ink-900', 'pl-2', 'pt-1']) {
       expect(classesOf(className), className).toEqual(expect.arrayContaining(['px-4', 'py-2', 'text-[17px]', ...className.split(' ')]));
     }
+  });
+
+  it('gives up its own where the stylesheet would draw them over a screen\'s, and keeps them where it would not: the order the stylesheet compiles', async () => {
+    const order = (await rulesOf('px-4 py-2 text-[17px] p-1 px-3 px-2 pl-2 pt-1 text-sm text-[14px] text-[13px]')).map((rule) => rule.selector.slice(1).replace(/\\/g, ''));
+    const at = (name: string) => {
+      expect(order, name).toContain(name);
+      return order.indexOf(name);
+    };
+    // Written before the Button's own, so lost to them if both were kept: the Button leaves its own out.
+    for (const name of ['p-1', 'px-3', 'px-2']) expect(at(name), name).toBeLessThan(at('px-4'));
+    expect(at('p-1')).toBeLessThan(at('py-2'));
+    for (const name of ['text-sm', 'text-[14px]', 'text-[13px]']) expect(at(name), name).toBeLessThan(at('text-[17px]'));
+    // Written after them, so drawn over them with both kept: the Button keeps its own.
+    expect(at('pl-2')).toBeGreaterThan(at('px-4'));
+    expect(at('pt-1')).toBeGreaterThan(at('py-2'));
   });
 });
 
@@ -141,5 +159,21 @@ describe('choices with pictures', () => {
     render(<Toggle on={false} onChange={() => {}} label="Health insurance" icon="icon.insurance" />);
     const control = screen.getByRole('switch', { name: 'Health insurance' });
     expect(control.querySelector('img')?.getAttribute('src')).toContain('icon.insurance');
+  });
+});
+
+describe('a frame and a shadow of its own', () => {
+  it('are never two classes of one element: the frame\'s box-shadow comes after a `shadow-*` or `ring-*` in the stylesheet and takes its place, so a frame names what it stands in as `--glow`', () => {
+    const FRAMES = ['frame', 'bevel', 'sunk', 'frame-raised', 'lamp', 'frame-double', 'tab'];
+    const files = readdirSync(join(__dirname, '..'), { recursive: true, encoding: 'utf8' }).filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file));
+    const both: string[] = [];
+    for (const file of files) {
+      const source = readFileSync(join(__dirname, '..', file), 'utf8');
+      for (const [, classes] of source.matchAll(/["'`]([^"'`\n]*)["'`]/g)) {
+        const names = classes.split(/\s+/);
+        if (names.some((name) => FRAMES.includes(name)) && names.some((name) => /^(shadow|ring|inset-shadow|inset-ring)-/.test(name))) both.push(`${file}: ${classes}`);
+      }
+    }
+    expect(both).toEqual([]);
   });
 });
