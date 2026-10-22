@@ -572,7 +572,8 @@ test('the scene of the ledger is drawn by the ledger itself, every line risen an
   const rows = within(ledger).getAllByRole('row');
   expect(rows.length).toBeGreaterThan(2);
   for (const row of rows) expect((row.parentElement as HTMLElement).style.opacity).toBe('1');
-  // The cash stands where it ends: the figure is what a screen reader is told.
+  // The cash stands where it ends: the figure is what a screen reader is told (under the ledger, once it is on screen: ui/drawnFirst.ts).
+  await screen.findByText('Cash now', {}, WAIT);
   const counted = document.querySelector<HTMLElement>('[data-coin-to]') as HTMLElement;
   const [said, shown] = [...counted.children].map((part) => part.textContent);
   expect(shown).toBe(said);

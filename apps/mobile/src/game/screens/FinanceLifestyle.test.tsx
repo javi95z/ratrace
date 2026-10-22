@@ -441,6 +441,8 @@ describe('the lifestyle tab, drawn again', () => {
       services,
     );
     await screen.findByRole('tabpanel', { name: 'Lifestyle' });
+    // Every panel in (the ones under the first screen come once the first are on it, a drawing of its own: ui/drawnFirst.ts).
+    await screen.findByRole('radiogroup', { name: 'How you live' }, { timeout: 15_000 });
     await settled();
     const before = renders.count;
     expect(before).toBeGreaterThan(0);
