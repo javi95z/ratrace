@@ -2,17 +2,19 @@
 import { content, lives } from '@ratrace/content';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { MemoryStore } from '@ratrace/core/session/memory';
-import { SupabaseAccount } from '@ratrace/online/supabase';
+import { cameBackTo, noticeIn, SupabaseAccount } from '@ratrace/online/supabase';
 import type { Account, AccountSaves, AccountState, CloudSaving, Opener } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { useEffect, useLayoutEffect } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { onlineOver } from '../../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../../online/browser';
 import { accountCloud, fromGoogle, heldBrowser } from '../../testing/accountCloud';
-import { authBrowser } from '../../testing/fakes';
+import { appState, authBrowser } from '../../testing/fakes';
 import { kv, memoryServices, renderGame, router } from '../../testing/render';
 import { servicesOver } from '../context';
 import type { Counted, Services } from '../context';
+import { Home } from './Home';
 import { Preferences } from './Settings';
 
 /*
@@ -75,6 +77,43 @@ describe('the account in the settings', () => {
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
     expect(said()).toContain('sign out');
     expect(await services.store.loadGame()).toBeNull();
+  });
+
+  it('shuts the sheets before the game starts again: none is open as the game is drawn anew, nor as the player lands on the front door', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const { account } = fakeAccount({ kind: 'member', userId: 'u', email: null });
+    const sheetOpen = () => document.querySelector('[aria-modal="true"]') !== null;
+    // Whether a sheet was there when each start of the game was drawn, when it was taken away (drawn before the front door, so it is taken away
+    // before the door's own sheets would be), and when the player was sent home.
+    const drawnWithSheet: boolean[] = [];
+    const takenWithSheet: boolean[] = [];
+    function Start() {
+      useEffect(() => void drawnWithSheet.push(sheetOpen()), []);
+      useLayoutEffect(() => () => void takenWithSheet.push(sheetOpen()), []);
+      return null;
+    }
+    const landedWithSheet: boolean[] = [];
+    router.dismissTo.mockImplementation(() => void landedWithSheet.push(sheetOpen()));
+    renderGame(
+      <>
+        <Start />
+        <Home />
+      </>,
+      { ...services, account, saves: savesAt('saved') },
+    );
+    // The way out, from the front door's settings: the question over the settings sheet, two sheets open.
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Settings' }))[0]);
+    fireEvent.click(within(sheetTitled('Settings')).getByRole('button', { name: 'Sign out' }));
+    fireEvent.click(within(sheetTitled('Sign out?')).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(landedWithSheet).toEqual([false]));
+    expect(takenWithSheet).toEqual([false]);
+    expect(drawnWithSheet).toEqual([false, false]);
+    expect(screen.queryByRole('heading', { name: 'Sign out?' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull();
+    // The sheets of the game drawn anew open as they always do.
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Settings' }))[0]);
+    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeTruthy();
   });
 
   it('keeps the member signed in when they answer no', async () => {
@@ -320,6 +359,39 @@ describe('keeping the account with Google, on the phone', () => {
     expect(authBrowser.opened).toHaveLength(1);
   });
 
+  it('on Android, opens the second browser once the first has let go, and the player is in the existing account', async () => {
+    authBrowser.android = true;
+    authBrowser.queued.push(fromGoogle.taken, fromGoogle.linked);
+    const { online } = await phone('member-1');
+    fireEvent.click(keepButton());
+    // The browser still holds the first trip (the app has not been told it is in front again): the second is refused once, and tried again.
+    await waitFor(() => expect(authBrowser.refused).toBe(1));
+    expect(screen.getByRole('status').textContent).toBe('You already have an account. Signing you in…');
+    act(() => appState.set('active'));
+    await waitFor(() => expect(block().textContent).toContain('Linked to Google'));
+    expect(online.account.state()).toEqual({ kind: 'member', userId: 'member-1', email: 'ana.garcia@example.com' });
+    expect(authBrowser.opened).toHaveLength(2);
+  });
+
+  it('on Android, says plainly that it could not sign in when the second browser is refused twice, and leaves a guest, never half signed in', async () => {
+    authBrowser.android = true;
+    authBrowser.stubborn = 5;
+    authBrowser.queued.push(fromGoogle.taken);
+    const { online, counted } = await phone('member-1');
+    fireEvent.click(keepButton());
+    await waitFor(() => expect(authBrowser.refused).toBe(1));
+    act(() => appState.set('active'));
+    expect((await screen.findByRole('alert')).textContent).toBe('Could not sign in. You are still a guest.');
+    expect(screen.queryByRole('status')).toBeNull();
+    await waitFor(() => expect(disabled(keepButton())).toBe(false));
+    expect(online.account.state()).toEqual({ kind: 'guest', userId: 'guest-1', notice: 'failed' });
+    // Refused twice, and never a third time.
+    expect(authBrowser.refused).toBe(2);
+    expect(authBrowser.opened).toHaveLength(1);
+    expect(counted).toEqual([]);
+    expect(kv.has('ratrace:keeping-account')).toBe(false);
+  });
+
   it('says plainly when the second trip fails, and takes back the word that the player was being signed in', async () => {
     authBrowser.queued.push(fromGoogle.taken, fromGoogle.failed);
     const { online } = await phone('member-1');
@@ -328,5 +400,24 @@ describe('keeping the account with Google, on the phone', () => {
     expect(screen.queryByRole('status')).toBeNull();
     await waitFor(() => expect(disabled(keepButton())).toBe(false));
     expect(online.account.state()).toEqual({ kind: 'guest', userId: 'guest-1', notice: 'failed' });
+  });
+});
+
+describe('the project in memory these tests run on', () => {
+  it('reads the address Google sends back as strictly as the real client: only a code, back to the app\'s own address, with no word of a failure', async () => {
+    for (const [url, signedIn] of [
+      ['theratrace://auth?code=c0de', true],
+      ['theratrace://auth/?code=c0de', true],
+      ['theratrace://auth#code=c0de', false],
+      ['theratrace://authx?code=c0de', false],
+      ['theratrace://auth?error=access_denied&code=c0de', false],
+      ['theratrace://auth?code=c0de#error=server_error', false],
+      ['https://example.com/?code=c0de', false],
+    ] as const) {
+      const project = accountCloud({ signedIn: { id: 'guest-1', is_anonymous: true, email: undefined } });
+      expect(await project.cloud.linkGoogle(BACK_FROM_GOOGLE, async () => url), url).toBe(signedIn);
+      // As the client decides it (connect.ts, `throughBrowser`): back to where it was sent, nothing said of a failure, a code in its query.
+      expect(cameBackTo(url, BACK_FROM_GOOGLE) && noticeIn(url) === null && new URL(url).searchParams.has('code'), url).toBe(signedIn);
+    }
   });
 });

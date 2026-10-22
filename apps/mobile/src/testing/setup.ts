@@ -50,5 +50,8 @@ Object.assign(BackHandler, backHandler);
 // The phone's connection, listened to once for the whole app: forgotten with the stand-ins, so no test reads another's.
 const { forgetConnection } = await import('../online/page');
 resetAlso(forgetConnection);
+// And every sheet free to open again, should a test end while the game was shutting them to start again.
+const { openSheetsAgain } = await import('../ui/back');
+resetAlso(openSheetsAgain);
 
 afterEach(resetFakes);

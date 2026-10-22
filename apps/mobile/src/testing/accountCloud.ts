@@ -43,10 +43,21 @@ interface Held {
   runs: CloudRun[];
 }
 
-/** The address a code is read from, as the client reads it. */
-const codeIn = (address: string): string | null => {
+/**
+ * The code an address carries for the player's session, as the real client reads it (connect.ts, `throughBrowser`, with `cameBackTo` and `noticeIn`
+ * of supabase.ts): back to the address it was sent to (itself, or followed by its query, its hash or a path below it), with no word of a failure
+ * (`error`, `error_code`) in its query or its hash, and a code in its query. Null otherwise. Written out here, because a file of `testing/` may take no
+ * more than the cloud's types (the wall); Account.test.ts holds it to the client's own functions, address by address.
+ */
+const codeIn = (address: string, to: string): string | null => {
+  if (!address.startsWith(to)) return null;
+  const next = address.charAt(to.length);
+  if (!(next === '' || to.endsWith('/') || next === '?' || next === '#' || next === '/')) return null;
   try {
-    return new URL(address).searchParams.get('code');
+    const url = new URL(address);
+    const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
+    for (const said of [url.searchParams, hash]) if (said.has('error') || said.has('error_code')) return null;
+    return url.searchParams.get('code');
   } catch {
     return null;
   }
@@ -77,7 +88,7 @@ export function accountCloud({ signedIn = null, existing = null, email = 'ana.ga
   const google = async (to: string, open: Opener | undefined, who: () => CloudUser | null): Promise<boolean> => {
     if (!open) return true;
     const back = await open('https://accounts.google.com/o/oauth2/v2/auth?client_id=ratrace');
-    if (back === null || !back.startsWith(to) || codeIn(back) === null) return false;
+    if (back === null || codeIn(back, to) === null) return false;
     const user = who();
     if (user === null) return false;
     become(user);

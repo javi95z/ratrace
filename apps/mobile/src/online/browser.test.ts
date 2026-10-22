@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { authBrowser } from '../testing/fakes';
+import { appState, authBrowser } from '../testing/fakes';
 import { BACK_FROM_GOOGLE, openForGoogle } from './browser';
 
 /*
@@ -21,4 +21,55 @@ describe('the browser Google is opened in', () => {
       expect(await openForGoogle('https://google'), type).toBeNull();
     }
   });
+
+  it('opens a second trip only once the app is in front again: on Android the browser holds the first until then', async () => {
+    authBrowser.android = true;
+    authBrowser.queued.push(fromGoogle('taken'), fromGoogle('code=X'));
+    expect(await openForGoogle('https://google/1')).toBe('theratrace://auth?taken');
+    // Sent back to the app, which is not in front yet: the second waits for it, and is not refused.
+    appState.set('background');
+    const second = openForGoogle('https://google/2');
+    await tick();
+    expect(authBrowser.opened).toHaveLength(1);
+    appState.set('active');
+    expect(await second).toBe('theratrace://auth?code=X');
+    expect(authBrowser.opened).toHaveLength(2);
+    expect(authBrowser.refused).toBe(0);
+  });
+
+  it('tries a refused trip once more when the app next comes to the front', async () => {
+    authBrowser.android = true;
+    authBrowser.queued.push(fromGoogle('taken'), fromGoogle('code=X'));
+    await openForGoogle('https://google/1');
+    // In front all along, as far as the app knows: the browser still holds the first trip, and refuses.
+    const second = openForGoogle('https://google/2');
+    await waitUntil(() => authBrowser.refused === 1);
+    appState.set('active');
+    expect(await second).toBe('theratrace://auth?code=X');
+    expect(authBrowser.refused).toBe(1);
+  });
+
+  it('gives up after a second refusal, and never tries a third time: the account says it could not sign in', async () => {
+    authBrowser.android = true;
+    authBrowser.stubborn = 5;
+    authBrowser.queued.push(fromGoogle('taken'));
+    await openForGoogle('https://google/1');
+    const second = openForGoogle('https://google/2');
+    await waitUntil(() => authBrowser.refused === 1);
+    appState.set('active');
+    await expect(second).rejects.toThrow('WebBrowser is already open');
+    expect(authBrowser.refused).toBe(2);
+    appState.set('active');
+    await tick();
+    expect(authBrowser.refused).toBe(2);
+    expect(authBrowser.opened).toHaveLength(1);
+  });
 });
+
+/** The browser coming back to the app's address, with this after it. */
+const fromGoogle = (rest: string) => ({ type: 'success', url: `theratrace://auth?${rest}` }) as const;
+const tick = () => new Promise((done) => setTimeout(done, 5));
+async function waitUntil(done: () => boolean) {
+  for (let i = 0; i < 200 && !done(); i++) await tick();
+  expect(done()).toBe(true);
+}

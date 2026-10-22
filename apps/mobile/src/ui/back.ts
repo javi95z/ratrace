@@ -40,3 +40,26 @@ export function sheetsGone(): Promise<void> {
     settle();
   });
 }
+
+/*
+ * Every sheet shut at once, whatever its screen holds (`closeEverySheet`): the game is about to start again under them (the player signed out), and
+ * a sheet is not left presented while the screens under it are taken away. Each closes as a sheet closes (the Sheet reads `sheetsShut`), so
+ * `sheetsGone` tells when they are gone. They may open again once the game has started again (`openSheetsAgain`): the screens drawn anew have none open.
+ */
+let shutting = false;
+const shutListeners = new Set<() => void>();
+export const subscribeShut = (listener: () => void): (() => void) => {
+  shutListeners.add(listener);
+  return () => void shutListeners.delete(listener);
+};
+/** True while every sheet is shut. */
+export const sheetsShut = (): boolean => shutting;
+function setShutting(now: boolean): void {
+  if (shutting === now) return;
+  shutting = now;
+  for (const listener of [...shutListeners]) listener();
+}
+/** Shuts every sheet there is, until `openSheetsAgain`. */
+export const closeEverySheet = (): void => setShutting(true);
+/** Lets the sheets open again, as their screens ask. */
+export const openSheetsAgain = (): void => setShutting(false);

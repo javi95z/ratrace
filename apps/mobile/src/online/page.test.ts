@@ -2,7 +2,7 @@ import { follow } from '@ratrace/online/follow';
 import type { AccountState } from '@ratrace/online/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appState, network, resetFakes } from '../testing/fakes';
-import { phoneConnection, phonePage, whileActive } from './page';
+import { forgetConnection, phoneConnection, phonePage, whileActive } from './page';
 
 /*
  * What the phone tells the account of itself, as a browser tells it of a page (apps/web/src/online/index.ts, `browserPage`): the connection come
@@ -190,6 +190,18 @@ describe('whether there is a connection now', () => {
     kept(phoneConnection.subscribe(() => undefined));
     kept(phoneConnection.subscribe(() => undefined));
     expect(network.listeners.size).toBe(1);
+    expect(phoneConnection.connected()).toBe(true);
+  });
+
+  it('does not let the first answer of a listening forgotten since reach the next one', async () => {
+    network.connected = false;
+    kept(phoneConnection.subscribe(() => undefined));
+    // Forgotten (a test ended) before the phone answered the first ask, and listened to again on a phone that is connected.
+    forgetConnection();
+    network.connected = true;
+    kept(phoneConnection.subscribe(() => undefined));
+    await settled();
+    await settled();
     expect(phoneConnection.connected()).toBe(true);
   });
 

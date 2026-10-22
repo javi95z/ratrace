@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * `theratrace://auth`, where Google sends the player back to. The browser opened for Google takes that address itself and hands it to the trip that
@@ -8,7 +8,11 @@ import { useEffect } from 'react';
  */
 export default function AuthRoute() {
   const router = useRouter();
+  // Once: drawn again while it leaves (a new `router`), it must not go back a second time, from the screen under it.
+  const gone = useRef(false);
   useEffect(() => {
+    if (gone.current) return;
+    gone.current = true;
     if (router.canGoBack()) router.back();
     else router.replace('/');
   }, [router]);

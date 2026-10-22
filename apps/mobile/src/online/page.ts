@@ -57,6 +57,8 @@ let reachable = true;
 const hearing = new Set<() => void>();
 /** The phone's one listening to its connection, begun with the first who asks and kept as long as the app lasts: what it says is never stale. */
 let stopHearing: (() => void) | null = null;
+/** Which listening the phone's is: counted up each time one begins. */
+let hearingSince = 0;
 
 /**
  * Whether the phone has a connection now, and every change of it, for a screen to read as the web reads `navigator.onLine` and its `online` and
@@ -78,9 +80,11 @@ export const phoneConnection = {
         told = true;
         set(reaches(state));
       });
+      // The listening this first answer belongs to: one forgotten since (by the tests' stand-ins) and begun again is another's, and is not told it.
+      const mine = (hearingSince += 1);
       void Network.getNetworkStateAsync()
         .then((state) => {
-          if (!told && stopHearing !== null) set(reaches(state));
+          if (!told && mine === hearingSince && stopHearing !== null) set(reaches(state));
         })
         .catch(() => undefined);
       stopHearing = () => subscription.remove();
@@ -94,6 +98,7 @@ export const phoneConnection = {
  * forgotten, as a new start of the app has it.
  */
 export function forgetConnection(): void {
+  hearingSince += 1;
   stopHearing?.();
   stopHearing = null;
   reachable = true;

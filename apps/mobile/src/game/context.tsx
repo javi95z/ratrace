@@ -31,6 +31,7 @@ import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
 import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
+import { closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
@@ -140,7 +141,7 @@ interface Cloud {
    * Starts the game again, as a page is loaded again: everything the screens hold is drawn anew from what the device holds, from the settings
    * given (what the device holds of them, so nothing the player set flashes back to its default while the device is read), on the front door.
    */
-  restart(settings: Settings): void;
+  restart(settings: Settings): Promise<void>;
 }
 
 const GameContext = createContext<Game | null>(null);
@@ -312,19 +313,27 @@ function Place(): null {
 export function GameProvider({ children, services }: { children: ReactNode; services?: Services }) {
   const [made] = useState(() => (services ? make(services) : (shared ??= make(phoneServices()))));
   const [started, setStarted] = useState<{ count: number; settings: Settings | null }>({ count: 0, settings: null });
+  // The sheets open (the question of signing out, the settings under it) are shut first, and the game starts again once they have gone: a sheet
+  // is never left presented while the screens under it are taken away (on iOS a view controller torn down so can be left half gone).
   const restart = useCallback(
-    (settings: Settings) => {
+    async (settings: Settings) => {
+      closeEverySheet();
+      await sheetsGone();
       made.game = roundStore(made);
       setStarted((was) => ({ count: was.count + 1, settings }));
     },
     [made],
   );
+  // Taken away halfway (the layout above it drawn anew), the game leaves no sheet shut for whatever comes next.
+  useEffect(() => openSheetsAgain, []);
   const router = useRouter();
-  // Once the game is drawn anew: whatever the stack is, the front door, on purpose. Once for each start, whatever else draws this again.
+  // Once the game is drawn anew: the sheets may open again, and whatever the stack is, the front door, on purpose. Once for each start, whatever else
+  // draws this again.
   const landed = useRef(0);
   useEffect(() => {
     if (started.count === landed.current) return;
     landed.current = started.count;
+    openSheetsAgain();
     router.dismissTo('/');
   }, [started, router]);
   return (
@@ -337,7 +346,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
 }
 
-function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => void; children: ReactNode }) {
+function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => Promise<void>; children: ReactNode }) {
   const [game] = useState(() => made.game);
   const [locale, setLocaleState] = useState<Locale>(() => localeOf(made.language.read(), phoneLanguages()));
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
@@ -670,7 +679,7 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
       await store.clearGame();
       for (const run of await store.listRuns()) await store.removeRun(run.runId);
       await store.saveProfile({ ...newProfile(), settings });
-      restart(settings);
+      await restart(settings);
       return true;
     },
   };

@@ -156,8 +156,12 @@ describe('a guest whose Google account is already a player\'s, on the phone', { 
     const sheet = screen.getByRole('heading', { name: 'A life on another device' }).closest('[aria-modal="true"]') as HTMLElement;
     expect(sheet.textContent).toContain('Software engineer, age 28, in');
     expect(sheet.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 22.');
+    const pushedWithSheet: boolean[] = [];
+    router.push.mockImplementation(() => void pushedWithSheet.push(screen.queryByRole('heading', { name: 'A life on another device' }) !== null));
     fireEvent.click(within(sheet).getByRole('button', { name: 'Pick it up here' }));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+    // The sheet has gone before the game is opened.
+    await waitFor(() => expect(pushedWithSheet).toEqual([false]));
+    expect(router.push).toHaveBeenCalledWith('/play');
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');
     expect(((await phone.device.loadGame()) as SavedGame).lifeId).toBe('engineer');
     expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull();

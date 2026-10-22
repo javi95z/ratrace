@@ -12,6 +12,7 @@ import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { speaking } from '../../testing/memoryServices';
 import { adjustedRead } from '../../ui/fonts';
+import { sheetOpened } from '../../ui/back';
 import { Home } from './Home';
 
 afterEach(cleanup);
@@ -344,8 +345,8 @@ describe('what the front door is drawn again for', () => {
       </GameProvider>,
     );
     await screen.findByRole('link', { name: /Continue your life/ });
-    // Let everything the opening of the game does settle (the profile, the finished lives).
-    await settled();
+    // Let everything the opening of the game does settle (the profile, the finished lives): until the drawings stop changing.
+    await steady(() => renders.count);
     const before = renders.count;
     // The news are left and a card answered: the round on screen and the view change, the profile and the lives are read again from the device.
     await settled(async () => {
@@ -423,12 +424,23 @@ describe('the life waiting in the account', () => {
     expect(asked).toEqual([]);
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
 
+    // Whether the question was still there when the game was opened.
+    const pushedWithSheet: boolean[] = [];
+    router.push.mockImplementation(() => void pushedWithSheet.push(screen.queryByRole('heading', { name: 'A life on another device' }) !== null));
     fireEvent.click(offer);
     const sheet = sheetTitled('A life on another device');
     expect(sheet.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 22.');
+    // A sheet still leaving, as an iOS Modal takes a moment to dismiss: the game waits for it.
+    const leaving = sheetOpened();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Pick it up here' }));
-    // The sheet goes first, and the game is opened once it has gone.
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(asked).toEqual(['take']));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull());
+    await new Promise((done) => setTimeout(done, 50));
+    expect(router.push).not.toHaveBeenCalled();
+    // The sheets gone, the game is opened, and the question was not there.
+    act(() => leaving());
+    await waitFor(() => expect(pushedWithSheet).toEqual([false]));
+    expect(router.push).toHaveBeenCalledWith('/play');
     expect(asked).toEqual(['take']);
     // The game on screen is the one that was taken.
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');

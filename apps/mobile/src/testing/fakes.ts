@@ -110,11 +110,40 @@ export const authBrowser = {
   opened: [] as Array<{ url: string; redirect: string }>,
   answer: { type: 'cancel' } as BrowserAnswer,
   queued: [] as Array<BrowserAnswer | Promise<BrowserAnswer>>,
+  /**
+   * Android's auth session (expo-web-browser's own): a trip that has come back is still held as open until the app is `active` again, and let go a
+   * turn after; an opening before then is refused ("WebBrowser is already open"). Off, unless a test turns it on.
+   */
+  android: false,
+  /** Held by a trip that came back, as above. */
+  held: false,
+  /** The openings refused while held. */
+  refused: 0,
+  /** Held for this many more `active`s than Android would hold it (a browser that does not let go): a test of an opening refused twice. */
+  stubborn: 0,
 };
 export const expoWebBrowser = {
   openAuthSessionAsync: async (url: string, redirect: string): Promise<BrowserAnswer> => {
+    if (authBrowser.held) {
+      authBrowser.refused += 1;
+      throw new Error('WebBrowser is already open, only one can be open at a time');
+    }
     authBrowser.opened.push({ url, redirect });
-    return authBrowser.queued.shift() ?? authBrowser.answer;
+    const answer = await (authBrowser.queued.shift() ?? authBrowser.answer);
+    if (authBrowser.android) {
+      authBrowser.held = true;
+      const letGo = (state: string) => {
+        if (state !== 'active') return;
+        if (authBrowser.stubborn > 0) {
+          authBrowser.stubborn -= 1;
+          return;
+        }
+        appState.listeners.delete(letGo);
+        void Promise.resolve().then(() => (authBrowser.held = false));
+      };
+      appState.listeners.add(letGo);
+    }
+    return answer;
   },
 };
 
@@ -302,6 +331,7 @@ export function resetFakes(): void {
   authBrowser.opened.length = 0;
   authBrowser.answer = { type: 'cancel' };
   authBrowser.queued.length = 0;
+  Object.assign(authBrowser, { android: false, held: false, refused: 0, stubborn: 0 });
   heard.length = 0;
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });

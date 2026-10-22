@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { sheetOpened } from './back';
+import { sheetOpened, sheetsShut, subscribeShut } from './back';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -90,7 +90,10 @@ function endTurn(id: number): void {
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
-export function Sheet({ open, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+  // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
+  const shut = useSyncExternalStore(subscribeShut, sheetsShut, () => false);
+  const open = asked && !shut;
   const [held, setHeld] = useState({ was: open, opening: open ? 1 : 0, mounted: open });
   let now = held;
   if (open !== held.was) {
