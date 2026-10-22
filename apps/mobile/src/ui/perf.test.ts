@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { released as releasedFile } from './testing/released';
 
 /*
  * The timing probe is in a build made with `EXPO_PUBLIC_PERF=1` and nowhere else. Its switch (perf.ts) is put through what a release build puts it
@@ -10,24 +10,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
  * never gathered into the bundle; with it, it does.
  */
 const here = fileURLToPath(new URL('.', import.meta.url));
-const fromExpo = createRequire(createRequire(import.meta.url).resolve('expo/package.json'));
-const fromMetroConfig = createRequire(fromExpo.resolve('@expo/metro-config/package.json'));
-
-interface Babel {
-  transformSync(code: string, options: object): { ast: unknown; code?: string | null } | null;
-  transformFromAstSync(ast: unknown, code: string, options: object): { code?: string | null } | null;
-}
-
-/** A file of the app as a release build for iOS makes it: Expo's preset, then Metro's folding. The switch by default. */
-function released(file = `${here}perf.ts`): string {
-  const babel = fromExpo('@babel/core') as Babel;
-  const { constantFoldingPlugin } = fromMetroConfig('metro-transform-plugins') as { constantFoldingPlugin: unknown };
-  const source = readFileSync(file, 'utf8');
-  const caller = { name: 'metro', bundler: 'metro', platform: 'ios', isDev: false, isServer: false, engine: 'hermes' };
-  const first = babel.transformSync(source, { filename: file, babelrc: false, configFile: false, presets: [fromExpo.resolve('babel-preset-expo')], caller, ast: true, code: false });
-  const folded = babel.transformFromAstSync(first?.ast, source, { filename: file, babelrc: false, configFile: false, plugins: [constantFoldingPlugin], code: true, comments: false });
-  return folded?.code ?? '';
-}
+/** The switch by default, as a release build makes it (testing/released.ts). */
+const released = (file = `${here}perf.ts`): string => releasedFile(file);
 
 afterEach(() => {
   vi.unstubAllEnvs();

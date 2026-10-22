@@ -8,13 +8,16 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useGame } from '../game/context';
-import { putOlderLife } from '../testing/olderLife';
 import { Button } from '../ui/kit';
 import { Screen } from '../ui/Page';
 import { RatAvatar } from '../ui/RatAvatar';
 import { CUES, useSound } from '../ui/sound';
 import { Sprite } from '../ui/Sprite';
 import { COLORS } from '../ui/theme';
+
+type OlderLives = typeof import('../testing/olderLife');
+// Cut out of a release build (`__DEV__` is `false` there, folded before the bundle's files are gathered: ui/devRoutes.test.ts), as the route itself goes home.
+const older: OlderLives | null = __DEV__ ? (require('../testing/olderLife') as OlderLives) : null;
 
 const look: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
 
@@ -59,7 +62,8 @@ function OlderLife() {
   const [failed, setFailed] = useState<string | null>(null);
   const begin = () => {
     setFailed(null);
-    void putOlderLife().then(boot).catch((error: unknown) => setFailed(String(error)));
+    if (older === null) return;
+    void older.putOlderLife().then(boot).catch((error: unknown) => setFailed(String(error)));
   };
   // The news, the cards and their results, the finances: one tap for each, as the round asks for them.
   const step = () => {

@@ -1,12 +1,16 @@
 // The scenes, one to a page, for the parity check against the web (apps/web/src/app/[locale]/kit/scene/page.tsx draws the
 // same named game states). Development only, like /kit and /dev; everything it needs is in testing/scene.tsx.
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { SceneView } from '../testing/scene';
+
+type Scenes = typeof import('../testing/scene');
+// Cut out of a release build: `__DEV__` is written in as `false` there and Metro folds the condition before the bundle's files are gathered, so
+// nothing of the scenes (their stores, the fixed sessions, the driver's address) is in it (ui/devRoutes.test.ts). As ui/perf.ts loads the probe.
+const scenes: Scenes | null = __DEV__ ? (require('../testing/scene') as Scenes) : null;
 
 export default function SceneRoute() {
   // `ready`: where the driver of the shots listens for the scene to say it is ready (scripts/shotDrivers.ts), when it is opened for a shot.
   const { name, ready } = useLocalSearchParams<{ name?: string; ready?: string }>();
-  if (!__DEV__) return <Redirect href="/" />;
+  if (scenes === null) return <Redirect href="/" />;
   const port = ready !== undefined && /^\d+$/.test(ready) ? Number(ready) : undefined;
-  return <SceneView name={name} readyPort={port} />;
+  return <scenes.SceneView name={name} readyPort={port} />;
 }

@@ -11,7 +11,10 @@ import { Picker } from '../ui/Picker';
 import { RatAvatar } from '../ui/RatAvatar';
 import { Sprite } from '../ui/Sprite';
 import { Language, PixelText, ReadText } from '../ui/text';
-import { MotionTwo } from '../ui/kitMotion';
+
+type KitMotion = typeof import('../ui/kitMotion');
+// Cut out of a release build (`__DEV__` is `false` there, folded before the bundle's files are gathered: ui/devRoutes.test.ts), as the route itself goes home.
+const kitMotion: KitMotion | null = __DEV__ ? (require('../ui/kitMotion') as KitMotion) : null;
 
 const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
 type Section = (typeof KIT_SECTIONS)[number];
@@ -201,7 +204,7 @@ function Body({ section }: { section: Section }): ReactNode {
     case 'dots':
       return null;
     case 'motion-2':
-      return <MotionTwo />;
+      return kitMotion ? <kitMotion.MotionTwo /> : null;
   }
 }
 
