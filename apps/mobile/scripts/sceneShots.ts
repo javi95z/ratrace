@@ -98,46 +98,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * the balance's net worth after inflation, the buttons a screen sizes, the guide's ring, the picture's sheet with its way to save). After it, the age a
  * life left the rat race is told at the round it got out in everywhere (2026-10-22: the moment said 52 where the HUD said 50, and the end's life line
  * and tale 52 where its figures said 50), on both sides: the escape's moment and the three ends of that life waited to be shot again, and Task 20
- * (the phase's exit) shot and judged them. None waits.
+ * (the phase's exit) shot and judged them. Phase 3's tasks registered twenty-eight more (the account, the rankings, the player's profile, the game
+ * online beside the game alone, the games with others), and its batch pass (Task 14) shot and judged them. None waits.
  * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
-  // Task 4 of phase 3: the account in the settings, and the account's life on the front door.
-  'settings-account-guest',
-  'settings-account-member',
-  'home-offer',
-  'home-account-taken',
-  // Phase 3, Task 7: the rankings, on the other players of `sceneCommunity` (no cloud on either side).
-  'rankings-all',
-  'rankings-week',
-  'rankings-friends',
-  'rankings-challenge',
-  'rankings-nickname',
-  // Phase 3, Task 8: the player's own profile, signed in (the scene's cloud), its rat a tab at a time, and its friend code just copied.
-  'player-member',
-  'player-editor-body',
-  'player-editor-wear',
-  'player-editor-scene',
-  'player-friend-code',
-  // Phase 3, Task 6: the game online beside the game alone, for a member (the account's `CLOUDS`, the other players of `sceneCommunity`).
-  'home-member',
-  'challenge-attempt',
-  'challenge-played',
-  'end-standing',
-  'new-ranked',
-  // Phase 3, Task 9: the games with others, at the scene's table (`sceneRooms`): the door, a lobby among friends, a public one with its clock, an invitation.
-  'room-door',
-  'room-lobby-friends',
-  'room-lobby-public',
-  'room-join-code',
-  // Phase 3, Task 10: the game with others in play (`sceneRooms`, the room's life the engine's): the news under the room's bar, the loans of a round,
-  // the room's order under a ledger, the end with the room's order over it, and the games played with others among the records.
-  'room-playing',
-  'room-loans',
-  'room-resolved',
-  'room-end',
-  'room-history',
-]);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
 
 /**
  * The scenes with lines in the phone's own words (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
@@ -298,6 +263,139 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     oneSided: 0,
     reason: 'The confetti either side of the prized badge, centred in a panel whose Russian lines make it a fraction taller: centred on another device pixel, their pieces at the panel\'s foot are cut a pixel apart.',
     report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'home-account-taken': {
+    shape: 1,
+    oneSided: 0,
+    reason: 'One pixel at the edge of a glyph the text check\'s windows did not cover, as in home-continue (the same front door, its continue button\'s title); nothing is out of place.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'home-member': {
+    shape: 5,
+    oneSided: 0,
+    reason: 'The pixel of home-continue\'s, and four of the member\'s rat at the foot of the page, its picture a device pixel off the web\'s: the rat stands at a fraction of a point, which the browser rounds one way and the phone another.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'rankings-friends': {
+    shape: 28,
+    oneSided: 0,
+    reason: 'The rats of the friends\' panel, each a picture at a fraction of a point, a device pixel apart: their edges count as shape (a picture is not text).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'rankings-nickname': {
+    shape: 317,
+    oneSided: 0,
+    reason: 'The name typed in the field (`Rata_Uno`) a device pixel lower on the phone: a field\'s value is no text to the web\'s text check (an input\'s value is not a text node), so its glyphs\' edges count as shape, as in the kit\'s forms (within a point, where a line of text would be clean).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'player-member': {
+    shape: 34,
+    lines: { '✎': 5 / 3 },
+    oneSided: 0,
+    reason: 'The career bar\'s lit lamps bleed a device-pixel sliver of light into the first dark lamp on the web (profile-r6\'s, phase 1\'s class); and the pencil of the name, U+270E, which Chrome on macOS draws from Lucida Grande and iOS, which has no Lucida Grande, from Zapf Dingbats: another pencil, lying flatter.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'player-editor-body': {
+    shape: 1015,
+    lines: { '🎲 At random': 5 / 3 },
+    oneSided: 0,
+    reason: 'The grid of choices a device pixel lower on the phone (the web paints it at a whole CSS pixel, 14.3 + 6 under the part\'s name; the phone at a device pixel), each rat in it with it; and the dice emoji of \'At random\', Apple Color Emoji lower on iOS than on macOS Chrome (new-first\'s).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'player-editor-wear': {
+    shape: 1384,
+    oneSided: 0,
+    reason: 'The grids of choices a device pixel lower on the phone, each piece of clothing in them with them, as in player-editor-body (whole CSS pixels against device pixels).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'player-editor-scene': {
+    shape: 670,
+    lines: { '🎲 At random': 5 / 3 },
+    oneSided: 0,
+    reason: 'The grid of backdrops a device pixel lower on the phone, as in player-editor-body, and the dice emoji of \'At random\' (new-first\'s).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'player-friend-code': {
+    shape: 569,
+    lines: { '✎': 5 / 3 },
+    oneSided: 0,
+    reason: 'The toast\'s words over the tabs (covered there, so not measured as text) three quarters of a point from the web\'s, the toast a point narrower; the bar\'s lamp sliver and the pencil of player-member\'s.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'challenge-attempt': {
+    shape: 0,
+    lines: { 'See the challenge ranking': 4 / 3 },
+    oneSided: 0,
+    reason: 'The way to the challenge\'s ranking: the web\'s `underline` skips the descenders of its words (Chrome\'s `text-decoration-skip-ink`), the phone\'s line runs whole under them, so the line\'s ink stands further apart than its glyphs (a third of a point).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'challenge-played': {
+    shape: 0,
+    lines: { 'See the challenge ranking': 4 / 3 },
+    oneSided: 0,
+    reason: 'The way to the challenge\'s ranking, underlined whole on the phone and round the descenders on the web, as in challenge-attempt.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'end-standing': {
+    shape: 168,
+    oneSided: 0,
+    reason: 'The rare badge\'s confetti either side of its line at the foot of the screen, cut a device pixel apart: where the score\'s standing puts that line, it falls at a fraction of a point (end-ru\'s class).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'new-ranked': {
+    shape: 738,
+    lines: { '🎲 At random': 2 },
+    oneSided: 0,
+    reason: 'The dice emoji, the arrow of the folded list and whole CSS pixels against device pixels, as in new-first.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-door': {
+    shape: 26,
+    oneSided: 0,
+    reason: 'The six dots of the empty code\'s placeholder at a fraction of a point, a device pixel apart: a placeholder is no text to the web\'s text check.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-lobby-friends': {
+    shape: 25,
+    oneSided: 0,
+    reason: 'The rats of the seats, pictures at a fraction of a point, a device pixel apart.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-lobby-public': {
+    shape: 7,
+    oneSided: 0,
+    reason: 'The rats of the seats, pictures at a fraction of a point, a device pixel apart.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-playing': {
+    shape: 1551,
+    oneSided: 0,
+    reason: 'Everything under the guide\'s note a device pixel lower (play-guide-r1\'s: the web paints the note\'s foot at a whole CSS pixel, the phone at a device pixel), and the paper\'s masthead (play-news-r1\'s).',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-loans': {
+    shape: 20,
+    oneSided: 0,
+    reason: 'The rats of the room\'s bar, each 128-pixel picture drawn into its small box nearest-neighbour by the browser and by Skia, which keep a few other rows and columns of it.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-resolved': {
+    shape: 2,
+    oneSided: 0,
+    reason: 'Two pixels of a rat of the room\'s bar, drawn small nearest-neighbour by each its own way, as in room-loans.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-end': {
+    shape: 22,
+    oneSided: 0,
+    reason: 'The rats of the room\'s order, pictures at a fraction of a point, a device pixel apart.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+  },
+  'room-history': {
+    shape: 17,
+    oneSided: 0,
+    reason: 'The rats of the game\'s players in its sheet, pictures at a fraction of a point, a device pixel apart.',
+    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
 };
 

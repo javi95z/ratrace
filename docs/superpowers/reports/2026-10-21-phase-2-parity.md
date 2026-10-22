@@ -1616,3 +1616,116 @@ takes the scene's own steps on it (`runRoomScene`), before the screen is first d
   web opens the question over the order.
 - **The loan's amount** is the kit's `TextField kind="amount"` (digits only, on the number pad); the four amounts a tap gives are buttons, gold when
   chosen, as the web's.
+
+## Phase 3 batch pass: the online scenes shot, compared and judged
+
+Phase 3's Task 14, part A (`.superpowers/sdd/2026-10-23-expo-phase-3-online/task-14-brief.md`). The twenty-eight scenes Tasks 4 to 10 registered and
+did not shoot (`PENDING_SHOTS`: the account, the rankings, the player's profile, the game online beside the game alone, the games with others) and
+the kit's `forms` section (`PENDING_SECTIONS`) were shot on both clients, compared and judged by phase 2's tolerances (a shape is accepted only with a
+measured cause, every line of text within the point unless its record names it). Both lists are empty now. Everything ran on the scenes' fake cloud
+services (`sceneCloud`, `sceneCommunity`, `sceneRooms`), never the live project: no `EXPO_PUBLIC_SUPABASE_*` set, the web's `next dev` started by the
+script with the project's address blank, its browser kept from every host but this machine (only `va.vercel-scripts.com` was asked for, and kept
+from). Simulator: iPhone 16 Pro, iOS 18.0, Expo Go, Metro on 8090; the web by its own `next dev` on 3021 in Playwright's Chrome.
+
+**The first shots** (before any fix): 4 clean (`settings-account-guest`, `settings-account-member`, `home-offer`, `room-join-code`), 24 differed, four
+of them never still in the app (`room-lobby-public`, `room-playing`, `room-loans`, `room-resolved`). The largest: `room-end` (631 810 shape pixels,
+96 pt), `player-friend-code` (151 855, the profile's big rat blank), `rankings-challenge` (33 074, "Top 10%" 6.67 pt), `rankings-friends` (24 267),
+`room-lobby-friends` (13 290, the tags 12.67 pt).
+
+### What differed, and was fixed in the app
+
+| # | difference (scenes) | measured cause | fix | test |
+|---|---|---|---|---|
+| 1 | the friend code 2.67 pt low beside "Your friend code:" (the five `rankings-*`, and the panel and everything under it with it) | a native `alignItems: 'baseline'` row: the kit moves a text's glyphs inside its box (`baselineShift`), so the baselines a native row reads are not where the glyphs stand (batch pass 1's lesson 5) | the line laid from the browser's baselines: the paragraph's strut, its words (reading 12) and the code (pixel 15), `webLine` (`codeLineOf`) | the run |
+| 2 | the rank card's name 2.33 pt low and its step 4 pt high (`player-member`, `player-friend-code`) | the same: the web's `items-baseline` row was a native baseline row | `webLine` for the name (pixel 17) and the step (reading 12) | the run |
+| 3 | the rat beside the editor's tabs without its frame (`player-*`) | `overflow: 'hidden'` on the `Framed` box clipped its own strips, which stand outside the box (the web's box-shadow, which an `overflow-hidden` does not clip) | the rat clipped in a box of its own inside the frame | the run |
+| 4 | the profile's big rat blank, its ground only (`player-friend-code`; reproduced on the simulator after `player-editor-scene`, three times out of three) | the canvas was mounted with a stand-in look under `opacity: 0` and handed a second picture once the member was read, while the toast rose: iOS left that second picture undrawn (with every sprite already decoded; never from a cold start) | the rat is drawn once the member is read, in their look, never first another one, hidden | `PlayerProfile.test`: no 128-point canvas before the member is read, one after |
+| 5 | the friends' panel: each line's lower frame strip missing (`rankings-friends`, 14 860 px) | the panel is cut across the rows of the page's list (`PanelPart`); the room between two lines was the lower line's `paddingTop`, and that part, drawn after the line above as the next row of the list, painted its ground over the line's frame shadow (2 under its box) | the room is the upper line's (`under`), so its shadow is in its own part; the foot's 8 is the last line's | `Rankings.test`: each line's room under it, the web's 6 and 8 |
+| 6 | "Top 10%", "Host", "You" and the tags of the records and the room's history standing at the top of their rows (`rankings-challenge` 6.67 pt, `room-lobby-friends` 12.67 pt, `room-end`) | the kit's `Tag` is `alignSelf: 'flex-start'` (the web's inline block at the start of a column); in a row it went to the row's top, where the web's flex item is centred by `items-center` | `Tag item`: a flex item of a row, placed as the row places its items (the challenge's board, a lobby's seats, the room's order, its history, a life's tag in the records) | the run |
+| 7 | the week's portrait over the challenge's board wider than the web's (`rankings-challenge`) | the web's 64-point portrait in a 52-point well is held to the well's width by the page's `img { max-width: 100% }`, its height left 64 (as the cheer's confetti in batch pass 1) | drawn 52 × 64 (`BOARD_FACE`) | the run |
+| 8 | the rules of a room with a small "•" where the web has its list's disc (`room-lobby-*`) | the web's `list-disc` is Blink's symbol marker, a filled circle 5 across, not a glyph | the jail's disc (already measured in phase 2) shared as `DiscItem`, used by both | the run |
+| 9 | the badges a game earned at 40 where the web draws 64 (`room-end`, everything under them 24 pt higher) | the web's `size-10` on a `Sprite` loses to the size its Sprite sets inline: the badge is its own 64 | the badge at its own size; its words in the web's `leading-tight` line (the name's pixel 16 in a reading 14 line, `webLine`) | the run |
+| 10 | the room's order: the place and the score 1.33 to 1.67 pt off (`room-end`) | the phone gave them the column's `leading-none` / `leading-tight`; the web's `pixel` sets its own line (1.1) on the span, over the column's | the pixel face's own line | the run |
+| 11 | the clock of a public lobby and of a round never still in the app (`room-lobby-public`, `room-playing`, `room-loans`) | the countdown read `Date.now()`, and the room store took its skew by it: the web's shot holds the browser's clock (`setFixedTime`), the phone's ticked | the countdowns (and the shout's wait) read the game's clock (`useClock`), and the room store takes its skew by the same clock: the phone's, or a scene's held at its day, where the count stands still (1:35 on both) | `Room.test`: a held clock holds the count still over a second |
+| 12 | `room-resolved` never still | its ledger's wheel and a promotion's confetti turn for ever (the ledger alone, `play-resolve-r6`, is drawn with motion left out) | `room-resolved` drawn with motion left out (core `STILL`, both clients) | `sceneRooms.test` |
+| 13 | the way to the challenge's ranking underlined 2/3 pt lower (`challenge-attempt`, `challenge-played`) | the web's `underline` with no offset is Chakra's own (post table: −75 of 1000), drawn by Chrome 1.5 under the baseline; the phone had a guessed 2 (parked) | `offset={1.5}`: 815.33 against 815.00 | the run |
+
+### What the shots taught the tooling
+
+- **Next 16.4 stops a dev server an agent started**, once, a moment after it answers, to recommend an upgrade (its "upgrade nudge"), and lets the same
+  command run when it is started again within five minutes: every other run of the shots failed on a refused page, and the `process.kill` of the
+  server already gone (`ESRCH`) hid why. The server's words now go to `.kit-shots/web-server.log`, a stop with Next's words starts it once more, and a
+  server already gone no longer hides the error the run met (`shotDrivers.ts`, `stoppedWithin`, tested). The recommendation (a security advisory for
+  Next.js 16.4.0) is the user's to act on; nothing was upgraded.
+- **A cold Metro** (`--clear`) built the bundle while the first scene's route was opened: the app showed its home, and the run stopped as a wrong page
+  (`home-new`, 55 % unlike). Expo Go was then opened twice on the bundle before the two final runs, as phase 2 did.
+
+### The residuals accepted, with their causes
+
+| scene | shape (px) | lines named | measured cause |
+|---|---|---|---|
+| home-account-taken, home-member | 1, 5 | — | home-continue's pixel of a glyph's edge outside the text check's windows; and four of the member's rat at the foot, a picture at a fraction of a point a device pixel apart |
+| rankings-friends, room-lobby-friends, room-lobby-public, room-end, room-history | 28, 25, 7, 22, 17 | — | players' rats, pictures at fractions of a point, a device pixel apart |
+| room-loans, room-resolved | 20, 2 | — | the rats of the room's bar: a 128-pixel picture drawn small nearest-neighbour by the browser and by Skia, which keep a few other rows and columns |
+| rankings-nickname | 317 | — | the name in the field a device pixel lower: an input's value is no text to the web's text check, so its glyphs' edges count as shape (within a point; the kit's forms, below) |
+| room-door | 26 | — | the six dots of the empty code's placeholder, at a fraction of a point (a placeholder is not text to the check either); measured at the same columns within a third of a point |
+| player-member | 34 | ✎ 5/3 | the career bar's lamp sliver (profile-r6's); the pencil U+270E: the web's shot has Lucida Grande's (rendered beside Zapf Dingbats', Apple Symbols' and Menlo's, it is the one that matches), iOS, which has no Lucida Grande, draws Zapf Dingbats': another pencil, lying flatter |
+| player-friend-code | 569 | ✎ 5/3 | player-member's, and the toast's words over the tabs (covered there, so not measured as text) three quarters of a point apart, the toast a point narrower |
+| player-editor-body, -wear, -scene | 1015, 1384, 670 | 🎲 At random 5/3 (body, scene) | the grid of choices a device pixel lower (the web paints it at a whole CSS pixel, 14.3 + 6 under the part's name; the phone at a device pixel), every rat in it with it; the dice emoji (new-first's) |
+| new-ranked | 738 | 🎲 At random 2 | new-first's: the dice emoji, the folded list's arrow, whole CSS pixels against device pixels |
+| challenge-attempt, challenge-played | 0 | See the challenge ranking 4/3 | the web's underline skips the descenders (Chrome's `text-decoration-skip-ink`), the phone's runs whole under them; the glyphs themselves stand within a third of a point |
+| end-standing | 168 | — | end-ru's: the rare badge's confetti at the foot of the screen, its line at a fraction of a point where the standing puts it, cut a device pixel apart |
+| room-playing | 1551 | — | play-guide-r1's: everything under the guide's note a device pixel lower (the note's foot at a whole CSS pixel on the web), and the paper's masthead (play-news-r1's) |
+
+The parked items, as found: the friend code's toast is in the web's shot (Playwright takes it well within its 2.6 s); the public lobby's clock reads
+1:35 on both (fix 11); the second place is cream on both (the web's `ink-100` is no colour, the button's own is drawn); the challenge link's
+underline is measured (fix 13); the friends' panel cut across rows is one panel (fix 5).
+
+### The kit's forms
+
+`kit-shots.ts --only=forms` (phase 3's folder, `phase-3-parity/forms.png`): **differs, accepted**: 2182 shape pixels, every label within 0.33 pt.
+The shape is the fields' values and placeholders, which the web's text check does not see (an input's value is not a text node): measured by their
+ink, each stands within two thirds of a point of the web's (the names and the friend code within a third, the room code and its dots two thirds
+lower), where a line of text would be clean. The focus ring, the sunk edges and the room code's spacing are alike. `PENDING_SECTIONS` is empty.
+
+### Two full runs
+
+Every scene on both clients, phase 2's sixty-five and phase 3's twenty-eight, from scratch on the final code (Metro started with its cache cleared,
+Expo Go opened twice on it; the web's own `next dev`, restarted once by each run when Next stopped it), no edit during either: **run A** exit 0 (load
+3.2 → 3.8), **run B** exit 0 (load 3.7 → 3.7, started straight after A). Both: **53 clean, 38 accepted, 2 in the phone's words** (`home-lost-newer` layout
+clean, `legal` not comparable), 0 differ. They differ by one pixel in `end-share` (5084/5085, the web's own picture) and `play-pageturn`
+(3896/3897), as in phase 2's runs; every phase 3 scene is the same in both. The shots and numbers committed are run B's. (A run before them, on the
+cold Metro, stopped at its first scene: above.)
+
+Run B, phase 3's scenes (phase 2's are as in its final table, above):
+
+| scene | verdict | raw % | shape (px) | of which blended | text lines | worst text (pt) | far | run A, where it differs |
+|---|---|---|---|---|---|---|---|---|
+| settings-account-guest | clean | 2.33 | 0 | 0 | 31 (17 unmeasured) | 0.33 | — |  |
+| settings-account-member | clean | 2.23 | 0 | 0 | 35 (19 unmeasured) | 0.33 | — |  |
+| home-offer | clean | 2.02 | 0 | 0 | 29 (21 unmeasured) | 1 | — |  |
+| home-account-taken | accepted | 2.94 | 1 | 1 | 18 (0 unmeasured) | 0.67 | — |  |
+| rankings-all | clean | 4.72 | 0 | 0 | 63 (1 unmeasured) | 1 | — |  |
+| rankings-week | clean | 4.01 | 0 | 0 | 45 (0 unmeasured) | 1 | — |  |
+| rankings-friends | accepted | 4.53 | 28 | 25 | 47 (0 unmeasured) | 1 | — |  |
+| rankings-challenge | clean | 4.78 | 0 | 0 | 43 (0 unmeasured) | 1 | — |  |
+| rankings-nickname | accepted | 4.23 | 317 | 317 | 54 (1 unmeasured) | 1 | — |  |
+| player-member | accepted | 2.69 | 34 | 3 | 26 (0 unmeasured) | 1.67 | ✎ 1.67 |  |
+| player-editor-body | accepted | 4.26 | 1015 | 144 | 7 (0 unmeasured) | 1.67 | 🎲 At random 1.67 |  |
+| player-editor-wear | accepted | 7.82 | 1384 | 865 | 10 (1 unmeasured) | 0.67 | — |  |
+| player-editor-scene | accepted | 4.21 | 670 | 57 | 8 (0 unmeasured) | 1.67 | 🎲 At random 1.67 |  |
+| player-friend-code | accepted | 2.76 | 569 | 538 | 27 (1 unmeasured) | 1.67 | ✎ 1.67 |  |
+| home-member | accepted | 3.12 | 5 | 4 | 20 (0 unmeasured) | 0.67 | — |  |
+| challenge-attempt | accepted | 4.8 | 0 | 0 | 18 (0 unmeasured) | 1.33 | See the challenge ranking 1.33 |  |
+| challenge-played | accepted | 4.71 | 0 | 0 | 18 (0 unmeasured) | 1.33 | See the challenge ranking 1.33 |  |
+| end-standing | accepted | 3.64 | 168 | 54 | 25 (0 unmeasured) | 0.67 | — |  |
+| new-ranked | accepted | 3.31 | 738 | 148 | 29 (1 unmeasured) | 2 | 🎲 At random 2 |  |
+| room-door | accepted | 4.76 | 26 | 26 | 21 (0 unmeasured) | 0.67 | — |  |
+| room-lobby-friends | accepted | 5.25 | 25 | 22 | 26 (1 unmeasured) | 0.67 | — |  |
+| room-lobby-public | accepted | 4.4 | 7 | 5 | 25 (0 unmeasured) | 0.67 | — |  |
+| room-join-code | clean | 2.59 | 0 | 0 | 7 (0 unmeasured) | 0.67 | — |  |
+| room-playing | accepted | 5.58 | 1551 | 1533 | 43 (4 unmeasured) | 1 | — |  |
+| room-loans | accepted | 4.77 | 20 | 18 | 50 (5 unmeasured) | 0.67 | — |  |
+| room-resolved | accepted | 4.02 | 2 | 2 | 38 (3 unmeasured) | 0.67 | — |  |
+| room-end | accepted | 4.31 | 22 | 20 | 45 (0 unmeasured) | 0.67 | — |  |
+| room-history | accepted | 2.2 | 17 | 8 | 38 (15 unmeasured) | 0.33 | — |  |

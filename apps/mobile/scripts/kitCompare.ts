@@ -12,9 +12,10 @@ export const PHASE_3_SECTIONS: readonly Section[] = ['forms'];
 
 /**
  * The sections on both kit pages and not shot yet. From phase 3 on, a task registers what it adds and does not shoot it (the phase's method, as the
- * scenes' `PENDING_SHOTS`): the batch pass (phase 3's Task 14) shoots each, compares it, fixes what differs, and takes it out of this list.
+ * scenes' `PENDING_SHOTS`): the batch pass (phase 3's Task 14) shoots each, compares it, fixes what differs, and takes it out of this list. Phase 3's
+ * batch pass shot and judged `forms`: none waits.
  */
-export const PENDING_SECTIONS: ReadonlySet<Section> = new Set<Section>(['forms']);
+export const PENDING_SECTIONS: ReadonlySet<Section> = new Set<Section>([]);
 
 /**
  * Which sections of a run are compared, and which are shot and left unjudged: a pending section is compared only where `--only` names it (the batch

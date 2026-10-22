@@ -94,17 +94,14 @@ test('every screen is the real one on the app (phase 1\'s stand-ins are retired)
   for (const name of ['records-three', 'collection-badges']) expect(isJudged(SCENES.find((scene) => scene.name === name)!), name).toBe(true);
 });
 
-test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after phase 2\'s exit, none of its scenes waits', () => {
+test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after phase 3\'s batch pass, none waits', () => {
   // The age a life left the rat race at, told at the round it got out in: the escape's moment and the ends of that life were shot again in Task 20.
-  // Phase 2's scenes are those listed up to its last (`profile-financed`); what waits since is phase 3's, each registered by its screen's task.
-  // Phase 3's tasks register theirs, and its batch pass (Task 14) shoots them.
-  expect([...PENDING_SHOTS]).toEqual(expect.arrayContaining(['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken', 'rankings-all', 'rankings-week', 'rankings-friends', 'rankings-challenge', 'rankings-nickname']));
-  const phase2 = SCENES.slice(0, SCENES.findIndex((scene) => scene.name === 'profile-financed') + 1).map((scene) => scene.name);
-  expect(phase2.filter((name) => PENDING_SHOTS.has(name))).toEqual([]);
-  for (const name of ['player-member', 'player-editor-body', 'player-editor-wear', 'player-editor-scene', 'player-friend-code']) expect(PENDING_SHOTS.has(name), name).toBe(true);
-  for (const name of ['home-member', 'challenge-attempt', 'challenge-played', 'end-standing', 'new-ranked']) expect(PENDING_SHOTS.has(name), name).toBe(true);
-  for (const name of ['room-door', 'room-lobby-friends', 'room-lobby-public', 'room-join-code']) expect(PENDING_SHOTS.has(name), name).toBe(true);
-  for (const name of ['room-playing', 'room-loans', 'room-resolved', 'room-end', 'room-history']) expect(PENDING_SHOTS.has(name), name).toBe(true);
+  // Phase 3's tasks registered theirs (the account, the rankings, the player's profile, the game online, the games with others), and its batch pass
+  // (Task 14) shot and judged every one of them.
+  expect([...PENDING_SHOTS]).toEqual([]);
+  for (const name of ['settings-account-guest', 'rankings-friends', 'player-friend-code', 'challenge-attempt', 'room-lobby-public', 'room-history']) {
+    expect(isJudged(SCENES.find((scene) => scene.name === name)!), name).toBe(true);
+  }
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
   for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
   for (const name of PENDING_SHOTS) expect(hasPhoneWords(name), name).toBe(false);
@@ -339,7 +336,29 @@ describe('what is accepted of a scene, and no more', () => {
       'play-news-r6',
       'play-pageturn',
       'profile-r6',
-    ]);
+      // Phase 3's batch pass: the online scenes.
+      'challenge-attempt',
+      'challenge-played',
+      'end-standing',
+      'home-account-taken',
+      'home-member',
+      'new-ranked',
+      'player-editor-body',
+      'player-editor-scene',
+      'player-editor-wear',
+      'player-friend-code',
+      'player-member',
+      'rankings-friends',
+      'rankings-nickname',
+      'room-door',
+      'room-end',
+      'room-history',
+      'room-lobby-friends',
+      'room-lobby-public',
+      'room-loans',
+      'room-playing',
+      'room-resolved',
+    ].sort());
     for (const [name, record] of Object.entries(ACCEPTED)) {
       expect(SCENES.map((scene) => scene.name), name).toContain(name);
       // A page of other words throughout has a baseline, not a record; a scene with a line of the phone's own words may have one (its shape only).
@@ -361,6 +380,15 @@ describe('what is accepted of a scene, and no more', () => {
       'new-unlocked': { '🎲 At random': 2 },
       'new-locked': { '🎲 At random': 2 },
       'play-guide-r1': { 'New regulator created to regulate the re': 4 / 3 },
+      // Phase 3's: the dice again (the rat's editor, a ranked life), the pencil of the player's name (Lucida Grande on macOS, Zapf Dingbats on iOS),
+      // and the underline of the way to the challenge's ranking, which the web draws round the descenders.
+      'player-member': { '✎': 5 / 3 },
+      'player-editor-body': { '🎲 At random': 5 / 3 },
+      'player-editor-scene': { '🎲 At random': 5 / 3 },
+      'player-friend-code': { '✎': 5 / 3 },
+      'challenge-attempt': { 'See the challenge ranking': 4 / 3 },
+      'challenge-played': { 'See the challenge ranking': 4 / 3 },
+      'new-ranked': { '🎲 At random': 2 },
     });
   });
 

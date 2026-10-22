@@ -124,8 +124,8 @@ test('a section\'s picture and numbers go to the report of the phase that added 
   for (const section of PHASE_3_SECTIONS) expect(SECTIONS).toContain(section);
 });
 
-test('a section waits for its batch pass, unjudged, until it is shot: phase 3\'s forms', () => {
-  expect([...PENDING_SECTIONS]).toEqual(['forms']);
+test('a section waits for its batch pass, unjudged, until it is shot: phase 3\'s forms was shot in its batch pass, and none waits', () => {
+  expect([...PENDING_SECTIONS]).toEqual([]);
   for (const section of PENDING_SECTIONS) expect(SECTIONS).toContain(section);
 });
 
@@ -200,12 +200,13 @@ test('a comparison is clean when no shape differs, no text is in one shot only, 
 });
 
 test('a run compares a pending section only where `--only` names it; otherwise it is shot and said to be unjudged, as a pending scene is', () => {
-  // A whole run: every section shot, forms not compared.
+  // A whole run, none waiting since phase 3's batch pass: every section shot and compared, forms with them.
   const all = judgedOf(SECTIONS, undefined);
-  expect(all.unjudged).toEqual(['forms']);
-  expect(all.judged).toEqual(SECTIONS.filter((s) => s !== 'forms'));
-  // Named, it is compared: the batch pass shooting it.
+  expect(all.unjudged).toEqual([]);
+  expect(all.judged).toEqual([...SECTIONS]);
+  // Named, a section is compared as ever.
   expect(judgedOf(['forms'], ['forms'])).toEqual({ judged: ['forms'], unjudged: [] });
-  expect(judgedOf(['buttons', 'forms'], ['buttons'])).toEqual({ judged: ['buttons'], unjudged: ['forms'] });
+  expect(judgedOf(['buttons', 'forms'], ['buttons'])).toEqual({ judged: ['buttons', 'forms'], unjudged: [] });
+  // What a run says of one that waits, should a later task register one before its batch pass.
   expect(unjudgedSection('forms')).toBe('forms       unjudged: not shot yet, waiting for its batch pass (PENDING_SECTIONS); --only=forms compares it');
 });
