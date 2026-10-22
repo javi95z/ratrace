@@ -15,6 +15,10 @@ const MOST_SENT = { message: 1000, stack: 8000, place: 500, build: 200, browser:
 /** The game's pages, by their path with no language: an error elsewhere is kept as on '/other'. A test holds this to the app. */
 export const PAGES: readonly string[] = ['/', '/challenge', '/collection', '/legal', '/new', '/play', '/player', '/rankings', '/records', '/room'];
 
+/** The phone app's screens, which it sends as `app:<route>`. The app's own screens for its makers (kit, dev…) are not here. */
+export const APP_PAGES: readonly string[] = ['/', '/challenge', '/collection', '/legal', '/new', '/play', '/player', '/rankings', '/records', '/room', '/settings'];
+const APP = 'app:';
+
 /** One kind of error as the database keeps it. */
 export interface ErrorRow {
   fingerprint: string;
@@ -78,12 +82,18 @@ function plain(text: string): string {
 
 /**
  * A page's path, as kept: the game's page it is, with no language, no query, no hash and nothing
- * after the page's own name. Anything else is '/other': a place is in every alert's title, and a
- * player could send any.
+ * after the page's own name. The app's screens come as `app:/play` and are kept so, apart from the
+ * web's, by the same rule with no language. Anything else is '/other': a place is in every alert's
+ * title, and a player could send any.
  */
 export function placeOf(path: string): string {
-  const bare = path.split(/[?#]/)[0];
+  const app = path.startsWith(APP);
+  const bare = (app ? path.slice(APP.length) : path).split(/[?#]/)[0];
   if (!bare.startsWith('/')) return '/other';
+  if (app) {
+    const screen = `/${bare.split('/')[1]}`;
+    return APP_PAGES.includes(screen) ? `${APP}${screen}` : '/other';
+  }
   const page = `/${bare.replace(/^\/(en|es|ru)(?=\/|$)/, '').split('/')[1] ?? ''}`;
   return PAGES.includes(page) ? page : '/other';
 }

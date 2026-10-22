@@ -43,6 +43,18 @@ Then run each workflow once by hand (Actions → the workflow → Run workflow) 
 GitHub turns off scheduled workflows in a public repository after 60 days with no commit: it mails a
 warning first, and one click turns them on again.
 
+## The addresses sign-in may come back to
+
+Kept by hand in the hosted project's dashboard: Authentication → URL Configuration → Redirect URLs.
+`supabase/config.toml` lists the same addresses, but only for a local project: it is never pushed
+(`supabase config push` is not run), so a change there is made in the dashboard too.
+
+| Address | Who comes back to it |
+|---|---|
+| `https://ratrace-plum.vercel.app/**` | The game in production |
+| `http://localhost:3010/**`, `http://localhost:3000/**` | The game on a developer's machine |
+| `theratrace://**` | The phone app, back from Google. Without it, Supabase sends the player to the Site URL in the browser, and the app never hears back. Add it before the app's accounts ship |
+
 ## Restoring
 
 ```bash
@@ -57,4 +69,5 @@ psql --single-transaction --variable ON_ERROR_STOP=1 --file dump/roles.sql --fil
 ```
 
 Then point the game at the new project (`NEXT_PUBLIC_SUPABASE_URL` and key in Vercel), deploy the
-functions (`pnpm online:deploy`) and set their secrets again.
+functions (`pnpm online:deploy`), set their secrets again, and list the addresses sign-in may come
+back to (above).

@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { alertRequest, fingerprintOf, PAGES, placeOf, reportErrors, scrub } from '../../../supabase/functions/_shared/errors.ts';
+import { alertRequest, APP_PAGES, fingerprintOf, PAGES, placeOf, reportErrors, scrub } from '../../../supabase/functions/_shared/errors.ts';
 import type { ErrorRow, ErrorsDeps } from '../../../supabase/functions/_shared/errors.ts';
 import { watched } from '../../../supabase/functions/_shared/watch.ts';
 
@@ -67,6 +67,26 @@ describe('what a report never carries', () => {
     expect(placeOf(`/${'x'.repeat(400)}`)).toBe('/other');
   });
 
+  it("keeps the app's screens under app:, as a page's (no query, no hash, nothing after the screen's own name), and the web's places as they were", () => {
+    expect(placeOf('app:/play')).toBe('app:/play');
+    expect(placeOf('app:/')).toBe('app:/');
+    expect(placeOf('app:/rankings?tab=friends')).toBe('app:/rankings');
+    expect(placeOf('app:/room#x')).toBe('app:/room');
+    expect(placeOf('app:/settings')).toBe('app:/settings');
+    expect(placeOf('app:/x/y')).toBe('/other');
+    expect(placeOf('app:/play/0a4fb313-975e-4fbb-a503-2087414daddf')).toBe('app:/play');
+    expect(placeOf('app:/es/play')).toBe('/other');
+    expect(placeOf('app:/dev')).toBe('/other');
+    expect(placeOf('app:play')).toBe('/other');
+    expect(placeOf('app:')).toBe('/other');
+    expect(placeOf('APP:/play')).toBe('/other');
+    expect(placeOf('app:app:/play')).toBe('/other');
+    expect(placeOf('/app:/play')).toBe('/other');
+    expect(placeOf('/settings')).toBe('/other');
+    for (const page of APP_PAGES) expect(placeOf(`app:${page}`)).toBe(`app:${page}`);
+    expect([...APP_PAGES].sort()).toEqual(['/', '/challenge', '/collection', '/legal', '/new', '/play', '/player', '/rankings', '/records', '/room', '/settings']);
+  });
+
   it('knows every page the game has', () => {
     const app = fileURLToPath(new URL('../../../apps/web/src/app/[locale]/', import.meta.url));
     const pages = readdirSync(app, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => `/${entry.name}`);
@@ -92,6 +112,13 @@ describe('what makes two errors one kind', () => {
 });
 
 describe('reporting the errors of a page', () => {
+  it("notes the app's reports under its own screens, apart from the web's", async () => {
+    const { deps, noted } = fake();
+    await reportErrors(deps, ME, { reports: [report({ place: 'app:/play?code=QQQ' }), report({ place: '/es/play' }), report({ place: 'app:/kit' })] });
+    expect(noted.map((row) => row.place)).toEqual(['app:/play', '/play', '/other']);
+    expect(noted[0].fingerprint).not.toBe(noted[1].fingerprint);
+  });
+
   it('notes each report, cleaned, and keeps nothing of who sent it', async () => {
     const { deps, noted } = fake();
     const reply = await reportErrors(deps, ME, { reports: [report({ message: `no game ${ME} for ana@x.com`, place: '/es/play?code=QQQ' })] });
