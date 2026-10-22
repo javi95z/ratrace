@@ -1,13 +1,15 @@
-import { BADGE_RARITY, content, rarityOf } from '@ratrace/content';
+import { BADGE_RARITY, content, progressOf, rarityOf } from '@ratrace/content';
+import { ratLookOf } from '@ratrace/core/game/avatar';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
+import { sceneCloud as memberCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { GameProvider, useGame, useT } from '../game/context';
+import { GameProvider, useGame, useProfile, useT, useWords } from '../game/context';
 import type { Services } from '../game/context';
 import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
@@ -30,6 +32,11 @@ import { WorkPanel } from '../game/screens/Work';
 import type { BalanceLine } from '../game/screens/Balance';
 import { ProfileOpened, ProfileSheet } from '../game/screens/Profile';
 import { RivalsBoard } from '../game/screens/Rivals';
+import { PlayerProfile } from '../game/screens/PlayerProfile';
+import { useRankName } from '../game/screens/RankCard';
+import { RatEditor } from '../game/screens/RatEditor';
+import type { RatGroup } from '../game/screens/RatEditor';
+import { Panel } from '../ui/kit';
 import { KEYFRAMES } from '../ui/motion';
 import { Screen } from '../ui/Page';
 import { useSpritesLoading } from '../ui/spriteImages';
@@ -218,6 +225,39 @@ function RankingsScene({ scene }: { scene: Scene }) {
   return <Rankings tab={opening?.tab} naming={opening?.naming} />;
 }
 
+/** The tab of the rat a scene of it has open (`player-editor-wear`: what it wears). */
+const ratTabOf = (scene: Scene): RatGroup => scene.name.slice('player-editor-'.length) as RatGroup;
+
+/**
+ * The rat of the player of a scene, a tab of it at a time (`player-editor-*`): the profile's panel alone on a page, as the profile draws it, the tab
+ * given as its initial state. Far down the profile, no shot could see it there; the web's page draws the same panel on the same page and presses
+ * the tab. A choice pressed does nothing: a scene is a picture.
+ */
+function RatScene({ scene }: { scene: Scene }) {
+  const t = useT('player');
+  const profile = useProfile();
+  const { text } = useWords();
+  const rankName = useRankName();
+  const member = sceneMember(scene.name);
+  if (member === null) return null;
+  return (
+    <Screen>
+      <Panel title={t('rat')} label={t('rat')}>
+        <RatEditor
+          look={ratLookOf(member.avatar, member.userId)}
+          earned={profile.badges}
+          rank={progressOf(profile.rank.points).rank}
+          badgeName={(id) => text.badges[id]?.name ?? id}
+          rankName={rankName}
+          onPick={nothing}
+          onLocked={nothing}
+          tab={ratTabOf(scene)}
+        />
+      </Panel>
+    </Screen>
+  );
+}
+
 /**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list. A moment of a life (`moment-*`) is
@@ -243,14 +283,15 @@ export const SCENE_SCREENS: SceneScreens = {
   moment: (scene) => <PlayScene scene={scene} />,
   settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,
   rankings: (scene) => <RankingsScene scene={scene} />,
+  player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerProfile copied={scene.name === 'player-friend-code'} />),
 };
 
 /**
  * What a scene is drawn with: its store behind the game's services, in the language it names whatever the phone speaks,
  * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; where the scene names one, the place its
  * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on); for a scene of the account, the
- * account it says, which stays so, with no network (`sceneCloud`, the web's page's too); and the other players it is told of (`sceneCommunity`:
- * the rankings').
+ * account it says, which stays so, with no network (`sceneCloud`, the web's page's too); the other players it is told of (`sceneCommunity`:
+ * the rankings'); and for a scene of the player's own profile, its member and their profile on the server (`cloudOf`).
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
   const basket = sceneBasket(scene.name);
@@ -262,7 +303,24 @@ export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneS
     ...(basket ? { basket } : {}),
     ...sceneCloud(scene.name),
     ...(community ? { community: () => community } : {}),
+    ...cloudOf(scene),
   };
+}
+
+/** The other players, as a game's services hand them to its screens. */
+type Community = NonNullable<ReturnType<NonNullable<Services['community']>>>;
+
+/**
+ * The cloud a scene of the player's own profile is drawn with (`memberCloud`: the same on the web's page): its member signed in from the start, and
+ * their profile on the server. None for any other scene.
+ */
+function cloudOf(scene: Scene): Pick<Services, 'account' | 'community'> {
+  const cloud = memberCloud(scene.name);
+  if (cloud === null) return {};
+  // What a scene's screen asks of the other players: what the server keeps of the member. Only what is drawn is answered, and checked against the game's own shapes: the rest is never asked.
+  const used: Pick<Community, 'me' | 'rename' | 'setAvatar'> = cloud.community;
+  const community = used as Community;
+  return { account: cloud.account, community: () => community };
 }
 
 /** What a mistyped name gets: the scenes there are. */

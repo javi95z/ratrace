@@ -113,6 +113,12 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'rankings-friends',
   'rankings-challenge',
   'rankings-nickname',
+  // Phase 3, Task 8: the player's own profile, signed in (the scene's cloud), its rat a tab at a time, and its friend code just copied.
+  'player-member',
+  'player-editor-body',
+  'player-editor-wear',
+  'player-editor-scene',
+  'player-friend-code',
 ]);
 
 /**

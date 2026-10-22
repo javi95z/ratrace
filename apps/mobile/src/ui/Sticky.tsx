@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode, type Ref } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import Animated, { measure, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { SCREEN_TOP, Screen, type ScreenScroller } from './Page';
 import { COLORS, GUTTER } from './theme';
@@ -225,5 +225,63 @@ export function StickyScreen({
         {children}
       </Screen>
     </Offset.Provider>
+  );
+}
+
+/**
+ * The page a part of it sticks in (`StickyPart`): how far it has scrolled, written on the UI thread (a `Screen`'s `scrollY`), the column the part
+ * stands in, as Reanimated measures it, how far below the top of what scrolls that column starts (the `Screen`'s room on top, `SCREEN_TOP`), and a
+ * count the page moves on each time its column is laid out again (anything in it grew or shrank): a part is measured again then, never per frame.
+ */
+export interface PageScrolling {
+  scrollY: SharedValue<number>;
+  column: AnimatedRef<View>;
+  top: number;
+  laid: SharedValue<number>;
+}
+export const PageScroll = createContext<PageScrolling | null>(null);
+
+/**
+ * A part of a page whose first row (`head`) stays at the top of the page while the rest of the part scrolls under it, and goes with the part once
+ * its foot comes up: the web's `sticky top-0` on a row inside a part of the page (the rat and its tabs over the choices of PlayerProfile's editor),
+ * not the page's own header (`StickyScreen`). Where the part starts in what scrolls and how far its row may go are measured on the UI thread each
+ * time the part, its row or the page's column is laid out again (a tab of other choices, a form opened above it), with no scroll needed; each frame
+ * of a scroll is then arithmetic on the UI thread, and React is never told of it. Outside a `PageScroll` (a part drawn on a page of its own) it is
+ * the rows as they are. The head is drawn over what passes under it; `gap` is the room between it and the rest, `style` the part's own.
+ */
+export function StickyPart({ head, gap = 0, style, children }: { head: ReactNode; gap?: number; style?: ViewStyle; children: ReactNode }) {
+  const page = useContext(PageScroll);
+  const part = useAnimatedRef<View>();
+  const row = useAnimatedRef<View>();
+  // Where the part starts in what scrolls (far below, until measured: nothing moves), how far its row may go down it, and its own layouts' count.
+  const at = useSharedValue(Number.MAX_SAFE_INTEGER);
+  const room = useSharedValue(0);
+  const own = useSharedValue(0);
+  const scrollY = page?.scrollY;
+  const column = page?.column;
+  const laid = page?.laid;
+  const top = page?.top ?? 0;
+  useAnimatedReaction(
+    () => (laid?.value ?? 0) + own.value,
+    () => {
+      if (column === undefined) return;
+      const box = measure(part);
+      const sheet = measure(column);
+      const held = measure(row);
+      if (box === null || sheet === null || held === null) return;
+      // The part's place in the column, and the column's in what scrolls: the scroll moves both alike on the screen.
+      at.value = top + box.pageY - sheet.pageY;
+      room.value = Math.max(0, box.height - held.height);
+    },
+  );
+  const stuck = useAnimatedStyle(() => ({ transform: [{ translateY: scrollY === undefined ? 0 : Math.max(0, Math.min(room.value, scrollY.value - at.value)) }] }));
+  const relaid = page === null ? undefined : () => void (own.value = own.value + 1);
+  return (
+    <Animated.View ref={part} collapsable={false} onLayout={relaid} style={[{ gap }, style]}>
+      <Animated.View ref={row} collapsable={false} onLayout={relaid} style={[{ zIndex: 1 }, stuck]}>
+        {head}
+      </Animated.View>
+      {children}
+    </Animated.View>
   );
 }

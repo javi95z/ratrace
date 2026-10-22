@@ -92,6 +92,10 @@ export async function reanimatedFake() {
         return () => void rea.listeners.delete(run);
       }, []);
     },
+    // A view's animated ref is a ref (the library's is also a function that answers the view); measuring one, which the phone does on the UI thread,
+    // answers nothing here, where nothing is laid out: what is worked out from it stays where it is with nothing measured.
+    useAnimatedRef: () => useRef(null),
+    measure: () => null,
     // read through a getter, so that it is the value of the moment it is read, as the library's is
     useDerivedValue: <T,>(fn: () => T) => ({
       get value() {

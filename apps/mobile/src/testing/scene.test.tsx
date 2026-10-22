@@ -679,3 +679,36 @@ test('the scenes of the rankings are the rankings themselves, told of the scene\
   await waitFor(() => expect((field as HTMLInputElement).value).toBe('Rata_Uno'), WAIT);
   expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
 });
+
+test('the scenes of the player\'s own profile are drawn signed in: the profile itself, its rat a tab at a time on a page of its own, and its code just copied', async () => {
+  render(<SceneView name="player-member" />);
+  expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
+  expect(screen.getByRole('button', { name: /ABCD2345/ })).toBeTruthy();
+  // The three lives of the scene's device, at a glance.
+  expect(screen.getByLabelText('Your figures').textContent).toMatch(/^3Lives/);
+  expect(screen.queryByText('Code copied')).toBeNull();
+  cleanup();
+  for (const [name, tab, groups] of [
+    ['player-editor-body', 'Body', ['Fur', 'Face']],
+    ['player-editor-wear', 'Clothes', ['Clothes', 'Headwear', 'Eyes']],
+    ['player-editor-scene', 'Backdrop', ['Backdrop', 'Colour']],
+  ] as const) {
+    render(<SceneView name={name} />);
+    expect((await screen.findByRole('tab', { name: tab }, WAIT)).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(groups);
+    // The panel alone: none of the rest of the profile.
+    expect(screen.queryByText('Rata_Uno')).toBeNull();
+    cleanup();
+  }
+  render(<SceneView name="player-friend-code" />);
+  expect(await screen.findByText('Code copied', {}, WAIT)).toBeTruthy();
+  expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
+});
+
+test('a scene of the game alone is drawn with nobody signed in, and one of the game online with its member', () => {
+  const store = new MemoryStore();
+  expect(servicesOf(SCENES.find((scene) => scene.name === 'records-three')!, store).account).toBeUndefined();
+  const online = servicesOf(SCENES.find((scene) => scene.name === 'player-member')!, store);
+  expect(online.account?.state()).toEqual({ kind: 'member', userId: 'u-scene', email: null });
+  expect(online.community?.()).not.toBeNull();
+});

@@ -118,6 +118,11 @@ export const SCENES: readonly Scene[] = [
   { name: 'rankings-friends', locale: 'en' },
   { name: 'rankings-challenge', locale: 'en' },
   { name: 'rankings-nickname', locale: 'en' },
+  { name: 'player-member', locale: 'en' },
+  { name: 'player-editor-body', locale: 'en' },
+  { name: 'player-editor-wear', locale: 'en' },
+  { name: 'player-editor-scene', locale: 'en' },
+  { name: 'player-friend-code', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -295,6 +300,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'rankings-friends': null,
   'rankings-challenge': null,
   'rankings-nickname': null,
+  // The player's own profile, signed in with Google (the scene's cloud, sceneCloud.ts), after the three lives of records-three: their figures, rank
+  // and badges. Its rat, a tab of it at a time, alone on a page (the editor is far down the profile, where no shot could see it); and the profile
+  // with its friend code just copied, the toast saying so.
+  'player-member': null,
+  'player-editor-body': null,
+  'player-editor-wear': null,
+  'player-editor-scene': null,
+  'player-friend-code': null,
 };
 
 /**
@@ -328,6 +341,11 @@ const LIVED: Readonly<Record<string, readonly Lived[]>> = {
   'records-detail': THREE_LIVES,
   'collection-items': THREE_LIVES,
   'collection-badges': THREE_LIVES,
+  'player-member': THREE_LIVES,
+  'player-editor-body': THREE_LIVES,
+  'player-editor-wear': THREE_LIVES,
+  'player-editor-scene': THREE_LIVES,
+  'player-friend-code': THREE_LIVES,
 };
 
 const DAY = 86_400_000;

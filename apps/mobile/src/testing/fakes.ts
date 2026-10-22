@@ -208,6 +208,8 @@ export const spriteModule = {
   SpriteStrip: ({ ids, frame }: { ids: readonly string[]; frame: { w: number; h: number } }) =>
     createElement('div', { 'data-strip': 'true' }, ...ids.map((id) => createElement('div', { key: id, 'data-sprite': id, 'data-size': `${frame.w}x${frame.h}` }))),
   ArtScale: createContext(1),
+  /** How a picture is sampled on a canvas drawn by hand (a rat's layers): here only what it says. */
+  PIXELATED: { filter: 0, mipmap: 0 },
 };
 
 /** The phone's files, as the game writes them (the picture of a life, in the cache): by their address, what was written there last. */

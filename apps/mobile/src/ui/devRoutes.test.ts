@@ -37,11 +37,15 @@ describe('the development pages in a release build', () => {
         const path = join(dir, name);
         return statSync(path).isDirectory() ? files(path) : /\.tsx?$/.test(name) && !/\.test\./.test(name) ? [path] : [];
       });
+    // The core's own test code (the scenes, their cloud) is test code too, named by the package's name.
+    const names = (source: string) => /(from|require\()\s*'(?:[./]*|@ratrace\/core\/)(testing\/|ui\/kitMotion|\.\/kitMotion)/.test(source);
+    expect(names("import { sceneCloud } from '@ratrace/core/testing/sceneCloud';")).toBe(true);
+    expect(names("import { ratLookOf } from '@ratrace/core/game/avatar';")).toBe(false);
     const naming = files(src)
       .map((path) => relative(src, path))
       .filter((path) => !path.startsWith('testing/') && !path.startsWith('ui/testing/'))
-      .filter((path) => /(from|require\()\s*'[./]*(testing\/|ui\/kitMotion|\.\/kitMotion)/.test(readFileSync(join(src, path), 'utf8')));
+      .filter((path) => names(readFileSync(join(src, path), 'utf8')));
     expect(naming.sort()).toEqual(['app/dev.tsx', 'app/kit.tsx', 'app/perf.tsx', 'app/scene.tsx']);
-    for (const path of naming) expect(readFileSync(join(src, path), 'utf8'), path).not.toMatch(/^import [^;]*'[./]*(testing\/|ui\/kitMotion)/m);
+    for (const path of naming) expect(readFileSync(join(src, path), 'utf8'), path).not.toMatch(/^import [^;]*'(?:[./]*|@ratrace\/core\/)(testing\/|ui\/kitMotion)/m);
   });
 });
