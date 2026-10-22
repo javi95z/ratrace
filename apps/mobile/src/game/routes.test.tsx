@@ -2,7 +2,8 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cleanup, screen } from '@testing-library/react';
+import type { Community } from '@ratrace/online/types';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, expect, test } from 'vitest';
 import CollectionRoute from '../app/collection';
@@ -10,6 +11,7 @@ import PlayerRoute from '../app/player';
 import RankingsRoute from '../app/rankings';
 import RecordsRoute from '../app/records';
 import RoomRoute from '../app/room';
+import { params } from '../testing/fakes';
 import { memoryServices, renderGame } from '../testing/render';
 
 // Beside app/, not in it: every file there is a route.
@@ -40,9 +42,37 @@ test('the records and the collection are their own screens', async () => {
 });
 
 test('the pages of the game with others go home: no solo screen leads to them, and the phone plays offline', () => {
-  for (const route of [<RankingsRoute key="rankings" />, <RoomRoute key="room" />, <PlayerRoute key="player" />] as ReactElement[]) {
+  for (const route of [<RoomRoute key="room" />, <PlayerRoute key="player" />] as ReactElement[]) {
     const { container } = renderGame(route, memoryServices());
     expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/');
     cleanup();
   }
+});
+
+test('the rankings are their own screen, opened on the ranking the link names: a friend request\'s notice is `theratrace://rankings?tab=friends`', async () => {
+  const asked: string[] = [];
+  const community = {
+    me: async () => null,
+    friends: async () => ({ friends: [], incoming: [], outgoing: [] }),
+    ranking: async (query: { period: string; friends: boolean }) => (asked.push(`${query.period} ${query.friends ? 'friends' : 'everyone'}`), []),
+    challengeRanking: async () => ({ rows: [], entrants: 0 }),
+  } as unknown as Community;
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  expect(screen.getByRole('heading', { name: 'Rankings' })).toBeTruthy();
+  await waitFor(() => expect(asked).toEqual(['all everyone']));
+  cleanup();
+  asked.length = 0;
+  params.tab = 'friends';
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  await waitFor(() => expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true'));
+  await waitFor(() => expect(asked).toEqual(['all friends']));
+  cleanup();
+  params.tab = 'challenge';
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  expect(await screen.findByText("Nobody has finished this week's challenge yet.")).toBeTruthy();
+  cleanup();
+  // A tab the page does not have opens it as it is: all time.
+  params.tab = 'nowhere';
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
 });

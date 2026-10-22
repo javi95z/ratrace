@@ -623,3 +623,35 @@ test('the scenes of the collection are the collection itself, open on its badges
   const owned = await screen.findByText(/^\d+ of \d+ owned$/, {}, WAIT);
   expect(owned.textContent).not.toMatch(/^0 of/);
 });
+
+test('the scenes of the rankings are the rankings themselves, told of the scene\'s other players (no cloud), each open on the ranking its name says without a tap', async () => {
+  render(<SceneView name="rankings-all" />);
+  const all = await screen.findByRole('list', { name: 'All time' }, WAIT);
+  const lines = within(all).getAllByRole('listitem').filter((item) => item.parentElement?.closest('[role="list"]') === all);
+  expect(lines).toHaveLength(8);
+  expect(lines[0].textContent).toContain('Queso_Grande');
+  // The scene's player is the sixth, lit as their own.
+  expect(lines[5].getAttribute('aria-selected')).toBe('true');
+  expect(await screen.findByText('Your friend code:', { exact: false }, WAIT)).toBeTruthy();
+  expect(within(screen.getByRole('region', { name: 'You' })).getByText('Rata_Uno')).toBeTruthy();
+  expect(screen.queryByRole('textbox')).toBeNull();
+  cleanup();
+  render(<SceneView name="rankings-week" />);
+  expect(await screen.findByRole('list', { name: 'This week' }, WAIT)).toBeTruthy();
+  cleanup();
+  render(<SceneView name="rankings-friends" />);
+  expect(await screen.findByRole('list', { name: 'Friends' }, WAIT)).toBeTruthy();
+  const friends = await screen.findByRole('region', { name: 'Your friends' }, WAIT);
+  await waitFor(() => expect(friends.textContent).toContain('MoneyRat'), WAIT);
+  expect(within(friends).getByRole('region', { name: 'Friend requests' })).toBeTruthy();
+  expect(within(friends).getByRole('region', { name: 'Requests sent' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="rankings-challenge" />);
+  expect(await screen.findByText('40 players · the best 4 are in the top 10%', {}, WAIT)).toBeTruthy();
+  cleanup();
+  // The name being changed: the form open from the start, on the name the player has.
+  render(<SceneView name="rankings-nickname" />);
+  const field = await screen.findByRole('textbox', { name: 'Name' }, WAIT);
+  await waitFor(() => expect((field as HTMLInputElement).value).toBe('Rata_Uno'), WAIT);
+  expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
+});

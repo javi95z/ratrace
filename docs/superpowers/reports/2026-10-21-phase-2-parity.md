@@ -1516,3 +1516,26 @@ in, on this simulator through Metal's XPC driver. Left as in batch pass 1, to be
 - **The legal notice's wording** on the phone (it says what phase 2's app does: kept on this phone, no account, nothing sent): the user's
   call, before an app that sends anything ships.
 - Screen readers (VoiceOver, TalkBack) were not walked through; the tablet's shelf not seen (no iPad simulator).
+
+## Phase 3, Task 7: the rankings (shots pending)
+
+Not shot in its task: the five scenes are in `PENDING_SHOTS`, unjudged until phase 3's batch pass (Task 14) shoots and compares them. They are the
+first scenes with other players: neither side has a cloud in a scene, so both registries give the screen the same community, written once in the core
+(`packages/core/src/testing/sceneCommunity.ts`, its shape held to the online client's `Community` by each client's type checker). Every scene is a
+device with no life; the player is `Rata_Uno` (friend code `RAT7K2QX`), sixth of all time, second this week and among friends, fifth of the challenge.
+
+| scene | what it is | how its tab or form is open |
+|---|---|---|
+| rankings-all | eight players of all time, the first three in their metals (the second in cream: the web's `text-ink-100` names no colour), two without a name (`Rat C1D0`, `Rat FA70`), the player's own line lit gold | none: the page opens on all time |
+| rankings-week | four lives that ended in the scene's week | the web's page presses its tab (`main [data-tab="week"]`); the phone's Rankings is given it (`tab`, as the route's `?tab=`) |
+| rankings-friends | three lines among friends, and the friends' panel under them: two friends, a request waiting (nameless), one sent | the same, `friends` |
+| rankings-challenge | the week's life and rule, forty entrants (the best four marked), six lines | the same, `challenge` |
+| rankings-nickname | all time, the player's name being changed: the web's form inside the player's panel (not a sheet: the web edits it in place), on `Rata_Uno` | the web's page presses "Change it" once the name is read; the phone's is given it (`naming`) |
+
+- **The rows are the page's list** (`ListScreen`): a ranking is fifty lines and the player's own, the challenge's the same. The head (title, the player's
+  panel, the tabs, the hint, the picker, what the ranking came to) is the list's header; the friends' panel is its footer (`ListScreen`'s new `foot`).
+  The friends' own lines (up to 200 friends and 50 requests each way) are memoised but not windowed.
+- **The friend code copies itself when pressed** (the web's `select-all`; a phone selects nothing in a line of text): the web's player page's words,
+  `player.copied` in a toast. Its touch box reaches past the panel's foot to the tabs (`CODE_REACH`).
+- **A ranking asked before is shown at once when it is asked again**, and replaced when the answer comes: the web keeps the last answer only (and shows it
+  at once when it is the one asked again). A tab switched back to has no "Loading…" on the phone where the web shows one.

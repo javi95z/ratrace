@@ -96,7 +96,8 @@ test('every screen is the real one on the app (phase 1\'s stand-ins are retired)
 
 test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after the phase\'s exit, none waits', () => {
   // The age a life left the rat race at, told at the round it got out in: the escape's moment and the ends of that life were shot again in Task 20.
-  expect([...PENDING_SHOTS]).toEqual([]);
+  // Phase 3 registers its scenes and shoots them in its batch pass (Task 14): the rankings' wait for it.
+  expect([...PENDING_SHOTS]).toEqual(['rankings-all', 'rankings-week', 'rankings-friends', 'rankings-challenge', 'rankings-nickname']);
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
   for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
   for (const name of PENDING_SHOTS) expect(hasPhoneWords(name), name).toBe(false);

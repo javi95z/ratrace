@@ -195,10 +195,12 @@ export const LIST_WINDOW = { initialNumToRender: 8, maxToRenderPerBatch: 6, wind
  * drawn again only when its datum (or `extraData`) changes. Whatever a row shows must be in its datum: a row that is `memo` with plain props is not
  * drawn again for a datum made anew that says the same. (The list's renderer is the same function for as long as the page is drawn, and the list
  * memoises it, `strictMode`.) `role` and `label` name the list for a screen reader. `onWidth` hears the width of the column inside its gutter (what
- * the web's container queries measure), once it is laid out and each time it changes.
+ * the web's container queries measure), once it is laid out and each time it changes. `foot` is what stands under its rows (the web's page after
+ * its list: the friends' panel under the ranking among friends), drawn as the list's footer.
  */
 export function ListScreen<T>({
   head,
+  foot,
   data,
   item,
   keyOf,
@@ -209,6 +211,7 @@ export function ListScreen<T>({
   onWidth,
 }: {
   head: ReactElement;
+  foot?: ReactElement;
   data: readonly T[];
   item: (row: T) => ReactElement;
   keyOf: (row: T) => string;
@@ -239,6 +242,7 @@ export function ListScreen<T>({
       keyExtractor={keyExtractor}
       extraData={extraData}
       ListHeaderComponent={head}
+      ListFooterComponent={foot}
       role={role}
       aria-label={label}
       onLayout={measured ? onLayout : undefined}

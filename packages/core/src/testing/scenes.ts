@@ -107,6 +107,13 @@ export const SCENES: readonly Scene[] = [
   { name: 'collection-items', locale: 'en' },
   { name: 'collection-badges', locale: 'en' },
   { name: 'profile-financed', locale: 'en', sheet: 'car_seat_ibiza' },
+  // The rankings of a player signed in, told by the same other players on both clients (`sceneCommunity`): of all time, of the week, among friends
+  // (the friends' panel under it), the week's challenge, and the player's name being changed (the web's form in its panel, opened from it).
+  { name: 'rankings-all', locale: 'en' },
+  { name: 'rankings-week', locale: 'en' },
+  { name: 'rankings-friends', locale: 'en' },
+  { name: 'rankings-challenge', locale: 'en' },
+  { name: 'rankings-nickname', locale: 'en', sheet: 'nickname' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -271,6 +278,12 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   // profile-owned's round, with a car bought on instalments in the fifth (a share down, a loan for the rest): the profile, and the car's own sheet
   // over it, with what is still owed on it (ItemCost's wine note, its words and figure on one baseline).
   'profile-financed': { life: 'engineer', round: 5, stage: 'finance', then: [{ action: 'buy', items: ['car_seat_ibiza'], financed: true }, { action: 'play' }, { action: 'next' }], ends: 'news' },
+  // The rankings ask the cloud, not the device: a device with no life, its other players those of the scene (`sceneCommunity`).
+  'rankings-all': null,
+  'rankings-week': null,
+  'rankings-friends': null,
+  'rankings-challenge': null,
+  'rankings-nickname': null,
 };
 
 /**

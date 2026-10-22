@@ -12,6 +12,7 @@
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { content } from '@ratrace/content';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -27,6 +28,7 @@ import { NewLife } from '@/game/screens/NewLife';
 import { PageTurn } from '@/game/screens/PageTurn';
 import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
+import { Rankings } from '@/game/screens/Rankings';
 import { WorkPanel } from '@/game/screens/Work';
 import { RivalsBoard } from '@/game/screens/Rivals';
 import { Legal } from './Legal';
@@ -327,6 +329,26 @@ const COLLECTION_TABS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * The rankings have no initial state either (the web reads a link's `#friends` and `?tab=challenge`, which this page's address cannot carry for
+ * them): a scene of them has the page press the tab its name says (`rankingsOpening`; each of the web's tabs is marked with its id, `data-tab`), and
+ * for the name being changed (`rankings-nickname`), the button of the player's panel that opens its form, once the name is read. The phone's
+ * Rankings is given the tab and the open form as its initial state.
+ */
+function RankingsScene({ scene }: { scene: Scene }) {
+  const t = useT('rankings');
+  const opening = rankingsOpening(scene.name);
+  const find = [
+    ...(opening === null || opening.tab === 'all' ? [] : [`main [data-tab="${opening.tab}"]`]),
+    ...(opening?.naming ? [() => [...document.querySelectorAll<HTMLElement>('main button')].find((button) => button.textContent === t('changeName')) ?? null] : []),
+  ];
+  return (
+    <PressedInTurn selectors={find}>
+      <Rankings />
+    </PressedInTurn>
+  );
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same.
  * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
  */
@@ -348,6 +370,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   rivals: () => <RivalsScene />,
   end: (scene) => <EndScene scene={scene} />,
   moment: (scene) => <PlayScene scene={scene} />,
+  rankings: (scene) => <RankingsScene scene={scene} />,
 };
 
 /**
@@ -393,7 +416,9 @@ export default function ScenePage({ searchParams }: { searchParams: Promise<{ na
   useEffect(() => {
     if (scene === undefined || !drawable) return;
     let current = true;
-    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: sceneServices(store, scene.name) }));
+    // The other players of a scene of the rankings, the same as the phone's scene gives its screen (`sceneCommunity`): no cloud.
+    const community = sceneCommunity(scene.name);
+    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: { ...sceneServices(store, scene.name), ...(community ? { community: () => community } : {}) } }));
     return () => {
       current = false;
     };

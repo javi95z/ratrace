@@ -2,6 +2,7 @@ import { BADGE_RARITY, content, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -23,6 +24,7 @@ import type { NewLifeOpened } from '../game/screens/NewLife';
 import { PageTurn } from '../game/screens/PageTurn';
 import { Play } from '../game/screens/Play';
 import { Records } from '../game/screens/Records';
+import { Rankings } from '../game/screens/Rankings';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { WorkPanel } from '../game/screens/Work';
 import type { BalanceLine } from '../game/screens/Balance';
@@ -205,6 +207,15 @@ function RivalsScene() {
 const collectionTabOf = (scene: Scene): 'items' | 'badges' => (scene.name === 'collection-items' ? 'items' : 'badges');
 
 /**
+ * The rankings a scene opens on (`rankingsOpening`): the tab its name says, and the form of the player's name open from the start (`rankings-nickname`),
+ * given to the screen as its initial state. The web's page presses the tab, and the button that opens the form.
+ */
+function RankingsScene({ scene }: { scene: Scene }) {
+  const opening = rankingsOpening(scene.name);
+  return <Rankings tab={opening?.tab} naming={opening?.naming} />;
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list. A moment of a life (`moment-*`) is
  * Play's own sheet, open over its stage as the game opens it (no initial state: nothing has taken it in yet): Play draws it.
@@ -227,16 +238,20 @@ export const SCENE_SCREENS: SceneScreens = {
   rivals: () => <RivalsScene />,
   end: (scene) => <EndOpened value={{ share: scene.sheet === 'share' }}><Play /></EndOpened>,
   moment: (scene) => <PlayScene scene={scene} />,
+  rankings: (scene) => <RankingsScene scene={scene} />,
 };
 
 /**
  * What a scene is drawn with: its store behind the game's services, in the language it names whatever the phone speaks,
  * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; and where the scene names one, the place its
- * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on).
+ * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on), and the other players it is told of
+ * (`sceneCommunity`: the rankings').
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
   const basket = sceneBasket(scene.name);
-  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW, ...(basket ? { basket } : {}) };
+  // The other players of a scene of the rankings, the same as the web's page gives its screen (`sceneCommunity`): no cloud.
+  const community = sceneCommunity(scene.name);
+  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW, ...(basket ? { basket } : {}), ...(community ? { community: () => community } : {}) };
 }
 
 /** What a mistyped name gets: the scenes there are. */

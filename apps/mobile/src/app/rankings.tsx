@@ -1,6 +1,10 @@
-import { Redirect } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { Rankings, type Kind } from '../game/screens/Rankings';
 
-/** A page of the game with others (online): no solo screen leads to it, and the phone plays offline, so it goes home. */
+/** The rankings a link can open on, by its `?tab=` (the web's `#friends` and `?tab=challenge`): a friend request's notice is `theratrace://rankings?tab=friends`. */
+const TABS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
+
 export default function RankingsRoute() {
-  return <Redirect href="/" />;
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  return <Rankings tab={TABS.find((one) => one === tab)} />;
 }
