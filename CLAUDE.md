@@ -46,6 +46,9 @@ pnpm --filter @ratrace/web exec tsx ../mobile/scripts/kit-shots.ts              
 npx expo prebuild --platform ios --clean && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CI=1 npx expo run:ios --configuration Release --device <udid> --no-bundler
 # ^ release build, in apps/mobile; with EXPO_PUBLIC_PERF=1 it carries the timing probe
 pnpm --filter @ratrace/mobile exec tsx scripts/perf.ts --launches=5   # the probe's collector (127.0.0.1:8095), after 5 cold starts
+pnpm --filter @ratrace/mobile exec tsx scripts/fakeCloud.ts [--friends=200,50,50]   # a fake project on 127.0.0.1:54399 (guests, Google's page, tables, rooms and ranked on the web's in-memory servers, Realtime): never the live one
+EXPO_NO_METRO_LAZY=1 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54399 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fake_local_only npx expo start --port 8090
+# ^ the app online on the fake project (or a release build with the same env); lazy bundling loses supabase-js's chunk in development (index.cjs vs index.mjs)
 ```
 
 Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`. The same eight can be counted in the game's own project through the function `track` (`_shared/events.ts`; `private.app_events`, by day and platform, nothing of who sent them; any caller with the publishable key, and a ceiling of 20,000 a day for each event and platform), and `pnpm online:stats` prints them.
