@@ -147,12 +147,12 @@ function Portfolio() {
             <Row left={t('savings')} sub={t('savingsRate', { rate: fmt.rate(depositRateBp(content, world)) })} right={fmt.money(p.deposit)} />
           </View>
           {p.cash > 0 ? (
-            <Button variant="secondary" onPress={() => setMove({ kind: 'save' })}>
+            <Button variant="secondary" size={13} padX={8} onPress={() => setMove({ kind: 'save' })}>
               {t('save')}
             </Button>
           ) : null}
           {p.deposit > 0 ? (
-            <Button variant="secondary" onPress={() => setMove({ kind: 'withdraw' })}>
+            <Button variant="secondary" size={13} padX={8} onPress={() => setMove({ kind: 'withdraw' })}>
               {t('withdraw')}
             </Button>
           ) : null}
@@ -1496,7 +1496,7 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
       {asked ? null : (
         // The web's `self-start`: as wide as its words.
         <View style={{ alignSelf: 'flex-start' }}>
-          <Button variant="quiet" onPress={onBack}>
+          <Button variant="quiet" size={14} onPress={onBack}>
             {t('allCities')}
           </Button>
         </View>
@@ -1523,9 +1523,9 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
         </View>
       )}
       <Versus strong label={t('left')} here={now.leftAnnual} there={here ? undefined : there.leftAnnual} />
-      {/* The web's quiet button, as wide as the sheet, which says whether what it folds is open: its `text-[14px]` loses to the Button's own 17 (kit.tsx's Button). */}
+      {/* The web's quiet button (`text-[14px]`, as wide as the sheet), which says whether what it folds is open. */}
       <Raised expanded={numbers} bg="night-700" style={{ paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }} onPress={() => setNumbers((open) => !open)}>
-        <PixelText size={17} tone="ink-200" style={{ textAlign: 'center' }}>{t(numbers ? 'hideNumbers' : 'showNumbers')}</PixelText>
+        <PixelText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{t(numbers ? 'hideNumbers' : 'showNumbers')}</PixelText>
       </Raised>
       {numbers ? (
         <View>

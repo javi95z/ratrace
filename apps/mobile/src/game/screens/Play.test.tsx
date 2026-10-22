@@ -307,6 +307,19 @@ describe('the play screen', () => {
 });
 
 describe('the guide of a first life', () => {
+  it('has its two buttons at the sizes the web\'s screen gives them: 15 to read on (`text-[15px]`), 14 to skip (`text-[14px]`), 16 in', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    const tip = await screen.findByRole('note', { name: 'Guide' });
+    const sizeOf = (control: HTMLElement) => ({
+      words: (control.querySelector('[dir="auto"]') as HTMLElement).style.fontSize,
+      sides: [control, ...control.querySelectorAll<HTMLElement>('*')].find((el) => el.style.paddingLeft !== '')?.style.paddingLeft,
+    });
+    expect(sizeOf(within(tip).getByRole('button', { name: 'Got it' }))).toEqual({ words: '15px', sides: '16px' });
+    expect(sizeOf(within(tip).getByRole('button', { name: 'Skip the guide' }))).toEqual({ words: '14px', sides: '16px' });
+  });
+
   it('gives one tip a stage, each read once, and remembered', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');

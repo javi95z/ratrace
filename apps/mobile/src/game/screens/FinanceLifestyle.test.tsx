@@ -177,6 +177,20 @@ describe('moving to another city', () => {
     for (const [i, row] of rows.entries()) expect(row.querySelector('[data-sprite^="crest."]'), String(i)).not.toBeNull();
   });
 
+  it('opens a city under a way back and over a fold of its figures, both the size the web\'s screen gives them (`text-[14px]`)', async () => {
+    const { services } = await inFinance('nurse');
+    await onLifestyle(services);
+    fireEvent.click(button('Move to another city'));
+    const madrid = openCity('madrid');
+    /** The size a button's words are drawn at, and how far in from its sides they stand. */
+    const sizeOf = (control: HTMLElement) => ({
+      words: (control.querySelector('[dir="auto"]') as HTMLElement).style.fontSize,
+      sides: [control, ...control.querySelectorAll<HTMLElement>('*')].find((el) => el.style.paddingLeft !== '')?.style.paddingLeft,
+    });
+    expect(sizeOf(within(madrid).getByRole('button', { name: ALL_CITIES }))).toEqual({ words: '14px', sides: '16px' });
+    expect(sizeOf(within(madrid).getByRole('button', { name: 'See the figures' }))).toEqual({ words: '14px', sides: '16px' });
+  });
+
   it('opens a city with its year beside this one, its figures folded away, and the move', async () => {
     const { services } = await inFinance('nurse');
     const view = viewOf(await stateOf(services));

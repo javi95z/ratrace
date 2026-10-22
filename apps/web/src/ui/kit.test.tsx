@@ -3,9 +3,48 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Bar, Panel, Segmented, Toggle } from './kit';
+import { Bar, Button, Panel, Segmented, Toggle } from './kit';
 
 afterEach(cleanup);
+
+describe('Button', () => {
+  const classesOf = (className?: string) => {
+    render(<Button className={className}>Go</Button>);
+    const classes = screen.getByRole('button', { name: 'Go' }).className.split(' ');
+    cleanup();
+    return classes;
+  };
+
+  it('is 17 with 16 in each side and 8 above and below, of its own', () => {
+    expect(classesOf()).toEqual(expect.arrayContaining(['px-4', 'py-2', 'text-[17px]', 'min-h-11']));
+  });
+
+  it('takes a screen\'s own size and sides in place of its own: the screen\'s are drawn, not lost to the Button\'s written after them', () => {
+    // The basket's button beside the round's (Play), and the savings' two beside their figure (Finance).
+    const basket = classesOf('shrink-0 px-3 text-[14px]');
+    expect(basket).toEqual(expect.arrayContaining(['shrink-0', 'px-3', 'text-[14px]', 'py-2']));
+    expect(basket).not.toContain('px-4');
+    expect(basket).not.toContain('text-[17px]');
+    const save = classesOf('shrink-0 px-2 text-[13px]');
+    expect(save).toEqual(expect.arrayContaining(['px-2', 'text-[13px]']));
+    expect(save.filter((name) => /^(px-|text-\[)/.test(name))).toEqual(['px-2', 'text-[13px]']);
+    // A size alone keeps the Button's sides; padding all round takes the place of both of its own.
+    expect(classesOf('self-start text-[14px]')).toEqual(expect.arrayContaining(['px-4', 'py-2', 'text-[14px]']));
+    const padded = classesOf('p-1');
+    expect(padded).toContain('p-1');
+    expect(padded).not.toContain('px-4');
+    expect(padded).not.toContain('py-2');
+    expect(padded).toContain('text-[17px]');
+    expect(classesOf('text-sm')).not.toContain('text-[17px]');
+  });
+
+  it('keeps its own size and sides for anything else a screen gives it: a place, a colour, a size at another width', () => {
+    // One side of a screen's (`pl-2`) is written after the Button's two, so it is drawn with them: the Button keeps the other.
+    for (const className of ['mt-2', 'flex-1', 'w-full', 'max-sm:hidden', 'sm:px-2 sm:text-[13px]', 'text-ink-900', 'pl-2', 'pt-1']) {
+      expect(classesOf(className), className).toEqual(expect.arrayContaining(['px-4', 'py-2', 'text-[17px]', ...className.split(' ')]));
+    }
+  });
+});
 
 describe('Panel', () => {
   it('hangs its title on a tab, as a heading, and answers to a name', () => {

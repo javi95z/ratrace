@@ -1143,6 +1143,7 @@
     "never": "You never left the rat race.",
     "escapedAt": "You left the rat race at {age}.",
     "netWorth": "Net worth",
+    "realNetWorth": "After inflation",
     "graph": "Your net worth through life, after inflation",
     "bankruptcies": "{count, plural, =0 {Never bankrupt} one {Bankrupt once} other {Bankrupt # times}}",
     "badges": "Badges of this life",
@@ -2096,7 +2097,6 @@
       "laterTitle": "If this changes",
       "laterBody": "A later version of the game may add an account, rankings or games with others. This notice will be updated to say what they keep, and why, before that version is released."
     },
-    "realNetWorth": "Net worth, after inflation",
     "shareFailed": "This phone could not make the picture to share.",
     "opensLife": "Shows the whole of this life"
   }

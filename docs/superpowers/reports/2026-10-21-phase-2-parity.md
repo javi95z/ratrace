@@ -1060,3 +1060,43 @@ next batch pass, with no record: it is shot, compared and judged there.
   under its box), on a canvas three deviations wider each side (6/12/20 px blur: 9, 18, 30 pt). Held by `Glow.test` and `Celebrations.test` (phone).
 - **Scenes.** `celebrate-earned` and `celebrate-legendary` wait for the next batch pass. Neither had a record (both were clean without the glow).
 
+
+### 2. The web's own bugs, fixed on the `expo` branch
+
+**A screen's size on a `Button`.** The web's Button wrote `px-4 py-2 text-[17px]` with the screen's classes after them; the stylesheet writes
+`px-4` after `px-3` and `p-1`, and `text-[17px]` after `text-[14px]` and `text-sm`, so a screen's sides and size were never drawn (Tailwind 4.3.3,
+compiled from `globals.css`). The Button now leaves out each of its own that a screen's class takes the place of (`ownSize` in ui/kit.tsx: `px-4`
+for `p-*`/`px-*`, `py-2` for `p-*`/`py-*`, `text-[17px]` for a font size); a screen's one side (`pl-2`, written after the Button's two) or a class
+at a width (`sm:px-2`) is drawn as it always was. Held by the web's `kit.test` (RED before: `px-4` beside `px-3`). Every caller that gives a size or
+sides keeps it, each a button set smaller beside other things in its row or under a note:
+
+| caller | classes | on the phone |
+|---|---|---|
+| Play: the basket beside the round's button | `shrink-0 px-3 text-[14px]` | `size={14} padX={12}` |
+| Finance: save and withdraw beside the savings | `shrink-0 px-2 text-[13px]` | `size={13} padX={8}` |
+| Finance, a city: the way back to every city | `self-start text-[14px]` | `size={14}` |
+| Finance, a city: the fold of its figures | `text-[14px]` | its `Raised`'s words at 14 |
+| Guide: "Got it", "Skip the guide" | `flex-1 text-[15px]`, `text-[14px]` | `size={15}`, `size={14}` |
+| Settings: dismiss a notice; Rankings, Room, the app's install | `shrink-0 text-[14px]`, `shrink-0 text-[13px]`, `shrink-0 px-2 text-[13px]`, `shrink-0 px-3 text-[14px]` | online only, not on the phone |
+
+The phone's Button has its `size` and `padX` again (taken out in batch pass 1 to draw what the web drew). Held by the phone's `kit.test`,
+`Finance.test`, `FinanceLifestyle.test` and `Play.test` (RED before: 17, 16 in). The scenes that draw one of these buttons, found by drawing every
+scene on the phone with its Button counted: `play-cards-r1`, `play-finance-r6`, `play-resolve-r6`, `play-guide-r1`, `balance-r6`, `profile-r6`,
+`profile-owned`, `profile-financed`, `moment-escape`, `moment-bankrupt`, `moment-crisis` (the guide's note on the stage) and the thirteen
+`finance-*` scenes (the basket's button; the savings' two in `play-finance-r6`, `finance-basket`, `finance-pension`, `finance-tabs-ru-360`). All wait
+for the next batch pass. Their records stay where the change does not touch their cause (`play-guide-r1`'s note is as tall: its buttons are 44 high
+at 15 or 17; `finance-taxes`, `finance-business`, `finance-buy-stock`, `profile-r6`).
+
+**`finance-tabs-ru-360`: the savings' words are whole again.** With buttons of 17, 16 in, the savings' label and rate were cut ("Сбе…",
+"4,2% …") on both sides, and the scene had a record for the ellipses. `Finance.test` measures the line in Russian at 360 from the fonts' own
+advances (`testing/widths.ts`, read by `scripts/fontCoverage.ts`'s table reader; no kerning taken off, so a line is never found narrower than the
+phone sets it): the line has 312 (360, less the gutter and the panel's padding each side); the buttons are 67.7 and 47.4 wide at 13, 8 in; the
+amount (`245 786 $`, a pixel 15) 71.8; that leaves the words 97.1, where the label needs 87.7 and the rate 57.6 (RED with buttons of 17, 16 in: 39.5).
+The record is gone and the scene waits for the next batch pass, which shoots it.
+
+**The raw key `end.realNetWorth`.** `git log -S realNetWorth`: the key was not renamed. It was `end.realNetWorth` ("After inflation",
+"Descontando la inflación", "С учётом инфляции") when the balance sheet's net worth asked for it (b8174b1, 2026-10-13), and 3c18114 (2026-10-14) took
+it out of the messages when the end of a life stopped using it, while the balance still did. It is back in en, es and ru with those words. Held by
+the web's `Balance.test` (RED before: next-intl's MISSING_MESSAGE, and the key on the page). The phone asks for the same key, and
+`phone.realNetWorth` ("Net worth, after inflation") is gone. `balance-r6` is no longer a scene of the phone's words (`PHONE_WORDS`), its record
+(1469 shape pixels, the phone's longer words) is gone, and it waits for the next batch pass.

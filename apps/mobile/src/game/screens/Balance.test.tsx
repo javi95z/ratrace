@@ -59,8 +59,8 @@ describe('the lines of the balance sheet', () => {
     sheet = open(/^Net worth/, 'Net worth');
     expect(within(sheet).getByText(/half your score/)).toBeTruthy();
     expect(within(sheet).getByText('The one the score counts')).toBeTruthy();
-    // The net worth after inflation is named in words, never by a key: the web's key is not in the messages, and the phone says it in its own.
-    expect(within(sheet).getByText('Net worth, after inflation')).toBeTruthy();
+    // The net worth after inflation is named in the web's words (`end.realNetWorth`), never by a key.
+    expect(within(sheet).getByText('After inflation')).toBeTruthy();
     expect(sheet.textContent).not.toMatch(/\b(end|phone)\.\w+/);
     // No round has been played: there is nothing to draw yet.
     expect(within(sheet).queryByRole('img')).toBeNull();

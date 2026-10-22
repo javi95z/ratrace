@@ -10,9 +10,12 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SCENES, sceneStore } from '@ratrace/core/testing/scenes';
 import { memoryServices, renderGame, spriteRenders } from '../../testing/render';
+import { servicesOf } from '../../testing/scene';
+import { widthOf } from '../../testing/widths';
 import { settled } from '../../testing/renders';
-import { COLORS } from '../../ui/theme';
+import { COLORS, GUTTER } from '../../ui/theme';
 import { useGame, useWords } from '../context';
 import { FinanceOpened } from './Finance';
 import { Play } from './Play';
@@ -539,6 +542,53 @@ describe('a sheet of an amount', () => {
     fireEvent.click(within(sheetTitled('Move cash to savings')).getByRole('button', { name: 'Confirm $1,000' }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Move cash to savings' })).toBeNull());
     expect(probe.state!.orders).toEqual([{ type: 'depositIn', amount: 200_000 }]);
+  });
+});
+
+/** The size a button's words are drawn at, and how far in from its sides they stand. */
+const sizeOf = (control: HTMLElement) => ({
+  words: (control.querySelector('[dir="auto"]') as HTMLElement).style.fontSize,
+  sides: [control, ...control.querySelectorAll<HTMLElement>('*')].find((el) => el.style.paddingLeft !== '')?.style.paddingLeft,
+});
+
+describe('the buttons a screen sets smaller, as the web\'s screens do', () => {
+  it('beside the savings, to save and to withdraw (`px-2 text-[13px]`), and the basket\'s beside the round\'s (`px-3 text-[14px]`)', async () => {
+    const { services, session } = await inFinance('heir');
+    await session.playRound({ orders: [{ type: 'depositIn', amount: 100_000 }] });
+    await toFinance(session);
+    renderGame(<Play />, services);
+    for (const name of ['Save', 'Withdraw']) expect(sizeOf(await screen.findByRole('button', { name })), name).toEqual({ words: '13px', sides: '8px' });
+    expect(sizeOf(button('No orders'))).toEqual({ words: '14px', sides: '12px' });
+  });
+
+  it('leave the savings line room for its words in Russian on a phone 360 wide: its label and its rate whole, nothing in it cut', async () => {
+    // The scene of it (`finance-tabs-ru-360`): the engineer's sixth round, where batch pass 1 found "Сбе…" and "4,2% …" with buttons of 17, 16 in.
+    const scene = SCENES.find((one) => one.name === 'finance-tabs-ru-360')!;
+    expect(scene.width).toBe(360);
+    renderGame(<Play />, servicesOf(scene, await sceneStore(scene.name)), 'ru');
+    const portfolio = ru.finance.portfolio;
+    const save = await screen.findByRole('button', { name: portfolio.save }, { timeout: 15_000 });
+    // The line: its label, rate and amount in a column that takes what is left, then its buttons, `gap` apart.
+    const line = save.parentElement!;
+    const [column, ...buttons] = Array.from(line.children) as HTMLElement[];
+    expect(buttons.map((one) => one.textContent)).toEqual([portfolio.save, portfolio.withdraw]);
+    const [label, rate, amount] = [...column.querySelectorAll<HTMLElement>('[dir="auto"]')].map((text) => text.textContent ?? '');
+    expect(label).toBe(portfolio.savings);
+    expect(rate).toMatch(/в год$/);
+    // The room the line has: the phone's width, less the page's gutter and the panel's padding either side.
+    let panelBox: HTMLElement = line;
+    while (panelBox.style.paddingLeft === '') panelBox = panelBox.parentElement!;
+    const room = scene.width! - 2 * GUTTER - 2 * parseFloat(panelBox.style.paddingLeft);
+    const gap = parseFloat(line.style.gap);
+    const widths = buttons.map((one) => {
+      const { words, sides } = sizeOf(one);
+      return widthOf(one.textContent ?? '', 'pixel', parseFloat(words), 'ru') + 2 * parseFloat(sides!);
+    });
+    const left = room - widths.reduce((sum, one) => sum + one + gap, 0);
+    // In the column, the amount (a pixel 15) keeps its width, 12 from the words, which have the rest.
+    const words = left - 12 - widthOf(amount, 'pixel', 15, 'ru');
+    expect(widthOf(label, 'read', 15, 'ru'), `${label} in ${words.toFixed(1)}`).toBeLessThanOrEqual(words);
+    expect(widthOf(rate, 'read', 12, 'ru'), `${rate} in ${words.toFixed(1)}`).toBeLessThanOrEqual(words);
   });
 });
 

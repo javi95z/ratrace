@@ -51,7 +51,8 @@ function tableOf(view: DataView, tag: string): { offset: number; length: number 
   throw new Error(`no ${tag} table`);
 }
 
-function cmapRanges(view: DataView, cmap: number): number[] {
+/** The glyph each code point the font draws is drawn with, from its Unicode cmap (format 12 where it has one, else 4). */
+function glyphsOf(view: DataView, cmap: number): Map<number, number> {
   const n = view.getUint16(cmap + 2);
   let best: { offset: number; format: number } | null = null;
   for (let i = 0; i < n; i++) {
@@ -64,7 +65,7 @@ function cmapRanges(view: DataView, cmap: number): number[] {
     if (!best || format === 12) best = { offset, format };
   }
   if (!best) throw new Error('no Unicode cmap');
-  const points: number[] = [];
+  const glyphs = new Map<number, number>();
   const o = best.offset;
   if (best.format === 12) {
     const groups = view.getUint32(o + 12);
@@ -73,7 +74,7 @@ function cmapRanges(view: DataView, cmap: number): number[] {
       const first = view.getUint32(at);
       const last = view.getUint32(at + 4);
       const glyph = view.getUint32(at + 8);
-      for (let c = first; c <= last; c++) if (glyph + (c - first) !== 0) points.push(c);
+      for (let c = first; c <= last; c++) if (glyph + (c - first) !== 0) glyphs.set(c, glyph + (c - first));
     }
   } else {
     const segs = view.getUint16(o + 6) / 2;
@@ -93,11 +94,15 @@ function cmapRanges(view: DataView, cmap: number): number[] {
           const g = view.getUint16(rangeOffsets + s * 2 + rangeOffset + (c - start) * 2);
           glyph = g === 0 ? 0 : (g + delta) & 0xffff;
         }
-        if (glyph !== 0) points.push(c);
+        if (glyph !== 0 && !glyphs.has(c)) glyphs.set(c, glyph);
       }
     }
   }
-  points.sort((a, b) => a - b);
+  return glyphs;
+}
+
+function cmapRanges(view: DataView, cmap: number): number[] {
+  const points = [...glyphsOf(view, cmap).keys()].sort((a, b) => a - b);
   const ranges: number[] = [];
   for (const c of points) {
     const last = ranges.length - 1;
@@ -106,6 +111,25 @@ function cmapRanges(view: DataView, cmap: number): number[] {
     else ranges.push(c, c);
   }
   return ranges;
+}
+
+/**
+ * How far each code point the font draws moves the pen, over the em (its glyph's advance in `hmtx`): what a line set in it is as wide as, with no kerning.
+ * Null for one it does not draw.
+ */
+export function advancesOf(path: string): (point: number) => number | null {
+  const bytes = readFileSync(path);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const unitsPerEm = view.getUint16(tableOf(view, 'head').offset + 18);
+  const metrics = view.getUint16(tableOf(view, 'hhea').offset + 34);
+  const hmtx = tableOf(view, 'hmtx').offset;
+  const glyphs = glyphsOf(view, tableOf(view, 'cmap').offset);
+  return (point) => {
+    const glyph = glyphs.get(point);
+    if (glyph === undefined) return null;
+    // Past the last full metric, every glyph has the last advance.
+    return view.getUint16(hmtx + Math.min(glyph, metrics - 1) * 4) / unitsPerEm;
+  };
 }
 
 export function readFont(path: string): FontFacts {

@@ -78,13 +78,12 @@ export function reach(height: number, room: { above: number; below: number }, { 
 }
 
 /**
- * A pixel button. Never smaller than 44 pt, so a thumb can hit it. Its words are 17 and its sides 16 in, always: where a web screen gives its
- * Button a smaller size or side (`px-3 text-[14px]` on the basket's button, `px-2 text-[13px]` beside the savings), the Button's own
- * `px-4 text-[17px]` come after them in the web's stylesheet and win, so the web draws every button at 17 and 16 (measured on its pages:
- * `getComputedStyle`), and so does the phone. `cell` is a button in a cell of a grid of
+ * A pixel button. Never smaller than 44 pt, so a thumb can hit it. `size` and `padX` are the web's `text-[Npx]` and `px-N` where a screen gives
+ * its Button its own (the basket's `px-3 text-[14px]`, the savings' `px-2 text-[13px]`): the web's Button takes a screen's in place of its own 17
+ * and 16. `cell` is a button in a cell of a grid of
  * them (the web's `grid grid-cols-2 gap-2`, placed in a row): an equal share of the row, and as tall as the tallest in it, as the grid stretches it.
  */
-export function Button({ variant, wide = false, cell = false, disabled = false, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean }) {
+export function Button({ variant, wide = false, cell = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   return (
@@ -107,7 +106,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         style={{
           backgroundColor: COLORS[bg],
           minHeight: TOUCH,
-          paddingHorizontal: 16,
+          paddingHorizontal: padX,
           paddingVertical: 8,
           flexDirection: 'row',
           alignItems: 'center',
@@ -117,7 +116,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         }}
       >
         {setIn(children, (s) => (
-          <PixelText size={17} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
+          <PixelText size={size} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
         ))}
       </Framed>
     </Pressable>

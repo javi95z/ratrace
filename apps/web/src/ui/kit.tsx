@@ -27,14 +27,35 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   wide?: boolean;
 }
 
-/** A pixel button. Never smaller than 44px, so a thumb can hit it. */
+/**
+ * The Button's own sides and size, each with the classes of a screen's that take its place (`px-3 text-[14px]` on the basket's button): with both on
+ * it, the stylesheet's order decides, and it writes `px-4` after `px-3` and `p-1`, and `text-[17px]` after `text-[14px]` and `text-sm`, so a screen's
+ * would never be drawn. A screen's one side (`pl-2`, `pt-1`) is written after the Button's two, and a class at a width (`sm:px-2`) after every class
+ * for all widths: those are drawn as they are, and leave the Button its own.
+ */
+const OWN_SIZE: ReadonlyArray<readonly [own: string, theirs: RegExp]> = [
+  ['px-4', /^px?-/],
+  ['py-2', /^py?-/],
+  ['text-[17px]', /^text-(?:\[\d+(?:\.\d+)?(?:px|rem|em)\]|xs|sm|base|lg|\d?xl)$/],
+];
+
+/** The Button's own sides and size that a screen's classes leave it. */
+function ownSize(className: string | undefined): string {
+  const theirs = className?.split(/\s+/) ?? [];
+  return OWN_SIZE.filter(([, taken]) => !theirs.some((name) => taken.test(name)))
+    .map(([own]) => own)
+    .join(' ');
+}
+
+/** A pixel button. Never smaller than 44px, so a thumb can hit it. A screen may give it its own sides and size (`ownSize`). */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = 'secondary', wide = false, className, type = 'button', children, ...rest }, ref) {
   return (
     <button
       ref={ref}
       type={type}
       className={join(
-        'pixel frame-raised relative inline-flex min-h-11 select-none items-center justify-center gap-2 px-4 py-2 text-center text-[17px]',
+        'pixel frame-raised relative inline-flex min-h-11 select-none items-center justify-center gap-2 text-center',
+        ownSize(className),
         'transition-transform active:translate-y-[2px] disabled:pointer-events-none disabled:opacity-45',
         BUTTON[variant],
         wide && 'w-full',

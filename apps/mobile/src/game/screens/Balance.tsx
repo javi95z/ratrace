@@ -16,8 +16,7 @@ import { WorthGraph } from './WorthGraph';
 
 /*
  * The web's Balance.tsx, on the phone. What the phone leaves out: the name of another player of a room who lent the player money (`usePeerName`): a life
- * on the phone is never in a room, and owes no one in one. One line is in words of the phone's own: the net worth after inflation, which the web asks of a
- * key no longer in the messages (`end.realNetWorth`, so the web shows the key itself); the phone never shows a key, and says it (`phone.realNetWorth`).
+ * on the phone is never in a room, and owes no one in one.
  */
 
 /** The lines of the balance sheet. Each opens what it is made of. */
@@ -98,7 +97,6 @@ export function BalanceSheet({ line, shown, open = true, onClose, onGone, onItem
   const estate = useT('finance.property');
   const debtText = useT('finance.debt');
   const end = useT('end');
-  const phone = useT('phone');
   const words = useWords();
   const { content, text, names, fmt } = words;
   const history = useGame((s) => s.history);
@@ -311,7 +309,7 @@ export function BalanceSheet({ line, shown, open = true, onClose, onGone, onItem
           <About>{t('netWorth.about')}</About>
           <Panel>
             <Row left={profile('netWorth')} right={<Figure tone="gold-500">{fmt.money(netWorth(p))}</Figure>} />
-            <Row left={phone('realNetWorth')} sub={t('netWorth.realHint')} right={fmt.money(realNetWorth(shown))} />
+            <Row left={end('realNetWorth')} sub={t('netWorth.realHint')} right={fmt.money(realNetWorth(shown))} />
           </Panel>
           {history.length > 1 ? (
             <Panel>

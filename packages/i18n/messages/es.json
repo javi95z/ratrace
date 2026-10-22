@@ -1143,6 +1143,7 @@
     "never": "Nunca saliste de la rueda.",
     "escapedAt": "Saliste de la rueda a los {age}.",
     "netWorth": "Patrimonio",
+    "realNetWorth": "Descontando la inflación",
     "graph": "Tu patrimonio a lo largo de la vida, descontando la inflación",
     "bankruptcies": "{count, plural, =0 {Nunca en quiebra} one {Una quiebra} other {# quiebras}}",
     "badges": "Insignias de esta vida",
@@ -2096,7 +2097,6 @@
       "laterTitle": "Si esto cambia",
       "laterBody": "Una versión futura del juego podría añadir una cuenta, clasificaciones o partidas con otros jugadores. Este aviso se actualizará antes de publicarla para decir qué guardan y para qué."
     },
-    "realNetWorth": "Patrimonio, descontando la inflación",
     "shareFailed": "Este teléfono no ha podido crear la imagen para compartir.",
     "opensLife": "Muestra esta vida entera"
   }

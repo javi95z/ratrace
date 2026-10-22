@@ -96,24 +96,52 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * call, 2026-10-21): the batch passes shoot every one of these, compare them and fix what differs, and take each out of this list as it is judged.
  * A scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a result. Batch pass 1 shot and judged the
  * thirty-nine of Tasks 11 to 19 and the merge. Waiting since, for the next batch pass: the scenes the user's decisions after it changed on both
- * sides (the parity report's "Decisions after batch pass 1"): the badges' glow.
+ * sides (the parity report's "Decisions after batch pass 1"): the badges' glow, the balance's net worth after inflation, the buttons a screen sizes.
+ * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
 export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   // The rarity's glow round a badge's card, drawn now on the web (its frame's `--glow`) and on the phone (`Glow`).
   'celebrate-earned',
   'celebrate-legendary',
+  // The net worth after inflation in the web's words on both sides (`end.realNetWorth`): the web showed the key, the phone words of its own. Its
+  // button sizes too (below).
+  'balance-r6',
+  // A Button a screen gives its own size (the web's Button takes it now, and the phone draws it): the guide's two (15 and 14), the basket's
+  // (14, 12 in) and the savings' two (13, 8 in). Every scene that draws one of them, found by drawing each scene on the phone.
+  'play-cards-r1',
+  'play-finance-r6',
+  'play-resolve-r6',
+  'play-guide-r1',
+  'finance-basket',
+  'finance-pension',
+  'finance-tabs-ru-360',
+  'finance-market',
+  'finance-buy-stock',
+  'finance-property',
+  'finance-debt',
+  'finance-lifestyle',
+  'finance-move',
+  'finance-shop',
+  'finance-item',
+  'finance-taxes',
+  'finance-business',
+  'profile-r6',
+  'profile-owned',
+  'profile-financed',
+  'moment-escape',
+  'moment-bankrupt',
+  'moment-crisis',
 ]);
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
- * "reload the page"; or where the web shows no words at all, but a key that is not in the messages: the net worth after inflation in `balance-r6`,
- * which the web writes `end.realNetWorth` and the phone `phone.realNetWorth`). The two shots cannot agree on their text, whatever the app does, so these
- * are compared for their layout and shape only: the text rows are reported (they are in the line) and not judged, and the verdict says so.
+ * "reload the page"). The two shots cannot agree on their text, whatever the app does, so these are compared for their layout and shape only: the
+ * text rows are reported (they are in the line) and not judged, and the verdict says so. (`balance-r6` was one while the web showed a key that was
+ * not in the messages, `end.realNetWorth`, and the phone its own words: the key is back, and both say it.)
  */
 export const PHONE_WORDS: readonly string[] = [
   'home-lost-newer',
   'legal',
-  'balance-r6',
 ];
 
 /**
@@ -213,13 +241,6 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     reason: 'One pixel of the edge of the band of light over the card\'s picture, held at the same moment on both sides: the motion section\'s own residual (motion-2: one pixel of the glint band\'s edge).',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
-  'finance-tabs-ru-360': {
-    shape: 0,
-    worstPt: 3,
-    oneSided: 0,
-    reason: 'The savings\' label and its rate cut short beside their buttons: Chrome\'s `text-overflow: ellipsis` keeps the space before its three dots ("4,2% …"), iOS\'s tail truncation draws its own ellipsis glyph after the last letter ("4,2%…"), 2.7 to 3 pt apart at the line\'s end only.',
-    report: 'Batch pass 1: every scene shot, compared and judged',
-  },
   'finance-buy-stock': {
     shape: 149,
     worstPt: 1,
@@ -246,13 +267,6 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     worstPt: 0.67,
     oneSided: 0,
     reason: 'The career bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (phase 1\'s class: a Bar\'s lamp bleeding a sliver).',
-    report: 'Batch pass 1: every scene shot, compared and judged',
-  },
-  'balance-r6': {
-    shape: 1469,
-    worstPt: 2.33,
-    oneSided: 0,
-    reason: 'The phone\'s words for the net worth after inflation ("Net worth, after inflation", `phone.realNetWorth`) are longer than the key the web shows (`end.realNetWorth`): their glyphs past the web\'s line box are in no window of the text check. Nothing else of the sheet differs.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'end-bankrupt': {

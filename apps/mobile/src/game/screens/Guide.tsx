@@ -86,12 +86,13 @@ function Note({ title, label, text, gotIt, skip, onRead, onSkip }: { title: stri
           </View>
         </View>
         <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
+          {/* The web's `flex-1 text-[15px]` and `text-[14px]`. */}
           <View style={{ flex: 1 }}>
-            <Button variant="secondary" wide onPress={onRead}>
+            <Button variant="secondary" wide size={15} onPress={onRead}>
               {gotIt}
             </Button>
           </View>
-          <Button variant="quiet" onPress={onSkip}>
+          <Button variant="quiet" size={14} onPress={onSkip}>
             {skip}
           </Button>
         </View>

@@ -3,6 +3,7 @@ import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LOCALES, messagesFor } from '@ratrace/i18n';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
 
@@ -122,6 +123,14 @@ describe('the lines of the balance sheet', () => {
     // The list gives way to the thing.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.getByRole('dialog', { name: 'Tissot PRX' })).toBeTruthy();
+  });
+
+  it('name the net worth after inflation in words, in every language, never by its key', async () => {
+    const { open } = await life('nurse');
+    const sheet = await open(/^Net worth/, 'Net worth');
+    expect(within(sheet).getByText('After inflation')).toBeTruthy();
+    expect(sheet.textContent).not.toMatch(/realNetWorth/);
+    for (const locale of LOCALES) expect(messagesFor(locale).end.realNetWorth, locale).toEqual(expect.any(String));
   });
 
   it('draw how net worth has moved once a round has been played', async () => {
