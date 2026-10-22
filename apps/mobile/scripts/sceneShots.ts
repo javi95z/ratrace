@@ -130,6 +130,13 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'room-lobby-friends',
   'room-lobby-public',
   'room-join-code',
+  // Phase 3, Task 10: the game with others in play (`sceneRooms`, the room's life the engine's): the news under the room's bar, the loans of a round,
+  // the room's order under a ledger, the end with the room's order over it, and the games played with others among the records.
+  'room-playing',
+  'room-loans',
+  'room-resolved',
+  'room-end',
+  'room-history',
 ]);
 
 /**

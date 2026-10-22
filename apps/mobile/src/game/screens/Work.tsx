@@ -9,7 +9,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { webBaseline, webLine } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bar, Bare, KeyFigure, LineTag, Panel, Row, Tag, Toggle, usePress } from '../../ui/kit';
+import { Bar, Bare, KeyFigure, LineTag, Panel, Raised, Row, Tag, Toggle, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { bannerSize, spriteBox } from '../../ui/sprites';
@@ -17,14 +17,15 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import type { ColorToken } from '../../ui/theme';
 import { useGame, useKnows, useSettings, useT, useWords } from '../context';
+import { useRoomSlice } from '../roomSlice';
 import { CareerMoves } from './CareerMoves';
 import { Explain } from './Explain';
 import { splitMastered, useFocusNote } from './focusNote';
 
 /*
  * The player's working life, as the web's Work.tsx draws it: the panel that sums it up (the profile's `WorkPanel`), the sheets each of its lines
- * opens, and the uses of focus the Lifestyle tab shares with them (`LifeUses`, `TeaseUse`, `MasteredLine`). What is only online is not drawn: teasing
- * a rival is for a game with friends (`TeaseUse` answers "no room", and the room's switch is not drawn).
+ * opens, and the uses of focus the Lifestyle tab shares with them (`LifeUses`, `TeaseUse`, `MasteredLine`). Teasing a rival is for a game with
+ * friends (`TeaseUse`: nothing in a life alone).
  *
  * A switch of focus is drawn again only when what it shows changes (`FocusSwitch`, memoised, with one stable callback): an order of another use, or
  * of anything else, leaves it as it is.
@@ -663,9 +664,59 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
 }
 
 /**
- * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it is aimed at. Nothing in a life alone, which is
- * every life on the phone: the web draws it only where the rules know it, the life is in a room and the room has rivals in it, and the phone has no
- * rooms (its room is always none, `useRoom` a slice of no room), so there is nothing to draw. The switch and its rivals come with rooms; `left` (the
- * focus there is to spend) and `title` (a panel of its own) are what the web draws them with.
+ * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it is aimed at. The teaser gains status this round;
+ * the rival starts the next one with less, and reads who did it. Nothing here in a life alone. With a `title`, it stands in a panel of its own. The
+ * rivals are read from the room by their names alone (`useRoomSlice`): a look at the room that changes neither draws nothing here.
  */
-export const TeaseUse: (props: { left: number; title?: string }) => ReactNode = () => null;
+export function TeaseUse({ left, title }: { left: number; title?: string }) {
+  const t = useT('work');
+  const room = useT('room');
+  const { text } = useWords();
+  const inRoom = useGame((s) => (s.view ? Object.hasOwn(s.view.player.life.flags, 'in_room') : false));
+  const aimed = useGame(useShallow((s) => s.orders.filter((order) => order.type === 'focus' && order.action === 'tease').map((order) => (order as { target?: string }).target ?? '')));
+  const setOrder = useGame((s) => s.setOrder);
+  const rivals = useRoomSlice(({ room: now }) => (now === null ? [] : now.members.filter((member) => !member.me && !member.left).map((member) => ({ userId: member.userId, name: member.name }))));
+  const known = useKnows()('focus:tease');
+  if (!known || !inRoom || rivals.length === 0) return null;
+  const isTease = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'tease';
+  const teasing = aimed.length > 0;
+  const target = rivals.some((rival) => rival.userId === aimed[0]) ? aimed[0] : undefined;
+  const aim = (userId: string | null) => setOrder(isTease, userId === null ? null : { type: 'focus', action: 'tease', target: userId });
+  const nameOf = (rival: (typeof rivals)[number]) => rival.name ?? room('nameless', { tag: rival.userId.slice(0, 4).toUpperCase() });
+
+  const use = (
+    <View style={{ gap: 6 }}>
+      <Toggle
+        on={teasing}
+        onChange={(on) => aim(on ? (target ?? rivals[0].userId) : null)}
+        disabled={!teasing && left < 1}
+        label={text.focusActions.tease}
+        hint={t('teaseGives')}
+        icon={focusArt.tease}
+      />
+      {teasing ? (
+        <View accessibilityRole="radiogroup" accessibilityLabel={t('teaseAt')} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingLeft: 8 }}>
+          {rivals.map((rival) => (
+            <Raised
+              key={rival.userId}
+              role="radio"
+              checked={rival.userId === target}
+              bg={rival.userId === target ? 'gold-500' : 'night-600'}
+              style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
+              onPress={() => aim(rival.userId)}
+            >
+              <ReadText size={14} tone={rival.userId === target ? 'ink-900' : 'cream'}>{nameOf(rival)}</ReadText>
+            </Raised>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+  return title === undefined ? (
+    use
+  ) : (
+    <View role="region" aria-label={title}>
+      <Panel title={title}>{use}</Panel>
+    </View>
+  );
+}

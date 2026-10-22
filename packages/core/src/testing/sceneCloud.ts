@@ -36,6 +36,11 @@ const MEMBERS: Readonly<Record<string, SceneMember>> = {
   'room-lobby-friends': RATA,
   'room-lobby-public': RATA,
   'room-join-code': RATA,
+  'room-playing': RATA,
+  'room-loans': RATA,
+  'room-resolved': RATA,
+  'room-end': RATA,
+  'room-history': RATA,
 };
 
 /** The member a scene is played by, or null for a scene with nobody signed in. */
@@ -64,6 +69,8 @@ export function sceneCloud(name: string) {
     me: async () => ({ nickname: member.nickname, friendCode: member.friendCode, avatar: member.avatar }),
     rename: async () => 'ok' as const,
     setAvatar: async () => true,
+    // The lives of others a life that ends is compared with (a game with others' end): none told, so the end says nothing of them.
+    compare: async () => null,
   };
   return { member, account, community };
 }

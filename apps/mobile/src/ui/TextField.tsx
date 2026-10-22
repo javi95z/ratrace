@@ -10,17 +10,20 @@ import { COLORS, EXTRA, TOUCH } from './theme';
  *   text  `sunk min-h-11 w-full bg-night-900 px-3 text-[16px] text-cream`: a name (the rankings, the profile, a room's seat);
  *   code  the same, `uppercase tracking-[0.12em]`: a friend's code;
  *   room  `pixel frame sunk min-h-11 w-full bg-night-900 px-3 text-[22px] tracking-[0.3em] text-cream placeholder:text-ink-500`: a room's code,
- *         letters and digits only, upper-cased, six at most (its `onChange`).
+ *         letters and digits only, upper-cased, six at most (its `onChange`);
+ *   amount RoomLoans.tsx's `type="number"` field, `frame min-h-11 bg-night-900 px-3 text-[18px] text-cream`: whole dollars, digits only, on the
+ *         phone's number pad (the browser's number field takes nothing else either).
  * `sunk` is drawn after `frame` in the web's stylesheet and wins: no outline round the room code either, only the sunk edge, night-900 on night-900.
  * Focused, the web's `:focus-visible` (a text field is always focus-visible in Chrome): a gold-200 outline 3 thick, 3 off the box.
  */
 
-export type FieldKind = 'text' | 'code' | 'room';
+export type FieldKind = 'text' | 'code' | 'room' | 'amount';
 
-const LOOK: Record<FieldKind, { role: 'read' | 'pixel'; size: number; tracking: number; placeholder: string }> = {
-  text: { role: 'read', size: 16, tracking: 0, placeholder: EXTRA.placeholder },
-  code: { role: 'read', size: 16, tracking: 0.12, placeholder: EXTRA.placeholder },
-  room: { role: 'pixel', size: 22, tracking: 0.3, placeholder: COLORS['ink-500'] },
+const LOOK: Record<FieldKind, { role: 'read' | 'pixel'; size: number; tracking: number; placeholder: string; frame: 'sunk' | 'frame' }> = {
+  text: { role: 'read', size: 16, tracking: 0, placeholder: EXTRA.placeholder, frame: 'sunk' },
+  code: { role: 'read', size: 16, tracking: 0.12, placeholder: EXTRA.placeholder, frame: 'sunk' },
+  room: { role: 'pixel', size: 22, tracking: 0.3, placeholder: COLORS['ink-500'], frame: 'sunk' },
+  amount: { role: 'read', size: 18, tracking: 0, placeholder: EXTRA.placeholder, frame: 'frame' },
 };
 
 /** A room's code is six letters and digits (Room.tsx's `slice(0, 6)`). */
@@ -35,7 +38,7 @@ const RING_OFFSET = 3;
  * code its letters and digits only, and never more than the field takes (a paste past `maxLength`).
  */
 export function cleanField(kind: FieldKind, text: string, maxLength: number | undefined): string {
-  const kept = kind === 'room' ? text.replace(/[^A-Za-z0-9]/g, '').toUpperCase() : kind === 'code' ? text.toUpperCase() : text;
+  const kept = kind === 'room' ? text.replace(/[^A-Za-z0-9]/g, '').toUpperCase() : kind === 'code' ? text.toUpperCase() : kind === 'amount' ? text.replace(/[^0-9]/g, '') : text;
   return maxLength === undefined ? kept : kept.slice(0, maxLength);
 }
 
@@ -74,7 +77,7 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
   const spacing = look.tracking * look.size;
   return (
     <View style={[{ alignSelf: 'stretch' }, place]}>
-      <Framed kind="sunk" style={{ backgroundColor: COLORS['night-900'] }}>
+      <Framed kind={look.frame} style={{ backgroundColor: COLORS['night-900'] }}>
         <TextInput
           accessibilityLabel={label}
           value={value}
@@ -84,7 +87,8 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
           maxLength={kind === 'room' ? undefined : max}
           placeholder={placeholder}
           placeholderTextColor={look.placeholder}
-          autoCapitalize={kind === 'text' ? 'none' : 'characters'}
+          autoCapitalize={kind === 'text' || kind === 'amount' ? 'none' : 'characters'}
+          keyboardType={kind === 'amount' ? 'number-pad' : 'default'}
           autoCorrect={false}
           spellCheck={false}
           autoComplete="off"

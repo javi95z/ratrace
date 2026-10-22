@@ -1,7 +1,9 @@
-import { CONTENT_VERSION } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { SCENE_ROOM_CODE, SCENE_STARTS_IN_MS, sceneInvite, sceneRooms } from './sceneRooms';
+import { runRoomScene, SCENE_ROOM_CODE, SCENE_STARTS_IN_MS, sceneGameOpened, sceneInvite, sceneRooms } from './sceneRooms';
+import { createRoomStore } from '../game/room';
+import { memoryDevice } from '../session/fixed';
 import { sceneMember } from './sceneCloud';
 import { SCENE_NOW, SCENES, sceneStore } from './scenes';
 
@@ -10,7 +12,7 @@ const ROOMS = SCENES.filter((scene) => scene.name.startsWith('room-')).map((scen
 
 describe('the games with others of a scene', () => {
   it('are there for the rooms\' scenes only, each played by the member signed in for it: every other scene has nobody to play with', () => {
-    expect(ROOMS).toEqual(['room-door', 'room-lobby-friends', 'room-lobby-public', 'room-join-code']);
+    expect(ROOMS).toEqual(['room-door', 'room-lobby-friends', 'room-lobby-public', 'room-join-code', 'room-playing', 'room-loans', 'room-resolved', 'room-end', 'room-history']);
     for (const name of ROOMS) {
       expect(sceneRooms(name), name).not.toBeNull();
       expect(sceneMember(name)?.nickname, name).toBe('Rata_Uno');
@@ -29,7 +31,7 @@ describe('the games with others of a scene', () => {
   });
 
   it('give the invitation\'s code only to the scene come by one', () => {
-    expect(ROOMS.map(sceneInvite)).toEqual([undefined, undefined, undefined, SCENE_ROOM_CODE]);
+    expect(ROOMS.map(sceneInvite)).toEqual([undefined, undefined, undefined, SCENE_ROOM_CODE, undefined, undefined, undefined, undefined, undefined]);
     expect(SCENE_ROOM_CODE).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
   });
 
@@ -62,4 +64,50 @@ describe('the games with others of a scene', () => {
     expect(await api.state('scene-room')).toEqual(before);
     expect(typeof watch('scene-room', () => undefined)).toBe('function');
   });
+
+  it('show the player\'s life in a game in play as the server would: the engineer\'s sixth round, with the flag of a life in a room', async () => {
+    const { api } = sceneRooms('room-playing')!;
+    const room = (await api.mine())!;
+    expect(room).toMatchObject({ status: 'playing', round: 5, rounds: content.rounds, deadline: SCENE_NOW + 150_000 });
+    expect(room.members.filter((m) => m.ready).map((m) => m.name)).toEqual(['Bea_7', 'Moe_Money']);
+    const life = await api.view(room.id);
+    if (life === 'gone') throw new Error('no life');
+    expect(life).toMatchObject({ lifeId: 'engineer', events: [], run: null });
+    expect(life.view.round).toBe(5);
+    expect(life.view.player.life.flags).toHaveProperty('in_room');
+    expect(life.record.history).toHaveLength(6);
+    // A room not played yet has no life to show.
+    expect(await sceneRooms('room-lobby-friends')!.api.view('scene-room')).toBe('gone');
+  });
+
+  it('put the loans of the round on the table of its scene: one offered to the player, and the player\'s own, waiting', async () => {
+    const room = (await sceneRooms('room-loans')!.api.mine())!;
+    expect(room.loans.map((loan) => [loan.mine, loan.lend, loan.status])).toEqual([
+      [false, false, 'open'],
+      [true, true, 'open'],
+    ]);
+  });
+
+  it('play the one round of room-resolved on the engine, and the room turns with it', async () => {
+    const rooms = createRoomStore({ link: () => sceneRooms('room-resolved'), store: memoryDevice(), content, lives, versions: VERSIONS, schedule: () => () => undefined });
+    await rooms.getState().boot();
+    await runRoomScene('room-resolved', rooms);
+    const life = rooms.getState().game!.getState();
+    expect(life.stage).toBe('resolve');
+    expect(life.view?.round).toBe(6);
+    expect(rooms.getState().room?.round).toBe(6);
+    expect(rooms.getState().room?.members.every((m) => !m.ready)).toBe(true);
+  }, 60_000);
+
+  it('end the game with the player first, and list the games played among the records, the latest open', async () => {
+    const room = (await sceneRooms('room-end')!.api.mine())!;
+    expect(room.status).toBe('finished');
+    expect(room.members.find((m) => m.me)?.standing?.score).toBe(Math.max(...room.members.map((m) => m.standing?.score ?? 0)));
+    const life = await sceneRooms('room-end')!.api.view(room.id);
+    expect(life !== 'gone' && life.view.finished).toBe(true);
+    const games = await sceneRooms('room-history')!.api.history();
+    expect(games.map((game) => game.id)).toEqual(['scene-game-2', 'scene-game-1']);
+    expect(sceneGameOpened('room-history')).toBe('scene-game-2');
+    expect(ROOMS.filter((name) => sceneGameOpened(name) !== undefined)).toEqual(['room-history']);
+  }, 60_000);
 });

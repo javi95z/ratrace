@@ -39,6 +39,7 @@ const rgb = (hex: string) => {
 // The web's fields, as its screens write them: the phone's field is held to these classes.
 const rankings = readFileSync(join(__dirname, '../../../web/src/game/screens/Rankings.tsx'), 'utf8');
 const room = readFileSync(join(__dirname, '../../../web/src/game/screens/Room.tsx'), 'utf8');
+const loans = readFileSync(join(__dirname, '../../../web/src/game/screens/RoomLoans.tsx'), 'utf8');
 
 /** A field whose value is the caller's state, as a screen holds it. */
 function Held({ kind, maxLength, start = '', onChange }: { kind?: FieldKind; maxLength?: number; start?: string; onChange?: (text: string) => void }) {
@@ -176,6 +177,21 @@ test('what a field keeps of what is typed, by its kind', () => {
   expect(cleanField('room', 'k7-q2 xm9', 6)).toBe('K7Q2XM');
   expect(cleanField('room', 'abc', undefined)).toBe('ABC');
   expect(cleanField('text', 'anything', undefined)).toBe('anything');
+  expect(cleanField('amount', '$2,5x00', undefined)).toBe('2500');
+});
+
+test('a loan\'s amount is the web\'s number field: framed, night-900, Chakra 18 in cream, digits only, on the number pad', () => {
+  expect(loans).toContain('className="frame min-h-11 bg-night-900 px-3 text-[18px] text-cream"');
+  const onChange = vi.fn();
+  render(<Held kind="amount" onChange={onChange} />);
+  const field = input();
+  expect(field.getAttribute('inputmode')).toBe('numeric');
+  expect(field.style.fontSize).toBe('18px');
+  expect(field.style.fontFamily).toContain('ChakraPetch_400Regular');
+  expect(field.style.minHeight).toBe('44px');
+  expect(boxOf(field).style.backgroundColor).toBe(rgb(COLORS['night-900']));
+  fireEvent.change(field, { target: { value: '1.000 $' } });
+  expect(onChange).toHaveBeenLastCalledWith('1000');
 });
 
 test('it is named for a screen reader, asks the keyboard for its return key, and is sent with it', () => {

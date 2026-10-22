@@ -2,6 +2,7 @@
 import { content, lives, textFor } from '@ratrace/content';
 import { memoryBasket } from '@ratrace/core/game/basket';
 import { LocalSessions } from '@ratrace/core/session/local';
+import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { GameSession, PlayerStore, SavedGame } from '@ratrace/core/session/types';
 import type { Order } from '@ratrace/engine';
 import { messagesFor } from '@ratrace/i18n';
@@ -13,6 +14,7 @@ import { memoryServices, pressBack, renderGame, router, spriteRenders } from '..
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
 import { painted } from '../../ui/testing/skia';
+import { ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { GameProvider, TAP_GUARD_MS, useGame } from '../context';
 import type { Services } from '../context';
@@ -57,6 +59,51 @@ async function playRounds(session: GameSession, rounds: number) {
 function realSession(real: GameSession, change: Partial<GameSession> = {}): GameSession {
   return { gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => real.answerCard(option), playRound: (choices) => real.playRound(choices), ...change };
 }
+
+/** What a room puts round a life, as words to find: Room.tsx's own pieces are its tests'. */
+function slots(actions: string | null = null) {
+  return { bar: <ReadText>{'the room bar'}</ReadText>, actions: actions === null ? null : <ReadText>{actions}</ReadText>, resolved: <ReadText>{'the room order'}</ReadText>, end: <ReadText>{'the room end'}</ReadText> };
+}
+
+describe('the play screen in a room', () => {
+  it('stays where it is with no life open yet: the room says itself where to go', async () => {
+    renderGame(<Play room={slots()} />, memoryServices());
+    await settled();
+    expect(router.dismissTo).not.toHaveBeenCalled();
+  });
+
+  it('shows the room\'s bar over the round, in the finances too, and its order under the ledger', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play room={slots()} />, services);
+    await screen.findByRole('heading', { name: 'News' });
+    expect(screen.getByText('the room bar')).toBeTruthy();
+    fireEvent.click(button('See what life brings'));
+    await answerHand();
+    await stageIs('Your finances');
+    expect(screen.getByText('the room bar')).toBeTruthy();
+    fireEvent.click(button('Play the round'));
+    await stageIs('Two years later');
+    expect(within(stage()).getByText('the room order')).toBeTruthy();
+    expect(screen.getByText('the room bar')).toBeTruthy();
+  });
+
+  it('puts the room\'s wait in place of the round\'s button on the cards\' stage too, which has none of its own', async () => {
+    renderGame(<Play room={slots('waiting for the others')} />, memoryServices(await sceneStore('play-cards-r1')));
+    await stageIs(/^Card \d of/);
+    expect(screen.getByText('waiting for the others')).toBeTruthy();
+  });
+
+  it('puts the room\'s wait in place of the round\'s button', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    renderGame(<Play room={slots('waiting for the others')} />, services);
+    await stageIs('Your finances');
+    expect(screen.getByText('waiting for the others')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Play the round' })).toBeNull();
+  });
+});
 
 describe('the play screen', () => {
   it('sends a visitor with no life in progress back to the front door', async () => {

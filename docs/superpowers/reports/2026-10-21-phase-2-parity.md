@@ -1588,3 +1588,31 @@ and the same player signed in, `Rata_Uno` (`sceneCloud.ts`), so the lobby shows 
   the web says to reload the page. No scene shows them.
 - **A sheet rises over the keyboard** on both platforms (`KeyboardAvoidingView` in the sheet's window): the lobby's name sheet has the first field in a
   sheet. To be seen on both.
+
+## Phase 3, Task 10: the game with others in play, its loans, shouts, end and history (shots pending)
+
+Not shot in its task: the five scenes are in `PENDING_SHOTS`, unjudged until phase 3's batch pass (Task 14). Both registries give the game the same
+table (`sceneRooms`), now with the player's life in the room: the life of another scene (`play-news-r6`, `play-finance-r6`, `end-escaped`), which the
+engine played the scenes' way, shown as the server shows a room's life (the `in_room` flag set). Each side's script waits for that life to open, and
+takes the scene's own steps on it (`runRoomScene`), before the screen is first drawn. The device has no life of its own in any of them.
+
+| scene | what it is | how it is opened |
+|---|---|---|
+| room-playing | the engineer's sixth round, at its news: the room's bar (2:30 left by the server's clock, Bea and Moe ticked), the paper telling of Bea's coup at the top with her rat | none |
+| room-loans | the same round at its finances: Moe's offer of a loan to answer, and the player's own to Bea, waiting, with Withdraw | none |
+| room-resolved | the same round played by the player as the last to play: the ledger, and "After round 6" under it, the player now first | the script puts the saver's orders in the basket and plays the round; the scene's table answers it with the engine's result |
+| room-end | the end of the engineer's life, the room's order over it: Place 1 of 3, the badges the game earned, Rematch, Leave | none |
+| room-history | the records with two games played with others; the latest open in its sheet: everyone with their place, city and job, worth and score | the web's page presses the first game of the Multiplayer section; the phone's Records is given it (`game`) |
+
+- **The bar's clock is drawn once a second** on the phone (the web four times a second), and only the bar's button is drawn for it: its rats are made
+  by the bar and handed in, the same each second. The line of the round's time jumps once a second; the web eases its width over 300 ms.
+- **The bar hides "n/m played"** as the web does below 640 px (`max-sm:hidden`): the ticks on the rats say it.
+- **Shouts stand over the page, not over a sheet** that is open: a sheet is a window of its own on the phone. The web's stand over its sheets.
+  Those heard while a sheet is open wait for it to go (the room keeps the latest three), and each is then shown its whole four seconds.
+  Their shadow is drawn (two strips of `EXTRA.shoutShadow`, as the paper's), not a CSS shadow.
+- **The bar is drawn where the stage puts it** (over the finances' tabs, or at the top of any other stage), as the web's is in one place: its
+  sheets, the shout's wait and an answer to a loan on its way are kept above it (`BarHost`), so a round turning under an open sheet leaves it open.
+- **Sheets take turns**: the room's order gives way to the question of leaving, and to the sheet of a player (closed, then the other opened); the
+  web opens the question over the order.
+- **The loan's amount** is the kit's `TextField kind="amount"` (digits only, on the number pad); the four amounts a tap gives are buttons, gold when
+  chosen, as the web's.

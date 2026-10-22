@@ -18,15 +18,15 @@ import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
-import { useGame, useRoom, useStill, useT, useWords } from '../context';
+import { useGame, useStill, useT, useWords } from '../context';
+import { useRoomSlice } from '../roomSlice';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins, useCoinTarget } from './FlyingCoins';
 import { Loop } from './Loop';
 
 /*
  * The web's Resolve.tsx on a phone: the ledger of a round, rolling up line by line, and where it leaves the player. What the phone leaves out:
- * nothing of the round; the names of the players of a room, which a phone never is in (`useRoom` answers no room, and a note of another player
- * names them as a room names a stranger).
+ * nothing of the round. In a room, a note of another player names them as the room does (their name, or the room's name for a stranger).
  */
 
 /** The ground, the frame and the words of a note, by its tone (the web's `NOTE`: gold is `frame-gold bg-gold-500 text-ink-900`). */
@@ -277,7 +277,8 @@ export function Resolve() {
   const resolved = useGame((s) => s.resolved);
   const story = useGame((s) => s.story);
   const view = useGame((s) => s.view);
-  const members = useRoom((s) => s.room?.members);
+  // The names the players of a room go by, by their ids: only these, so a look at the room (a seat that played, a shout) does not draw the ledger again.
+  const names = useRoomSlice(({ room: now }) => (now === null ? null : Object.fromEntries(now.members.map((member) => [member.userId, member.name]))));
   const room = useT('room');
   const still = useStill();
   // When the page came: the counts under the ledger start from then, as the web's do, though their panels are put in later.
@@ -290,8 +291,8 @@ export function Resolve() {
 
   const { before, events } = resolved;
   const scene = milestoneOf(story, before.round, view.round);
-  // Who did something to this life, in a game with friends, by the name the room shows (on a phone, none: the room's name for a stranger).
-  const whoIs = (userId: string) => members?.find((member) => member.userId === userId)?.name ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
+  // Who did something to this life, in a game with friends, by the name the room shows.
+  const whoIs = (userId: string) => names?.[userId] ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
   const notes = roundNotes(words, t, events, whoIs);
   const lines = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
   // A crisis that was on when the round was played and is not now has just ended.

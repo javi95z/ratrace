@@ -5,12 +5,12 @@ import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud as memberCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
-import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
+import { runRoomScene, sceneGameOpened, sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { GameProvider, useGame, useProfile, useT, useWords } from '../game/context';
+import { GameProvider, useGame, useProfile, useRooms, useT, useWords } from '../game/context';
 import type { Services } from '../game/context';
 import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
@@ -286,8 +286,9 @@ export const SCENE_SCREENS: SceneScreens = {
   settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,
   rankings: (scene) => <RankingsScene scene={scene} />,
   player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerProfile copied={scene.name === 'player-friend-code'} />),
-  // The games with others, at the scene's table (`sceneRooms`); one come by an invitation is given its code as the route gives it (`?code=`).
-  room: (scene) => <Room code={sceneInvite(scene.name)} />,
+  // The games with others, at the scene's table (`sceneRooms`); one come by an invitation is given its code as the route gives it (`?code=`). The games
+  // played with others are the records' (`room-history`), given the one open (the web's page presses it).
+  room: (scene) => (scene.name === 'room-history' ? <Records game={sceneGameOpened(scene.name)} /> : <Room code={sceneInvite(scene.name)} />),
 };
 
 /**
@@ -354,8 +355,11 @@ export const whereOf = (state: RoundState & RoundActions): string =>
 /**
  * Takes the steps a scene goes on with (`runScene`: the result of a card, the ledger of a round) once the game has opened on
  * the scene's store, on that game, and says where they left it. Needs no more of the game than a screen has: its actions and its state through `useGame`.
+ * A scene of a game with others then waits for the life in its room, and takes its own steps on that one (`runRoomScene`), so its screen is first
+ * drawn there too.
  */
 function Script({ scene, done }: { scene: Scene; done: (where: string) => void }) {
+  const rooms = useRooms();
   // The round store's state as it stands, whenever the script asks (it reads the game between its steps): a selector is run
   // on every change the store makes, as it is told of them, so what this one saw last is the latest.
   const latest = useRef<(RoundState & RoundActions) | null>(null);
@@ -368,8 +372,10 @@ function Script({ scene, done }: { scene: Scene; done: (where: string) => void }
     if (status === 'booting' || started.current) return;
     started.current = true;
     const now = () => latest.current as RoundState & RoundActions;
-    runScene(scene.name, { getState: now }).then(() => done(whereOf(now())), (error: unknown) => console.error(error));
-  }, [status, scene, done]);
+    runScene(scene.name, { getState: now })
+      .then(() => runRoomScene(scene.name, rooms))
+      .then(() => done(whereOf(now())), (error: unknown) => console.error(error));
+  }, [status, scene, done, rooms]);
   return null;
 }
 

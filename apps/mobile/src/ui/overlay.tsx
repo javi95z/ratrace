@@ -326,6 +326,12 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
 }
 
 /**
+ * Whether a sheet is on screen, or still going: one shown, one waiting for its turn, or one taken away whose window is still being dismissed. What
+ * stands over the page and not over a sheet (a room's shouts) waits for this to be false, so it is seen.
+ */
+export const useSheetsShowing = (): boolean => useSyncExternalStore(subscribeTop, () => top.sheets.length > 0 || turns.length > 0, () => false);
+
+/**
  * A short message that shows itself out, announced politely. Fixed to the screen, as the web's `fixed bottom-28`: a
  * screen gives it as its Screen's `fixed`, never inside the column, where it would scroll with the page. While a sheet is open it is drawn
  * over the sheet, in its window, as the web's stands over its sheets (a refusal said of what was asked for in the sheet).

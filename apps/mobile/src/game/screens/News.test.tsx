@@ -10,7 +10,9 @@ import { speaking } from '../../testing/memoryServices';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { GameProvider, useGame } from '../context';
+import { RoomPaper } from '../roomStory';
 import { dashesOf, Headlines, NewsPanel, RoundOpener } from './News';
+import type { RoomMember } from '@ratrace/core/game/room';
 
 afterEach(cleanup);
 
@@ -23,6 +25,47 @@ async function playRounds(session: GameSession, rounds: number) {
     await session.playRound({ orders: [] });
   }
 }
+
+/** A player of a room, as the round left them: their score, and the score and place of the round before. */
+const player = (userId: string, name: string, score: number, before: [number, number], over: Partial<RoomMember> = {}): RoomMember => ({
+  userId, name, me: false, host: false, bot: null, followed: false, friend: false, ready: false, left: false, shout: null, avatar: null,
+  standing: { score, netWorth: 0, status: 0, escaped: false, bankruptcies: 0, before: { score: before[0], place: before[1] }, cityId: null, career: null },
+  ...over,
+});
+
+describe('the news of a game with friends', () => {
+  it('tells of the players themselves, with the rat it is about, and never of the player\'s made-up people', async () => {
+    const services = memoryServices();
+    await playRounds(await services.sessions.start('engineer'), 1);
+    // Bea took the lead from the player this round.
+    const members = [player('me-0000', 'Rata_Uno', 100, [90, 1], { me: true }), player('bea-0000', 'Bea_7', 140, [80, 2], { avatar: 'rat_teal' })];
+    renderGame(
+      <RoomPaper.Provider value={members}>
+        <Headlines />
+      </RoomPaper.Provider>,
+      services,
+    );
+    const paper = await screen.findByRole('region', { name: 'News' });
+    const story = within(paper).getByText(en.room.paperTopic.toUpperCase()).closest('[role="listitem"]') as HTMLElement;
+    expect(story.textContent).toContain('Bea_7');
+    expect(story.querySelector('[data-sprite="icon.percentile"]')).toBeNull();
+    expect(screen.queryByText(en.rivals.topic.toUpperCase())).toBeNull();
+  });
+
+  it('says nothing of the game in a quiet round', async () => {
+    const services = memoryServices();
+    await services.sessions.start('engineer');
+    renderGame(
+      <RoomPaper.Provider value={[player('me-0000', 'Rata_Uno', 400, [396, 1], { me: true }), player('bea-0000', 'Bea_7', 300, [298, 2])]}>
+        <Headlines />
+      </RoomPaper.Provider>,
+      services,
+    );
+    const paper = await screen.findByRole('region', { name: 'News' });
+    expect(within(paper).getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.queryByText(en.room.paperTopic.toUpperCase())).toBeNull();
+  });
+});
 
 describe('the news of a round', () => {
   it('is a paper with its masthead, the city and the issue, a clipping to each headline and the gauges of the economy', async () => {
