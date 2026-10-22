@@ -556,7 +556,7 @@ describe('the list of scenes', () => {
       'player-friend-code',
       'home-member',
       'challenge-attempt',
-      'challenge-board',
+      'challenge-played',
       'end-standing',
       'new-ranked',
     ]);
@@ -955,7 +955,7 @@ describe('the scenes of the account', () => {
   });
 
   it('gives the scenes of the game online a member, with nothing waiting in the account, and home-member home-continue\'s life', async () => {
-    for (const name of ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked']) {
+    for (const name of ['home-member', 'challenge-attempt', 'challenge-played', 'end-standing', 'new-ranked']) {
       expect(sceneCloud(name).account!.state(), name).toEqual({ kind: 'member', userId: 'scene-player', email: 'ana.garcia@example.com' });
       expect(sceneCloud(name).saves!.offer(), name).toBeNull();
     }
@@ -963,7 +963,7 @@ describe('the scenes of the account', () => {
   });
 
   it('gives every other scene no cloud: nobody signed in, as before', async () => {
-    const online = ['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken', 'home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked'];
+    const online = ['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken', 'home-member', 'challenge-attempt', 'challenge-played', 'end-standing', 'new-ranked'];
     for (const { name } of SCENES.filter((scene) => !online.includes(scene.name))) {
       expect(sceneCloud(name), name).toEqual({});
     }

@@ -8,14 +8,14 @@ import { GameSessions } from '@ratrace/core/session/sessions';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RankedGame, SavedGame } from '@ratrace/core/session/types';
 import { rankedServer } from '../../../../web/src/testing/rankedServer';
 import { GameProvider, useGame } from '../context';
 import type { Services } from '../context';
-import { network } from '../../testing/fakes';
+import { focus, network } from '../../testing/fakes';
 import { speaking } from '../../testing/memoryServices';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled, steady } from '../../testing/renders';
@@ -298,13 +298,40 @@ describe('the weekly challenge page, for a player signed in', () => {
     expect(router.push).toHaveBeenCalledWith('/rankings?tab=challenge');
   });
 
-  it('offers no attempt with no connection, and tells the player to sign in only where nobody is', async () => {
+  it('offers no attempt with no connection, and says what the web says to anyone who cannot have it: to sign in', async () => {
     network.connected = false;
     const { services } = withAccount({ entered: false, score: null });
     renderGame(<WeeklyChallenge />, services);
     await screen.findByRole('link', { name: "See the challenge ranking" });
     await waitFor(() => expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull());
     expect(screen.getByRole('button', { name: 'Practise' })).toBeTruthy();
+    // The web's words, for a player who is signed in all the same: a question of words for the user, kept as the web has them.
+    expect(screen.getByText('To play the attempt that counts, sign in. You can still practise.')).toBeTruthy();
+  });
+
+  it('begins the attempt asked for as a practice when the connection went while its question was open, as the web does', async () => {
+    const { services, asked } = withAccount({ entered: false, score: null });
+    await services.sessions.start('engineer');
+    renderGame(<WeeklyChallenge />, services);
+    asked.length = 0;
+    fireEvent.click(await screen.findByRole('button', { name: "Play today's attempt" }));
+    const sheet = (await screen.findByRole('heading', { name: 'End the life you are living?' })).closest('[aria-modal="true"]') as HTMLElement;
+    act(() => network.set(false));
+    await waitFor(() => expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull());
+    fireEvent.click(within(sheet).getByRole('button', { name: 'End it and start this one' }));
+    await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: false, challenge: week.week, replace: undefined }]));
+  });
+
+  it('asks again whether today\'s attempt is had each time the page is shown again: it stays drawn under the rankings opened from it', async () => {
+    let entry = { entered: false, score: null as number | null };
+    const services = memoryServices();
+    const community = { challengeEntry: async () => entry } as unknown as Community;
+    renderGame(<WeeklyChallenge />, { ...services, account: accountAs(guest), community: () => community });
+    await screen.findByRole('button', { name: "Play today's attempt" });
+    entry = { entered: true, score: 512 };
+    await act(async () => focus.again());
+    expect(await screen.findByText("You have played today's attempt. Your best this week: 512 points.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
   });
 });
 

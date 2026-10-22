@@ -717,7 +717,7 @@ test('the scenes of the game online beside the game alone are drawn for a member
   expect(await screen.findByRole('button', { name: "Play today's attempt" }, WAIT)).toBeTruthy();
   expect(await screen.findByText('Your best this week: 8,105 points.', {}, WAIT)).toBeTruthy();
   cleanup();
-  render(<SceneView name="challenge-board" />);
+  render(<SceneView name="challenge-played" />);
   expect(await screen.findByText("You have played today's attempt. Your best this week: 8,105 points.", {}, WAIT)).toBeTruthy();
   expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
   expect(screen.getByRole('link', { name: 'See the challenge ranking' })).toBeTruthy();

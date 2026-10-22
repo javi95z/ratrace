@@ -284,7 +284,7 @@ Everything in phase 2's Global Constraints still holds (`docs/superpowers/plans/
 - [ ] Screen method. Scenes:
   - `home-member`
   - `challenge-attempt`
-  - `challenge-board`
+  - `challenge-played` (named `challenge-board` until Task 6's review: the page once today's attempt is played; the board itself is `rankings-challenge`)
   - `end-standing`
   - `new-ranked`
 - [ ] **Commit** `feat(mobile): the online parts of the front door, the week's challenge, a life's end and a new life`.

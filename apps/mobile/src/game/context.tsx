@@ -318,14 +318,14 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   const restart = useCallback(
     async (settings: Settings) => {
       closeEverySheet();
-      let started = false;
+      let ready = false;
       try {
         await sheetsGone();
         made.game = roundStore(made);
-        started = true;
+        ready = true;
       } finally {
         // A start that failed leaves the game as it was, and its sheets free to open again; one that did not lets them open once it is drawn.
-        if (!started) openSheetsAgain();
+        if (!ready) openSheetsAgain();
       }
       setStarted((was) => ({ count: was.count + 1, settings }));
     },

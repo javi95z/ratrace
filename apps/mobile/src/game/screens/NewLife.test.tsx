@@ -732,6 +732,38 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
   });
 
+  it('says nothing of ending the life it has just taken up, while it waits for the sheet to go', async () => {
+    const { there, phone } = await twoDevices();
+    let gone: () => void = () => undefined;
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('button', START));
+    const sheet = await elsewhere();
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(await ready(sheet, 'Continue that life'));
+    await waitFor(async () => expect(((await phone.store.loadGame()) as RankedGame | null)?.gameId).toBe(there.gameId));
+    await settled();
+    // The life on the phone now is the one taken up: no warning that starting would end it, while the page waits and while it is on its way out.
+    expect(screen.queryByText(en.newLife.replace)).toBeNull();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await settled();
+    expect(screen.queryByText(en.newLife.replace)).toBeNull();
+  });
+
+  it('takes it up once for two quick presses', async () => {
+    const { phone } = await twoDevices();
+    let takenUp = 0;
+    const takeUp = phone.sessions.takeUp.bind(phone.sessions);
+    phone.sessions.takeUp = (life: Parameters<typeof takeUp>[0]) => ((takenUp += 1), takeUp(life));
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('button', START));
+    const button = await ready(await elsewhere(), 'Continue that life');
+    fireEvent.click(button);
+    fireEvent.click(button);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(takenUp).toBe(1);
+  });
+
   it('cannot be taken up here when it was begun under older rules, and the sheet says so', async () => {
     const { server, there, phone } = await twoDevices();
     (server.games.get(there.gameId) as { engine_version: string }).engine_version = '0.0.1';

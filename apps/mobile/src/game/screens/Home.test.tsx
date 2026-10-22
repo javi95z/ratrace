@@ -12,7 +12,7 @@ import type { Account, AccountLife, AccountSaves, AccountState, Community } from
 import { afterEach, describe, expect, it } from 'vitest';
 import { GameProvider, useGame } from '../context';
 import { rankedServer } from '../../../../web/src/testing/rankedServer';
-import { network } from '../../testing/fakes';
+import { focus, network } from '../../testing/fakes';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
@@ -646,6 +646,37 @@ describe('the front door of a player with an account', () => {
     expect(screen.queryByRole('link', { name: 'Your profile' })).toBeNull();
   });
 
+  it('asks the other players again each time it is shown again, as the web asks on every visit: requests answered and a rat dressed on the screens over it', async () => {
+    // The front door stays drawn under the rankings and the profile; what was done there is told when it is shown again.
+    let incoming = [friend('a'), friend('b')];
+    let avatar: string | null = null;
+    let entered = false;
+    const asked: string[] = [];
+    const others = othersOf({
+      friends: async () => (asked.push('friends'), { friends: [], incoming, outgoing: [] }),
+      me: async () => (asked.push('me'), { nickname: 'Rata', friendCode: 'ABCD2345', avatar }),
+      challengeEntry: async () => (asked.push('entry'), { entered, score: null }),
+    });
+    renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => others });
+    fireEvent.click(await screen.findByRole('link', { name: '2 friend requests' }));
+    expect(router.push).toHaveBeenLastCalledWith('/rankings?tab=friends');
+    await screen.findByText(/^(Ends today|\d days? left)$/);
+    const before = { friends: asked.filter((what) => what === 'friends').length, me: asked.filter((what) => what === 'me').length };
+    // On the rankings' page both requests are answered; on the profile's the rat is dressed; and today's attempt is played.
+    incoming = [];
+    avatar = 'rat_gold';
+    entered = true;
+    await act(async () => focus.again());
+    await waitFor(() => expect(screen.queryByRole('link', { name: /friend request/ })).toBeNull());
+    expect(await screen.findByText('Played today')).toBeTruthy();
+    expect(asked.filter((what) => what === 'friends')).toHaveLength(before.friends + 1);
+    expect(asked.filter((what) => what === 'me')).toHaveLength(before.me + 1);
+    // A request that came meanwhile is told, the next time it is shown.
+    incoming = [friend('c')];
+    await act(async () => focus.again());
+    expect(await screen.findByRole('link', { name: '1 friend request' })).toBeTruthy();
+  });
+
   it('shows the ranked life the phone has only a note of, once there is someone signed in to ask the server for it', async () => {
     // The phone opens before anyone is signed in. A note the account left here, never opened, has nothing to show yet.
     const server = rankedServer();
@@ -668,7 +699,7 @@ describe('the front door of a player with an account', () => {
     expect(server.games.get(there.gameId)?.status).toBe('playing');
   });
 
-  it('is not drawn again for the connection coming and going, nor for a change of the game it does not show, once the other players have answered', async () => {
+  it('is not drawn again for the connection coming and going, a change of the game it does not show, or being shown again, once the other players have answered', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
     const others = othersOf({
@@ -698,6 +729,8 @@ describe('the front door of a player with an account', () => {
     await settled(() => network.set(false));
     await settled(() => network.set(true));
     await settled(() => leave!());
+    // Shown again, it asks again: the same answers draw nothing.
+    await settled(() => focus.again());
     expect(renders.count).toBe(before);
   });
 });

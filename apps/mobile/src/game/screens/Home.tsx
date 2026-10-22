@@ -2,7 +2,7 @@ import { CHALLENGE_ART, ratArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
@@ -15,6 +15,7 @@ import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { useAccount, useAccountOffer, useCommunity, useGame, useRuns, useSaving, useSignedIn, useWords } from '../context';
+import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
@@ -287,16 +288,11 @@ function FriendRequests() {
   const { state } = useAccount();
   const community = useCommunity();
   const router = useRouter();
-  const [waiting, setWaiting] = useState(0);
   const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
-  useEffect(() => {
-    if (userId === null || community === null) return;
-    let live = true;
-    void community.friends().then((found) => live && setWaiting(found?.incoming.length ?? 0));
-    return () => {
-      live = false;
-    };
-  }, [userId, community]);
+  // Asked each time the front door is shown: it stays drawn under the screens over it (the requests answered on the rankings' page), where the web's
+  // is drawn anew on every visit.
+  const ask = useMemo(() => (userId === null || community === null ? null : () => community.friends().then((found) => found?.incoming.length ?? 0)), [userId, community]);
+  const waiting = useAskedWhenShown(ask, 0);
   if (waiting === 0) return null;
   return (
     <Raised
@@ -318,16 +314,10 @@ function ProfileLink() {
   const { state } = useAccount();
   const community = useCommunity();
   const router = useRouter();
-  const [avatar, setAvatar] = useState<string | null>(null);
   const userId = state.kind === 'member' ? state.userId : null;
-  useEffect(() => {
-    if (userId === null || community === null) return;
-    let live = true;
-    void community.me().then((me) => live && setAvatar(me?.avatar ?? null));
-    return () => {
-      live = false;
-    };
-  }, [userId, community]);
+  // Asked each time the front door is shown (the rat may have been dressed on the profile's page over it), as `FriendRequests` asks.
+  const ask = useMemo(() => (userId === null || community === null ? null : () => community.me().then((me) => me?.avatar ?? null)), [userId, community]);
+  const avatar = useAskedWhenShown(ask, null);
   if (userId === null) return null;
   return (
     <Raised

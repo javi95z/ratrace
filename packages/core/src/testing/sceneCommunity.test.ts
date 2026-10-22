@@ -6,7 +6,7 @@ import { SCENE_NOW, sceneCloud, SCENES, sceneStore } from './scenes';
 const DAY = 86_400_000;
 const RANKINGS = SCENES.filter((scene) => scene.name.startsWith('rankings-')).map((scene) => scene.name);
 /** The scenes of the game online beside the game alone: the front door, the week's challenge, a life's end and a new life, for a member. */
-const ONLINE = ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked'];
+const ONLINE = ['home-member', 'challenge-attempt', 'challenge-played', 'end-standing', 'new-ranked'];
 
 describe('the other players of a scene of the rankings', () => {
   it('are there for the rankings\' scenes and those of the game online only: every other scene asks nobody', () => {
@@ -78,7 +78,7 @@ describe('the other players of a scene of the game online', () => {
   it('tell the challenge\'s page the attempt is still to play with the week\'s best so far, or played today, the best the ranking shows', async () => {
     const mine = (await sceneCommunity('rankings-challenge')!.challengeRanking(weekOf(SCENE_NOW)))!.rows.find((row) => row.mine)!;
     expect(await sceneCommunity('challenge-attempt')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: false, score: mine.score });
-    expect(await sceneCommunity('challenge-board')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: true, score: mine.score });
+    expect(await sceneCommunity('challenge-played')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: true, score: mine.score });
     // The rankings' player has played today's too.
     expect(await sceneCommunity('rankings-all')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: true, score: mine.score });
   });
@@ -99,6 +99,6 @@ describe('the other players of a scene of the game online', () => {
   it('are on the device the scene says: a life in progress at the door, an end, and nothing on the pages that begin one', async () => {
     expect(((await (await sceneStore('home-member')).loadGame()) as { lifeId: string }).lifeId).toBe('nurse');
     expect(((await (await sceneStore('end-standing')).loadGame()) as { lifeId: string }).lifeId).toBe('engineer');
-    for (const name of ['challenge-attempt', 'challenge-board', 'new-ranked']) expect(await (await sceneStore(name)).loadGame(), name).toBeNull();
+    for (const name of ['challenge-attempt', 'challenge-played', 'new-ranked']) expect(await (await sceneStore(name)).loadGame(), name).toBeNull();
   });
 });

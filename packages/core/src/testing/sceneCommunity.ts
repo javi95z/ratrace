@@ -181,7 +181,7 @@ const PLAYED_TODAY: Entry = { entered: true, score: CHALLENGE.rows[4].score };
 const ONLINE_SCENES: Readonly<Record<string, { entry?: Entry; standing?: { below: number; total: number } }>> = {
   'home-member': { entry: { entered: false, score: null } },
   'challenge-attempt': { entry: { entered: false, score: CHALLENGE.rows[4].score } },
-  'challenge-board': { entry: PLAYED_TODAY },
+  'challenge-played': { entry: PLAYED_TODAY },
   'end-standing': { standing: { below: 31, total: 40 } },
   'new-ranked': {},
 };

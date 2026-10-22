@@ -128,7 +128,8 @@ export const SCENES: readonly Scene[] = [
   // where its score stands among others'; and a new life, ranked or not.
   { name: 'home-member', locale: 'en' },
   { name: 'challenge-attempt', locale: 'en' },
-  { name: 'challenge-board', locale: 'en' },
+  // (Today's attempt played: the page's note and its way to the board. The board itself is the rankings', `rankings-challenge`.)
+  { name: 'challenge-played', locale: 'en' },
   { name: 'end-standing', locale: 'en' },
   { name: 'new-ranked', locale: 'en' },
 ];
@@ -320,7 +321,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'home-member': { life: 'nurse', round: 3, stage: 'news' },
   // The week's challenge for a member: the attempt still to play today (with the week's best so far), and today's had. No life in progress.
   'challenge-attempt': null,
-  'challenge-board': null,
+  'challenge-played': null,
   // end-escaped's life, for a member: where its score stands among the lives others played from the same start.
   'end-standing': { life: 'engineer', round: 1, stage: 'end' },
   // The page where a life is chosen, for a member: ranked or their own.
@@ -699,7 +700,7 @@ const CLOUDS: Readonly<Record<string, { who: SceneWho; offer?: SceneLife }>> = {
   // The game online beside the game alone: a member, with nothing waiting in the account. What the other players say is `sceneCommunity`'s.
   'home-member': { who: MEMBER },
   'challenge-attempt': { who: MEMBER },
-  'challenge-board': { who: MEMBER },
+  'challenge-played': { who: MEMBER },
   'end-standing': { who: MEMBER },
   'new-ranked': { who: MEMBER },
 };

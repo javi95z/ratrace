@@ -369,5 +369,5 @@ test('the scenes of the game online beside the game alone are drawn by their scr
   expect(web).toContain("home: (scene) => (scene.sheet === undefined ? <Home /> : ");
   expect(app).toContain(": <Home />),");
   for (const source of [web, app]) expect(source).toContain('challenge: () => <WeeklyChallenge />,');
-  for (const name of ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked']) expect(SCENES.find((scene) => scene.name === name)?.sheet, name).toBeUndefined();
+  for (const name of ['home-member', 'challenge-attempt', 'challenge-played', 'end-standing', 'new-ranked']) expect(SCENES.find((scene) => scene.name === name)?.sheet, name).toBeUndefined();
 });

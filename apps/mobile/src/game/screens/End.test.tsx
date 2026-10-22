@@ -387,6 +387,20 @@ describe('the end of a ranked life', { timeout: 60_000 }, () => {
     expect(screen.queryByRole('link', { name: /see the rankings/ })).toBeNull();
   });
 
+  it('says nothing of the week\'s ranking at the end of a practice of the challenge, and asks nothing of it', async () => {
+    const week = challengeOf(weekOf(Date.now()), lives);
+    if (!week) throw new Error('no challenge this week');
+    const services = memoryServices();
+    await playRounds(await services.sessions.start(week.lifeId, { challenge: week.week }), content.rounds);
+    const asked: string[] = [];
+    const community = { compare: async () => null, challengeRanking: async () => (asked.push('ranking'), null), challengeChoices: async () => (asked.push('choices'), null) } as unknown as Community;
+    renderGame(<End />, { ...services, account, community: () => community });
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    await settled();
+    expect(screen.queryByText(/^Place \d+ of \d+/)).toBeNull();
+    expect(asked).toEqual([]);
+  });
+
   it('says where the week\'s attempt stands among everyone\'s, at the end of a ranked life of the week\'s challenge', async () => {
     const SERVER_NOW = Date.UTC(2026, 9, 13, 12);
     const served = challengeOf(weekOf(SERVER_NOW), lives);

@@ -18,13 +18,42 @@ export const routerNow = { is: router };
 export const params: Record<string, string> = {};
 /** The path of the screen in front, as the router says it (`usePathname`). */
 export const pathname = { now: '/' };
+/**
+ * The screens in the stack, as a test brings them to the front again (`focus.again()`: another screen pushed over them was left, and they are shown
+ * again without being drawn anew): each focus effect is left (its clean-up runs) and run again, as the router runs it on blur and focus.
+ */
+export const focus = {
+  screens: new Set<() => void>(),
+  again() {
+    for (const shown of [...focus.screens]) shown();
+  },
+};
+/**
+ * A focus effect: run as the screen is first shown (a screen of a test is in front while it is drawn), and left and run again each time `focus.again()`
+ * shows it, with nothing drawn again for it, as the router does.
+ */
+function useFocusEffect(effect: () => void | (() => void)): void {
+  useEffect(() => {
+    let leave = effect();
+    const again = () => {
+      leave?.();
+      leave = effect();
+    };
+    focus.screens.add(again);
+    return () => {
+      focus.screens.delete(again);
+      leave?.();
+    };
+  }, [effect]);
+}
+
 export const expoRouter = {
   useRouter: () => routerNow.is,
   usePathname: () => pathname.now,
   useLocalSearchParams: () => params,
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
-  // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn.
-  useFocusEffect: (effect: () => void | (() => void)) => useEffect(effect, [effect]),
+  // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn, and again when it is shown again.
+  useFocusEffect,
 };
 
 /** Who listens to Android's Back (`BackHandler.addEventListener('hardwareBackPress', …)`), in the order they began to: the phone asks the latest first. */
@@ -323,6 +352,7 @@ export function resetFakes(): void {
   for (const reset of alsoReset) reset();
   for (const spy of Object.values(router)) spy.mockReset();
   routerNow.is = router;
+  focus.screens.clear();
   backListeners.length = 0;
   device.languages = ['en'];
   device.timeZone = 'UTC';

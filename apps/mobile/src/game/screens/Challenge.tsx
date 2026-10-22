@@ -3,7 +3,7 @@ import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
 import { useRouter } from 'expo-router';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
@@ -18,6 +18,7 @@ import { bannerSize, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useCanSignIn, useClock, useCommunity, useGame, useRanking, useWords } from '../context';
+import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ElsewhereSheet } from './NewLife';
@@ -43,6 +44,12 @@ export function useRuleText() {
 /** The day a week's challenge closes: its Sunday. */
 const lastDay = (week: string): number => (weekStart(week) ?? 0) + 6 * 86_400_000;
 
+/** A known answer of whether today's attempt is had is kept until another is known: one the account cannot give says nothing new. */
+const keptUnlessKnown = (found: boolean | null, drawn: boolean | null): boolean => found === null || found === drawn;
+/** Two answers of the player's attempt alike: today's had or not, and the same best. */
+const sameEntry = (a: ChallengeEntryAnswer, b: ChallengeEntryAnswer): boolean => a === b || (a !== null && b !== null && a.entered === b.entered && a.score === b.score);
+type ChallengeEntryAnswer = { entered: boolean; score: number | null } | null;
+
 /** The places of a challenge's ranking that are in its best tenth: the first, at least. */
 export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
 
@@ -55,18 +62,10 @@ export function WeeklyChallengeCard() {
   const ruleText = useRuleText();
   const router = useRouter();
   const community = useCommunity();
-  // Whether the player has had today's attempt: not asked where nobody is signed in, and said only once known.
-  const [entered, setEntered] = useState<boolean | null>(null);
-  useEffect(() => {
-    if (week === null || community === null) return;
-    let live = true;
-    void community.challengeEntry(week.week).then((entry) => {
-      if (live && entry !== null) setEntered(entry.entered);
-    });
-    return () => {
-      live = false;
-    };
-  }, [community, week]);
+  // Whether the player has had today's attempt: not asked where nobody is signed in, and said only once known (an account that cannot say keeps what
+  // was said). Asked each time the front door is shown again, which stays drawn under the screens over it (the web's is drawn anew on every visit).
+  const ask = useMemo(() => (week === null || community === null ? null : () => community.challengeEntry(week.week).then((entry) => entry?.entered ?? null)), [week, community]);
+  const entered = useAskedWhenShown(ask, null, keptUnlessKnown);
   if (week === null) return null;
   const rule = ruleText(week.rule);
   // The days left of the week, today not counted: none on its Sunday.
@@ -130,17 +129,9 @@ export function WeeklyChallenge() {
   const [away, setAway] = useState(false);
   /** The button whose start is being confirmed or is waiting for a ranked life elsewhere: the attempt, or a practice. */
   const [attempt, setAttempt] = useState(false);
-  const [entry, setEntry] = useState<{ entered: boolean; score: number | null } | null>(null);
-  useEffect(() => {
-    if (week === null || community === null) return;
-    let live = true;
-    void community.challengeEntry(week.week).then((answer) => {
-      if (live) setEntry(answer);
-    });
-    return () => {
-      live = false;
-    };
-  }, [community, week]);
+  // Asked each time the page is shown (it stays drawn under the rankings opened from it).
+  const ask = useMemo(() => (week === null || community === null ? null : () => community.challengeEntry(week.week)), [week, community]);
+  const entry = useAskedWhenShown(ask, null, sameEntry);
   if (week === null) return null;
   const rule = ruleText(week.rule);
   const lifeName = text.lives[week.lifeId]?.name ?? week.lifeId;
