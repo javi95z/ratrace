@@ -4,7 +4,7 @@ import type { DrawOp } from '@ratrace/core/game/share';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Platform, Share } from 'react-native';
-import { files, folders, memoryServices, renderGame, shareSheet } from '../../testing/render';
+import { files, folders, photos, memoryServices, renderGame, shareSheet } from '../../testing/render';
 import { JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, pixelSize } from '../../ui/fonts';
 import { painted, type FaceDouble, type Painted } from '../../ui/testing/skia';
 import { drawCard, ShareCard } from './ShareCard';
@@ -186,7 +186,7 @@ describe('the share sheet', () => {
       expect(painted.asked).toEqual([]);
       const sheet = await drawn();
       expect(painted.asked).toEqual([[CARD.w * 4, CARD.h * 4]]);
-      // The phone has no file to save to: its share sheet keeps the picture where the player says.
+      // No link to a file, as the web's: the picture is saved to the phone's photos by a button (below).
       expect(within(sheet).queryByRole('link', { name: 'Save the picture' })).toBeNull();
       fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
       await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
@@ -272,5 +272,86 @@ describe('the share sheet', () => {
     painted.surfaces = false;
     open();
     expect((await screen.findByRole('alert')).textContent).toBe(FAILED);
+  });
+});
+
+describe('saving the picture to the phone\'s photos', () => {
+  const show = () => renderGame(<ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => picture() as never} faces={faces} />, memoryServices());
+  /** The sheet, once its picture is drawn. */
+  const drawn = async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Share this life' }));
+    const sheet = screen.getByRole('heading', { name: 'A picture of this life' }).closest('[aria-modal="true"]') as HTMLElement;
+    expect(await within(sheet).findByRole('img', { name: 'Nurse: score 364' })).toBeTruthy();
+    return sheet;
+  };
+  const FILE = 'file:///cache/share/rat-race-nurse-364.png';
+
+  it('is a button under Share, as the web\'s link under its own: it asks leave to add to the photos, and no more, then saves the picture there, and says so', async () => {
+    show();
+    const sheet = await drawn();
+    const buttons = within(sheet).getAllByRole('button').map((one) => one.textContent);
+    expect(buttons.slice(buttons.indexOf('Share'))).toEqual(['Share', 'Save the picture']);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(sheet).findByRole('status')).textContent).toBe('Saved to your photos.');
+    // Leave to add to them, not to read them.
+    expect(photos.asked).toEqual([{ writeOnly: true, granular: undefined }]);
+    expect(photos.saved).toEqual([FILE]);
+    expect(files.get(FILE)).toEqual(Uint8Array.of(137, 80, 78, 71));
+    // Nothing went to the share sheet.
+    expect(shareSheet.handed).toEqual([]);
+  });
+
+  it('saves nothing where the player does not allow it, and says where it can be allowed', async () => {
+    photos.allows = false;
+    show();
+    const sheet = await drawn();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(sheet).findByRole('alert')).textContent).toBe('The Rat Race may not add to your photos. You can allow it in Settings.');
+    expect(photos.saved).toEqual([]);
+    // Allowed since, it saves.
+    photos.allows = true;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(sheet).findByRole('status')).textContent).toBe('Saved to your photos.');
+    expect(within(sheet).queryByRole('alert')).toBeNull();
+    expect(photos.saved).toEqual([FILE]);
+  });
+
+  it('says so when the phone could not save it, and it can be tried again', async () => {
+    photos.fails = true;
+    show();
+    const sheet = await drawn();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(sheet).findByRole('alert')).textContent).toBe('The picture could not be saved.');
+    expect(photos.saved).toEqual([]);
+    photos.fails = false;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(sheet).findByRole('status')).textContent).toBe('Saved to your photos.');
+  });
+
+  it('saves once for a double tap: a second press while the first is saving does nothing', async () => {
+    show();
+    const sheet = await drawn();
+    const save = within(sheet).getByRole('button', { name: 'Save the picture' });
+    fireEvent.click(save);
+    fireEvent.click(save);
+    await within(sheet).findByRole('status');
+    await new Promise((done) => setTimeout(done, 20));
+    expect(photos.asked).toHaveLength(1);
+    expect(photos.saved).toEqual([FILE]);
+  });
+
+  it('speaks Spanish and Russian', async () => {
+    photos.allows = false;
+    renderGame(<ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => picture() as never} faces={faces} />, memoryServices(), 'ru');
+    // A Russian title is set in runs of its fonts: the name jsdom works out of them may drop the space between two runs.
+    fireEvent.click(screen.getByRole('button', { name: /^Поделиться\s?жизнью$/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Сохранить\s?картинку$/ }));
+    expect((await screen.findByRole('alert')).textContent).toBe('The Rat Race не может добавлять картинки в фото. Это можно разрешить в настройках.');
+    cleanup();
+    photos.allows = true;
+    renderGame(<ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => picture() as never} faces={faces} />, memoryServices(), 'es');
+    fireEvent.click(screen.getByRole('button', { name: 'Compartir esta vida' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Guardar la imagen' }));
+    expect((await screen.findByRole('status')).textContent).toBe('Imagen guardada en tus fotos.');
   });
 });

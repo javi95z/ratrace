@@ -20,9 +20,9 @@ import { SITE_URL } from '../site';
  * The web's ShareCard.tsx, on the phone. The card is drawn as the web's canvas draws it: core's list of things to draw (`shareCard`), four times the
  * grid, its pictures with no smoothing, its type in the game's typefaces at the sizes the page shows them. On a surface of Skia's of its own, then a PNG,
  * which the phone's share sheet is handed as a file (written to the cache: `usePictureShare`), with the web's line inviting into the game (its words and
- * its address, `SITE_URL`) where the sheet takes words beside a file: on iOS, not on Android. What the phone leaves out: the file to save (the web's link),
- * which the share sheet offers itself. Where the picture cannot be had, it says so in the phone's own words (the web's speak of a browser). Nothing of it
- * is drawn until the player asks for the picture.
+ * its address, `SITE_URL`) where the sheet takes words beside a file: on iOS, not on Android. The web's link that saves the picture as a file is a button
+ * that saves it to the phone's photos, in the link's words and look. Where the picture cannot be had, or saved, it says so in the phone's own words (the
+ * web's speak of a browser, and a browser saves without asking). Nothing of it is drawn until the player asks for the picture.
  */
 
 /** Fetches a sprite's picture, or null if it does not exist or does not arrive. Whoever asked lets go of it. In the app, the app's files; a test hands in its own. */
@@ -170,9 +170,10 @@ function Drawing({ children }: { children: string }) {
 }
 
 /**
- * The picture of a life, and the way to take it away: the phone's share sheet, handed it as a file. The picture is drawn when the sheet opens
- * (`opened`: open from the start, for a scene), and let go of when it closes. Where the phone has no share sheet, or the picture cannot be drawn or
- * made a file, the sheet says so in the phone's own words (`phone.shareFailed`): the web's for a picture that cannot be had speak of a browser.
+ * The picture of a life, and the two ways to take it away: the phone's share sheet, handed it as a file, and its photos. The picture is drawn when the
+ * sheet opens (`opened`: open from the start, for a scene), and let go of when it closes. Where the phone has no share sheet, or the picture cannot be
+ * drawn or made a file, the sheet says so in the phone's own words (`phone.shareFailed`): the web's for a picture that cannot be had speak of a browser.
+ * Saved to the photos, or not allowed there, or not saved, it says that too, under the buttons.
  */
 export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened = false }: { ops: DrawOp[]; fileName: string; alt: string; load?: SpriteLoader; faces?: FaceLoader; opened?: boolean }) {
   const t = useT('share');
@@ -186,6 +187,9 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
   const [open, setOpen] = useState(opened);
   // A picture being handed over: a second press of Share meanwhile is no second share.
   const sending = useRef(false);
+  // A picture being saved to the photos: a second press of Save meanwhile is no second picture there. And what came of the last save.
+  const saving = useRef(false);
+  const [saved, setSaved] = useState<'saved' | 'refused' | 'failed' | null>(null);
   const [picture, setPicture] = useState<{ image: SkImage; png: Uint8Array } | 'failed' | null>(null);
 
   useEffect(() => {
@@ -214,6 +218,7 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
       live = false;
       drawn?.dispose();
       setPicture(null);
+      setSaved(null);
     };
   }, [open, ops, load, typefaces, locale, share]);
 
@@ -250,6 +255,28 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
             >
               {t('send')}
             </Button>
+            {/* The web's link to save the picture, under Share where the browser has a share sheet: a button's look, in the secondary colours. */}
+            <Button
+              variant="secondary"
+              wide
+              onPress={() => {
+                if (saving.current) return;
+                saving.current = true;
+                void share
+                  .save(ready.png, fileName)
+                  .then(setSaved, () => setSaved('failed'))
+                  .finally(() => {
+                    saving.current = false;
+                  });
+              }}
+            >
+              {t('save')}
+            </Button>
+            {saved !== null ? (
+              <View accessible role={saved === 'saved' ? 'status' : 'alert'}>
+                <ReadText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{phone(saved === 'saved' ? 'pictureSaved' : saved === 'refused' ? 'saveRefused' : 'saveFailed')}</ReadText>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </Sheet>

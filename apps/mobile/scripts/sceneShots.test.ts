@@ -111,6 +111,7 @@ test('a scene of a screen ported but not shot yet is unjudged until a batch pass
     'moment-escape',
     'moment-bankrupt',
     'moment-crisis',
+    'end-share',
   ]);
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
   for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
@@ -156,12 +157,13 @@ test('what the web draws of a scene that the phone does not is hidden in the web
   expect([...page.matchAll(/<p [^>]*className="frame bg-night-700[^"]*"/g)]).toHaveLength(2);
 });
 
-test('the picture\'s sheet is compared without the web\'s link that saves its file, which the phone\'s share sheet does itself: the one link of the sheet that downloads', () => {
+test('the picture\'s sheet is compared whole: the web\'s link that saves its file is the phone\'s button that saves it to the photos', () => {
   const share = SCENES.find((scene) => scene.name === 'end-share')!;
-  expect(webRules(share)).toBe('[role="dialog"] a[download] { display: none !important; }');
+  expect(webRules(share)).toBe('');
   const web = readFileSync(new URL('../../web/src/game/screens/ShareCard.tsx', import.meta.url), 'utf8');
   expect([...web.matchAll(/download=\{/g)]).toHaveLength(1);
   expect(web).toContain("{t('save')}");
+  expect(readFileSync(new URL('../src/game/screens/ShareCard.tsx', import.meta.url), 'utf8')).toContain("{t('save')}");
 });
 
 test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the stage of the round and the bar of its next step', () => {

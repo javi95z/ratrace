@@ -2098,6 +2098,9 @@
       "laterBody": "A later version of the game may add an account, rankings or games with others. This notice will be updated to say what they keep, and why, before that version is released."
     },
     "shareFailed": "This phone could not make the picture to share.",
+    "pictureSaved": "Saved to your photos.",
+    "saveRefused": "The Rat Race may not add to your photos. You can allow it in Settings.",
+    "saveFailed": "The picture could not be saved.",
     "opensLife": "Shows the whole of this life"
   }
 }

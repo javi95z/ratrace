@@ -21,6 +21,7 @@ vi.mock('expo-sqlite/kv-store', async () => (await import('./fakes')).expoKeyVal
 vi.mock('expo-audio', async () => (await import('./fakes')).expoAudio);
 vi.mock('expo-file-system', async () => (await import('./fakes')).expoFileSystem);
 vi.mock('expo-sharing', async () => (await import('./fakes')).expoSharing);
+vi.mock('expo-media-library', async () => (await import('./fakes')).expoMediaLibrary);
 vi.mock('../ui/soundSources', async () => (await import('./fakes')).soundSources);
 vi.mock('react-native-safe-area-context', async () => (await import('./fakes')).safeArea);
 vi.mock('../ui/Sprite', async () => (await import('./fakes')).spriteModule);

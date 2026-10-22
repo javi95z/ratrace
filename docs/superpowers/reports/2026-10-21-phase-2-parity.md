@@ -1100,3 +1100,21 @@ it out of the messages when the end of a life stopped using it, while the balanc
 the web's `Balance.test` (RED before: next-intl's MISSING_MESSAGE, and the key on the page). The phone asks for the same key, and
 `phone.realNetWorth` ("Net worth, after inflation") is gone. `balance-r6` is no longer a scene of the phone's words (`PHONE_WORDS`), its record
 (1469 shape pixels, the phone's longer words) is gone, and it waits for the next batch pass.
+
+### 3. Save the picture, to the phone's photos
+
+The web's picture sheet has a second way, a link that saves the PNG as a file (`share.save`, "Save the picture"), under Share where the browser has
+a share sheet, in the secondary colours. The phone draws it there as a secondary button, in the same words, which adds the picture to the phone's
+photos (`expo-media-library` 58.0.11, `Asset.create` of the PNG written to the cache's `share/` folder, as for Share). It asks for leave to add only,
+never to read: `requestPermissionsAsync(true)`; `app.json` gives the config plugin iOS's add-only words ("The Rat Race saves the picture of your life
+to your photos.", `NSPhotoLibraryAddUsageDescription`) and no words for reading (`photosPermission: false`: no `NSPhotoLibraryUsageDescription`), and
+on Android no kind of media to read (`granularPermissions: []`: no `READ_MEDIA_IMAGES`). Under the buttons it then says, in the phone's own words
+(`phone.pictureSaved`, `phone.saveRefused`, `phone.saveFailed`; Russian without the player's gender, Spanish as the game speaks): saved, not allowed
+(and where to allow it), or not saved. A second press while it saves does nothing. Held by `ShareCard.test`: a save allowed, refused, failed (and
+tried again), a double tap, Spanish and Russian (RED before: no button). `end-share` is compared whole now (the web's link was hidden in its shot,
+`WEB_ONLY`) and waits for the next batch pass; its record (the picture's own residual) stays.
+
+**To check in the next batch pass, on iOS:** the system's question as the player first saves (its words, add-only), the picture in Photos after it
+(its size, 1080 × 1348, and that it is the one on screen), and the sheet's words for a refusal (Settings → The Rat Race → Photos → None). Android:
+the plugin still declares `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `READ_MEDIA_VISUAL_USER_SELECTED` (it always does); whether a
+write-only request is granted on Android 10 to 12, where it asks for `WRITE_EXTERNAL_STORAGE`, is for an Android device.

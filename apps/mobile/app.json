@@ -29,7 +29,16 @@
       "expo-font",
       "expo-audio",
       "expo-localization",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "The Rat Race saves the picture of your life to your photos.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": []
+        }
+      ]
     ],
     "scheme": "theratrace",
     "backgroundColor": "#141b33",

@@ -46,8 +46,8 @@ export const SHEETS_OVER_THE_HUD: readonly string[] = ['hud', 'amount', 'celebra
 /**
  * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
  * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
- * the web's page: the line is the only `p` of that frame on the page of a guest. The link of the picture's sheet that saves its file, which the phone's
- * share sheet does itself (`end-share`). And on the scenes of the Hud, and of a sheet drawn over it, everything of Play
+ * the web's page: the line is the only `p` of that frame on the page of a guest. (The link of the picture's sheet that saves its file was hidden in
+ * `end-share` until the phone drew its own way to save the picture, to its photos.) And on the scenes of the Hud, and of a sheet drawn over it, everything of Play
  * but the Hud (`HUD_ONLY`); of the badges a step earned, everything of Play but the Hud and the cards (`CELEBRATIONS_ONLY`).
  * And one rule that hides nothing, for the text check alone: the calendar covers what it covers (`CALENDAR_COVERS`).
  */
@@ -56,8 +56,6 @@ export const WEB_ONLY: Readonly<Record<string, string>> = {
   'play-pageturn': CALENDAR_COVERS,
   ...Object.fromEntries(SCENES.filter((scene) => SHEETS_OVER_THE_HUD.includes(screenOf(scene))).map((scene) => [scene.name, HUD_ONLY])),
   'celebrate-earned': CELEBRATIONS_ONLY,
-  // The picture's sheet keeps the web's second way, a link that saves the file (`a[download]`): the phone's share sheet saves it itself (Task 18).
-  'end-share': '[role="dialog"] a[download] { display: none !important; }',
 };
 
 /**
@@ -96,7 +94,8 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * call, 2026-10-21): the batch passes shoot every one of these, compare them and fix what differs, and take each out of this list as it is judged.
  * A scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a result. Batch pass 1 shot and judged the
  * thirty-nine of Tasks 11 to 19 and the merge. Waiting since, for the next batch pass: the scenes the user's decisions after it changed on both
- * sides (the parity report's "Decisions after batch pass 1"): the badges' glow, the balance's net worth after inflation, the buttons a screen sizes.
+ * sides (the parity report's "Decisions after batch pass 1"): the badges' glow, the balance's net worth after inflation, the buttons a screen sizes,
+ * the picture's sheet with its way to save.
  * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
 export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
@@ -131,6 +130,8 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'moment-escape',
   'moment-bankrupt',
   'moment-crisis',
+  // The picture's sheet: the phone saves the picture to its photos, under Share, as the web's link saves its file (and is no longer hidden there).
+  'end-share',
 ]);
 
 /**
