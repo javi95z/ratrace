@@ -182,7 +182,11 @@ describe('the end of a life, as it is drawn', () => {
     // The scene's life did win one (a rare badge, the first of its kind): the cheer is there to be found, not skipped for want of one.
     expect(prized).toBeDefined();
     const name = text.badges[prized!.id].name;
-    expect(screen.getByText(rarityOf(prized!.id) === 'legendary' ? `A legendary badge: ${name}!` : `A rare badge: ${name}!`)).toBeTruthy();
+    const cheer = screen.getByText(rarityOf(prized!.id) === 'legendary' ? `A legendary badge: ${name}!` : `A rare badge: ${name}!`);
+    // Its words wrap within the row, between the confetti, as the web's do: found by hand, "A legendary badge: Lunch with Bufé!" ran on
+    // past the frame on one line, cut under the confetti.
+    // The line itself is the row's item (the pixel face's runs are spans inside it).
+    expect((cheer.closest('[dir="auto"]') as HTMLElement).style.flexShrink).toBe('1');
     const gained = (await store.loadProfile()).rank.lives[run.runId];
     expect(gained).toBeGreaterThan(0);
     expect(await screen.findByText(new RegExp(`^\\+${gained} points · `))).toBeTruthy();

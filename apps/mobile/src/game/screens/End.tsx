@@ -250,7 +250,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
             <Framed kind="frame" tone={GOLD} style={{ backgroundColor: COLORS['night-600'] }}>
               <View style={{ overflow: 'hidden', paddingHorizontal: 12, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                 <Loop name="confetti" style={{ position: 'absolute', left: 8 }} />
-                <PixelText size={16} tone="gold-200" style={{ textAlign: 'center' }}>
+                {/* The words are the row's one item that gives way, as the web's text in its flex row: a long badge name wraps between the confetti. */}
+                <PixelText size={16} tone="gold-200" style={{ textAlign: 'center', flexShrink: 1 }}>
                   {t(rarityOf(prized.id) === 'legendary' ? 'legendaryBadge' : 'rareBadge', { name: text.badges[prized.id]?.name ?? prized.id })}
                 </PixelText>
                 <Loop name="confetti" style={{ position: 'absolute', right: 8 }} />
