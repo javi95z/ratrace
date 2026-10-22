@@ -521,18 +521,21 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.setMarketNotice('https://push.example/1', false)).toBe(false);
   });
 
-  it('keeps where a phone with the app can be told, by its Expo token, apart from the browsers', async () => {
+  it('keeps where a phone with the app can be told, by its Expo token, claimed for whoever signs in there', async () => {
     client.answers.getSession = signedIn;
     client.answers.push_tokens = { data: null, error: null };
+    client.answers.rpc = { data: null, error: null };
     const cloud = await connectSupabase('u', 'k');
     const phone = 'ExponentPushToken[abc123]';
     expect(await cloud.community.notifyMe({ expo: phone, platform: 'ios' }, 'ru')).toBe(true);
     expect(await cloud.community.stopNotifying({ expo: phone })).toBe(true);
+    // The phone is claimed through the server, which moves it from whoever held it before.
     expect(client.asked).toEqual([
-      ['push_tokens', ['upsert', { token: phone, platform: 'ios', locale: 'ru', user_id: 'u-1' }, { onConflict: 'token' }]],
+      ['rpc', 'claim_push_token', { p_token: phone, p_platform: 'ios', p_locale: 'ru' }],
       ['push_tokens', ['delete'], ['eq', 'token', phone]],
     ]);
     client.answers.push_tokens = { data: null, error: new Error('offline') };
+    client.answers.rpc = { data: null, error: new Error('offline') };
     expect(await cloud.community.notifyMe({ expo: phone, platform: 'android' }, 'es')).toBe(false);
     expect(await cloud.community.stopNotifying({ expo: phone })).toBe(false);
   });

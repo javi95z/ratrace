@@ -7,6 +7,9 @@
 -- of a browser. A player's browsers and phones come together, so that the day's one notice is
 -- claimed once for all of them.
 
+-- The table's key to auth.users locks it: wait a little for it, never stall the project's sign-ins.
+set local lock_timeout = '5s';
+
 create table public.push_tokens (
   -- Expo's token is unique to a phone's app: one row a phone, whoever is signed in there.
   token text primary key check (token like 'ExponentPushToken[%]' and char_length(token) <= 200),
@@ -32,6 +35,28 @@ create policy "own phones are changed" on public.push_tokens for update
   to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy "own phones are removed" on public.push_tokens for delete
   to authenticated using ((select auth.uid()) = user_id);
+
+-- A phone follows whoever is signed in on it: from a guest to the account they sign in to, from one
+-- account to the next. Its row is claimed by the player who asks, whoever held it; the rules of the
+-- table could not move it, and the account before would go on being told on a phone it left. The
+-- market notice, turned on by someone else, is turned off again for the new player.
+create function public.claim_push_token(p_token text, p_platform text, p_locale text)
+returns void
+language sql
+volatile
+security definer
+set search_path = ''
+as $$
+  insert into public.push_tokens as t (token, user_id, platform, locale)
+  values (p_token, (select auth.uid()), p_platform, p_locale)
+  on conflict (token) do update set
+    user_id = excluded.user_id,
+    platform = excluded.platform,
+    locale = excluded.locale,
+    market_moved = case when t.user_id = excluded.user_id then t.market_moved else false end;
+$$;
+revoke all on function public.claim_push_token(text, text, text) from public, anon;
+grant execute on function public.claim_push_token(text, text, text) to authenticated;
 
 -- ------------------------------------------------------------------------------------------------
 -- The clock's notices, with the phones. Their answers gain a column, so each is made again.

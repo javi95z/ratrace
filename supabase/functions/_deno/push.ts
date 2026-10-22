@@ -37,12 +37,14 @@ export function vapid(): boolean {
 function sendersOf(db: Db): Senders {
   return {
     web: vapid() ? (subscription, payload, options) => webpush.sendNotification(subscription, payload, options) : null,
+    // `init` carries the signal that gives up on Expo after EXPO_PATIENCE (`_shared/push.ts`).
     post: (url, init) => fetch(url, init),
     expoToken: Deno.env.get('EXPO_ACCESS_TOKEN') || undefined,
     forget: async (row) => {
       if (isApp(row)) await db.from('push_tokens').delete().eq('token', row.token);
       else await db.from('push_subscriptions').delete().eq('endpoint', row.endpoint);
     },
+    log: (line) => console.error(line),
   };
 }
 

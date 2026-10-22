@@ -145,6 +145,8 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
 };
 
 const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room', shout: 'room', friendRequest: 'rankings#friends', friendAccepted: 'rankings#friends' };
+/** The app's screen for each notice: the web's page, but for the friends, which the app's router opens by a query (an opened link's `#` is dropped on the way). */
+const APP_PAGE: Record<NoticeAbout['kind'], string> = { ...PAGE, friendRequest: 'rankings?tab=friends', friendAccepted: 'rankings?tab=friends' };
 const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan', shout: 'room-shout', friendRequest: 'friends', friendAccepted: 'friends' };
 
 /** Where a tap on a phone's notice leads: the app's own links. */
@@ -153,12 +155,12 @@ export const APP_LINK = 'theratrace://';
 /**
  * The notice for a browser, or a phone with the app (`on: 'app'`), that asked for notices in a
  * language; one the game does not have, or none, reads in English. The words are the same on both:
- * a browser is led to the page on the site in its language, a phone to the screen in the app.
+ * a browser is led to the page on the site in its language, a phone to the screen in the app (`theratrace://rankings?tab=friends` for the friends).
  */
 export function noticeOf(locale: string | null, about: NoticeAbout, on: 'web' | 'app' = 'web'): Notice {
   const lang = langOf(locale);
   const words = (WORDS[lang][about.kind] as Words)(about as never);
-  return { ...words, url: on === 'app' ? `${APP_LINK}${PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
+  return { ...words, url: on === 'app' ? `${APP_LINK}${APP_PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
 }
 
 /** True where a push service says a subscription is gone for good: the browser unsubscribed, or it expired. */

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_SEND, isApp } from '../../../supabase/functions/_shared/push.ts';
+import { describe, expect, it, vi } from 'vitest';
+import { byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_PATIENCE, EXPO_SEND, isApp } from '../../../supabase/functions/_shared/push.ts';
 import type { AppDevice, Device, Senders, WebDevice } from '../../../supabase/functions/_shared/push.ts';
 import { noticeOf } from '../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../supabase/functions/_shared/notice.ts';
@@ -19,7 +19,11 @@ function fakes(options: { web?: boolean; webFails?: (endpoint: string) => number
   const web: Array<{ subscription: unknown; payload: string; options: unknown }> = [];
   const posts: Array<{ url: string; headers: Record<string, string>; messages: Array<Record<string, unknown>> }> = [];
   const forgotten: Device[] = [];
+  const logged: string[] = [];
   const senders: Senders = {
+    log: (line) => {
+      logged.push(line);
+    },
     web:
       options.web === false
         ? null
@@ -43,7 +47,7 @@ function fakes(options: { web?: boolean; webFails?: (endpoint: string) => number
       forgotten.push(row);
     },
   };
-  return { senders, web, posts, forgotten };
+  return { senders, web, posts, forgotten, logged };
 }
 
 const weekly: NoticeAbout = { kind: 'weekly', place: null, entrants: null };
@@ -100,6 +104,62 @@ describe('a notice to the browsers and the phones of players', () => {
       expect(web).toHaveLength(1);
       expect(forgotten).toEqual([]);
     }
+  });
+
+  it('gives up on an Expo that does not answer, forgets nobody, and goes on to the browsers and the players after', async () => {
+    vi.useFakeTimers();
+    try {
+      const { senders, web, forgotten, logged } = fakes();
+      let aborted = false;
+      const hanging: Senders = {
+        ...senders,
+        post: (_url, init) => {
+          init.signal?.addEventListener('abort', () => {
+            aborted = true;
+          });
+          return new Promise(() => {});
+        },
+      };
+      let done: { sent: number; removed: number } | null = null;
+      void deliverTo([browser('u1'), phone('u1')], () => weekly, 60, 'normal', hanging).then((result) => {
+        done = result;
+      });
+      await vi.advanceTimersByTimeAsync(EXPO_PATIENCE - 1);
+      expect(done).toBeNull();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(done).toEqual({ sent: 1, removed: 0 });
+      expect(aborted).toBe(true);
+      expect(web).toHaveLength(1);
+      expect(forgotten).toEqual([]);
+      expect(logged).toEqual(['expo push: 1 batches, failed: timeout ×1; tickets refused: none']);
+      // The next player of the run is told as if nothing had happened.
+      const next = fakes();
+      expect(await deliverTo([phone('u2')], () => weekly, 60, 'normal', next.senders)).toEqual({ sent: 1, removed: 0 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('logs what Expo refused by its codes alone, never a token, so that wrong credentials show', async () => {
+    const refusing = fakes({
+      tickets: (to) =>
+        to.includes('creds')
+          ? { status: 'error', message: `Could not send to ${to}: InvalidCredentials`, details: { error: 'InvalidCredentials' } }
+          : to.includes('busy')
+            ? { status: 'error', message: `${to} is sending too much`, details: { error: 'MessageRateExceeded' } }
+            : to.includes('dead')
+              ? { status: 'error', message: `${to} is not registered`, details: { error: 'DeviceNotRegistered' } }
+              : { status: 'ok', id: 'x' },
+    });
+    expect(await deliverTo([phone('creds', 1), phone('creds', 2), phone('busy'), phone('dead'), phone('fine')], () => weekly, 60, 'normal', refusing.senders)).toEqual({ sent: 1, removed: 1 });
+    expect(refusing.logged).toEqual(['expo push: 1 batches, failed: none; tickets refused: InvalidCredentials ×2, MessageRateExceeded ×1']);
+    const down = fakes({ expoStatus: 503 });
+    await deliverTo([phone('u1')], () => weekly, 60, 'normal', down.senders);
+    expect(down.logged).toEqual(['expo push: 1 batches, failed: http 503 ×1; tickets refused: none']);
+    for (const line of [...refusing.logged, ...down.logged]) expect(line).not.toMatch(/ExponentPushToken|creds|busy|dead/);
+    const fine = fakes();
+    await deliverTo([phone('u1')], () => weekly, 60, 'normal', fine.senders);
+    expect(fine.logged).toEqual([]);
   });
 
   it('still tells the phones where the game has no keys for browsers', async () => {

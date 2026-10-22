@@ -38,7 +38,10 @@ describe('what a notice says', () => {
     expect(noticeOf('ru', { kind: 'yourTurn', round: 6, rounds: 20, secondsLeft: 72 }, 'app')).toMatchObject({ url: 'theratrace://room', tag: 'room' });
     expect(noticeOf('en', { kind: 'idle' }, 'app').url).toBe('theratrace://play');
     expect(noticeOf('en', { kind: 'marketMoved', asset: 'gold', percent: 6 }, 'app').url).toBe('theratrace://play');
-    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://rankings#friends');
+    // The app's router drops a `#` from a link the system opens: the friends are asked for by a query, and the web keeps its own.
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://rankings?tab=friends');
+    expect(noticeOf('en', { kind: 'friendAccepted', who: null }, 'app').url).toBe('theratrace://rankings?tab=friends');
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }).url).toBe('/es/rankings#friends');
     expect(noticeOf('es', { kind: 'idle' }, 'web')).toEqual(noticeOf('es', { kind: 'idle' }));
     expect(noticeOf(null, { kind: 'idle' }, 'app').title).toBe('Your life is waiting');
   });

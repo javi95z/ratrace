@@ -344,7 +344,8 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
         try {
           const { error } =
             'expo' in keys
-              ? await client.from('push_tokens').upsert({ token: keys.expo, platform: keys.platform, locale, user_id: await me() }, { onConflict: 'token' })
+              ? // A phone follows whoever signs in on it: the server moves its row from the account before.
+                await client.rpc('claim_push_token', { p_token: keys.expo, p_platform: keys.platform, p_locale: locale })
               : await client.from('push_subscriptions').upsert({ endpoint: keys.endpoint, p256dh: keys.p256dh, auth: keys.auth, locale, user_id: await me() }, { onConflict: 'endpoint' });
           return !error;
         } catch {

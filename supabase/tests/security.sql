@@ -107,12 +107,13 @@ begin
     then passed := passed + 1; else failed := array_append(failed, 'a function made without a grant can be called by clients'); end if;
   drop function public.probe_function();
   drop table public.probe_table;
-  -- A visitor with no account can call nothing. A player can call five things: the ranking, following someone by their
-  -- code, the ranking and the sums of choices of a week's challenge, and the question of whether they are in a room.
+  -- A visitor with no account can call nothing. A player can call six things: the ranking, following someone by their
+  -- code, the ranking and the sums of choices of a week's challenge, the question of whether they are in a room, and
+  -- claiming the phone they are signed in on.
   select count(*) into n from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('anon', p.oid, 'execute');
   if n = 0 then passed := passed + 1; else failed := array_append(failed, format('%s functions of the game can be called with no account', n)); end if;
-  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'challenge_choices', 'challenge_ranking', 'in_room', 'ranking']
-    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the rankings, the choices of a challenge, following by code, and being in a room'); end if;
+  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'challenge_choices', 'challenge_ranking', 'claim_push_token', 'in_room', 'ranking']
+    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the rankings, the choices of a challenge, following by code, being in a room, and claiming a phone'); end if;
 
   -- ---------------------------------------------------------------- player A
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
@@ -1265,6 +1266,32 @@ begin
   reset role;
   if n = 0 and (select market_moved and user_id = a from public.push_tokens where token = tok_a)
     then passed := passed + 1; else failed := array_append(failed, 'B saw, changed or removed A''s phone'); end if;
+  -- A phone follows whoever signs in on it: claimed again by its own player it keeps their switch;
+  -- claimed by another, it is theirs, and the market notice is off until they turn it on.
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  perform public.claim_push_token(tok_a, 'ios', 'ru');
+  reset role;
+  if (select user_id = a and market_moved and locale = 'ru' from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'a player claiming their own phone again lost its switch or its language'); end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  perform public.claim_push_token(tok_a, 'android', 'en');
+  reset role;
+  if (select user_id = b and not market_moved and platform = 'android' and locale = 'en' from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'a phone did not follow the player who signed in on it, or kept the market notice of the one before'); end if;
+  if not has_function_privilege('anon', 'public.claim_push_token(text, text, text)', 'execute') and has_function_privilege('authenticated', 'public.claim_push_token(text, text, text)', 'execute')
+    then passed := passed + 1; else failed := array_append(failed, 'a visitor with no account can claim a phone, or a player cannot'); end if;
+  perform set_config('request.jwt.claims', '{}', true);
+  set local role authenticated;
+  begin
+    perform public.claim_push_token('ExponentPushToken[test-nobody]', 'ios', 'en');
+    failed := array_append(failed, 'a phone was claimed with nobody signed in');
+  exception when not_null_violation then passed := passed + 1;
+  end;
+  reset role;
+  -- Back to A's, for what follows.
+  update public.push_tokens set user_id = a, market_moved = true where token = tok_a;
   set local role anon;
   begin
     select count(*) into n from public.push_tokens;

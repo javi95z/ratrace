@@ -70,8 +70,13 @@ installed to the Home screen (iOS 16.4 or later).
   `market_moved`, off until turned on), owned by the player through RLS. The clock's notice
   functions list a player's browsers and phones together, so the day's one notice is claimed once for
   all of them. A phone is sent the same words, in batches of 100, and a tap opens the app's screen
-  (`theratrace://<page>`). A phone Expo answers `DeviceNotRegistered` is deleted. `EXPO_ACCESS_TOKEN`
-  is sent as a bearer token where it is set as a secret; without it, Expo needs no key.
+  (`theratrace://<page>`; the friends are `theratrace://rankings?tab=friends`, since the app's router
+  drops a `#`). A phone Expo answers `DeviceNotRegistered` is deleted. Expo has 10 s to answer a
+  batch; batches it fails and tickets it refuses for other reasons are counted in the function's log
+  by their codes alone (wrong Apple or Google credentials show there). `EXPO_ACCESS_TOKEN` is sent as
+  a bearer token where it is set as a secret; without it, Expo needs no key.
+- The app keeps its phone through `claim_push_token` (security definer): the row follows whoever
+  signs in on that phone, and its market switch is turned off when it changes hands.
 
 ### Setup, once
 

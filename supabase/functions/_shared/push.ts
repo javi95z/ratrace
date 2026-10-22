@@ -42,17 +42,21 @@ interface Answer {
 export interface Senders {
   /** Web push, as `web-push` sends: a failure carries the push service's `statusCode`. Null where the game has no keys for it. */
   web: ((subscription: { endpoint: string; keys: { p256dh: string; auth: string } }, payload: string, options: { TTL: number; urgency: Urgency }) => Promise<unknown>) | null;
-  /** `fetch`, for Expo's push service. */
-  post: (url: string, init: { method: 'POST'; headers: Record<string, string>; body: string }) => Promise<Answer>;
+  /** `fetch`, for Expo's push service. `signal` aborts a request Expo has not answered in time. */
+  post: (url: string, init: { method: 'POST'; headers: Record<string, string>; body: string; signal?: AbortSignal }) => Promise<Answer>;
   /** The game's access token for Expo's push service, where it has one. */
   expoToken?: string;
   /** Forgets a browser or a phone that can no longer be told. */
   forget: (row: Device) => Promise<void>;
+  /** Where what went wrong with Expo is written, for the function's logs. Never handed a token. */
+  log?: (line: string) => void;
 }
 
 /** Expo's push service, and how many messages it takes at once. */
 export const EXPO_SEND = 'https://exp.host/--/api/v2/push/send';
 export const EXPO_BATCH = 100;
+/** How long Expo has to answer a batch, in milliseconds: a service that hangs must not hold back the players after. */
+export const EXPO_PATIENCE = 10_000;
 
 /** A message to a phone, as Expo's push service takes it. The tap's link and the notice's kind travel in `data`. */
 export interface ExpoMessage {
@@ -82,41 +86,85 @@ export function unregistered(answer: unknown): boolean {
   return ticket !== null && typeof ticket === 'object' && ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered';
 }
 
+/** A batch's answer from Expo, or why there is none, read within `EXPO_PATIENCE`. */
+async function askExpo(senders: Pick<Senders, 'post'>, init: { method: 'POST'; headers: Record<string, string>; body: string }): Promise<{ tickets: unknown[] } | { trouble: string }> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<{ trouble: string }>((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      resolve({ trouble: 'timeout' });
+    }, EXPO_PATIENCE);
+  });
+  const asked = (async (): Promise<{ tickets: unknown[] } | { trouble: string }> => {
+    try {
+      const answer = await senders.post(EXPO_SEND, { ...init, signal: controller.signal });
+      if (!answer.ok) return { trouble: `http ${answer.status}` };
+      const tickets = ((await answer.json()) as { data?: unknown } | null)?.data;
+      return Array.isArray(tickets) ? { tickets } : { trouble: 'unreadable' };
+    } catch {
+      return { trouble: controller.signal.aborted ? 'timeout' : 'unreachable' };
+    }
+  })();
+  try {
+    return await Promise.race([asked, late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The error code of a ticket or a receipt of Expo's: never its message, which may name the token. */
+const errorCode = (ticket: unknown): string => {
+  const code = (ticket as { details?: { error?: unknown } } | null)?.details?.error;
+  return typeof code === 'string' && /^[A-Za-z]{1,40}$/.test(code) ? code : 'unknown';
+};
+
 /**
  * Sends each phone its notice through Expo's push service, a hundred at a time. A phone Expo says
  * is no longer registered is forgotten, as a browser the push service says is gone. Nothing is
- * forgotten when Expo cannot be reached or fails as a whole.
+ * forgotten when Expo cannot be reached, fails as a whole, or takes longer than `EXPO_PATIENCE`.
+ * Batches Expo did not take, and tickets refused for another reason than a phone gone (wrong
+ * credentials for Apple's or Google's service, too many messages), are counted in one line of the
+ * log, by their codes alone.
  */
-export async function deliverExpo<T extends AppDevice>(tokens: readonly T[], message: (row: T) => Notice, ttl: number, urgency: Urgency, senders: Pick<Senders, 'post' | 'expoToken' | 'forget'>): Promise<{ sent: number; removed: number }> {
+export async function deliverExpo<T extends AppDevice>(tokens: readonly T[], message: (row: T) => Notice, ttl: number, urgency: Urgency, senders: Pick<Senders, 'post' | 'expoToken' | 'forget' | 'log'>): Promise<{ sent: number; removed: number }> {
   let sent = 0;
   let removed = 0;
+  const failedBatches = new Map<string, number>();
+  const refused = new Map<string, number>();
+  const count = (into: Map<string, number>, key: string) => into.set(key, (into.get(key) ?? 0) + 1);
   const headers: Record<string, string> = { accept: 'application/json', 'accept-encoding': 'gzip, deflate', 'content-type': 'application/json' };
   if (senders.expoToken) headers.authorization = `Bearer ${senders.expoToken}`;
   const batches: T[][] = [];
   for (let at = 0; at < tokens.length; at += EXPO_BATCH) batches.push(tokens.slice(at, at + EXPO_BATCH));
   await Promise.all(
     batches.map(async (batch) => {
-      try {
-        const answer = await senders.post(EXPO_SEND, { method: 'POST', headers, body: JSON.stringify(batch.map((row) => expoMessage(row.token, message(row), ttl, urgency))) });
-        if (!answer.ok) return;
-        const tickets = ((await answer.json()) as { data?: unknown } | null)?.data;
-        if (!Array.isArray(tickets)) return;
-        // Expo answers a ticket for each message, in the order they were sent.
-        await Promise.all(
-          batch.map(async (row, i) => {
-            const ticket = tickets[i] as { status?: unknown } | undefined;
-            if (ticket?.status === 'ok') sent += 1;
-            else if (unregistered(ticket)) {
+      const answer = await askExpo(senders, { method: 'POST', headers, body: JSON.stringify(batch.map((row) => expoMessage(row.token, message(row), ttl, urgency))) });
+      if ('trouble' in answer) {
+        count(failedBatches, answer.trouble);
+        return;
+      }
+      // Expo answers a ticket for each message, in the order they were sent.
+      await Promise.all(
+        batch.map(async (row, i) => {
+          const ticket = answer.tickets[i] as { status?: unknown } | undefined;
+          if (ticket?.status === 'ok') sent += 1;
+          else if (unregistered(ticket)) {
+            try {
               await senders.forget(row);
               removed += 1;
+            } catch {
+              count(refused, 'not-forgotten');
             }
-          }),
-        );
-      } catch {
-        // Expo could not be reached, or answered nothing readable: nobody is forgotten for it.
-      }
+          } else count(refused, errorCode(ticket));
+        }),
+      );
     }),
   );
+  if (failedBatches.size + refused.size > 0) {
+    const listed = (counts: Map<string, number>) => [...counts].map(([code, n]) => `${code} ×${n}`).join(', ');
+    senders.log?.(`expo push: ${batches.length} batches, failed: ${listed(failedBatches) || 'none'}; tickets refused: ${listed(refused) || 'none'}`);
+  }
   return { sent, removed };
 }
 
