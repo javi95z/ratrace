@@ -13,6 +13,8 @@ import { TapProvider } from './tap';
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
 // it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
 const modal = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
+// And the box that leaves the keyboard its room: what it was told.
+const avoiding = vi.hoisted(() => [] as Array<Record<string, unknown>>);
 const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async () => {
   const rn = await vi.importActual<Record<string, unknown> & { Platform: object }>('react-native-web');
@@ -20,6 +22,10 @@ vi.mock('react-native', async () => {
     ...rn,
     Platform: { ...rn.Platform, get OS() { return platform.OS; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
+    KeyboardAvoidingView: (props: { children: React.ReactNode } & Record<string, unknown>) => {
+      avoiding.push(props);
+      return <div data-testid="keyboard-room">{props.children}</div>;
+    },
     Modal: (props: { children: React.ReactNode; visible?: boolean } & Record<string, unknown>) => {
       modal.props = props;
       return <div data-modal data-visible={String(props.visible !== false)}>{props.visible === false ? null : props.children}</div>;
@@ -64,6 +70,19 @@ function sheet(props: Partial<React.ComponentProps<typeof Sheet>> = {}) {
   );
   return onClose;
 }
+
+test('a sheet rises over the keyboard on every platform: its window is its own, which nothing else makes smaller for it', () => {
+  for (const os of ['ios', 'android']) {
+    platform.OS = os;
+    avoiding.length = 0;
+    sheet();
+    expect(avoiding.at(-1)).toMatchObject({ behavior: 'padding', style: { flex: 1 } });
+    const room = screen.getByTestId('keyboard-room');
+    expect(room.contains(screen.getByText('inside'))).toBe(true);
+    expect(room.contains(document.body.querySelector('[data-testid="sheet-backdrop"]'))).toBe(true);
+    cleanup();
+  }
+});
 
 test('a sheet that is not open draws nothing', () => {
   sheet({ open: false });

@@ -59,3 +59,14 @@ const phoneShare: PictureShare = {
 
 /** The phone's share sheet. */
 export const usePictureShare = (): PictureShare => phoneShare;
+
+/**
+ * The phone's share sheet, for a link and the words that go with it (an invitation to a game): the web's `navigator.share({ title, text, url })`.
+ * iOS's sheet takes the link beside the words; Android's takes words only (React Native's `Share` sends no `url` there), so the link goes at the end
+ * of them, and `title` heads its sheet. True once the player has shared it, as far as the phone says (Android always says so); a sheet that could not
+ * open throws.
+ */
+export async function shareLink(title: string, text: string, url: string): Promise<boolean> {
+  const content = Platform.OS === 'ios' ? { message: text, url } : { title, message: `${text} ${url}` };
+  return (await Share.share(content)).action === Share.sharedAction;
+}

@@ -123,6 +123,12 @@ export const SCENES: readonly Scene[] = [
   { name: 'player-editor-wear', locale: 'en' },
   { name: 'player-editor-scene', locale: 'en' },
   { name: 'player-friend-code', locale: 'en' },
+  // The games with others, signed in (the scene's cloud), on the table of `sceneRooms`: the way in, with public games waiting; a game among friends
+  // the player opened, waiting for its host; a public one, its clock counting down to its start; and the way in come by an invitation's code.
+  { name: 'room-door', locale: 'en' },
+  { name: 'room-lobby-friends', locale: 'en' },
+  { name: 'room-lobby-public', locale: 'en' },
+  { name: 'room-join-code', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -308,6 +314,11 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'player-editor-wear': null,
   'player-editor-scene': null,
   'player-friend-code': null,
+  // The games with others are the server's: a device with no life, the table the scene's (`sceneRooms`).
+  'room-door': null,
+  'room-lobby-friends': null,
+  'room-lobby-public': null,
+  'room-join-code': null,
 };
 
 /**

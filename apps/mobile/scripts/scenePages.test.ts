@@ -20,7 +20,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'settings', 'rankings', 'player']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'settings', 'rankings', 'player', 'room']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -358,4 +358,16 @@ test('the player\'s own profile is drawn signed in on both sides, with the same 
   expect(web).toContain('<PressedInTurn selectors={find}>\n      <PlayerProfile />');
   expect(app).toContain('tab={ratTabOf(scene)}');
   expect(app).toContain("<PlayerProfile copied={scene.name === 'player-friend-code'} />");
+});
+
+test('the games with others are drawn at the same table on both sides, the core\'s, never the project\'s: one come by an invitation is given its code as each side\'s link gives it', () => {
+  expect(web).toContain("import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
+  expect(app).toContain("import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
+  expect(web).toContain('const table = rooms ? { rooms: () => rooms } : {};');
+  expect(app).toContain('...(rooms ? { rooms: () => rooms } : {}),');
+  // The web's door reads the code from the page's address; the phone's from its route, which its screen takes as a prop.
+  expect(web).toContain("address.searchParams.set('code', code);");
+  expect(read('../../web/src/game/screens/Room.tsx')).toContain("new URLSearchParams(window.location.search).get('code')");
+  expect(app).toContain('room: (scene) => <Room code={sceneInvite(scene.name)} />,');
+  expect(read('../src/app/room.tsx')).toContain('<Room code={');
 });

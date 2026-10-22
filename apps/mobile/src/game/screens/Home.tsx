@@ -15,6 +15,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { useAccountOffer, useGame, useRuns, useSaving, useWords } from '../context';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
+import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 
@@ -53,6 +54,8 @@ export function Home() {
   // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
   const week = useThisWeek();
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
+  // A game with others that is not over comes before everything else, in gold.
+  const turn = useRoomLive();
 
   return (
     <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
@@ -81,11 +84,12 @@ export function Home() {
           <Loading>{common('loading')}</Loading>
         ) : (
           <>
+            {turn ? <RoomCard primary /> : null}
             {inProgress ? (
               <Raised
                 role="link"
-                tone={GOLD}
-                bg="gold-500"
+                tone={turn ? {} : GOLD}
+                bg={turn ? 'night-600' : 'gold-500'}
                 style={{ minHeight: 56, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
                 onPress={() => router.push('/play')}
               >
@@ -93,15 +97,15 @@ export function Home() {
                   // A life of the weekly challenge says so before anything else: the attempt that counts, or a practice.
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Sprite id={CHALLENGE_ART.icon} size={{ w: 16, h: 16 }} />
-                    <PixelText size={11} tone="ink-700" lineHeight={11} style={{ letterSpacing: 11 * 0.05, textTransform: 'uppercase' }}>
+                    <PixelText size={11} tone={turn ? 'gold-500' : 'ink-700'} lineHeight={11} style={{ letterSpacing: 11 * 0.05, textTransform: 'uppercase' }}>
                       {t(ranked ? 'continueChallenge' : 'continuePractice')}
                     </PixelText>
                   </View>
                 ) : null}
                 {/* The button is a pixel one, set in the 15 of the page: the letter spacing it gives (0.03 em) is 0.45, and its title, its label and its detail keep that length, not 0.03 of their own size. */}
-                <PixelText size={19} tone="ink-900" style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>{t('continue')}</PixelText>
+                <PixelText size={19} tone={turn ? 'cream' : 'ink-900'} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>{t('continue')}</PixelText>
                 {/* The detail is Chakra Petch inside that pixel text: it keeps its font-size-adjust (so it is drawn larger than 13) and its 1.1 line. */}
-                <ReadText size={adjustedRead(13)} tone="ink-700" lineHeight={13 * 1.1} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>
+                <ReadText size={adjustedRead(13)} tone={turn ? 'ink-200' : 'ink-700'} lineHeight={13 * 1.1} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>
                   {t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, round), city: names.cities[cityId] })}
                 </ReadText>
               </Raised>
@@ -109,14 +113,15 @@ export function Home() {
             <AccountLifeOffer endsLife={inProgress ? lifeId : null} endsRound={inProgress ? round : null} />
             <Raised
               role="link"
-              tone={inProgress ? {} : GOLD}
-              bg={inProgress ? 'night-600' : 'gold-500'}
+              tone={inProgress || turn ? {} : GOLD}
+              bg={inProgress || turn ? 'night-600' : 'gold-500'}
               style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
               onPress={() => router.push('/new')}
             >
-              <PixelText size={19} tone={inProgress ? 'cream' : 'ink-900'} style={{ textAlign: 'center' }}>{t('newLife')}</PixelText>
+              <PixelText size={19} tone={inProgress || turn ? 'cream' : 'ink-900'} style={{ textAlign: 'center' }}>{t('newLife')}</PixelText>
             </Raised>
             {challengeInProgress ? null : <WeeklyChallengeCard />}
+            {turn ? null : <RoomCard />}
             {over ? (
               <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/play')}>
                 <PixelText size={15} tone="cream" style={{ textAlign: 'center' }}>{t('lastLife')}</PixelText>

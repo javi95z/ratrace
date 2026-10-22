@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sheetOpened, sheetsShut, subscribeShut } from './back';
@@ -195,53 +195,59 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
 
   return (
     <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
-      <View
-        accessibilityViewIsModal
-        aria-modal
-        onTouchEnd={perfTouched}
-        style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }}
-      >
-        {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
-        <PerfDrawn name={`sheet: ${title}`} />
-        <Pressable
-          testID="sheet-backdrop"
-          accessible={false}
-          importantForAccessibility="no"
-          onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
-        />
-        <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH }, rise]}>
-          <Framed
-            kind="bevel"
-            tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
-            style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88 }}
-          >
-            <ScrollView
-              // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
-              keyboardShouldPersistTaps="handled"
-              bounces={false}
-              style={{ flexGrow: 0 }}
-              contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: Math.max(12, inset.bottom) }}
+      {/*
+       * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
+       * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.
+       */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <View
+          accessibilityViewIsModal
+          aria-modal
+          onTouchEnd={perfTouched}
+          style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }}
+        >
+          {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
+          <PerfDrawn name={`sheet: ${title}`} />
+          <Pressable
+            testID="sheet-backdrop"
+            accessible={false}
+            importantForAccessibility="no"
+            onPress={onClose}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
+          />
+          <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH }, rise]}>
+            <Framed
+              kind="bevel"
+              tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
+              style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88 }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                <View accessibilityRole="header" style={{ flexShrink: 1, paddingTop: 4 }}>
-                  <PixelText size={19}>{title}</PixelText>
+              <ScrollView
+                // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
+                keyboardShouldPersistTaps="handled"
+                bounces={false}
+                style={{ flexGrow: 0 }}
+                contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: Math.max(12, inset.bottom) }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                  <View accessibilityRole="header" style={{ flexShrink: 1, paddingTop: 4 }}>
+                    <PixelText size={19}>{title}</PixelText>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={closeLabel}
+                    onPress={close}
+                    style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
+                  >
+                    <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
+                  </Pressable>
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={closeLabel}
-                  onPress={close}
-                  style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
-                >
-                  <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
-                </Pressable>
-              </View>
-              {children}
-            </ScrollView>
-          </Framed>
-        </Animated.View>
-        {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
-      </View>
+                {children}
+              </ScrollView>
+            </Framed>
+          </Animated.View>
+          {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

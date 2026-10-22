@@ -119,6 +119,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'player-editor-wear',
   'player-editor-scene',
   'player-friend-code',
+  // Phase 3, Task 9: the games with others, at the scene's table (`sceneRooms`): the door, a lobby among friends, a public one with its clock, an invitation.
+  'room-door',
+  'room-lobby-friends',
+  'room-lobby-public',
+  'room-join-code',
 ]);
 
 /**

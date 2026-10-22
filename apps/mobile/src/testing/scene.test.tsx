@@ -712,3 +712,26 @@ test('a scene of the game alone is drawn with nobody signed in, and one of the g
   expect(online.account?.state()).toEqual({ kind: 'member', userId: 'u-scene', email: null });
   expect(online.community?.()).not.toBeNull();
 });
+
+test('the scenes of the games with others are drawn signed in, at the scene\'s table: the door, a lobby among friends, a public one counting down, an invitation', async () => {
+  render(<SceneView name="room-door" />);
+  expect(await screen.findByText('2 games are looking for players right now', {}, WAIT)).toBeTruthy();
+  expect(screen.getByRole('textbox', { name: 'Game code' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="room-lobby-friends" />);
+  const members = await screen.findByRole('region', { name: 'In the game: 3 of 6' }, WAIT);
+  expect(within(members).getAllByRole('listitem').map((seat) => seat.textContent)).toEqual([expect.stringMatching(/^Rata_UnoHostYou/), 'Bea_7', 'Rat C3D4']);
+  expect(within(screen.getByRole('region', { name: 'Game code' })).getByText('K7Q2XM')).toBeTruthy();
+  expect(screen.getByText('Software engineer')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Start' }).getAttribute('aria-disabled')).not.toBe('true');
+  cleanup();
+  render(<SceneView name="room-lobby-public" />);
+  const clock = await screen.findByRole('region', { name: 'Looking for players' }, WAIT);
+  // A minute and thirty-five seconds by the server's clock, whatever the phone's says: counted down from there.
+  expect(within(clock).getByRole('timer').textContent).toMatch(/^Starts in 1:3[0-5]$/);
+  expect(screen.queryByText('Host')).toBeNull();
+  cleanup();
+  render(<SceneView name="room-join-code" />);
+  const invitation = await screen.findByRole('region', { name: 'You are invited to the game' }, WAIT);
+  expect(within(invitation).getByText('K7Q2XM')).toBeTruthy();
+});

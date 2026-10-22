@@ -2101,6 +2101,8 @@
     "pictureSaved": "Imagen guardada en tus fotos.",
     "saveRefused": "The Rat Race no tiene permiso para añadir a tus fotos. Puedes darlo en Ajustes.",
     "saveFailed": "No se ha podido guardar la imagen.",
-    "opensLife": "Muestra esta vida entera"
+    "opensLife": "Muestra esta vida entera",
+    "roomOtherVersion": "Esa partida juega con otra versión del juego. Actualiza la aplicación y vuelve a intentarlo.",
+    "roomOtherRules": "Esta partida juega con otra versión del juego. Actualiza la aplicación para jugarla."
   }
 }
