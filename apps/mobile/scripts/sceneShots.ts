@@ -97,10 +97,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * thirty-nine of Tasks 11 to 19 and the merge; batch pass 2 the twenty-seven the user's decisions after it changed on both sides (the badges' glow,
  * the balance's net worth after inflation, the buttons a screen sizes, the guide's ring, the picture's sheet with its way to save). After it, the age a
  * life left the rat race is told at the round it got out in everywhere (2026-10-22: the moment said 52 where the HUD said 50, and the end's life line
- * and tale 52 where its figures said 50), on both sides: the escape's moment and the three ends of that life wait to be shot again.
+ * and tale 52 where its figures said 50), on both sides: the escape's moment and the three ends of that life waited to be shot again, and Task 20
+ * (the phase's exit) shot and judged them. None waits.
  * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>(['moment-escape', 'end-escaped', 'end-share', 'end-ru']);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
 
 /**
  * The scenes with lines in the phone's own words (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
