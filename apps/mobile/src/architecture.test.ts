@@ -67,6 +67,19 @@ const touchesDevice = (path: string, source: string): string[] =>
     .filter(({ from }) => DEVICE.test(from) || /^@\/session\/(?!types$)/.test(from))
     .map(({ from }) => `imports ${from}`);
 
+/**
+ * What a file takes of the cloud that it may not: the client library anywhere; more than the package's types (`@ratrace/online/*`) anywhere but
+ * the phone's cloud (`online/*`) and the game context that wires it; and, in a screen, the phone's cloud itself.
+ */
+function reachesCloud(path: string, source: string): string[] {
+  const place = rel(path);
+  const wiring = place.startsWith('online/') || place === 'game/context.tsx';
+  const screen = /^(app|ui|game\/screens)\//.test(place);
+  return importsIn(path, source)
+    .filter((i) => /^@supabase\//.test(i.from) || (!wiring && !i.typeOnly && /^@ratrace\/online(\/.*)?$/.test(i.from)) || (screen && /^@\/online(\/.*)?$/.test(i.from)))
+    .map((i) => `${place}: ${i.from}`);
+}
+
 /** Every storage of the device, by name: the phone's SQLite and AsyncStorage, the browser's three. */
 const namesStorage = (source: string): boolean => /\b(expo-sqlite|AsyncStorage|localStorage|sessionStorage|indexedDB)\b/.test(source);
 /** The only files that may name one: the phone's store, the context that wires it into the game, and the stand-in for the phone's store in tests. */
@@ -78,8 +91,8 @@ const SENDS = /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bs
 const RULES = join(SRC, 'rules');
 const bundles = readdirSync(RULES).filter((name) => name.endsWith('.js')).map((name) => join(RULES, name));
 const REPO = fileURLToPath(new URL('../../..', import.meta.url));
-/** The packages the app carries besides the core: the rules (engine), what they run on (content), the interface's words (i18n). */
-const CARRIED = ['engine', 'content', 'i18n'].map((name) => join(REPO, 'packages', name, 'src'));
+/** The packages the app carries besides the core: the rules (engine), what they run on (content), the interface's words (i18n), the client of the servers (online). */
+const CARRIED = ['engine', 'content', 'i18n', 'online'].map((name) => join(REPO, 'packages', name, 'src'));
 
 /** Every file of code under `dir` that is not a test: TypeScript, and JavaScript of any kind (a bundle, or a stray `.js` beside the `.ts`). */
 function codeUnder(dir: string): string[] {
@@ -168,6 +181,16 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(namesStorage(readFileSync(STORAGE_FILES[0], 'utf8'))).toBe(true);
   });
 
+  it('keeps the account\'s session in the phone\'s store, under its own keys, and hands the client no other', () => {
+    // The client is made in one file of the phone, with the store's session for its storage, and renews the session only when told to.
+    const connecting = all.filter((path) => /\bconnectSupabase\s*\(/.test(readFileSync(path, 'utf8'))).map(rel);
+    expect(connecting).toEqual(['online/index.ts']);
+    const online = readFileSync(join(SRC, 'online/index.ts'), 'utf8');
+    expect(online).toMatch(/connectSupabase\(url, key, \{[^}]*\bstorage: kvSession\b[^}]*\bautoRefresh: false\b[^}]*\}\)/);
+    expect(importsOf(join(SRC, 'online/index.ts')).find((i) => i.from === '@/kvStore')?.names).toMatch(/\bkvSession\b/);
+    expect(readFileSync(STORAGE_FILES[0], 'utf8')).toMatch(/export const kvSession\b/);
+  });
+
   it('keeps the engine and the content out of the phone\'s store', () => {
     const imports = importsOf(join(SRC, 'kvStore.ts')).map((i) => i.from);
     expect(imports).toContain('expo-sqlite/kv-store');
@@ -191,23 +214,33 @@ describe('the wall between the phone\'s screens and the game', () => {
     // reach the memory services through testing/scene.tsx, never the session itself).
     // And the timing probe's long life (testing/perfLife.ts), put on the phone by the probe's own route, in a build made with EXPO_PUBLIC_PERF=1 only
     // (ui/perf.test.ts holds that a build without the flag has none of it).
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
+    // And the phone's cloud (online/index.ts), which keeps the account's session and the lists of lives the account is still to be told of in the
+    // phone's store, as the web's keeps them in the browser's.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'online/index.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/perfLife')).map(rel)).toEqual(['app/perf.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);
   });
 
-  it('lets no screen reach the cloud, and only the game context may ever wire it', () => {
-    const reaches = (path: string) => importsOf(path).filter((i) => /^@supabase\//.test(i.from) || /^@ratrace\/online(\/(?!types$).*)?$/.test(i.from));
-    expect(screens.flatMap((path) => reaches(path).map((i) => `${rel(path)}: ${i.from}`))).toEqual([]);
-    const wires = mine.filter((path) => reaches(path).length > 0).map(rel);
-    expect(wires.filter((file) => file !== 'game/context.tsx')).toEqual([]);
+  it('lets no screen reach the cloud, and only the phone\'s cloud (online/*) and the game context that wires it may ever take more of it than its types', () => {
+    const screen = join(SRC, 'game/screens/Anything.tsx');
+    expect(reachesCloud(screen, "import { connectSupabase } from '@ratrace/online/connect';")).toEqual(['game/screens/Anything.tsx: @ratrace/online/connect']);
+    expect(reachesCloud(join(SRC, 'game/helper.ts'), "const { follow } = require('@ratrace/online/follow');")).toEqual(['game/helper.ts: @ratrace/online/follow']);
+    expect(reachesCloud(join(SRC, 'ui/Thing.tsx'), "import type { Account } from '@ratrace/online/types';\nimport type { Cloud } from '@ratrace/online/supabase';")).toEqual([]);
+    expect(reachesCloud(screen, "import type { Session } from '@supabase/supabase-js';")).toEqual(['game/screens/Anything.tsx: @supabase/supabase-js']);
+    expect(reachesCloud(join(SRC, 'online/index.ts'), "import { connectSupabase } from '@ratrace/online/connect';")).toEqual([]);
+    expect(reachesCloud(join(SRC, 'game/context.tsx'), "import { phoneOnline } from '../online';\nimport { follow } from '@ratrace/online/follow';")).toEqual([]);
+    // A screen that takes the phone's cloud itself reaches it as much as one that takes the package.
+    expect(reachesCloud(screen, "import { phoneOnline } from '../../online';")).toEqual(['game/screens/Anything.tsx: @/online']);
+    expect(mine.flatMap((path) => reachesCloud(path, readFileSync(path, 'utf8')))).toEqual([]);
+    // The rule finds what it is there for: the phone's cloud does take the package.
+    expect(mine.filter((path) => rel(path).startsWith('online/') && importsOf(path).some((i) => !i.typeOnly && i.from.startsWith('@ratrace/online/'))).map(rel)).toContain('online/index.ts');
     // And the client library is named in no file of the phone or the core: only `@ratrace/online/connect` loads it.
     const named = all.filter((path) => importsOf(path).some((i) => i.from === '@supabase/supabase-js') || /import\('@supabase\/supabase-js'\)/.test(readFileSync(path, 'utf8'))).map(rel);
     expect(named).toEqual([]);
   });
 
-  it('sends nothing from the phone, as its legal notice says (`phone.legal`): the one request in the app is a development scene telling the shots\' driver, on this machine, that it is ready (and the timing probe\'s, in its own build only)', () => {
+  it('sends only what it means to: the game\'s servers, through the Supabase client (`@ratrace/online/connect`); a development scene telling the shots\' driver, on this machine, that it is ready; and the timing probe\'s, in its own build only', () => {
     expect(SENDS.test("const res = await fetch('https://example.com');")).toBe(true);
     expect(SENDS.test('const socket = new WebSocket(url);')).toBe(true);
     expect(SENDS.test('const request = new XMLHttpRequest();')).toBe(true);
@@ -223,7 +256,13 @@ describe('the wall between the phone\'s screens and the game', () => {
     for (const dir of CARRIED) expect(shipped.some((path) => path.startsWith(dir)), relative(REPO, dir)).toBe(true);
     expect(shipped.some((path) => path.endsWith('.json'))).toBe(false);
     const sending = shipped.filter((path) => SENDS.test(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
-    expect(sending.sort()).toEqual(['apps/mobile/src/testing/scene.tsx', 'apps/mobile/src/ui/perfProbe.tsx']);
+    expect(sending.sort()).toEqual(['apps/mobile/src/testing/scene.tsx', 'apps/mobile/src/ui/perfProbe.tsx', 'packages/online/src/connect.ts']);
+    // The Supabase client's: every request the client makes, through the one `fetch` it is handed (with a time it may take), and nothing else of the
+    // package's own. The client itself is loaded by that file alone (the test above).
+    const client = readFileSync(join(REPO, 'packages/online/src/connect.ts'), 'utf8');
+    expect([...client.matchAll(/\bfetch\s*\(/g)]).toHaveLength(1);
+    expect(client).toContain('const patient: typeof fetch = (input, init) => fetch(input, {');
+    expect(client).toContain("await import('@supabase/supabase-js')");
     // The timing probe's, in a build made with EXPO_PUBLIC_PERF=1 only (ui/perf.test.ts: any other build has none of it): its lines to the collector on
     // this machine, one request.
     const probe = readFileSync(join(SRC, 'ui/perfProbe.tsx'), 'utf8');

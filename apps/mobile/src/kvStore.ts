@@ -207,3 +207,29 @@ export const kvBasket: BasketText = {
     else Storage.setItemSync(BASKET, text);
   },
 };
+
+/** The account's session, under keys of the app's own: nothing of the phone's store is the client's but these. */
+const SESSION = 'ratrace:session:';
+
+/**
+ * Where the account's client keeps its session on the phone (the browser's localStorage, on the web): who is signed in, and the proof of a trip to
+ * Google while it is under way. Kept in the phone's store, so the player who opened the app last time is the one who opens it now, never a new guest.
+ */
+export const kvSession = {
+  getItem: (key: string): Promise<string | null> => Storage.getItem(SESSION + key),
+  setItem: (key: string, value: string): Promise<void> => Storage.setItem(SESSION + key, value),
+  removeItem: async (key: string): Promise<void> => {
+    await Storage.removeItem(SESSION + key);
+  },
+  /** Takes away every key of the session: for signing out, which leaves nothing of the player on the phone for the next to find. */
+  clear: async (): Promise<void> => {
+    for (const key of await Storage.getAllKeys()) if (key.startsWith(SESSION)) await Storage.removeItem(key);
+  },
+};
+
+/** Short texts read and written at once (synchronously), as a browser's localStorage reads and writes them: the lists the account is still to be told of. */
+export type KeptText = Pick<globalThis.Storage, 'getItem' | 'setItem'>;
+export const kvText: KeptText = {
+  getItem: (key) => Storage.getItemSync(key),
+  setItem: (key, value) => Storage.setItemSync(key, value),
+};

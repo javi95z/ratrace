@@ -43,6 +43,11 @@ export interface Cloud extends SyncCloud {
   onUser(listener: (user: CloudUser | null) => void): () => void;
   /** Sends the errors a page met, to be kept with the server's: see `docs/errors.md`. */
   reportErrors(reports: ErrorReport[]): Promise<Sent>;
+  /**
+   * Starts (true) or stops (false) renewing the session by itself, for a client made not to (`autoRefresh: false`): a phone renews it only while
+   * the app is in front. Left out by a cloud that renews it as it was made to.
+   */
+  autoRefresh?(on: boolean): Promise<void>;
 }
 
 const FAILURES = ['error', 'error_code', 'error_description'];

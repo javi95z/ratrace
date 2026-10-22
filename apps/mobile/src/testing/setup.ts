@@ -22,6 +22,9 @@ vi.mock('expo-audio', async () => (await import('./fakes')).expoAudio);
 vi.mock('expo-file-system', async () => (await import('./fakes')).expoFileSystem);
 vi.mock('expo-sharing', async () => (await import('./fakes')).expoSharing);
 vi.mock('expo-media-library', async () => (await import('./fakes')).expoMediaLibrary);
+vi.mock('expo-network', async () => (await import('./fakes')).expoNetwork);
+vi.mock('expo-web-browser', async () => (await import('./fakes')).expoWebBrowser);
+vi.mock('expo-constants', async () => (await import('./fakes')).expoConstants);
 vi.mock('../ui/soundSources', async () => (await import('./fakes')).soundSources);
 vi.mock('react-native-safe-area-context', async () => (await import('./fakes')).safeArea);
 vi.mock('../ui/Sprite', async () => (await import('./fakes')).spriteModule);
@@ -30,10 +33,12 @@ vi.mock('react-native-gesture-handler', async () => (await import('./fakes')).ge
 vi.mock('@shopify/react-native-skia', async () => (await import('../ui/testing/skia')).skiaFake());
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
 vi.mock('react-native-reanimated', async () => (await import('../ui/testing/reanimated')).reanimatedFake());
-// A list that draws only the rows near the screen has none laid out in jsdom: it draws them all (`everyRow`).
+// A list that draws only the rows near the screen has none laid out in jsdom: it draws them all (`everyRow`). And the app is in front, or not, as
+// a test says (`appState`): react-native-web's follows the page's visibility, which jsdom never changes.
 vi.mock('react-native', async (original) => {
   const native = await original<typeof import('react-native')>();
-  return { ...native, FlatList: (await import('./fakes')).everyRow(native.FlatList as never) };
+  const fakes = await import('./fakes');
+  return { ...native, FlatList: fakes.everyRow(native.FlatList as never), AppState: fakes.appStateModule };
 });
 
 // Android's Back: react-native-web has none (it says so on every listener); the fake keeps who listens, for `pressBack`. Loaded only now, after

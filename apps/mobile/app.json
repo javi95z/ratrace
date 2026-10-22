@@ -49,7 +49,8 @@
           "isAccessMediaLocationEnabled": false,
           "granularPermissions": []
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "scheme": "theratrace",
     "backgroundColor": "#141b33",

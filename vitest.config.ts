@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { configDefaults, defineConfig } from 'vitest/config';
 
-/** The phone's tests that draw the game: they get the native modules' stand-ins (apps/mobile/src/testing/setup.ts). */
-const PHONE_GAME = 'apps/mobile/src/{game,app,testing}/**/*.test.{ts,tsx}';
+/** The phone's tests that draw the game, and those of its cloud: they get the native modules' stand-ins (apps/mobile/src/testing/setup.ts). */
+const PHONE_GAME = 'apps/mobile/src/{game,app,testing,online}/**/*.test.{ts,tsx}';
 
 export default defineConfig({
   plugins: [react()],

@@ -19,6 +19,8 @@ const client = vi.hoisted(() => {
         linkIdentity: async (...a: unknown[]) => (asked.push(['linkIdentity', ...a]), answers.linkIdentity),
         signInWithOAuth: async (...a: unknown[]) => (asked.push(['signInWithOAuth', ...a]), answers.signInWithOAuth),
         exchangeCodeForSession: async (...a: unknown[]) => (asked.push(['exchangeCodeForSession', ...a]), answers.exchangeCodeForSession),
+        startAutoRefresh: async () => void asked.push(['startAutoRefresh']),
+        stopAutoRefresh: async () => void asked.push(['stopAutoRefresh']),
         onAuthStateChange: (listener: (event: string, session: unknown) => void) => {
           listeners.push(listener);
           return { data: { subscription: { unsubscribe: () => listeners.splice(listeners.indexOf(listener), 1) } } };
@@ -86,6 +88,13 @@ describe('the cloud, made from the Supabase client', () => {
     // Named alone, the storage leaves the renewal as it is.
     await connectSupabase('u', 'k', { storage });
     expect(client.created[1][2]).toMatchObject({ auth: { autoRefreshToken: true, storage } });
+  });
+
+  it('starts and stops renewing the session when told: a phone renews it only while it is in front', async () => {
+    const cloud = await connectSupabase('u', 'k', { autoRefresh: false });
+    await cloud.autoRefresh?.(true);
+    await cloud.autoRefresh?.(false);
+    expect(client.asked).toEqual([['startAutoRefresh'], ['stopAutoRefresh']]);
   });
 
   it('says who is signed in, or nobody', async () => {

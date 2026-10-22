@@ -14,8 +14,11 @@ import { painted } from '../ui/testing/skia';
 export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn(), canGoBack: vi.fn(() => true) };
 /** The query of the address the screen was opened with (`/scene?name=`): none, unless a test gives it some. A `Redirect` is a box that names where it goes. */
 export const params: Record<string, string> = {};
+/** The path of the screen in front, as the router says it (`usePathname`). */
+export const pathname = { now: '/' };
 export const expoRouter = {
   useRouter: () => router,
+  usePathname: () => pathname.now,
   useLocalSearchParams: () => params,
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
   // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn.
@@ -57,6 +60,60 @@ export const expoLocalization = {
   getLocales: () => device.languages.map((languageCode) => ({ languageCode, languageTag: languageCode })),
   getCalendars: () => [{ timeZone: device.timeZone }],
 };
+
+/**
+ * Whether the app is in front, as React Native's AppState says it: in front, unless a test sends it away (`appState.set('background')`), and every
+ * listener told of each change, as the phone tells them.
+ */
+export const appState = {
+  currentState: 'active' as 'active' | 'background' | 'inactive',
+  listeners: new Set<(state: string) => void>(),
+  set(next: 'active' | 'background' | 'inactive') {
+    appState.currentState = next;
+    for (const listener of [...appState.listeners]) listener(next);
+  },
+};
+export const appStateModule = {
+  get currentState() {
+    return appState.currentState;
+  },
+  addEventListener(_event: 'change', listener: (state: string) => void) {
+    appState.listeners.add(listener);
+    return { remove: () => void appState.listeners.delete(listener) };
+  },
+};
+
+/** The phone's connection, as expo-network tells it: there, unless a test takes it away (`network.set(false)`); every listener is told of a change. */
+export const network = {
+  connected: true,
+  listeners: new Set<(state: { isConnected: boolean; isInternetReachable: boolean }) => void>(),
+  set(connected: boolean) {
+    network.connected = connected;
+    for (const listener of [...network.listeners]) listener({ isConnected: connected, isInternetReachable: connected });
+  },
+};
+export const expoNetwork = {
+  getNetworkStateAsync: async () => ({ isConnected: network.connected, isInternetReachable: network.connected }),
+  addNetworkStateListener(listener: (state: { isConnected: boolean; isInternetReachable: boolean }) => void) {
+    network.listeners.add(listener);
+    return { remove: () => void network.listeners.delete(listener) };
+  },
+};
+
+/** The system's browser, opened for Google: it keeps what it was opened with, and comes back as a test says (closed, unless told otherwise). */
+export const authBrowser = {
+  opened: [] as Array<{ url: string; redirect: string }>,
+  answer: { type: 'cancel' } as { type: 'success'; url: string } | { type: 'cancel' | 'dismiss' },
+};
+export const expoWebBrowser = {
+  openAuthSessionAsync: async (url: string, redirect: string) => {
+    authBrowser.opened.push({ url, redirect });
+    return authBrowser.answer;
+  },
+};
+
+/** The app's own description, as expo-constants reads it from app.json. */
+export const expoConstants = { default: { expoConfig: { version: '1.0.0' } } };
 
 /** What the phone's key-value store holds, by key: the game, the runs, the profile, the language and the basket are all in it. */
 export const kv = new Map<string, string>();
@@ -213,7 +270,14 @@ export function resetFakes(): void {
   device.languages = ['en'];
   device.timeZone = 'UTC';
   for (const key of Object.keys(params)) delete params[key];
+  pathname.now = '/';
   kv.clear();
+  appState.currentState = 'active';
+  appState.listeners.clear();
+  network.connected = true;
+  network.listeners.clear();
+  authBrowser.opened.length = 0;
+  authBrowser.answer = { type: 'cancel' };
   heard.length = 0;
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });

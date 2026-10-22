@@ -507,6 +507,9 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       if (word === 'unknown-version') return 'unknown-version';
       return word !== null && REFUSALS.has(word) ? 'refused' : 'failed';
     },
+    async autoRefresh(on) {
+      await (on ? client.auth.startAutoRefresh() : client.auth.stopAutoRefresh());
+    },
     async reportErrors(reports) {
       const { error } = await client.functions.invoke('report-error', { body: { reports } });
       if (!error) return 'sent';
