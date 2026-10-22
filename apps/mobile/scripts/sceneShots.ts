@@ -1,6 +1,7 @@
 import { SCENES, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
-import { textSummary, verdictOf } from './kitCompare';
+import { MESSAGES } from '@ratrace/i18n';
+import { TEXT_WITHIN_PT, textSummary, verdictOf } from './kitCompare';
 import type { Result } from './kitCompare';
 
 /*
@@ -135,20 +136,30 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
 ]);
 
 /**
- * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
- * "reload the page"). The two shots cannot agree on their text, whatever the app does, so these are compared for their layout and shape only: the
- * text rows are reported (they are in the line) and not judged, and the verdict says so. (`balance-r6` was one while the web showed a key that was
- * not in the messages, `end.realNetWorth`, and the phone its own words: the key is back, and both say it.)
+ * The scenes with lines in the phone's own words (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
+ * "reload the page"), and those lines, by the web's words for them (the text the comparison finds them by). The two shots cannot agree on such a
+ * line, whatever the app does: it is reported (in the line's count) and not judged. Every other line of the scene is judged as any scene's is, and
+ * its shape too, and the verdict says `phone words, ...`. (`balance-r6` was one while the web showed a key that was not in the messages,
+ * `end.realNetWorth`, and the phone its own words: the key is back, and both say it.)
  */
-export const PHONE_WORDS: readonly string[] = [
-  'home-lost-newer',
-  'legal',
-];
+const web = MESSAGES.en;
+export const PHONE_WORDS: Readonly<Record<string, readonly string[]>> = {
+  // The notice of a life saved by a newer version: the web says to reload the page, the phone to update the app.
+  'home-lost-newer': [web.home.lostNewer],
+  // The legal notice tells of an account, a database and cookies, and the app has none: from what it keeps on, every section is the phone's own,
+  // and stands where the length of the phone's words above it puts it. The title, the first section (the same words on both) and the way back are
+  // judged.
+  legal: [web.legal.dataBody, web.legal.whyTitle, web.legal.whyBody, web.legal.whoTitle, web.legal.whoBody, web.legal.deviceTitle, web.legal.deviceBody, web.legal.rightsTitle, web.legal.rightsBody, web.legal.updated],
+};
+
+/** Whether a scene has lines in the phone's own words. */
+export const hasPhoneWords = (name: string): boolean => name in PHONE_WORDS;
 
 /**
- * Of those, the scenes whose whole page is other words (the legal notice: other sections, other paragraphs, other lengths), where every box
- * stands where the length of its text puts it. Their shapes are not a layout to judge either, so they are reported and never fail a run; the
- * layout of such a page is judged once, by drawing the phone's page with the web's own words (the parity report says how it was done for `legal`).
+ * Of those, the scenes whose page is other words from some line down (the legal notice: other sections, other paragraphs, other lengths), where every
+ * box under them stands where the length of its text puts it. Their shapes are not a layout to judge, so they are held to where they stood (`PAGE_BASELINE`);
+ * the lines in the web's words above them are judged; the layout of such a page is judged once, by drawing the phone's page with the web's own words (the
+ * parity report says how it was done for `legal`).
  */
 export const PHONE_PAGES: readonly string[] = ['legal'];
 
@@ -160,8 +171,11 @@ export const PHONE_PAGES: readonly string[] = ['legal'];
 export interface Accepted {
   /** The most shape pixels (what differs and is not text) accepted. */
   shape: number;
-  /** The most any line of text may stand apart, in points. */
-  worstPt: number;
+  /**
+   * The lines of text, by their words (the web's), that may stand further apart than the tolerance (`TEXT_WITHIN_PT`), each with the most it may, in
+   * points. Every other line of the scene is held to the tolerance: a residual of one line lets no other drift.
+   */
+  lines?: Readonly<Record<string, number>>;
   /** The most lines of text found in one shot only. */
   oneSided: number;
   /** What the residual is. */
@@ -173,107 +187,95 @@ export interface Accepted {
 export const ACCEPTED: Readonly<Record<string, Accepted>> = {
   'home-continue': {
     shape: 1,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'One pixel at the edge of a glyph the text check\'s windows did not cover (the descender of the "y" of "your" in the continue button\'s title); nothing is out of place.',
     report: 'Task 6: the front door, its settings, the week\'s challenge and the legal notice',
   },
   'new-first': {
     shape: 738,
-    worstPt: 2,
+    lines: { '🎲 At random': 2 },
     oneSided: 0,
     reason: 'The dice emoji (Apple Color Emoji sits 2 pt lower on iOS than on macOS Chrome), the arrow of the folded list (macOS\'s system sign against iOS\'s), and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
   },
   'new-unlocked': {
     shape: 738,
-    worstPt: 2,
+    lines: { '🎲 At random': 2 },
     oneSided: 0,
     reason: 'The same as new-first: the dice emoji, the arrow of the folded list, and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
   },
   'new-locked': {
     shape: 738,
-    worstPt: 2,
+    lines: { '🎲 At random': 2 },
     oneSided: 0,
     reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels); the rows of the locked lives are clean since the frames\' far strips are laid from the near edge (batch pass 1).',
     report: 'Task 7: choosing a new life',
   },
   'play-news-r1': {
     shape: 1443,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The paper\'s masthead, centred, stands a device pixel left of the web\'s (a sub-pixel centring), and is not measured as text: the paper\'s rules of the same ink lie within its window, so its glyphs\' edges count as shape.',
     report: 'Task 9: play, round by round, from the news',
   },
   'play-news-r6': {
     shape: 1443,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The masthead as in play-news-r1 (the bar\'s label, two device pixels higher before, stands within the point since batch pass 1).',
     report: 'Task 9: play, round by round, from the news',
   },
   'play-guide-r1': {
     shape: 3453,
-    // Four device pixels.
-    worstPt: 4 / 3,
+    // Four device pixels: the headline's two lines under the note (the web's text of each is the headline's first forty letters).
+    lines: { 'New regulator created to regulate the re': 4 / 3 },
     oneSided: 0,
     reason: 'The masthead as in play-news-r1, and everything under the guide\'s note two device pixels lower: the web paints the note\'s foot at a whole CSS pixel (564.48 to 564), the phone at a device pixel (564.67).',
     report: 'Task 9: play, round by round, from the news',
   },
   'play-pageturn': {
     shape: 3897,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), all along them now that the lines of the paper it covers are measured only where they show (CALENDAR_COVERS), and the masthead as in play-news-r1.',
     report: 'Task 9: play, round by round, from the news',
   },
   'new-replace': {
     shape: 310,
-    worstPt: 1,
     oneSided: 0,
     reason: 'The dice emoji under the backdrop (a covered line, not measured as text: its edges count as shape), and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
   },
   'play-cards-legendary': {
     shape: 1,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'One pixel of the edge of the band of light over the card\'s picture, held at the same moment on both sides: the motion section\'s own residual (motion-2: one pixel of the glint band\'s edge).',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'finance-buy-stock': {
     shape: 149,
-    worstPt: 1,
     oneSided: 0,
     reason: 'The price line, antialiased on both sides (phase 2\'s exception: the web\'s svg path and Skia\'s, the same points), its edge pixels in other shares of its teal.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'finance-taxes': {
     shape: 31,
-    worstPt: 1,
     oneSided: 0,
     reason: 'The tops of the letters of a line the bar of the next step covers (covered at its middle, so not measured as text) peek over the bar\'s edge a device pixel apart.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'finance-business': {
     shape: 35,
-    worstPt: 1,
     oneSided: 0,
     reason: 'The tops of the letters of a line under the bar of the next step, as in finance-taxes.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'profile-r6': {
     shape: 30,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The career bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (phase 1\'s class: a Bar\'s lamp bleeding a sliver).',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'end-bankrupt': {
     shape: 5,
-    // One device pixel.
-    worstPt: 1 / 3,
     oneSided: 0,
     reason: 'Five pixels of a gold edge on the last row of the screen compared (839.67 pt), where the web\'s is antialiased at a fractional place and the phone\'s on a device pixel.',
     report: 'Batch pass 1: every scene shot, compared and judged',
@@ -282,14 +284,12 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     // 5084 and 5085 in the pass's runs: the web's own picture is not the same from one shot to the next (677 of its pixels changed between two shots
     // of the same page), and the count moves with it by a pixel or two.
     shape: 5100,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The picture to share is a picture, its words no text to the comparison: drawn from the same layout by Skia on the phone and by the canvas on the web, its glyphs\' edges differ (Skia sets them without kerning) and the 1080-wide card is smoothed into its 270 points by each its own way, the web\'s a little differently each time it is drawn.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'end-ru': {
     shape: 168,
-    worstPt: 0.67,
     oneSided: 0,
     reason: 'The confetti either side of the prized badge, centred in a panel whose Russian lines make it a fraction taller: centred on another device pixel, their pieces at the panel\'s foot are cut a pixel apart.',
     report: 'Batch pass 1: every scene shot, compared and judged',
@@ -326,7 +326,7 @@ export type Line =
   | {
       scene: string;
       locale: string;
-      /** A scene of the phone's own words (`PHONE_WORDS`) is judged by its layout alone, and says so. */
+      /** A scene with lines in the phone's own words (`PHONE_WORDS`) is judged without them, and says so. */
       verdict: 'clean' | 'differs' | 'accepted' | 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted';
       rawPercent: number;
       beyondPercent: number;
@@ -335,10 +335,14 @@ export type Line =
       shapeBlended: number;
       textLines: number;
       unmeasured: number;
-      /** Lines of text found in one shot and not the other: text the app does not draw, or draws elsewhere altogether. */
+      /** Lines of text found in one shot and not the other: text the app does not draw, or draws elsewhere altogether. Of the lines judged. */
       oneSided: number;
-      /** The most any line's ink stands apart in the two shots, of those found in both. */
+      /** The most any line's ink stands apart in the two shots, of those found in both and judged. */
       worstPt: number;
+      /** The lines in the phone's own words, reported and not judged (`PHONE_WORDS`). */
+      phoneLines?: number;
+      /** Each line judged that stands further apart than the tolerance, by its words (the first forty letters, as the text check has them), and how far. */
+      far?: Array<{ text: string; pt: number }>;
       /** The app's screen never stood still while it was shot (`stillShot`): what was compared is one moment of something moving, and the run fails for it. */
       moving?: true;
     };
@@ -353,34 +357,53 @@ export const unjudgedLine = (scene: Scene): Line => ({
   why: 'ported and not shot yet: a batch pass shoots it and judges it',
 });
 
+/** How the text check names a line: its first forty letters (`TEXT_BOXES` in shotDrivers.ts). A line named in a record or in `PHONE_WORDS` is found by those. */
+export const lineName = (words: string): string => words.trim().slice(0, 40);
+
+/** A result without its lines in the phone's own words: what is judged of it. */
+function judgedOf(scene: Scene, result: Result): Result {
+  const own = (PHONE_WORDS[scene.name] ?? []).map(lineName);
+  return own.length === 0 ? result : { ...result, texts: result.texts.filter((text) => !own.includes(text.text)) };
+}
+
+/** Whether a result's text is within what is accepted of it: no more lines in one shot only than the record allows, and every line within the tolerance or the bound its record names it by. */
+function textWithin(result: Result, record: Accepted | undefined): boolean {
+  const bound = (text: string) => Object.entries(record?.lines ?? {}).find(([name]) => lineName(name) === text)?.[1] ?? TEXT_WITHIN_PT;
+  const measured = result.texts.filter((text) => !text.unmeasured);
+  return textSummary(result).oneSided <= (record?.oneSided ?? 0) && measured.every((text) => !Number.isFinite(text.apart) || text.apart <= bound(text.text));
+}
+
 /**
- * What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. A shape the
- * phone's words make themselves (longer than the web's, past the web's line, where no window of the text check reaches) is a residual like any
- * other: accepted by its record (`ACCEPTED`, its shape alone: the text of such a scene says nothing), and failing on any growth.
+ * What a scene with lines in the phone's own words comes to, those lines left out: its layout and its other lines, or, where the page is other words from
+ * some line down, its other lines and where it stands against its baseline. A shape the phone's words make themselves (longer than the web's, past the
+ * web's line, where no window of the text check reaches) is a residual like any other: accepted by its record (`ACCEPTED`), and failing on any growth.
  */
-function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
+function phoneVerdict(scene: Scene, judged: Result): 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
+  const record = ACCEPTED[scene.name];
   if (PHONE_PAGES.includes(scene.name)) {
     const base = PAGE_BASELINE[scene.name];
-    return base === undefined || Math.abs(result.shape - base.shape) <= base.shape * base.drift ? 'phone words, not comparable' : 'phone words, drifted';
+    if (base !== undefined && Math.abs(judged.shape - base.shape) > base.shape * base.drift) return 'phone words, drifted';
+    return textWithin(judged, record) ? 'phone words, not comparable' : 'phone words, layout differs';
   }
-  if (result.shape === 0) return 'phone words, layout clean';
-  const record = ACCEPTED[scene.name];
-  return record !== undefined && result.shape <= record.shape ? 'phone words, layout accepted' : 'phone words, layout differs';
+  if (verdictOf(judged) === 'clean') return 'phone words, layout clean';
+  return record !== undefined && judged.shape <= record.shape && textWithin(judged, record) ? 'phone words, layout accepted' : 'phone words, layout differs';
 }
 
 /** Whether a scene that differs differs by no more than its record says. */
 function withinRecord(scene: Scene, result: Result): boolean {
   const record = ACCEPTED[scene.name];
-  const text = textSummary(result);
-  return record !== undefined && result.shape <= record.shape && text.worstPt <= record.worstPt && text.oneSided <= record.oneSided;
+  return record !== undefined && result.shape <= record.shape && textWithin(result, record);
 }
 
 /** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. `moving`: the app's shot never stood still. */
 export function lineOf(scene: Scene, result: Result, moving = false): Line {
-  const plain = verdictOf(result);
+  const judged = judgedOf(scene, result);
+  const plain = verdictOf(judged);
   if (plain === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
-  const verdict = PHONE_WORDS.includes(scene.name) ? phoneVerdict(scene, result) : plain === 'differs' && withinRecord(scene, result) ? 'accepted' : plain;
-  const text = textSummary(result);
+  const verdict = hasPhoneWords(scene.name) ? phoneVerdict(scene, judged) : plain === 'differs' && withinRecord(scene, judged) ? 'accepted' : plain;
+  const text = textSummary(judged);
+  const far = judged.texts.filter((line) => !line.unmeasured && Number.isFinite(line.apart) && line.apart > TEXT_WITHIN_PT).map((line) => ({ text: line.text, pt: round(line.apart, 2) }));
+  const phoneLines = result.texts.length - judged.texts.length;
   return {
     scene: scene.name,
     locale: scene.locale,
@@ -390,10 +413,12 @@ export function lineOf(scene: Scene, result: Result, moving = false): Line {
     loose: result.loose,
     shape: result.shape,
     shapeBlended: result.shapeBlended ?? 0,
-    textLines: text.lines,
+    textLines: result.texts.length,
     unmeasured: text.unmeasured,
     oneSided: text.oneSided,
     worstPt: round(text.worstPt, 2),
+    ...(phoneLines > 0 ? { phoneLines } : {}),
+    ...(far.length > 0 ? { far } : {}),
     ...(moving ? { moving: true as const } : {}),
   };
 }

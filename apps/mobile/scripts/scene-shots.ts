@@ -23,11 +23,11 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * Every scene is drawn on the same day (`SCENE_NOW`): the browser's clock is held at it, the app's services answer it. The web's pages are
  * given `webRules` (sceneShots.ts): what it draws that the phone does not is hidden (`WEB_ONLY`: on the challenge page, the line that tells a
  * guest to sign in). (A short page is as tall as the screen shows by the web's own `min-h-safe`.)
- * A scene of a screen ported and not shot yet (`PENDING_SHOTS`: the batch passes shoot those) is shot but not compared: its line is `unjudged`. A scene in the phone's own
- * words (`PHONE_WORDS`) is compared for its layout only: its text rows are reported and not judged, and its verdict says `phone words, ...`. A
+ * A scene of a screen ported and not shot yet (`PENDING_SHOTS`: the batch passes shoot those) is shot but not compared: its line is `unjudged`. A scene with lines
+ * in the phone's own words (`PHONE_WORDS`, each named) is compared without them: they are reported and not judged, and its verdict says `phone words, ...`. A
  * compared scene whose app shot is more than half unlike the web's is the wrong page (a stand-in, a reload, a red box):
  * the run stops and exits 1, as the kit's does. A scene that differs and whose residual is explained in the parity report is `accepted` (`ACCEPTED` in
- * sceneShots.ts: the most shape pixels, text stood apart and lines in one shot only), and fails on any growth; the page of other words (`PAGE_BASELINE`)
+ * sceneShots.ts: the most shape pixels, lines in one shot only, and the lines named that may stand further apart than the point every other line is held to), and fails on any growth; the page of other words (`PAGE_BASELINE`)
  * on its drift from where it stood. When every scene is clean, accepted, in the phone's words within its bound or unjudged the run exits 0; a scene that
  * differs beyond that is listed and exits 1, as does a compared scene whose app shot never stood still (`stillShot`; its line says `moving`).
  */
@@ -97,7 +97,10 @@ async function main() {
     writeFileSync(file, jsonOf(mergeLines(kept, lines)));
     for (const line of lines) {
       if (line.verdict === 'unjudged') console.log(`${line.scene.padEnd(18)} unjudged: ${line.why}`);
-      else console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(28)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt${line.moving ? '  NEVER STILL in the app' : ''}`);
+      else {
+        console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(28)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt${line.phoneLines ? `, phone words ${line.phoneLines}` : ''}${line.moving ? '  NEVER STILL in the app' : ''}`);
+        for (const far of line.far ?? []) console.log(`${''.padEnd(20)}${far.pt} pt  ${JSON.stringify(far.text)}`);
+      }
     }
     const restless = lines.filter((line) => line.verdict !== 'unjudged' && line.moving === true);
     if (restless.length > 0) console.error(`never still in the app (one moment of something moving was compared): ${restless.map((line) => line.scene).join(', ')}`);
