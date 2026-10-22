@@ -5,7 +5,7 @@ import { cityIcon, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useId, useState } from 'react';
 import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { ageAt } from '@ratrace/core/game/present';
+import { escapeAge } from '@ratrace/core/game/present';
 import type { Community, Friend, Friends, RankedLifeDetail, RankingRow } from '@ratrace/online/types';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
@@ -320,7 +320,7 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
             <div>
               <Row left={end('netWorth')} right={<span className="text-gold-500">{fmt.money(life.netWorth)}</span>} />
               <Row left={t('runStatus')} right={fmt.number(life.status)} />
-              <Row left={t('runEscape')} right={life.escapedAtRound === null ? t('runNever') : t('runAge', { age: ageAt(content, life.escapedAtRound) })} />
+              <Row left={t('runEscape')} right={life.escapedAtRound === null ? t('runNever') : t('runAge', { age: escapeAge(content, life.escapedAtRound) })} />
               <Row left={t('runBankruptcies')} right={fmt.number(life.bankruptcies)} />
             </div>
             {life.history.length > 1 ? <WorthGraph history={life.history} label={end('graph')} height={72} /> : null}

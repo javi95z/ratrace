@@ -26,10 +26,12 @@ export const escapeAge = (content: Content, escapedAtRound: number): number => a
 
 /**
  * The round a milestone of the story is told at. A milestone is written with the round the game stands at once its step is
- * taken; the way out of the rat race is won in the round just played (the `escaped` event's round, one before), and is told
- * there, at `escapeAge`. The stories already saved keep what they hold: this only reads them.
+ * taken. Both turns of the way out come only from a round's step, and each belongs to the round just played, one before: the
+ * escape is won in it (the `escaped` event's round, told at `escapeAge`), and a life is caught again by the round that does not
+ * cover it. Every rules bundle still played writes them so (escapeAge.test.ts). The stories already saved keep what they hold:
+ * this only reads them.
  */
-export const milestoneRound = (m: Milestone): number => (m.kind === 'escaped' ? Math.max(0, m.round - 1) : m.round);
+export const milestoneRound = (m: Milestone): number => (m.kind === 'escaped' || m.kind === 'escapeLost' ? Math.max(0, m.round - 1) : m.round);
 
 /** The age a milestone of the story is told at. */
 export const milestoneAge = (content: Content, m: Milestone): number => ageAt(content, milestoneRound(m));

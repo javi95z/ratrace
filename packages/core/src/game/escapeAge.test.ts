@@ -1,9 +1,15 @@
-import { content, lives, textFor } from '@ratrace/content';
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { bots, content, lives, textFor } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
+import type { GameEvent } from '@ratrace/engine';
 import en from '@ratrace/i18n/messages/en.json';
 import { describe, expect, it } from 'vitest';
 import { formatFor } from '../lib/format';
 import { fixedSessions } from '../session/fixed';
+import { LocalSessions } from '../session/local';
+import { MemoryStore } from '../session/memory';
+import { newProfile } from '../session/types';
 import { runScene, sceneStore } from '../testing/scenes';
 import { chapters, epilogue } from './epilogue';
 import { momentsOf } from './moments';
@@ -58,5 +64,77 @@ describe('the age a life left the rat race at', () => {
       { round: 15, kind: 'escaped' },
     ];
     expect(chapters(story).map((m) => [m.kind, milestoneAge(content, m)])).toEqual([['escaped', 50], ['promoted', 52]]);
+  });
+});
+
+/**
+ * The engineer played by the indexer on a seed of her own: out of the rat race in round 15 (at 52), caught again in round 16 (lived at 54).
+ * Played through the sessions, so the story is written as the game writes it (`recordStep`, `storyAfter`). Returns the life once the round
+ * that caught her is played.
+ */
+async function caughtAgain() {
+  const store = new MemoryStore();
+  await store.saveProfile({ ...newProfile(), unlocked: Object.fromEntries(lives.map((life) => [life.id, { at: 0, gameId: 'caught' }])) });
+  let n = 0;
+  const sessions = new LocalSessions(store, content, lives, { newId: () => `caught-${(n += 1)}`, newSeed: () => 'lost-engineer-indexer-1'.padEnd(64, '0'), now: () => 0 });
+  const session = await sessions.start('engineer');
+  const bot = bots.find((one) => one.id === 'indexer')!;
+  for (;;) {
+    while (session.view().phase === 'cards') await session.answerCard(bot.pick(content, session.view()));
+    const played: GameEvent[] = (await session.playRound({ orders: bot.orders(content, session.view()) })).events;
+    if (played.some((event) => event.kind === 'escapeLost') || session.view().finished) return { session, played };
+  }
+}
+
+describe('the age a life was caught again by the rat race at', () => {
+  it('is the age of the round that caught it, as the escape is told at the round it was won in', async () => {
+    const { session, played } = await caughtAgain();
+    const view = session.view();
+    expect(played).toContainEqual({ kind: 'escapeLost' });
+    // Round 16 played: the game stands at 17, and the story writes both turns of the way out with the round it stands at once each is played.
+    expect(view.round).toBe(17);
+    expect(view.player.escapedAtRound).toBeNull();
+    const story = session.story();
+    expect(story.filter((m) => m.kind === 'escaped' || m.kind === 'escapeLost')).toEqual([{ round: 16, kind: 'escaped' }, { round: 17, kind: 'escapeLost' }]);
+    const back = story.find((m) => m.kind === 'escapeLost')!;
+    expect(milestoneRound(back)).toBe(16);
+    expect(milestoneAge(content, back)).toBe(54);
+    expect(milestoneAge(content, story.find((m) => m.kind === 'escaped')!)).toBe(52);
+
+    const life = lives.find((one) => one.id === 'engineer')!;
+    const [, middle] = epilogue({ words: { content, ...textFor('en'), fmt: formatFor('en') }, t: tale, life, view, story, score: 0, bankruptcies: 0 });
+    expect(middle).toContain('At 52 you left the rat race');
+    expect(middle).toContain('At 54 the rat race caught you again.');
+    expect(middle).not.toContain('At 56 the rat race caught you again.');
+  }, 60_000);
+
+  it('is told before what the same round brought once it was played', () => {
+    const story: Milestone[] = [
+      { round: 17, kind: 'worth', mark: 100_000_000 },
+      { round: 17, kind: 'escapeLost' },
+    ];
+    expect(chapters(story).map((m) => [m.kind, milestoneAge(content, m)])).toEqual([['escapeLost', 54], ['worth', 56]]);
+  });
+});
+
+describe('the round the way out is written with, in every rules bundle still played', () => {
+  // Saved stories are read, never rewritten: `milestoneRound` holds only if every version of the game that a life in progress may
+  // still be on wrote both turns of the way out with the round that opens once the round that brought them is played.
+  const held = fileURLToPath(new URL('../../../../supabase/functions/_shared/game/', import.meta.url));
+  const retired = new Set<string>(JSON.parse(readFileSync(held + 'retired.json', 'utf8')));
+  const shipped = Object.keys(JSON.parse(readFileSync(held + 'shipped.json', 'utf8'))).filter((key) => !retired.has(key));
+  const files = readdirSync(held).filter((file) => /^v\d+\.\d+\.\d+-\d+\.\d+\.\d+\.js$/.test(file));
+
+  it('is the round after the one the life got out in, or was caught in, from the oldest to the newest', () => {
+    expect(files.map((file) => file.slice(1, -3).replace('-', '/')).sort()).toEqual([...shipped].sort());
+    // The story's writer: every milestone of a step at the round the game stands at after it (`o = after.round`), the way out among them.
+    const story = /(\w)=(\w)\.round,\w=\2\.player,[^]*?kind==="escaped"&&\w\.push\(\{round:\1,kind:"escaped"\}\),\w\.kind==="escapeLost"&&\w\.push\(\{round:\1,kind:"escapeLost"\}\)/;
+    // The round's step: `completed = round + 1`; out at `completed - 1`, caught again in the same step; the game then stands at `completed`.
+    const step = /,(\w)=(\w)\.round\+1,[^]*?escapedAtRound=\1-1,\w\.push\(\{kind:"escaped",round:\1-1\}\)\):\w\.escapedAtRound!==null&&!\w&&\(\w\.escapedAtRound=null,\w\.push\(\{kind:"escapeLost"\}\)\)[^]*?\2\.round=\1,/;
+    for (const file of files) {
+      const source = readFileSync(held + file, 'utf8');
+      expect(story.test(source), `${file}: the story's writer`).toBe(true);
+      expect(step.test(source), `${file}: the round's step`).toBe(true);
+    }
   });
 });

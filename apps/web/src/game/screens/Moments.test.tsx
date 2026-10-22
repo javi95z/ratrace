@@ -73,13 +73,14 @@ async function playRound(user: ReturnType<typeof userEvent.setup>) {
 
 describe('a moment of a life', () => {
   it('takes the screen when the player leaves the rat race, with what made it so, and is heard', async () => {
-    const { user, sound } = await life({ events: [{ kind: 'escaped', round: 1 }] });
+    // Out in the round played, the first (round 0, lived at 22): the moment tells the age of that round.
+    const { user, sound } = await life({ events: [{ kind: 'escaped', round: 0 }] });
     expect(screen.queryByRole('dialog')).toBeNull();
     await playRound(user);
 
     const moment = await screen.findByRole('dialog', { name: 'Out of the rat race!' });
     expect(moment.getAttribute('data-tone')).toBe('gold');
-    expect(within(moment).getByText(/^At 24, your income pays for your whole life/)).toBeTruthy();
+    expect(within(moment).getByText(/^At 22, your income pays for your whole life/)).toBeTruthy();
     expect(within(moment).getByText('Your passive income, after tax')).toBeTruthy();
     expect(within(moment).getByText('What your life costs')).toBeTruthy();
     expect(moment.querySelector('[data-confetti]')).not.toBeNull();
@@ -107,7 +108,7 @@ describe('a moment of a life', () => {
 
   it('shows one at a time when a round brings more than one, the gravest first', async () => {
     const { user } = await life({
-      events: [{ kind: 'escaped', round: 1 }, { kind: 'bankrupt', proceeds: 0, debtsCleared: 0 }],
+      events: [{ kind: 'escaped', round: 0 }, { kind: 'bankrupt', proceeds: 0, debtsCleared: 0 }],
       story: [{ round: 1, kind: 'worth', mark: 100_000_000 }],
     });
     await playRound(user);

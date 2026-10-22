@@ -72,7 +72,7 @@ export function chapters(story: readonly Milestone[]): Milestone[] {
   const ranked = kept.map((m, at) => ({ m, at })).sort((a, b) => weight(b.m) - weight(a.m) || a.at - b.at);
   return ranked
     .slice(0, TOLD)
-    // By the round each is told at: the way out, won in the round just played, before what that round's end brought.
+    // By the round each is told at: the way out, won or lost in the round just played, before what that round's end brought.
     .sort((a, b) => milestoneRound(a.m) - milestoneRound(b.m) || a.at - b.at)
     .map((entry) => entry.m);
 }
