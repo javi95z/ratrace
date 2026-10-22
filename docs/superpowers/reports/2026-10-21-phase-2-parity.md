@@ -797,8 +797,11 @@ the web by its own `next dev` on 3021 in Playwright's Chrome. Load average durin
 without `VISIBLE_HEIGHT`); of the thirty-nine new ones six were clean and thirty-three differed (the largest: `end-share` 734 692 shape pixels, `finance-pension`
 199 975, `finance-buy-stock` 167 762, `work-panel` 131 743, `finance-shop` 126 673, `profile-r6` 104 171; worst text 129.67 pt).
 
-**Last full run:** 44 clean, 18 accepted (each with its record, `ACCEPTED` in `sceneShots.ts`), `home-lost-newer` phone words with a clean layout, `balance-r6`
-phone words with an accepted layout, `legal` not comparable (within its baseline). The run exits 0.
+**The last two full runs** (after every fix of this pass, e94c6a0 and on; each `web app compare` of all 65 scenes, from scratch): 44 clean, 18
+accepted (each with its record, `ACCEPTED` in `sceneShots.ts`), `home-lost-newer` phone words with a clean layout, `balance-r6` phone words with an
+accepted layout, `legal` not comparable (within its baseline). Both exit 0. The table is the last run's. (Five runs between were stopped by the
+machine, not by a scene: the simulator shut down once, refused a screenshot or a URL four times, locked once, and Chrome timed out a page once under
+a load of 40; `simctl` is now tried again where it fails, f4df504. One run found the engineer's sky missing in `records-three`: fixed, e94c6a0.)
 
 | scene | verdict | raw % | beyond % | a point away (px) | shape (px) | of which blended edges | text lines | worst text (pt) |
 |---|---|---|---|---|---|---|---|---|
@@ -815,7 +818,7 @@ phone words with an accepted layout, `legal` not comparable (within its baseline
 | play-cards-legendary | accepted | 5.42 | 0.981 | 9198 | 1 | 0 | 35 (0 unmeasured) | 0.67 |
 | play-cards-three | clean | 5.24 | 0.52 | 8752 | 0 | 0 | 40 (0 unmeasured) | 0.33 |
 | play-cards-ru-360 | clean | 5.2 | 1.134 | 9375 | 0 | 0 | 37 (0 unmeasured) | 0.67 |
-| play-finance-r6 | clean | 4.49 | 1.203 | 16450 | 0 | 0 | 53 (9 unmeasured) | 1 |
+| play-finance-r6 | clean | 4.48 | 1.203 | 16450 | 0 | 0 | 53 (9 unmeasured) | 1 |
 | play-outcome-r1 | clean | 3.66 | 1.089 | 9926 | 0 | 0 | 31 (0 unmeasured) | 0.67 |
 | play-resolve-r6 | clean | 4.52 | 1.072 | 13298 | 0 | 0 | 41 (8 unmeasured) | 0.67 |
 | play-news-r6 | accepted | 4.21 | 1.131 | 13520 | 1443 | 1443 | 41 (4 unmeasured) | 0.67 |
@@ -856,7 +859,7 @@ phone words with an accepted layout, `legal` not comparable (within its baseline
 | rivals-r6 | clean | 2.77 | 0.281 | 4571 | 0 | 0 | 20 (0 unmeasured) | 0.33 |
 | end-escaped | clean | 3.09 | 0.598 | 11156 | 0 | 0 | 24 (0 unmeasured) | 0.33 |
 | end-bankrupt | accepted | 3.15 | 0.624 | 11821 | 5 | 5 | 25 (1 unmeasured) | 0.33 |
-| end-share | accepted | 1.22 | 0.544 | 6841 | 5084 | 4266 | 28 (25 unmeasured) | 0.67 |
+| end-share | accepted | 1.22 | 0.544 | 6842 | 5085 | 4267 | 28 (25 unmeasured) | 0.67 |
 | end-ru | accepted | 4.27 | 2.184 | 12258 | 168 | 54 | 25 (0 unmeasured) | 0.67 |
 | moment-escape | clean | 4.75 | 0.898 | 10354 | 0 | 0 | 52 (40 unmeasured) | 0.67 |
 | moment-bankrupt | clean | 2.44 | 0.591 | 9284 | 0 | 0 | 54 (39 unmeasured) | 0.67 |
@@ -865,7 +868,7 @@ phone words with an accepted layout, `legal` not comparable (within its baseline
 | records-three | clean | 3.48 | 0.743 | 7633 | 0 | 0 | 28 (0 unmeasured) | 0.67 |
 | records-detail | clean | 2.29 | 0.313 | 2894 | 0 | 0 | 42 (28 unmeasured) | 0.67 |
 | collection-items | clean | 4.05 | 0.352 | 5552 | 0 | 0 | 14 (0 unmeasured) | 0.67 |
-| collection-badges | clean | 5.15 | 0.618 | 9827 | 0 | 0 | 29 (0 unmeasured) | 0.67 |
+| collection-badges | clean | 5.23 | 0.618 | 9827 | 0 | 0 | 29 (0 unmeasured) | 0.67 |
 | profile-financed | clean | 2.47 | 1.242 | 11286 | 0 | 0 | 95 (77 unmeasured) | 1 |
 
 ### What differed, and was fixed in the app
@@ -879,7 +882,8 @@ phone words with an accepted layout, `legal` not comparable (within its baseline
 | 5 | a city's sheet 10 pt taller (`play-cards-city`), the price chart's caption 5.5 pt high (`finance-buy-stock`), a past life's sheet 2.33 pt short (`records-detail`) | rows the web lays `items-baseline` were native rows on their texts' baselines: the kit moves a text's glyphs inside its box (`baselineShift`), so the baselines a native row reads are not where the glyphs stand, and the row grows | Versus, the price caption, the score and worth of a past life, a level's head and the down payment's row placed from the browser's baselines (`webLine`) | the run |
 | 6 | the ▸ of a figure that opens 1 pt narrower and the figure before it 1.33 pt right (`work-panel`, `profile-r6`, under the backdrop of `profile-owned`: 350 px); the business's ✓ wider (6.33 pt) | Chrome draws both in the system font (`.SFNS`, `CSS.getPlatformFontsForNode`), and scales a system font past the stack as it scales Jersey (the pixel ▸ is 7.223 wide at 11 px, the reading one 5.266: 1.372, Jersey's 1.3745, not SF's 1.103); the phone used SF's own small letters, and drew the ✓ from Zapf Dingbats | a system-font run in pixel text is scaled as Jersey (an emoji keeps its own scale: the dice, measured); the ✓ is the system font's | `fonts.test` |
 | 7 | a frame's bottom strip a device pixel under its box's fill (`end-ru`: 990 of 1140 px), the light edge of an owned thing's tile a device pixel short of its corner (`collection-items`) | Yoga rounds a child's place relative to its parent but the parent's size from its edges on the screen: at a fractional place a strip set `bottom: -2, height: 2` stood 550.33 where the fill ended at 550.00 | a strip anchored to the far edge (bottom, right) is laid from the near edge with its colour as the border there (`placeOf`, Frame.tsx): its far edge is rounded where the parent's is | `Frame.test` |
-| 8 | (development) Reanimated's warning on every screen that scrolls: "Dependencies should only be used on the web" | the page's scroll handler was given a list of dependencies | none given | the Metro log |
+| 8 | (development) Reanimated's warning on every screen that scrolls: "Dependencies should only be used on the web" | the page's scroll handler was given a list of dependencies, and the sticky page's animated reaction another (f1979fa) | none given | the Metro log |
+| 9 | the engineer's sky missing behind his face on the records (`records-three`, 3434 px, in a full run after the canvases were laid together) | each picture of a canvas of layers read itself inside the Skia tree: one that came in later redrew only itself, and the canvas was never asked again to draw it (Skia 2.14's lost request, blank-sprites-report) | the pictures are read outside the canvas, which is put in once all are in (e94c6a0) | `Sprite.test`, the run |
 
 ### What the comparison was taught (tooling)
 
@@ -903,9 +907,135 @@ phone words with an accepted layout, `legal` not comparable (within its baseline
 | profile-r6 | 30 | 0.67 | the career bar's lit lamps bleed a device-pixel sliver into the first dark one on the web (phase 1's class) |
 | balance-r6 | 1469 | (phone words) | the phone's "Net worth, after inflation" is longer than the key the web shows; its glyphs past the web's line box are in no window of the text check |
 | end-bankrupt | 5 | 0.33 | five pixels of a gold edge on the last row compared (839.67 pt), antialiased at a fractional place on the web |
-| end-share | 5084 | 0.67 | the picture to share is a picture: Skia's glyphs (no kerning) against the canvas's, each smoothing the 1080-wide card into 270 points its own way |
+| end-share | 5084, 5085 (record 5100) | 0.67 | the picture to share is a picture: Skia's glyphs (no kerning) against the canvas's, each smoothing the 1080-wide card into 270 points its own way; the web's own picture changed in 677 pixels between two shots of the same page |
 | end-ru | 168 | 0.67 | the prized badge's confetti centred in a panel a fraction taller in Russian: on another device pixel, their pieces at the foot cut a pixel apart |
 
 The records of Tasks 6 to 10 were tightened to what this pass measured (`new-locked` 1267 → 738, `new-replace` 1159 → 310, `play-news-r1` 1446 → 1443,
 `play-news-r6` 1518 → 1443, `play-guide-r1` 3504 → 3453, `play-pageturn` 4309 → 3897, worst text 1 → 0.67 on four of them); `celebrate-earned` is clean (its 44
 pixels were glyph edges the text check did not cover) and has no record any more.
+
+## Batch pass 1: the device checks
+
+Every "to check in the batch pass" item of the task reports (11 to 19), the merge report, the blank-sprites report and `progress.md`, on the
+iPhone 16 Pro simulator (iOS 18.0), in the release build unless said otherwise. This machine has no iPad simulator and no Android emulator or `adb`:
+what only those can show is said so, not guessed.
+
+| # | item (from) | how it was checked | result |
+|---|---|---|---|
+| 1 | The card swipe's feel and threshold (T11) | Drags on a two-choice card, through the probe (UI frames) | ok: a 171-pt drag let go picks (`from swipe`, the outcome on screen 50 to 81 ms after the release, settled 64 to 97 ms); the UI thread drew 60 frames a second, none missed, through all five drags |
+| 2 | A swipe on a card of more than two choices does nothing (T11) | The same drag on the office lottery (three choices) | ok: nothing chosen, the card stays |
+| 3 | A double tap makes one move (Review focus, T15) | Two taps 600 ms apart on a choice of a card; two taps 20 ms each, back to back, on a thing's "Buy for $22,491" | ok: one choice, one save (one `saveGame` in the store's timeline), the outcome once; one order in the basket ("1 order"), no refusal |
+| 4 | Modal swaps: the pension's In/Out re-keys its AmountSheet; the BuySheet's Once/Every round re-keys it (T12, T13) | Pressed both ways on each | ok: the sheet stays shown, its title and words change, no flash seen in the shots before and after |
+| 5 | The slider in a scrolling sheet (T13) | Dragged the pension's handle 26 → 230 pt | ok: the amount follows ($28,500), the sheet does not scroll; Confirm puts the order in |
+| 6 | Reanimated's scroll handler with the sticky header, the closing rows, the away strip (T12) | Scrolled and flung the Market tab down and back | ok: the Hud closes to its strip (name, age, round), the tabs stick under it, both follow a fling and open again at the top |
+| 7 | The `Untouched` scene wrapper (T11) | Pressed "Play the round" in the scene `play-finance-r6` in Expo Go | finding: the page takes no touch, but the bar at the foot of Play (the screen's fixed layer, outside the wrapper) and a sheet (a Modal, a window of its own) still do: the press played the round. Guarded already: a scene whose game moves says it is not ready, and the run fails naming it (`Ready`); no run of this pass was moved. Left as it is (tooling only) |
+| 8 | The iOS share sheet carries the picture and the invite (T18) | Shared the end's picture, chose Copy, read the simulator's pasteboard | ok: a PNG (`rat-race-engineer-496`, 76 KB) and the invite ("Can you do better? Play The Rat Race: …/en") together. The sheet offers **Save to Files, not Save Image**: Photos is not offered (the app declares no photo-library use); a decision for you, below |
+| 9 | Android: the file alone (T18) | — | not checked here (no Android device); the code hands Android the file only, as reported in Task 18 |
+| 10 | Greyed badges against Chrome's `grayscale` (T19) | `collection-badges` shot | ok: clean (0 shape pixels, the greyed words measured in their grey) |
+| 11 | `paddingBottom: 40` at a list's foot (T19) | Records flung to its end with 60 lives | ok, with a note: the last row stands 40 pt above the screen's edge, 6 pt above the 34-pt home indicator, as the web's `pb-10` stands above the bottom of the page it scrolls; nothing is under the indicator |
+| 12 | `profile-owned`, `end-ru` and the Russian obituary title (merge) | Shots | ok: `profile-owned` clean; `end-ru` accepted (168 px: the prized badge's confetti a device pixel apart, measured) |
+| 13 | Records and the Collection's badges flung, rows windowed (T19) | 60 lives on the records (`perf?runs=records-three&copies=20`), flung down and back; the badges' tab likewise | ok, with the frames below (performance): every row comes in, only rows near the screen are mounted |
+| 14 | Things list → a thing, on iOS (T18) | A car bought, then the profile's Things, then the car | ok: the list goes, the thing's sheet comes, nothing half gone |
+| 15 | The business sheet's Modal replaced by the InvestSheet's (T15) | `finance-business`'s life: the shop's sheet, then "Put more money in" | ok: the business sheet goes and the amount sheet comes in its place, no flash seen |
+| 16 | Two Modals at once, legendary and escape (T16) | — | not reached (no life earned a legendary badge on the round it left the rat race); left for Task 20 |
+| 17 | A toast over a sheet; the coins while the page is scrolled (T12, T16) | — | not reached in this pass; left for Task 20 |
+| 18 | The shelf's column → row jump on a tablet (T15) | — | not checked: no iPad simulator on this machine (one iPhone 16 Pro, iOS 18.0) |
+| 19 | VoiceOver on a result with a badge; TalkBack's live regions (T11, T16) | — | not checked: no screen reader is driven from here |
+| 20 | Every record re-confirmed without `VISIBLE_HEIGHT` (T12) | Full runs | ok (the shots' section above) |
+
+## Batch pass 1: the release build and its performance
+
+**The build.** `npx expo prebuild --platform ios --clean` in apps/mobile (`ios/` and `android/` are ignored by git), then
+`LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CI=1 npx expo run:ios --configuration Release --device <the booted iPhone 16 Pro> --no-bundler`
+(CocoaPods 1.17 under Ruby 4 stops on "Unicode Normalization not appropriate for ASCII-8BIT" without a UTF-8 locale). No account or signing is asked
+for on the simulator. A build with the timing probe is the same command with `EXPO_PUBLIC_PERF=1`. Simulator: iPhone 16 Pro, iOS 18.0, on this Mac
+(11 cores; load average 4 to 7 during the measures, with Finder and a system save panel at 80 to 99 % of a core each in the last ones).
+
+**The probe** (`ui/perf.ts`, `ui/perfProbe.tsx`, `scripts/perf.ts`): marks drawn with what they mark (a stage, a tab, a sheet, the front door), timed
+from the last touch let go (or a swipe let go, told from the UI thread) to:
+- *drawn*: the mark's commit, then a hop to the UI thread after that commit's mounting and one of its frames;
+- *settled*: the first two UI frames in a row at the display's pace after it (≤ 25 ms apart): the screen's pictures drawn into their canvases, whatever
+  the mounting set going. **The budgets are judged on settled**, the later and stricter of the two.
+
+Each frame of both threads is counted a second at a time, each UI frame over 25 ms told as it comes, the store's calls timed, and each step of a
+`useCountUp` timed from its value set to its commit. Everything is told by HTTP to `scripts/perf.ts` on 127.0.0.1:8095 (the simulator's own host).
+A build without the flag has none of it: `perf.test.ts` puts `perf.ts` and `app/perf.tsx` through Expo's Babel preset and Metro's constant folding
+(as a release build does) and finds no `require` of the probe or of the perf lives; and the release bundle built without the flag (`main.jsbundle`,
+14.3 MB) holds none of the collector's address, `perfProbe`, `timedStore`, `putSceneLife`, `putSceneRuns`, `slowFrame` or `settledMs` (0 matches each;
+the marks' names stay as the props of a component that draws nothing). The route `theratrace:///perf?…` puts a scene's life (or its finished lives,
+many times over) on the phone, in a build with the flag only (anywhere else it goes home).
+
+**What a change cost, measured** (the release build with the probe; *before* is the build of bae93fe, *after* the build of f1979fa; settled, median of
+five or more, in ms; drawn beside it where it says more):
+
+| budget | what | before (settled) | after (settled) | after, drawn | verdict |
+|---|---|---|---|---|---|
+| cold start to Home ≤ 2000 | `simctl launch` to the front door drawn | 937 (1399, 937, 874, 954, 907) | 928 (1507, 928, 925, 962, 925) | — | pass |
+| Home → Play ≤ 300 | Continue → the round's news | 146 (209, 146, 47, 111, 164) | 74 (74, 111, 63, 146, 47) | 46 | pass |
+| stage ≤ 200 | news → cards | 54 (n 14) | 47 (n 10) | 30 | pass |
+| stage ≤ 200 | cards → outcome, pressed | 70 (n 14) | 61 (n 8) | 45 | pass |
+| stage ≤ 200 | cards → outcome, swiped | 133, 63 (n 2) | 65 (82, 65, 64, 97, 65) | 50 | pass |
+| stage ≤ 200 | outcome → finances | 77 (161, 77, 69, 77) | 90 (76, 44, 143, 108, 72, 106) | 52 | pass |
+| stage ≤ 200 | finances → resolve, round 6 | 231 (239, 281, 145, 222) | 166 (180, 166, 208, 150, 83); a second five 215 (197, 215, 221, 226, 196): 202 over the ten | 98; 130 | **at the budget** (below) |
+| stage ≤ 200 | finances → resolve, round 20 (the round that ends a long life; 63 lives on the phone) | — | 222 (238, 189, 209, 242, 239, 197, 193, 235, 261, 145) | 149 | **over** (below) |
+| stage ≤ 200 | resolve → news | 101 (45, 157; n 2) | 99 (115, 98, 96, 131, 99) | 30 | pass |
+| stage ≤ 200 | resolve → end of a long life | 275 (n 1) | 130 (130, 129, 113, 130, 130); again 115 (112, 111, 162, 120, 115) | 47 | pass |
+| finance ≤ 150 | the finances opened (their first tab) | 77 | see above | 52 | pass |
+| tab ≤ 150 | portfolio | 58 | 49 | 34 | pass |
+| tab ≤ 150 | market | 113 | 113 | 54 | pass |
+| tab ≤ 150 | property | 114 | 100 | 50 | pass |
+| tab ≤ 150 | business | 45 (n 1) | 109 (59, 109, 163, 62, 112) | 43 | pass |
+| tab ≤ 150 | debt | 44 | 46 | 29 | pass |
+| tab ≤ 150 | lifestyle: on screen / every panel in | 196 (n 9; all of it at once) | 80 / 147 | 30 | pass |
+| tab ≤ 150 | shop: on screen / every shelf in | 146 / 178 | 114 (60, 114, 126, 98, 133) / 481 | 43 | pass (on screen); the last shelf comes in over half a second, while the first are read |
+| tab ≤ 150 | taxes | 97 (n 1) | 46 (80, 32, 46, 136, 46) | 29 | pass |
+| sheet ≤ 150 | a Sheet opened (cash, pension, buy a fund, sales, the escape bar) | 47 (Sales) | 46 (Cash), 59 (Pension), 47 (Buy, five: 98, 46, 47, 46, 98) | 30 | pass |
+| swipe 60 fps | five drags of a two-choice card, UI frames | — | 60 a second, 0 missed in every second of a drag | — | pass |
+| fling, no drop | Records flung down and back | 28 frames missed with 63 lives (17, 1, 5, 5) | 9 with 63 lives (3, 2, 0, 0, 2, 2), the longest 36 ms; 17 with 121 lives after e94c6a0 (4, 4; 1, 2, 6), the longest 42 ms | — | **over** (below) |
+| fling, no drop | the Collection's badges, down and back | — | 10 (2, 1, 2, 1, 1; 1, 1, 0, 1), the longest 37 ms | — | **over** (below) |
+| count | `useCountUp` during Resolve: JS from a step's value set to its commit | 114 steps, 458 ms in all, median 4.19, worst 9.35 | 114 steps, 343 to 400 ms in all, median 2.8 to 3.4, worst 6.1 to 17.4 (five rounds) | — | reported |
+
+**What was over, its cause, and the fix** (each a commit of this pass):
+
+1. **The Lifestyle tab** (settled 196): one commit of ~900 views and 28 canvases; the UI thread then spent 100 to 300 ms making them (`sample` of the main
+   thread: `-[CAMetalLayer nextDrawable]` and `CAImageQueue` for each canvas's first drawing, Fabric's mounting). *Fix* (50dbacf): the tab draws its
+   first screen (how the job is done, the focus, the skills) and the rest once that is on screen and the UI thread draws at its pace again
+   (`ui/drawnFirst.ts`): 80 on screen, 147 for every panel.
+2. **The shop's last shelf** (178): the shelves were put in one batch a frame, so each batch's mounting followed the last's with no frame between.
+   *Fix* (50dbacf): the next shelves once the last are on screen and the UI thread is calm (`whenShown`): the tab on screen in 114; the rest comes in
+   behind while the first shelves are read.
+3. **Finances → resolve** (231): the JS thread's commit 66 to 192 ms, then 50 to 110 ms frames on the UI thread. The CPU profile of the step
+   (Hermes, through Metro's inspector, in a development build) is mostly React drawing the resolve page; beside it, `@ungap/structured-clone` (the
+   `structuredClone` Expo's runtime installs, written in JavaScript, which the engine and the session call on every move: 17 ms of the step) and the
+   formatjs number polyfill. *Fixes*: the phone clones the game's plain data through Hermes's native JSON (93db088; `clone.test.ts` plays four whole
+   lives both ways and finds every view alike); the loops of the page are one canvas each (e298982); the ledger is drawn first, the cash, net worth
+   and sayings once it is on screen (bc40658). 166 after (the three together; not measured one by one).
+4. **The end of a long life** (275): the end page's map, life line, rivals, graph and badges (some thirty canvases) in the stage's own commit.
+   *Fix* (50dbacf): the end draws its first screen, the rest once it is on screen: 130.
+5. **Canvases** everywhere: a loop (the wheel, a coin, confetti) was four canvases, a list's face two (sky and portrait), a medal two (rim and badge).
+   *Fix* (e298982): `SpriteLayers` lays pictures together on one canvas, pixel for pixel where each lay alone: a loop is one strip moved under a box
+   of one frame. The Records fling: 28 frames missed → 9.
+
+**What is still over, and why it is left:**
+
+- **Finances → resolve at round 6: 202 over ten** (166 in one set of five, 215 in the next, the same build and life; the Mac was loaded by two
+  processes of its own at a core each, Finder and a save panel, through the second). The touch to the commit is 104 to 110 ms of it: the round
+  (engine and saves, under 10 ms) and React drawing the resolve page, the Hud's new figures and the finances' tab taken down; then 50 to 97 ms of UI
+  frames mounting it. What is left is the page itself, which the web draws in one go as well.
+
+- **The round that ends a long life, finances → resolve: 222** (a 20-round life, 63 finished lives on the phone from the fling test). The JS thread's
+  commit is 100 to 170 ms: the engine's last round and its score, the finished life written (`addRun` reads and writes every past life as one JSON
+  value: 15 to 28 ms), the lives read again for the records and the rank (`listRuns` 22 to 71 ms), and the resolve page. The same change at round 6
+  is 166. Storing each life under its own key would take the write off this step (not the read the records need); left as a concern, as it changes
+  how the phone keeps its lives.
+- **Flings of Records and of the badges: 9 and 10 frames missed** over a fling down and back (each 33 to 37 ms: one frame dropped at a time). Each
+  row a FlatList brings in is mounted, and its canvases made, on the UI thread while the list moves; on this simulator a canvas's first drawing goes
+  through Metal's XPC to the Mac's GPU (`MTLSimDriver`, the `nextDrawable` above), which a phone's GPU does not. Not fixed further here; to be
+  measured on a device (phase 4's TestFlight build) before anything else is traded for it.
+
+**The share card's sheet** (not a budget): on screen in 28 ms, its picture drawn on the JS thread for 712 ms after (`MakeOffscreen`, the PNG; the UI
+thread kept 60 frames a second, the JS thread missed 42). A press in that time waits for it.
+
+**The simulator is not the phone.** Every time above is from the iPhone 16 Pro simulator on this Mac. The JS thread runs at the Mac's speed (faster
+than a phone's); the UI thread's canvases go through Metal's simulator driver (slower than a phone's GPU). A device, Android above all, was not
+available here: the budgets are to be measured there again before a release.
