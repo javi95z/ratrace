@@ -150,6 +150,15 @@ export class OlderSession implements GameSession {
     }
   }
 
+  /** Writes the finished life's record again, as it now stands. A failure is reported and otherwise ignored. */
+  private async persistRun(): Promise<void> {
+    try {
+      await this.store.addRun(this.asRun());
+    } catch (error) {
+      this.onSaveError?.(error);
+    }
+  }
+
   async tellProfile(): Promise<{ earned: string[]; unlocked: string[] }> {
     const { save } = this;
     try {
@@ -185,7 +194,8 @@ export class OlderSession implements GameSession {
       await this.persist();
       const had = this.ofGallery.length;
       const news = await this.tellProfile();
-      if (this.save.state.finished && this.ofGallery.length !== had) await this.persist();
+      // The run again with the gallery's badges the profile counts as this life's: only the run, the game is as it was written.
+      if (this.save.state.finished && this.ofGallery.length !== had) await this.persistRun();
       return { view: this.current, events: ((last as { events: unknown[] } | null)?.events ?? []) as StepResult['events'], earned: news.earned, unlocked: news.unlocked };
     };
     const result = this.tail.then(run, run);

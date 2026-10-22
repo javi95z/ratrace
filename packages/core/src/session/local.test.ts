@@ -450,6 +450,25 @@ describe('what a life earns', () => {
     expect((await store.listRuns())[0].badges).toContain('twenty_items');
   });
 
+  it('writes the life once on the step that ends it, and its finished record again only for the gallery badges the profile counts as its own', async () => {
+    const { store, sessions } = setup();
+    const owned = content.items.filter((item) => item.id !== 'watch_casio').slice(0, 19).map((item) => item.id);
+    await store.saveProfile({ ...(await store.loadProfile()), gallery: owned });
+    const session = await sessions.start('nurse');
+    while (session.view().round < content.rounds - 1) await playOne(session);
+    await answerAll(session);
+    const calls: string[] = [];
+    const { saveGame, addRun } = store;
+    store.saveGame = (game) => (calls.push('saveGame'), saveGame(game));
+    store.addRun = (run) => (calls.push(`addRun ${run.badges.includes('twenty_items') ? 'with' : 'without'} the gallery's badge`), addRun(run));
+    // The twentieth thing, bought on the last round: the gallery's badge is earned by the step that ends the life.
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    expect(session.view().finished).toBe(true);
+    // The game once; the run first as the step made it, then with the badge of the gallery the profile said is this life's.
+    expect(calls).toEqual(['addRun without the gallery\'s badge', 'saveGame', 'addRun with the gallery\'s badge']);
+    expect((await store.listRuns())[0].badges).toContain('twenty_items');
+  });
+
   it('refuses to start a life the player has not unlocked', async () => {
     const { store, sessions } = setup();
     await expect(sessions.start('heir')).rejects.toThrow('locked life: heir');

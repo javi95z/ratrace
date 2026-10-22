@@ -124,6 +124,15 @@ class LocalSession implements GameSession {
     }
   }
 
+  /** Writes the finished life's record again, as it now stands. A failure is reported and otherwise ignored. */
+  private async persistRun(): Promise<void> {
+    try {
+      await this.store.addRun(this.asRun());
+    } catch (error) {
+      this.deps.onSaveError?.(error);
+    }
+  }
+
   /**
    * Tells the profile everything the life has earned and owned so far: badges it has not held
    * before, the gallery, and the lives those unlock. It tells all of it every time, not only the
@@ -168,8 +177,9 @@ class LocalSession implements GameSession {
     await this.persist();
     const had = this.ofGallery.length;
     const news = await this.tellProfile();
-    // The run was written before the profile could say which gallery badges this life earned: write it again with them.
-    if (this.save.state.finished && this.ofGallery.length !== had) await this.persist();
+    // The run was written before the profile could say which gallery badges this life earned: write it again with them. Only the run: the game
+    // written with it is the same as before (the gallery's badges are the profile's, not the save's).
+    if (this.save.state.finished && this.ofGallery.length !== had) await this.persistRun();
     return { view: this.current, events: result.events, earned: news.earned, unlocked: news.unlocked };
   }
 
