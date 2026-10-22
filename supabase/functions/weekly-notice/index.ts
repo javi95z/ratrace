@@ -13,7 +13,7 @@ import { noting } from '../_deno/errors.ts';
 import { watched } from '../_shared/watch.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { isoWeek } from '../_shared/notice.ts';
-import { byPlayer, claimDay, clockRun, vapid } from '../_deno/push.ts';
+import { addUp, byPlayer, claimDay, clockRun, expoAnswer, tally, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
 /** A browser or a phone, with its player's place in last week's challenge (null in the idle notice's rows). */
@@ -32,10 +32,7 @@ export default {
     const kind = 'value' in read && (read.value as { kind?: unknown } | null)?.kind === 'idle' ? 'idle' : 'weekly';
     const db = ctx.supabaseAdmin;
     const now = new Date();
-    let sent = 0;
-    let removed = 0;
-    let skipped = 0;
-    let unreached = 0;
+    const totals = tally();
     const notices = clockRun(db);
     // Whose notice of the day this very call took: their other browsers and phones, on the next page, are sent it too.
     const taken = new Set<string>();
@@ -44,13 +41,14 @@ export default {
         kind === 'weekly'
           ? await db.rpc('notice_week', { week_id: isoWeek(now.getTime() - WEEK_MS) }).range(from, from + PAGE - 1)
           : await db.rpc('notice_idle', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
-      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, unreached });
+      if (error) return json(500, { error: 'read-failed', ...totals, ...expoAnswer(notices.run) });
       const rows = (data ?? []) as Placed[];
       for (const [user, devices] of byPlayer(rows)) {
+        const before = taken.has(user);
         const done = await notices.tell(
           devices,
           async () => {
-            if (taken.has(user)) return true;
+            if (before) return true;
             if (!(await claimDay(db, user, now))) return false;
             taken.add(user);
             return true;
@@ -59,14 +57,10 @@ export default {
           // A day to be delivered: a Monday notice is no use on Wednesday.
           86_400,
         );
-        if (done.told) {
-          sent += done.sent;
-          removed += done.removed;
-        } else if (done.why === 'had-today') skipped += 1;
-        else unreached += 1;
+        addUp(totals, done, before);
       }
       if (rows.length < PAGE) break;
     }
-    return json(200, { kind, sent, removed, skipped, unreached });
+    return json(200, { kind, ...totals, ...expoAnswer(notices.run) });
   }, noting)),
 };

@@ -118,14 +118,22 @@ async function askExpo(senders: Pick<Senders, 'post'>, init: { method: 'POST'; h
     }, EXPO_PATIENCE);
   });
   const asked = (async (): Promise<{ tickets: unknown[] } | { trouble: string }> => {
+    let answer: Answer;
     try {
-      const answer = await senders.post(EXPO_SEND, { ...init, signal: controller.signal });
-      if (!answer.ok) return { trouble: `http ${answer.status}${await requestError(answer)}` };
-      const tickets = ((await answer.json()) as { data?: unknown } | null)?.data;
-      return Array.isArray(tickets) ? { tickets } : { trouble: 'unreadable' };
+      answer = await senders.post(EXPO_SEND, { ...init, signal: controller.signal });
     } catch {
       return { trouble: controller.signal.aborted ? 'timeout' : 'unreachable' };
     }
+    if (!answer.ok) return { trouble: `http ${answer.status}${await requestError(answer)}` };
+    // Expo answered: a body that cannot be read is a broken reply, not an outage.
+    let body: unknown;
+    try {
+      body = await answer.json();
+    } catch {
+      return { trouble: controller.signal.aborted ? 'timeout' : 'unreadable' };
+    }
+    const tickets = (body as { data?: unknown } | null)?.data;
+    return Array.isArray(tickets) ? { tickets } : { trouble: 'unreadable' };
   })();
   try {
     return await Promise.race([asked, late]);
@@ -273,6 +281,33 @@ export async function tellPlayer<T extends Device>(rows: readonly T[], claim: ()
   if (!(await claim())) return { told: false, why: 'had-today' };
   return { told: true, ...(await deliverTo(rows, aboutOf, ttl, urgency, senders)) };
 }
+
+/** What a run of the clock answers, added up player by player. */
+export interface Tally {
+  sent: number;
+  removed: number;
+  /** Players who had their notice of the day already. */
+  skipped: number;
+  /** Players nothing could be told this run, their day left untaken: Expo was down, and they have a phone alone. */
+  unreached: number;
+}
+
+export const tally = (): Tally => ({ sent: 0, removed: 0, skipped: 0, unreached: 0 });
+
+/**
+ * Adds what became of one player to the run's answer. A player the run told already, on an earlier
+ * page, whose phones on a later page were left because Expo was down, is not counted unreached.
+ */
+export function addUp(into: Tally, done: Told, toldBefore = false): void {
+  if (done.told) {
+    into.sent += done.sent;
+    into.removed += done.removed;
+  } else if (done.why === 'had-today') into.skipped += 1;
+  else if (!toldBefore) into.unreached += 1;
+}
+
+/** What a run of the clock answers of Expo: why it was left alone (null if it never was), and how many phones were not told for it. */
+export const expoAnswer = (run: ExpoRun): { expoDown: string | null; phonesSkipped: number } => ({ expoDown: run.down, phonesSkipped: run.skipped });
 
 /** Rows grouped by whose they are: a player's browsers and phones together. */
 export function byPlayer<T extends { user_id: string }>(rows: readonly T[]): Map<string, T[]> {

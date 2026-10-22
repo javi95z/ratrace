@@ -77,7 +77,8 @@ installed to the Home screen (iOS 16.4 or later).
   by their codes alone (wrong Apple or Google credentials show there). After one batch that timed out
   or could not reach Expo, a run of the clock asks Expo no more: an outage costs the run 10 s once,
   every browser is still told, and a player with a phone alone keeps their day for a later run (the
-  answer's `unreached`). `EXPO_ACCESS_TOKEN` is sent as a bearer token where it is set as a secret;
+  answer's `unreached`; its `expoDown` says why Expo was left, and `phonesSkipped` how many phones
+  were not told). An answer Expo sent but that cannot be read is no outage: Expo is asked again. `EXPO_ACCESS_TOKEN` is sent as a bearer token where it is set as a secret;
   without it, Expo needs no key.
 - The app keeps its phone through `claim_push_token` (security definer): the row follows whoever
   signs in on that phone, and its market switch is turned off and its `created_at` starts again when

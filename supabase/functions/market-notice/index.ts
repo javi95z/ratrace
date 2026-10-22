@@ -16,7 +16,7 @@ import { json } from '../_shared/http.ts';
 import { GAMES } from '../_shared/game/index.ts';
 import { marketMover } from '../_shared/market.ts';
 import type { MarketRow } from '../_shared/market.ts';
-import { byPlayer, claimDay, clockRun, vapid } from '../_deno/push.ts';
+import { addUp, byPlayer, claimDay, clockRun, expoAnswer, tally, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
 type Browser = Subscription & MarketRow;
@@ -28,15 +28,12 @@ export default {
     if (!vapid()) return json(500, { error: 'no-vapid-keys' });
     const db = ctx.supabaseAdmin;
     const now = new Date();
-    let sent = 0;
-    let removed = 0;
-    let skipped = 0;
+    const totals = tally();
     let quiet = 0;
-    let unreached = 0;
     const notices = clockRun(db);
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await db.rpc('notice_market', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
-      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, quiet, unreached });
+      if (error) return json(500, { error: 'read-failed', ...totals, quiet, ...expoAnswer(notices.run) });
       const rows = (data ?? []) as Browser[];
       for (const [user, browsers] of byPlayer(rows)) {
         const life = browsers[0];
@@ -48,14 +45,10 @@ export default {
           continue;
         }
         const done = await notices.tell(browsers, () => claimDay(db, user, now), () => ({ kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
-        if (done.told) {
-          sent += done.sent;
-          removed += done.removed;
-        } else if (done.why === 'had-today') skipped += 1;
-        else unreached += 1;
+        addUp(totals, done);
       }
       if (rows.length < PAGE) break;
     }
-    return json(200, { sent, removed, skipped, quiet, unreached });
+    return json(200, { ...totals, quiet, ...expoAnswer(notices.run) });
   }, noting)),
 };

@@ -7,11 +7,11 @@
 // through Expo's push service, which needs no key; EXPO_ACCESS_TOKEN is sent where it is set, for a
 // project that asks for one.
 import webpush from 'npm:web-push@3.6.7';
-import { byPlayer, deliverExpo as sendExpo, deliverTo, expoRun, isApp, tellPlayer } from '../_shared/push.ts';
+import { addUp, byPlayer, deliverExpo as sendExpo, deliverTo, expoAnswer, expoRun, isApp, tally, tellPlayer } from '../_shared/push.ts';
 import type { AppDevice, Device, ExpoRun, Senders, Told, Urgency } from '../_shared/push.ts';
 import type { Notice, NoticeAbout } from '../_shared/notice.ts';
 
-export { byPlayer };
+export { addUp, byPlayer, expoAnswer, tally };
 
 /** A browser or a phone that asked for notices, and whose it is. */
 export type Subscription = Device;

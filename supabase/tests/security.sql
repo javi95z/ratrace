@@ -1340,7 +1340,7 @@ begin
   -- Counts are read as what a call added, never as a total: the live project has its own counts of the day.
   reset role;
   begin
-  if (select array_agg(column_name::text order by column_name::text) from information_schema.columns where table_schema = 'private' and table_name = 'app_events') = array['count', 'day', 'name', 'platform', 'props']
+  if (select array_agg(column_name::text order by ordinal_position) from information_schema.columns where table_schema = 'private' and table_name = 'app_events') = array['day', 'name', 'props', 'platform', 'count']
     then passed := passed + 1; else failed := array_append(failed, 'the events keep a column that could name a player'); end if;
 
   select coalesce(sum(e.count), 0) into held from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": true}' and e.platform = 'android';
@@ -1437,6 +1437,9 @@ begin
 
   -- A day's ceiling: twenty thousand of one event on one platform, its props together, then no more.
   -- Today's own counts of share on the web are set aside for this, and come back when the block ends.
+  -- The lock `count_event` takes for them is taken first: on the live project, a real share counted
+  -- meanwhile waits for this check instead of racing it or deadlocking with it.
+  perform pg_advisory_xact_lock(hashtextextended(format('app-event:%s:share:web', private.today()), 0));
   delete from private.app_events where day = private.today() and name = 'share' and platform = 'web';
   insert into private.app_events (day, name, props, platform, count) values (private.today(), 'share', '{"what": "card"}', 'web', 19999);
   yes1 := public.count_event('share', '{"what": "invite"}', 'web');

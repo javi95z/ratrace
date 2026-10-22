@@ -56,6 +56,11 @@ declare
   today constant date := private.today();
   counted integer;
 begin
+  -- A call over the ceiling is answered at once, without waiting its turn behind the others.
+  select coalesce(sum(e.count), 0) into counted from private.app_events e where e.day = today and e.name = p_name and e.platform = p_platform;
+  if counted >= ceiling then
+    return false;
+  end if;
   -- One call at a time for an event and platform of the day, so two at once cannot both pass the ceiling.
   perform pg_advisory_xact_lock(hashtextextended(format('app-event:%s:%s:%s', today, p_name, p_platform), 0));
   select coalesce(sum(e.count), 0) into counted from private.app_events e where e.day = today and e.name = p_name and e.platform = p_platform;

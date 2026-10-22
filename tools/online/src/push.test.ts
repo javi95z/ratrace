@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_PATIENCE, EXPO_SEND, expoRun, isApp, tellPlayer } from '../../../supabase/functions/_shared/push.ts';
+import { addUp, byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_PATIENCE, EXPO_SEND, expoAnswer, expoRun, isApp, tally, tellPlayer } from '../../../supabase/functions/_shared/push.ts';
 import type { AppDevice, Device, Senders, WebDevice } from '../../../supabase/functions/_shared/push.ts';
 import { noticeOf } from '../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../supabase/functions/_shared/notice.ts';
@@ -302,6 +303,25 @@ describe('a run of the clock, when Expo is down', () => {
     expect(posts).toHaveLength(0);
   });
 
+  it('goes on asking Expo after an answer it could not read, which is no outage', async () => {
+    const { senders, logged } = fakes();
+    let asked = 0;
+    const state = expoRun();
+    const garbled: Senders = {
+      ...senders,
+      run: state,
+      post: async () => {
+        asked += 1;
+        return { ok: true, status: 200, json: async () => JSON.parse('<html>') as unknown };
+      },
+    };
+    const { outcomes } = await run(players(4), garbled);
+    expect(state.down).toBeNull();
+    expect(asked).toBe(3);
+    expect(outcomes).toEqual(['told 0', 'told 1', 'told 1', 'told 0']);
+    expect(logged).toEqual(Array.from({ length: 3 }, () => 'expo push: 1 batches, failed: unreadable ×1; tickets refused: none'));
+  });
+
   it('goes on asking Expo after an answer that came quickly, even a refusal', async () => {
     const { senders, posts } = fakes({ expoStatus: 503 });
     const state = expoRun();
@@ -326,6 +346,35 @@ describe('a run of the clock, when Expo is down', () => {
     expect(await tellPlayer([browser('u1'), phone('u1')], async () => false, () => weekly, 60, 'normal', { ...senders, run: expoRun() })).toEqual({ told: false, why: 'had-today' });
     expect(web).toEqual([]);
     expect(posts).toEqual([]);
+  });
+});
+
+describe("what a run of the clock answers", () => {
+  it('adds up each player, and says whether Expo was down and how many phones it left', async () => {
+    const totals = tally();
+    addUp(totals, { told: true, sent: 2, removed: 1 });
+    addUp(totals, { told: true, sent: 0, removed: 0 });
+    addUp(totals, { told: false, why: 'had-today' });
+    addUp(totals, { told: false, why: 'unreached' });
+    // A player told on an earlier page of the run, whose phones on a later page Expo could not take, was told: not unreached.
+    addUp(totals, { told: false, why: 'unreached' }, true);
+    expect(totals).toEqual({ sent: 2, removed: 1, skipped: 1, unreached: 1 });
+    expect(expoAnswer(expoRun())).toEqual({ expoDown: null, phonesSkipped: 0 });
+    const { senders } = fakes({ expoThrows: true });
+    const state = expoRun();
+    await deliverTo([phone('u1')], () => weekly, 60, 'normal', { ...senders, run: state });
+    await deliverTo([phone('u2'), phone('u2', 2)], () => weekly, 60, 'normal', { ...senders, run: state });
+    expect(expoAnswer(state)).toEqual({ expoDown: 'unreachable', phonesSkipped: 2 });
+  });
+
+  it('is what the weekly and market notices answer, each player added up as told before or not', () => {
+    const source = (name: string) => readFileSync(new URL(`../../../supabase/functions/${name}/index.ts`, import.meta.url), 'utf8');
+    const weekly = source('weekly-notice');
+    const market = source('market-notice');
+    expect(weekly).toMatch(/json\(200, \{ kind, \.\.\.totals, \.\.\.expoAnswer\(notices\.run\) \}\)/);
+    expect(market).toMatch(/json\(200, \{ \.\.\.totals, quiet, \.\.\.expoAnswer\(notices\.run\) \}\)/);
+    expect(weekly).toMatch(/const before = taken\.has\(user\);[\s\S]*addUp\(totals, done, before\)/);
+    expect(market).toMatch(/addUp\(totals, done\)/);
   });
 });
 

@@ -53,7 +53,7 @@ Kept by hand in the hosted project's dashboard: Authentication → URL Configura
 |---|---|
 | `https://ratrace-plum.vercel.app/**` | The game in production |
 | `http://localhost:3010/**`, `http://localhost:3000/**` | The game on a developer's machine |
-| `theratrace://**` | The phone app, back from Google. Without it, Supabase sends the player to the Site URL in the browser, and the app never hears back. Add it before the app's accounts ship |
+| `theratrace://auth` | The phone app, back from Google, exactly this address and nothing else under `theratrace://`. Without it, Supabase sends the player to the Site URL in the browser, and the app never hears back. Add it before the app's accounts ship |
 
 ## Restoring
 
