@@ -9,14 +9,14 @@ import type { HostInstance, LayoutChangeEvent } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Button, Notice, Raised, Well } from '../../ui/kit';
+import { Button, Notice, Raised, Segmented, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { BottomBar, Screen } from '../../ui/Page';
 import type { ScreenScroller } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useGame, useProfile, useRuns, useStill, useT, useWords } from '../context';
+import { useGame, useProfile, useRanking, useRuns, useStill, useT, useWords } from '../context';
 import { anotherLife, lifeRows } from '../lives';
 import { BackLink } from './BackLink';
 import { Difficulty, LifeBrief, LifeSummary } from './LifeSummary';
@@ -131,14 +131,66 @@ function InProgress() {
 }
 
 /**
- * Choose who to be. A locked life shows what unlocks it. (What the web adds for a player with an account, the ranked or free way to play and the
- * ranked life in progress on another device, is not here: the phone has no account yet.)
+ * A player has one ranked life in progress: one on another device is never ended by starting here, it is asked about (the web's sheet, on each page
+ * that begins a life: a new one, the week's attempt). It is taken up here (`onTake`), where its rules are this app's, or ended for the life asked for
+ * (`onEnd`, with the id of the life it ends), or left as it is. `away` says the server did not answer the taking up; `starting`, that an answer is on
+ * its way. A leaf of its own: the page is not drawn again as the question comes and goes. It keeps the life it asked about while it leaves.
+ */
+export function ElsewhereSheet({ starting, away, onTake, onEnd }: { starting: boolean; away: boolean; onTake(): void; onEnd(gameId: string): void }) {
+  const t = useT('newLife');
+  const common = useT('common');
+  const { content, text } = useWords();
+  const elsewhere = useGame((s) => s.elsewhere);
+  const clearElsewhere = useGame((s) => s.clearElsewhere);
+  const [held, setHeld] = useState(elsewhere);
+  if (elsewhere !== null && elsewhere !== held) setHeld(elsewhere);
+  const life = elsewhere ?? held;
+  return (
+    <Sheet open={elsewhere !== null} onClose={clearElsewhere} title={t('elsewhereTitle')} closeLabel={common('close')} back={false}>
+      {life ? (
+        <>
+          <ReadText lineHeight={15 * SNUG} tone="ink-200">
+            {t('elsewhereBody', { life: text.lives[life.lifeId]?.name ?? life.lifeId, round: Math.min(life.round + 1, content.rounds), total: content.rounds })}
+          </ReadText>
+          {life.here ? null : (
+            <ReadText size={14} lineHeight={14 * SNUG} tone="ink-200" style={{ marginTop: 8 }}>
+              {t('elsewhereOther')}
+            </ReadText>
+          )}
+          {away ? (
+            <Notice role="alert" size={13} style={{ marginTop: 12 }}>
+              {t('elsewhereAway')}
+            </Notice>
+          ) : null}
+          <View style={{ marginTop: 16, gap: 12 }}>
+            {life.here ? (
+              <Button variant="primary" wide disabled={starting} onPress={onTake}>
+                {t('elsewhereTake')}
+              </Button>
+            ) : null}
+            <Button variant="danger" wide disabled={starting} onPress={() => onEnd(life.gameId)}>
+              {t('elsewhereEnd')}
+            </Button>
+            <Button variant="quiet" wide onPress={clearElsewhere}>
+              {common('cancel')}
+            </Button>
+          </View>
+        </>
+      ) : null}
+    </Sheet>
+  );
+}
+
+/**
+ * Choose who to be. A locked life shows what unlocks it. A player signed in chooses whether the life is ranked (played by the server) or their own,
+ * and a ranked life of theirs in progress on another device is asked about, never ended by starting here.
  */
 export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const t = useT('newLife');
   const common = useT('common');
   const router = useRouter();
   const start = useGame((s) => s.start);
+  const continueElsewhere = useGame((s) => s.continueElsewhere);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
@@ -147,6 +199,11 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const [asking, setAsking] = useState(opened === 'replace');
   /** The last try to start a life came to nothing, for a reason that is not the player's. */
   const [failed, setFailed] = useState(false);
+  /** The ranked life in progress elsewhere could not be asked for just now. */
+  const [away, setAway] = useState(false);
+  // A ranked life is played by the server. It is offered when there is someone to play it for and a way to reach it.
+  const ranking = useRanking();
+  const [wantRanked, setWantRanked] = useState(true);
   const [showLocked, setShowLocked] = useState(opened === 'locked');
   /** A life being begun: a second press while it is is no second life, whatever the screen has drawn by then. */
   const busy = useRef(false);
@@ -203,24 +260,50 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   };
 
   /**
-   * Starts the chosen life. The answer of the question's sheet waits for the sheet to be gone before the page changes under it (`sheetsGone`: a Modal
-   * still leaving on iOS holds the screen that is changing); one that came from the button has no sheet to wait for.
+   * Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player has said may end for it. The answer of a sheet
+   * waits for the sheets to be gone before the page changes under them (`sheetsGone`: a Modal still leaving on iOS holds the screen that is
+   * changing); one that came from the button has no sheet to wait for.
    */
-  const begin = async (fromSheet = false) => {
+  const begin = async (replace?: string, fromSheet = false) => {
     if (busy.current) return;
     busy.current = true;
     setAsking(false);
     setFailed(false);
+    setAway(false);
     setStarting(true);
     try {
+      // Nothing began if the player has a ranked life in progress somewhere else: they are asked what to do about it.
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
-      if (await start(chosen)) {
+      if (await start(chosen, { ranked: ranking === 'yes' && wantRanked, replace })) {
         setBegun(true);
         if (fromSheet) await sheetsGone();
         router.replace('/play');
       }
     } catch (error) {
       console.error('the life could not be started:', error);
+      setFailed(true);
+    } finally {
+      busy.current = false;
+      setStarting(false);
+    }
+  };
+  /** Goes on with the ranked life in progress elsewhere, in place of starting one: from its sheet, once the sheet has gone. */
+  const takeUp = async () => {
+    if (busy.current) return;
+    busy.current = true;
+    setAway(false);
+    setStarting(true);
+    try {
+      const answer = await continueElsewhere();
+      if (answer === 'taken') {
+        setBegun(true);
+        await sheetsGone();
+        router.replace('/play');
+      }
+      // Gone, there is nothing in the way any more, and the sheet has closed by itself.
+      else if (answer === 'away') setAway(true);
+    } catch (error) {
+      console.error('the life could not be taken up:', error);
       setFailed(true);
     } finally {
       busy.current = false;
@@ -234,6 +317,27 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
       contentStyle={{ gap: 12 }}
       bar={
         <BottomBar>
+          {ranking === 'yes' ? (
+            // Two ways to play, side by side, each saying in a few words what it is.
+            <View style={{ marginBottom: 8 }}>
+              <Segmented<'ranked' | 'free'>
+                label={t('mode')}
+                value={wantRanked ? 'ranked' : 'free'}
+                onChange={(mode) => setWantRanked(mode === 'ranked')}
+                options={[
+                  { value: 'ranked', label: t('modeRanked'), hint: t('modeRankedHint') },
+                  { value: 'free', label: t('modeFree'), hint: t('modeFreeHint') },
+                ]}
+              />
+            </View>
+          ) : null}
+          {ranking === 'offline' ? (
+            <View accessible role="status" style={{ marginBottom: 8 }}>
+              <ReadText size={12} tone="ink-200" style={{ textAlign: 'center' }}>
+                {t('noConnection')}
+              </ReadText>
+            </View>
+          ) : null}
           {failed ? (
             <Notice role="alert" size={13} center style={{ marginBottom: 8 }}>
               {t('failed')}
@@ -310,11 +414,14 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
           <Button variant="primary" wide onPress={() => setAsking(false)}>
             {t('confirmNo')}
           </Button>
-          <Button variant="danger" wide disabled={starting} onPress={() => void begin(true)}>
+          <Button variant="danger" wide disabled={starting} onPress={() => void begin(undefined, true)}>
             {t('confirmYes')}
           </Button>
         </View>
       </Sheet>
+
+      {/* A player has one ranked life in progress. One on another device is never ended by starting here: it is asked about. */}
+      <ElsewhereSheet starting={starting} away={away} onTake={() => void takeUp()} onEnd={(gameId) => void begin(gameId, true)} />
     </Screen>
   );
 }

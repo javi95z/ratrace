@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
-import { challengeOf, content, lives, weekOf } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, lives, weekOf } from '@ratrace/content';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { LocalSessions } from '@ratrace/core/session/local';
+import { rankedNote, RankedSessions } from '@ratrace/core/session/ranked';
+import type { RankedApi } from '@ratrace/core/session/ranked';
+import { GameSessions } from '@ratrace/core/session/sessions';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import { messagesFor } from '@ratrace/i18n';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { AccountLife, AccountSaves, AccountState } from '@ratrace/online/types';
+import type { Account, AccountLife, AccountSaves, AccountState, Community } from '@ratrace/online/types';
 import { afterEach, describe, expect, it } from 'vitest';
 import { GameProvider, useGame } from '../context';
+import { rankedServer } from '../../../../web/src/testing/rankedServer';
+import { network } from '../../testing/fakes';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
@@ -551,5 +557,147 @@ describe('the account at the foot of the front door', () => {
     expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
     fireEvent.click(settingsButtons()[0]);
     expect(within(sheetTitled('Settings')).getByRole('button', { name: 'Sign out' })).toBeTruthy();
+  });
+});
+
+describe('the front door of a player with an account', () => {
+  /** An account that only says who is playing, and lets a test change it. */
+  function accountOf(initial: AccountState) {
+    let state = initial;
+    const watching = new Set<() => void>();
+    const account: Account = {
+      state: () => state,
+      subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)),
+      start: async () => undefined,
+      keepWithGoogle: async () => false,
+      useExistingAccount: async () => false,
+      dismissNotice: () => undefined,
+      signOut: async () => false,
+    };
+    const become = (next: AccountState) => {
+      state = next;
+      act(() => watching.forEach((listener) => listener()));
+    };
+    return { account, become };
+  }
+  const GUEST: AccountState = { kind: 'guest', userId: 'u-guest', notice: null };
+  const MEMBER: AccountState = { kind: 'member', userId: 'u-member', email: null };
+  /** The other players, answering only what the front door asks: the player's own profile, their friends, today's attempt. */
+  const othersOf = (answers: Partial<Community> = {}): Community =>
+    ({ me: async () => null, friends: async () => null, challengeEntry: async () => null, ...answers }) as unknown as Community;
+  const friend = (userId: string) => ({ userId, nickname: null, avatar: null });
+
+  it('leads to the rankings where someone is signed in, a guest too, and shows no way to them where nobody is', async () => {
+    renderGame(<Home />, { ...memoryServices(), account: accountOf(GUEST).account, community: () => othersOf() });
+    const rankings = await screen.findByRole('link', { name: 'Rankings' });
+    fireEvent.click(rankings);
+    expect(router.push).toHaveBeenLastCalledWith('/rankings');
+    expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
+    // Across the row under the collection and the records, as the web's `col-span-2`.
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'Records', 'Rankings', 'Privacy and legal notice']);
+  });
+
+  it('keeps the way to the rankings with no connection: they are the account\'s, and say so themselves', async () => {
+    network.connected = false;
+    renderGame(<Home />, { ...memoryServices(), account: accountOf(GUEST).account, community: () => othersOf() });
+    expect(await screen.findByRole('link', { name: 'Rankings' })).toBeTruthy();
+  });
+
+  it('says how many friend requests wait on the player, and leads to them, for a guest or a member: nothing when there are none', async () => {
+    const asked: string[] = [];
+    const others = othersOf({ friends: async () => (asked.push('friends'), { friends: [], incoming: [friend('a'), friend('b')], outgoing: [] }) });
+    renderGame(<Home />, { ...memoryServices(), account: accountOf(GUEST).account, community: () => others });
+    const requests = await screen.findByRole('link', { name: '2 friend requests' });
+    expect(requests.querySelector('[data-sprite="icon.multiplayer"]')).not.toBeNull();
+    fireEvent.click(requests);
+    expect(router.push).toHaveBeenLastCalledWith('/rankings?tab=friends');
+    expect(asked).toEqual(['friends']);
+    cleanup();
+    renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => othersOf({ friends: async () => ({ friends: [friend('c')], incoming: [], outgoing: [] }) }) });
+    await screen.findByRole('link', { name: 'Rankings' });
+    await settled();
+    expect(screen.queryByText(/friend request/)).toBeNull();
+  });
+
+  it('asks nobody of friends, and shows no request, where nobody is signed in', async () => {
+    const asked: string[] = [];
+    renderGame(<Home />, { ...memoryServices(), community: () => othersOf({ friends: async () => (asked.push('friends'), null) }) });
+    await screen.findByRole('link', { name: 'Records' });
+    await settled();
+    expect(asked).toEqual([]);
+  });
+
+  it('leads a member to their profile with their rat on it, beside the account at the foot; a guest has no profile there', async () => {
+    const asked: string[] = [];
+    const services = { ...memoryServices(), community: () => othersOf({ me: async () => (asked.push('me'), { nickname: 'Rata', friendCode: 'ABCD2345', avatar: null }) }) };
+    renderGame(<Home />, { ...services, account: accountOf(MEMBER).account });
+    const profile = await screen.findByRole('link', { name: 'Your profile' });
+    fireEvent.click(profile);
+    expect(router.push).toHaveBeenLastCalledWith('/player');
+    // In the settings panel at the foot, after the account.
+    const foot = screen.getByRole('region', { name: 'Account' });
+    expect(foot.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The rat on it is the member's own, as their profile on the server keeps it.
+    await waitFor(() => expect(asked).toContain('me'));
+    cleanup();
+    renderGame(<Home />, { ...services, account: accountOf(GUEST).account });
+    await screen.findByRole('link', { name: 'Rankings' });
+    await settled();
+    expect(screen.queryByRole('link', { name: 'Your profile' })).toBeNull();
+  });
+
+  it('shows the ranked life the phone has only a note of, once there is someone signed in to ask the server for it', async () => {
+    // The phone opens before anyone is signed in. A note the account left here, never opened, has nothing to show yet.
+    const server = rankedServer();
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const deps = { newId: () => 'local-1', newSeed: () => 'seed-1', now: () => 1 };
+    const elsewhere = new MemoryStore();
+    const there = await new GameSessions(elsewhere, new LocalSessions(elsewhere, content, lives, deps), new RankedSessions(() => server.api, elsewhere, content, lives, versions, deps), versions).start('nurse', { ranked: true });
+    const store = new MemoryStore();
+    await store.saveGame(rankedNote({ gameId: there.gameId, lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION }));
+    let api: RankedApi | null = null;
+    const { account, become } = accountOf({ kind: 'offline' });
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => api, store, content, lives, versions, deps), versions);
+    renderGame(<Home />, { sessions, store, account, tapGuardMs: 0 });
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
+    // Sign-in lands, a moment after the phone opened.
+    api = server.api;
+    become(GUEST);
+    expect(await screen.findByRole('link', { name: /Continue your life/ })).toBeTruthy();
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+  });
+
+  it('is not drawn again for the connection coming and going, nor for a change of the game it does not show, once the other players have answered', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const others = othersOf({
+      me: async () => ({ nickname: 'Rata', friendCode: 'ABCD2345', avatar: null }),
+      friends: async () => ({ friends: [], incoming: [friend('a')], outgoing: [] }),
+      challengeEntry: async () => ({ entered: true, score: 300 }),
+    });
+    const renders: Renders = { count: 0 };
+    let leave: (() => void) | null = null;
+    function Hand() {
+      leave = useGame((s) => s.leaveNews);
+      return null;
+    }
+    render(
+      <GameProvider services={speaking({ ...services, account: accountOf(MEMBER).account, community: () => others }, 'en')}>
+        <Counted into={renders}>
+          <Home />
+        </Counted>
+        <Hand />
+      </GameProvider>,
+    );
+    await screen.findByRole('link', { name: '1 friend request' });
+    await screen.findByRole('link', { name: 'Your profile' });
+    await screen.findByText('Played today');
+    await steady(() => renders.count);
+    const before = renders.count;
+    await settled(() => network.set(false));
+    await settled(() => network.set(true));
+    await settled(() => leave!());
+    expect(renders.count).toBe(before);
   });
 });

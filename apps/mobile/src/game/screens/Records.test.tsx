@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
+import { CONTENT_VERSION } from '@ratrace/content';
 import { formatFor } from '@ratrace/core/lib/format';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { createElement } from 'react';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { roomServer } from '../../../../web/src/testing/roomServer';
 import { useGame } from '../context';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
@@ -176,13 +179,60 @@ describe('the records', () => {
     expect(history.contains(screen.getByRole('region', { name: 'Personal bests' }))).toBe(true);
   });
 
-  it('has no multiplayer section: games with others are online, and the phone plays none', async () => {
+  it('has no multiplayer section for a player who has played none, signed in or not', async () => {
     const services = memoryServices();
     await services.store.addRun(run('alone'));
     renderGame(<Records />, services);
     await livesOf();
     expect(screen.queryByRole('region', { name: 'Multiplayer' })).toBeNull();
     expect(screen.queryByText('Multiplayer')).toBeNull();
+    cleanup();
+    renderGame(<Records />, { ...memoryServices(), rooms: () => roomServer().link('cccccccc-cccc-4ccc-8ccc-cccccccccccc'), schedule: () => () => {} });
+    expect(await screen.findByText('No life finished yet. Your first one will appear here.')).toBeTruthy();
+    await settled();
+    expect(screen.queryByRole('region', { name: 'Multiplayer' })).toBeNull();
+  });
+
+  it('lists the multiplayer games over, with where the player came and how many played, even before a life of their own', async () => {
+    const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const versions = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const server = roomServer();
+    const opened = (await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 90, ...versions })).body.room as { id: string; code: string };
+    await server.ask(B, { action: 'join', code: opened.code, ...versions });
+    await server.ask(HOST, { action: 'start', roomId: opened.id });
+    for (let guard = 0; guard < 50 && server.db.rooms.get(opened.id)?.status !== 'finished'; guard++) {
+      server.wait(96_000);
+      await server.ask(HOST, { action: 'state', roomId: opened.id });
+    }
+    // B's phone keeps their life in the game among its finished ones, under the id of that life.
+    const services = memoryServices();
+    const gameId = server.db.members.find((m) => m.user_id === B)?.game_id as string;
+    await services.store.addRun(run(gameId, { lifeId: 'nurse', score: 300, room: true }));
+    renderGame(<Records />, { ...services, rooms: () => server.link(B), schedule: () => () => {} });
+    const section = await screen.findByRole('region', { name: 'Multiplayer' });
+    // That life is told with its game, not again among the lives lived alone.
+    expect(screen.queryByRole('list', { name: 'Past lives' })).toBeNull();
+    const [row] = within(section).getAllByRole('listitem');
+    expect(row.textContent).toContain('Nurse');
+    expect(row.textContent).toMatch(/#[12] of 2/);
+    expect(row.textContent).toContain('2 players');
+    // A whole game played on the server first: a few seconds alone, more on a busy machine.
+  }, 60_000);
+
+  it('lists the lives of games with others the phone keeps where the server tells of no game, each opening in a sheet', async () => {
+    const services = memoryServices();
+    await services.store.addRun(run('together', { lifeId: 'engineer', score: 444, room: true }));
+    await services.store.addRun(run('alone', { lifeId: 'nurse' }));
+    // The server knows of no game of theirs.
+    renderGame(<Records />, { ...services, rooms: () => roomServer().link('cccccccc-cccc-4ccc-8ccc-cccccccccccc'), schedule: () => () => {} });
+    const section = await screen.findByRole('region', { name: 'Multiplayer' });
+    const line = within(section).getByRole('button', { name: /Software engineer/ });
+    expect(line.textContent).toContain('444');
+    // Among the lives alone, only the nurse's.
+    expect((await livesOf()).map((life) => life.textContent)).toEqual([expect.stringContaining('Nurse')]);
+    fireEvent.click(line);
+    expect(sheetOf('Software engineer').textContent).toContain('444');
   });
 
   it('opens with the sheet of a life it is given open, once the lives are read (a scene\'s initial state)', async () => {

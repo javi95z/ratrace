@@ -359,3 +359,15 @@ test('the player\'s own profile is drawn signed in on both sides, with the same 
   expect(app).toContain('tab={ratTabOf(scene)}');
   expect(app).toContain("<PlayerProfile copied={scene.name === 'player-friend-code'} />");
 });
+
+test('the scenes of the game online beside the game alone are drawn by their screens as they are, on both sides, over the same account and other players', () => {
+  // The account of the scene (`CLOUDS`, in the core's services of a scene) and its other players (`sceneCommunity`), handed to the game on each side.
+  expect(web).toContain('sceneServices(store, scene.name)');
+  expect(app).toContain('...sceneCloud(scene.name),');
+  for (const source of [web, app]) expect(source).toContain('const community = sceneCommunity(scene.name);');
+  // No initial state and nothing pressed: the front door, the week's challenge and a new life as they open, the end as Play draws it.
+  expect(web).toContain("home: (scene) => (scene.sheet === undefined ? <Home /> : ");
+  expect(app).toContain(": <Home />),");
+  for (const source of [web, app]) expect(source).toContain('challenge: () => <WeeklyChallenge />,');
+  for (const name of ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked']) expect(SCENES.find((scene) => scene.name === name)?.sheet, name).toBeUndefined();
+});

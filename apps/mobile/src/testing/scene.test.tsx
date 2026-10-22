@@ -705,6 +705,31 @@ test('the scenes of the player\'s own profile are drawn signed in: the profile i
   expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
 });
 
+test('the scenes of the game online beside the game alone are drawn for a member, told of the scene\'s other players: the door, the challenge, an end, a new life', async () => {
+  render(<SceneView name="home-member" />);
+  expect(await screen.findByRole('link', { name: '1 friend request' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Rankings' })).toBeTruthy();
+  expect(await screen.findByRole('link', { name: 'Your profile' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('link', { name: /Continue your life/ })).toBeTruthy();
+  expect(screen.getByText('3 days left')).toBeTruthy();
+  cleanup();
+  render(<SceneView name="challenge-attempt" />);
+  expect(await screen.findByRole('button', { name: "Play today's attempt" }, WAIT)).toBeTruthy();
+  expect(await screen.findByText('Your best this week: 8,105 points.', {}, WAIT)).toBeTruthy();
+  cleanup();
+  render(<SceneView name="challenge-board" />);
+  expect(await screen.findByText("You have played today's attempt. Your best this week: 8,105 points.", {}, WAIT)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
+  expect(screen.getByRole('link', { name: 'See the challenge ranking' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="end-standing" />);
+  expect(await screen.findByText('Better than 77% of the Software engineer lives others have played (40).', {}, WAIT)).toBeTruthy();
+  cleanup();
+  render(<SceneView name="new-ranked" />);
+  const mode = await screen.findByRole('radiogroup', { name: 'How to play' }, WAIT);
+  expect(within(mode).getByRole('radio', { name: /^Ranked/ }).getAttribute('aria-checked')).toBe('true');
+});
+
 test('a scene of the game alone is drawn with nobody signed in, and one of the game online with its member', () => {
   const store = new MemoryStore();
   expect(servicesOf(SCENES.find((scene) => scene.name === 'records-three')!, store).account).toBeUndefined();

@@ -15,6 +15,7 @@ import { useRuns, useT, useWords } from '../context';
 import { BackLink } from './BackLink';
 import { Heading } from './Heading';
 import { LifeFace } from './LifeFace';
+import { RoomHistory } from './RoomHistory';
 import { RunDetail } from './RunDetail';
 
 /** A personal best: what it is, the life that holds it (or none yet), and its figure (the web's `bevel … bg-night-700 px-3 py-2`). */
@@ -79,8 +80,7 @@ const BETWEEN = 6;
 const keyOf = (line: Line): string => line.runId;
 
 /**
- * Personal bests, and every life lived to the end with its graph. (The web's games with others, `RoomHistory`, are online: the phone plays none,
- * so it has none to tell.) The lives are one list that draws only the lines near the screen: a player who has lived many has a long one. The list is
+ * Personal bests, the games played with others (`RoomHistory`), and every life lived to the end with its graph. The lives are one list that draws only the lines near the screen: a player who has lived many has a long one. The list is
  * the web's section of past lives, named as it is; the page above its lines (the title, the bests, their heading) is its header.
  * `opened` is a life whose sheet is open from the start, by its id, once the lives are read (a scene's initial state; the player opens one by a tap).
  */
@@ -91,8 +91,9 @@ export function Records({ opened }: { opened?: string } = {}) {
   const runs = useRuns();
   const lifeName = useCallback((run: FinishedRun) => text.lives[run.lifeId]?.name ?? run.lifeId, [text]);
   const records = useMemo(() => recordsOf(runs ?? []), [runs]);
-  // Lives lived in a game with friends are told with their game, among the multiplayer ones (online: none on the phone).
+  // Lives lived in a game with friends are told with their game, among the multiplayer ones.
   const alone = useMemo(() => (runs ?? []).filter((run) => !run.room), [runs]);
+  const together = useMemo(() => (runs ?? []).filter((run) => run.room), [runs]);
   const [openId, setOpenId] = useState<string | null>(opened ?? null);
   const open = runs?.find((run) => run.runId === openId) ?? null;
   // Each line as it is drawn, made again only when the lives or the language change: a line's datum is all it shows.
@@ -129,6 +130,8 @@ export function Records({ opened }: { opened?: string } = {}) {
           <ReadText size={14} tone="ink-200">{t('empty')}</ReadText>
         </Framed>
       ) : null}
+      {/* On a phone with no life of its own yet, the account's multiplayer games are still there. */}
+      {runs !== null && runs.length === 0 ? <RoomHistory runs={together} /> : null}
 
       {runs !== null && runs.length > 0 ? (
         <View role="region" aria-label={t('bests')}>
@@ -146,6 +149,8 @@ export function Records({ opened }: { opened?: string } = {}) {
           </View>
         </View>
       ) : null}
+
+      {runs !== null && runs.length > 0 ? <RoomHistory runs={together} /> : null}
 
       {/* The past lives' heading: their lines are the list's own rows, under it. */}
       {alone.length > 0 ? <Heading>{t('history')}</Heading> : null}

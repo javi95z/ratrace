@@ -1,4 +1,4 @@
-import { badgeArt, endingArt, GIFT_ART, lives, portraitArt, rarityOf } from '@ratrace/content';
+import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { epilogue } from '@ratrace/core/game/epilogue';
@@ -22,8 +22,9 @@ import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useGame, useProfile, useRanking, useRuns, useT, useWords } from '../context';
+import { useCommunity, useGame, useProfile, useRanking, useRuns, useT, useWords } from '../context';
 import { BackLink } from './BackLink';
+import { ChallengeResult } from './Challenge';
 import { LifeLine } from './LifeLine';
 import { LifeMap, routeOf } from './LifeMap';
 import { Loop } from './Loop';
@@ -34,10 +35,31 @@ import { ShareCard } from './ShareCard';
 import { WorthGraph } from './WorthGraph';
 
 /*
- * The web's End.tsx, on the phone, in the web's phone layout (its desk's two columns are one). What the phone leaves out, being online only: where the
- * score stands among the lives others played (`useStanding`, the community's), the link to the rankings and the week's result (a ranked life, which the
- * phone never has), and the quick game against others after a life alone (`VersusOthers`, the rooms'). `extra` is a room's (none on the phone).
+ * The web's End.tsx, on the phone, in the web's phone layout (its desk's two columns are one). `extra` is a room's.
  */
+
+/** Fewer lives than this to compare with say nothing yet: a share of three is not a standing. */
+export const COMPARE_MIN = 5;
+
+/**
+ * Where a score stands among the lives other players finished from the same start, as a share of them that did worse. Nothing while it is being
+ * asked, with nobody to ask, or with too few to tell.
+ */
+function useStanding(lifeId: string, score: number): { pct: number; total: number } | null {
+  const community = useCommunity();
+  const [standing, setStanding] = useState<{ pct: number; total: number } | null>(null);
+  useEffect(() => {
+    if (community === null || lifeId === '') return;
+    let live = true;
+    void community.compare({ lifeId, score }).then((found) => {
+      if (live && found !== null && found.total >= COMPARE_MIN) setStanding({ pct: Math.floor((found.below * 100) / found.total), total: found.total });
+    });
+    return () => {
+      live = false;
+    };
+  }, [community, lifeId, score]);
+  return standing;
+}
 
 const BEST: Record<Best, string> = { score: 'bestScore', netWorth: 'bestNetWorth', escape: 'bestEscape', status: 'bestStatus' };
 
@@ -124,6 +146,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const bankruptcies = useGame((s) => s.bankruptcies);
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const gameId = useGame((s) => s.gameId);
+  const ranked = useGame((s) => s.ranked);
+  const challenge = useGame((s) => s.challenge);
   const earned = useGame((s) => s.badges);
   const profile = useProfile();
   const runs = useRuns();
@@ -145,6 +169,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const life = lives.find((candidate) => candidate.id === lifeId);
   const told = useMemo(() => (life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : []), [life, words, tale, view, story, score.total, bankruptcies]);
   const dead = obituary(content, view, bankruptcies);
+  const standing = useStanding(lifeId, score.total);
   const prized = prizedBadge(earned.filter(isNew));
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave. Worked out here, drawn only when the player asks for it.
@@ -236,6 +261,24 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
                 <ReadText size={12} tone="teal-300" style={{ flexShrink: 1, textAlign: 'center' }}>{t('legacy', { amount: fmt.money(p.life.legacy) })}</ReadText>
               </View>
             ) : null}
+            {standing ? (
+              <View accessible role="status" style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Sprite id={PERCENTILE_ART} />
+                <ReadText size={13} tone="teal-300" style={{ flexShrink: 1, textAlign: 'center' }}>{t('compare', { pct: standing.pct, life: lifeName, total: standing.total })}</ReadText>
+              </View>
+            ) : null}
+            {ranked ? (
+              <Raised
+                role="link"
+                bg="night-600"
+                place={{ marginTop: 12, alignSelf: 'stretch' }}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12 }}
+                onPress={() => router.push('/rankings')}
+              >
+                <Sprite id="icon.trophy" />
+                <PixelText size={15} tone="teal-300" style={{ flexShrink: 1, textAlign: 'center' }}>{t('rankedLink')}</PixelText>
+              </Raised>
+            ) : null}
           </Framed>
         </View>
       </Rising>
@@ -277,6 +320,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
           ))}
         </View>
       ) : null}
+
+      {/* The week's attempt, beside everyone else's: its place, and the choices that set it apart. */}
+      {ranked && challenge !== null ? <ChallengeResult week={challenge} /> : null}
 
       {told.length > 0 ? (
         <Panel title={tale('title')} label={tale('title')}>

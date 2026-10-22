@@ -500,7 +500,8 @@ export default function ScenePage({ searchParams }: { searchParams: Promise<{ na
   useEffect(() => {
     if (scene === undefined || !drawable) return;
     let current = true;
-    // The other players of a scene of the rankings, the same as the phone's scene gives its screen (`sceneCommunity`): no cloud.
+    // The other players of a scene of the game online (the rankings', the front door's, the challenge's, an end's, a new life's), the same as the
+    // phone's scene gives its screen (`sceneCommunity`): no cloud.
     const community = sceneCommunity(scene.name);
     void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: { ...sceneServices(store, scene.name), ...(community ? { community: () => community } : {}), ...cloudOf(scene.name) } }));
     return () => {

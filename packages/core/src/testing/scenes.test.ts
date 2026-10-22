@@ -554,6 +554,11 @@ describe('the list of scenes', () => {
       'player-editor-wear',
       'player-editor-scene',
       'player-friend-code',
+      'home-member',
+      'challenge-attempt',
+      'challenge-board',
+      'end-standing',
+      'new-ranked',
     ]);
   });
 
@@ -761,12 +766,15 @@ describe('the scenes of the end of a life', () => {
       { name: 'end-bankrupt', locale: 'en' },
       { name: 'end-share', locale: 'en', sheet: 'share' },
       { name: 'end-ru', locale: 'ru' },
+      { name: 'end-standing', locale: 'en' },
     ]);
     expect(screenOf({ name: 'end-share', locale: 'en' })).toBe('end');
+    // And the same end for a member, where its score stands among others' (`sceneCommunity`).
+    expect(await saveOf(await sceneStore('end-standing'))).toEqual(escaped);
   });
 
   it('are drawn with motion left out: the score stands counted, the story risen, the portrait at the end of its line, a rare badge\'s confetti still', async () => {
-    for (const name of ['end-escaped', 'end-bankrupt', 'end-share', 'end-ru']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
+    for (const name of ['end-escaped', 'end-bankrupt', 'end-share', 'end-ru', 'end-standing']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
   });
 });
 
@@ -946,8 +954,17 @@ describe('the scenes of the account', () => {
     expect((await (await sceneStore('home-account-taken')).loadProfile()).settings.reducedMotion).toBe(true);
   });
 
+  it('gives the scenes of the game online a member, with nothing waiting in the account, and home-member home-continue\'s life', async () => {
+    for (const name of ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked']) {
+      expect(sceneCloud(name).account!.state(), name).toEqual({ kind: 'member', userId: 'scene-player', email: 'ana.garcia@example.com' });
+      expect(sceneCloud(name).saves!.offer(), name).toBeNull();
+    }
+    expect(await saveOf(await sceneStore('home-member'))).toEqual(await saveOf(await sceneStore('home-continue')));
+  });
+
   it('gives every other scene no cloud: nobody signed in, as before', async () => {
-    for (const { name } of SCENES.filter((scene) => !['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken'].includes(scene.name))) {
+    const online = ['settings-account-guest', 'settings-account-member', 'home-offer', 'home-account-taken', 'home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked'];
+    for (const { name } of SCENES.filter((scene) => !online.includes(scene.name))) {
       expect(sceneCloud(name), name).toEqual({});
     }
     const services = sceneServices(await sceneStore('home-offer'), 'home-offer');

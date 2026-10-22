@@ -716,10 +716,29 @@ export function useCommunity(): Community | null {
  */
 export function useRanking(): 'yes' | 'offline' | 'no' {
   const { account } = useCloud();
-  const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
-  const connected = useSyncExternalStore(phoneConnection.subscribe, phoneConnection.connected, () => true);
-  if (state.kind === 'offline') return 'no';
-  return connected ? 'yes' : 'offline';
+  // One answer of both, the account and the connection: a screen is drawn again when the answer changes, not each time the connection comes and
+  // goes where nobody is signed in.
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      const stopAccount = account.subscribe(listener);
+      const stopConnection = phoneConnection.subscribe(listener);
+      return () => {
+        stopAccount();
+        stopConnection();
+      };
+    },
+    [account],
+  );
+  return useSyncExternalStore(subscribe, () => (account.state().kind === 'offline' ? 'no' : phoneConnection.connected() ? 'yes' : 'offline'), () => 'no');
+}
+
+/**
+ * Whether someone is signed in to the cloud, a guest or a member (`useRanking() !== 'no'`): for a screen that draws only that (the way to the
+ * rankings), which is not drawn again as the connection comes and goes.
+ */
+export function useSignedIn(): boolean {
+  const { account } = useCloud();
+  return useSyncExternalStore(account.subscribe, () => account.state().kind !== 'offline', () => false);
 }
 
 /**

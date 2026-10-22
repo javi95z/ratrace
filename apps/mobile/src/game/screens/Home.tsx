@@ -1,7 +1,8 @@
 import { CHALLENGE_ART, ratArt } from '@ratrace/content';
+import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
@@ -9,10 +10,11 @@ import { Button, Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { adjustedRead } from '../../ui/fonts';
 import { Loading } from '../../ui/Loading';
+import { RatAvatar } from '../../ui/RatAvatar';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
-import { useAccountOffer, useGame, useRuns, useSaving, useWords } from '../context';
+import { useAccount, useAccountOffer, useCommunity, useGame, useRuns, useSaving, useSignedIn, useWords } from '../context';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
@@ -117,6 +119,7 @@ export function Home() {
               <PixelText size={19} tone={inProgress ? 'cream' : 'ink-900'} style={{ textAlign: 'center' }}>{t('newLife')}</PixelText>
             </Raised>
             {challengeInProgress ? null : <WeeklyChallengeCard />}
+            <FriendRequests />
             {over ? (
               <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/play')}>
                 <PixelText size={15} tone="cream" style={{ textAlign: 'center' }}>{t('lastLife')}</PixelText>
@@ -144,6 +147,8 @@ export function Home() {
                 <PixelText size={15} tone="ink-200">{t('records')}</PixelText>
               </Raised>
             </View>
+            {/* The rankings are the other players': there is a way to them only where someone is signed in to ask. Across the row, the web's `col-span-2`. */}
+            <RankingsLink />
             {/* The web's words for a life that is newer, or waiting, or gone from another tab, tell of a page and a connection: the phone's own say update the app. */}
             {lost ? <Notice role="status">{lost === 'newer' ? phone('lostNewer') : lost === 'waiting' ? phone('lostWaiting') : t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</Notice> : null}
             {moved && status === 'none' ? (
@@ -158,7 +163,7 @@ export function Home() {
       {/* At the foot, as it always was: the settings, also behind the gear above. */}
       <View style={{ width: '100%', marginTop: 'auto' }}>
         <Panel label={settings('title')}>
-          <HomeSettingsPanel />
+          <HomeSettingsPanel profile={<ProfileLink />} />
         </Panel>
       </View>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
@@ -251,6 +256,89 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
         ) : null}
       </Sheet>
     </>
+  );
+}
+
+/** The way to the rankings, where someone is signed in to ask the others (a leaf of its own: the connection coming and going draws nothing). */
+function RankingsLink() {
+  const t = useT('home');
+  const router = useRouter();
+  const signedIn = useSignedIn();
+  if (!signedIn) return null;
+  return (
+    <Raised
+      role="link"
+      bg="night-700"
+      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
+      onPress={() => router.push('/rankings')}
+    >
+      <Sprite id="icon.status" />
+      <PixelText size={15} tone="ink-200">{t('rankings')}</PixelText>
+    </Raised>
+  );
+}
+
+/**
+ * Friend requests waiting on the player, as a line that leads to them: there only when there are any, for someone signed in. Asked once as the front
+ * door opens, and again whenever who is signed in changes.
+ */
+function FriendRequests() {
+  const t = useT('home');
+  const { state } = useAccount();
+  const community = useCommunity();
+  const router = useRouter();
+  const [waiting, setWaiting] = useState(0);
+  const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
+  useEffect(() => {
+    if (userId === null || community === null) return;
+    let live = true;
+    void community.friends().then((found) => live && setWaiting(found?.incoming.length ?? 0));
+    return () => {
+      live = false;
+    };
+  }, [userId, community]);
+  if (waiting === 0) return null;
+  return (
+    <Raised
+      role="link"
+      tone={GOLD}
+      bg="night-600"
+      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+      onPress={() => router.push('/rankings?tab=friends')}
+    >
+      <Sprite id="icon.multiplayer" />
+      <PixelText size={15} tone="gold-500" style={{ flexShrink: 1, textAlign: 'center' }}>{t('friendRequests', { n: waiting })}</PixelText>
+    </Raised>
+  );
+}
+
+/** The way to the player's profile, with their rat on it: there for someone signed in with Google, whose profile the others see, and for nobody else. */
+function ProfileLink() {
+  const t = useT('home');
+  const { state } = useAccount();
+  const community = useCommunity();
+  const router = useRouter();
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const userId = state.kind === 'member' ? state.userId : null;
+  useEffect(() => {
+    if (userId === null || community === null) return;
+    let live = true;
+    void community.me().then((me) => live && setAvatar(me?.avatar ?? null));
+    return () => {
+      live = false;
+    };
+  }, [userId, community]);
+  if (userId === null) return null;
+  return (
+    <Raised
+      role="link"
+      bg="night-700"
+      style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
+      onPress={() => router.push('/player')}
+    >
+      <RatAvatar look={ratLookOf(avatar, userId)} size="sm" />
+      <PixelText size={15} tone="ink-200">{t('profile')}</PixelText>
+    </Raised>
   );
 }
 

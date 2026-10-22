@@ -119,6 +119,12 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'player-editor-wear',
   'player-editor-scene',
   'player-friend-code',
+  // Phase 3, Task 6: the game online beside the game alone, for a member (the account's `CLOUDS`, the other players of `sceneCommunity`).
+  'home-member',
+  'challenge-attempt',
+  'challenge-board',
+  'end-standing',
+  'new-ranked',
 ]);
 
 /**

@@ -102,6 +102,7 @@ test('a scene of a screen ported but not shot yet is unjudged until a batch pass
   const phase2 = SCENES.slice(0, SCENES.findIndex((scene) => scene.name === 'profile-financed') + 1).map((scene) => scene.name);
   expect(phase2.filter((name) => PENDING_SHOTS.has(name))).toEqual([]);
   for (const name of ['player-member', 'player-editor-body', 'player-editor-wear', 'player-editor-scene', 'player-friend-code']) expect(PENDING_SHOTS.has(name), name).toBe(true);
+  for (const name of ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked']) expect(PENDING_SHOTS.has(name), name).toBe(true);
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
   for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
   for (const name of PENDING_SHOTS) expect(hasPhoneWords(name), name).toBe(false);

@@ -1,14 +1,22 @@
 // @vitest-environment jsdom
-import { lives } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { messagesFor } from '@ratrace/i18n';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { RankedSessions } from '@ratrace/core/session/ranked';
+import { GameSessions } from '@ratrace/core/session/sessions';
 import { newProfile } from '@ratrace/core/session/types';
-import type { SavedGame } from '@ratrace/core/session/types';
+import type { RankedGame, SavedGame } from '@ratrace/core/session/types';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import type { Account, AccountState } from '@ratrace/online/types';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider, useGame } from '../context';
+import { rankedServer } from '../../../../web/src/testing/rankedServer';
+import { network } from '../../testing/fakes';
 import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
-import { Counted, settled } from '../../testing/renders';
+import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { AccessibilityInfo } from 'react-native';
 import { StrictMode } from 'react';
@@ -558,3 +566,192 @@ describe('the dice shows the life it picked', () => {
   });
 });
 
+
+describe('choosing between a ranked life and a casual one', () => {
+  const GUEST: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const accountAs = (state: AccountState): Account => ({ state: () => state, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false });
+  /** Someone is signed in, and the services remember how each life was asked for. */
+  function signedIn(state: AccountState = GUEST) {
+    const services = memoryServices();
+    const asked: Array<{ ranked?: boolean } | undefined> = [];
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string, options?: { ranked?: boolean }) => {
+      asked.push(options);
+      return start(lifeId);
+    };
+    return { services: { ...services, account: accountAs(state) }, asked };
+  }
+
+  it('offers a ranked life to a player who is signed in, on by default, and says what it means', async () => {
+    const { services, asked } = signedIn();
+    renderGame(<NewLife />, services);
+    // Two ways to play, side by side: ranked is chosen, and each says in a few words what it is.
+    const mode = await screen.findByRole('radiogroup', { name: 'How to play' });
+    const ranked = within(mode).getByRole('radio', { name: /^Ranked/ });
+    expect(ranked.getAttribute('aria-checked')).toBe('true');
+    expect(ranked.textContent).toContain('For the ranking');
+    expect(within(mode).getByRole('radio', { name: /^Offline/ }).textContent).toContain('Just for you');
+    fireEvent.click(screen.getByRole('button', START));
+    await waitFor(() => expect(asked).toEqual([{ ranked: true, replace: undefined }]));
+  });
+
+  it('starts a casual life when the player turns it off', async () => {
+    const { services, asked } = signedIn();
+    renderGame(<NewLife />, services);
+    fireEvent.click(await screen.findByRole('radio', { name: /^Offline/ }));
+    fireEvent.click(screen.getByRole('button', START));
+    await waitFor(() => expect(asked).toEqual([{ ranked: false, replace: undefined }]));
+  });
+
+  it('offers no ranked life where nobody is signed in, and asks for none', async () => {
+    const { services, asked } = signedIn({ kind: 'offline' });
+    renderGame(<NewLife />, services);
+    await screen.findAllByRole('radio');
+    expect(screen.queryByRole('radiogroup', { name: 'How to play' })).toBeNull();
+    expect(screen.queryByText(/will not be ranked/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', START));
+    await waitFor(() => expect(asked).toEqual([{ ranked: false, replace: undefined }]));
+  });
+
+  it('says so, before the life begins, when there is an account and no connection', async () => {
+    network.connected = false;
+    const { services, asked } = signedIn();
+    renderGame(<NewLife />, services, 'es');
+    expect((await screen.findByRole('status')).textContent).toBe('Sin conexión: esta vida no será clasificatoria.');
+    expect(screen.queryByRole('radiogroup', { name: 'Cómo jugar' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Empezar esta vida' }));
+    await waitFor(() => expect(asked).toEqual([{ ranked: false, replace: undefined }]));
+  });
+
+  it('turns the ranked choice into the note as the connection goes, and back as it returns', async () => {
+    const { services } = signedIn();
+    renderGame(<NewLife />, services);
+    await screen.findByRole('radiogroup', { name: 'How to play' });
+    act(() => network.set(false));
+    expect(await screen.findByText('No connection: this life will not be ranked.')).toBeTruthy();
+    expect(screen.queryByRole('radiogroup', { name: 'How to play' })).toBeNull();
+    act(() => network.set(true));
+    expect(await screen.findByRole('radiogroup', { name: 'How to play' })).toBeTruthy();
+  });
+
+  it('is not drawn again for the connection where nobody is signed in to rank a life', async () => {
+    const services = memoryServices();
+    const renders: Renders = { count: 0 };
+    render(
+      <GameProvider services={speaking(services, 'en')}>
+        <Counted into={renders}>
+          <NewLife />
+        </Counted>
+      </GameProvider>,
+    );
+    await screen.findAllByRole('radio');
+    await steady(() => renders.count);
+    const before = renders.count;
+    await settled(() => network.set(false));
+    await settled(() => network.set(true));
+    expect(renders.count).toBe(before);
+  });
+});
+
+describe('a ranked life in progress on another device', { timeout: 60_000 }, () => {
+  const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
+  /** A device of the player, over a server of ranked lives several devices can share. */
+  function deviceOf(server: ReturnType<typeof rankedServer>, versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION }) {
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    return { sessions, store, account, tapGuardMs: 0 };
+  }
+  /** The desk is a round into a ranked life as a nurse. The phone, which this test draws, knows nothing of it. */
+  async function twoDevices() {
+    const server = rankedServer();
+    const desk = deviceOf(server);
+    const there = await desk.sessions.start('nurse', { ranked: true });
+    while (there.view().phase === 'cards') await there.answerCard(0);
+    await there.playRound({ orders: [] });
+    return { server, there, phone: deviceOf(server) };
+  }
+  /** The sheet that asks about it, once it is open, and one of its buttons once it can be pressed (the sheet opens as the start that asked it ends). */
+  const elsewhere = async (title = 'A ranked life in progress') => (await screen.findByRole('heading', { name: title })).closest('[aria-modal="true"]') as HTMLElement;
+  async function ready(sheet: HTMLElement, name: string) {
+    const button = within(sheet).getByRole('button', { name });
+    await waitFor(() => expect(button.getAttribute('aria-disabled')).not.toBe('true'));
+    return button;
+  }
+
+  it('is not ended by starting another: the player is asked, and nothing begins meanwhile', async () => {
+    const { server, there, phone } = await twoDevices();
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('button', START));
+    const sheet = await elsewhere();
+    expect(sheet.textContent).toContain('Nurse, round 2 of 20. You have it in progress on another device, and you can have only one.');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(await phone.store.loadGame()).toBeNull();
+    // Left as it is.
+    fireEvent.click(await ready(sheet, 'Cancel'));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A ranked life in progress' })).toBeNull());
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('is taken up on this phone when the player would rather go on with it, once the sheet has gone', async () => {
+    const { server, there, phone } = await twoDevices();
+    let gone: () => void = () => undefined;
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('button', START));
+    const sheet = await elsewhere();
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(await ready(sheet, 'Continue that life'));
+    await waitFor(async () => expect(((await phone.store.loadGame()) as RankedGame | null)?.gameId).toBe(there.gameId));
+    await new Promise((done) => setTimeout(done, 30));
+    expect(router.replace).not.toHaveBeenCalled();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(server.games.size).toBe(1);
+  });
+
+  it('is ended, and the new life begun, only when the player says so, once the sheet has gone', async () => {
+    const { server, there, phone } = await twoDevices();
+    let gone: () => void = () => undefined;
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('radio', { name: /Software engineer/ }));
+    fireEvent.click(screen.getByRole('button', START));
+    const sheet = await elsewhere();
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(await ready(sheet, 'End it and start this one'));
+    await waitFor(() => expect(server.games.get(there.gameId)?.status).toBe('abandoned'));
+    await waitFor(async () => expect((await phone.store.loadGame()) as RankedGame).toMatchObject({ ranked: true, lifeId: 'engineer' }));
+    await new Promise((done) => setTimeout(done, 30));
+    expect(router.replace).not.toHaveBeenCalled();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+  });
+
+  it('cannot be taken up here when it was begun under older rules, and the sheet says so', async () => {
+    const { server, there, phone } = await twoDevices();
+    (server.games.get(there.gameId) as { engine_version: string }).engine_version = '0.0.1';
+    renderGame(<NewLife />, phone, 'es');
+    fireEvent.click(await screen.findByRole('button', { name: 'Empezar esta vida' }));
+    const sheet = await elsewhere('Una vida clasificatoria en curso');
+    expect(sheet.textContent).toContain('Empezó con otras reglas y no se puede seguir en este dispositivo.');
+    expect(within(sheet).queryByRole('button', { name: 'Seguir con esa vida' })).toBeNull();
+    expect(within(sheet).getByRole('button', { name: 'Terminarla y empezar esta' })).toBeTruthy();
+  });
+
+  it('says so when that life cannot be taken up just now, and keeps the question open', async () => {
+    const { server, phone } = await twoDevices();
+    renderGame(<NewLife />, phone);
+    fireEvent.click(await screen.findByRole('button', START));
+    const sheet = await elsewhere();
+    server.state.down = true;
+    fireEvent.click(await ready(sheet, 'Continue that life'));
+    expect((await within(sheet).findByRole('alert')).textContent).toBe('The server did not answer. Try again.');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'A ranked life in progress' })).toBeTruthy();
+  });
+});

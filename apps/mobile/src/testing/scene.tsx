@@ -291,11 +291,13 @@ export const SCENE_SCREENS: SceneScreens = {
  * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; where the scene names one, the place its
  * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on); for a scene of the account, the
  * account it says, which stays so, with no network (`sceneCloud`, the web's page's too); the other players it is told of (`sceneCommunity`:
- * the rankings'); and for a scene of the player's own profile, its member and their profile on the server (`cloudOf`).
+ * the rankings', and those of the game online beside the game alone); and for a scene of the player's own profile, its member and their profile on
+ * the server (`cloudOf`).
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
   const basket = sceneBasket(scene.name);
-  // The other players of a scene of the rankings, the same as the web's page gives its screen (`sceneCommunity`).
+  // The other players of a scene of the game online (the rankings', the front door's, the challenge's, an end's, a new life's), the same as the web's
+  // page gives its screen (`sceneCommunity`).
   const community = sceneCommunity(scene.name);
   return {
     ...speaking(memoryServices(store), scene.locale),

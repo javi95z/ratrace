@@ -1543,3 +1543,24 @@ device with no life; the player is `Rata_Uno` (friend code `RAT7K2QX`), sixth of
   `player.copied` in a toast. Its touch box reaches past the panel's foot to the tabs (`CODE_REACH`).
 - **A ranking asked before is shown at once when it is asked again**, and replaced when the answer comes: the web keeps the last answer only (and shows it
   at once when it is the one asked again). A tab switched back to has no "Loading…" on the phone where the web shows one.
+
+## Phase 3, Task 6: the game online beside the game alone (shots pending)
+
+Not shot in its task: the five scenes are in `PENDING_SHOTS`, unjudged until phase 3's batch pass (Task 14). Each is drawn for a member signed in
+with Google (the account's `CLOUDS` in `scenes.ts`, nothing waiting in it) and told of the scene's other players (`sceneCommunity.ts`, extended with
+what each of these scenes is told beyond the rankings': the player's attempt at the week's challenge, and where a score stands). Neither side draws
+them with an initial state or a press: the registries draw the screens as they open.
+
+| scene | what it is |
+|---|---|
+| home-member | home-continue's life, for a member: the way to the rankings across the row under the collection and the records, a friend request waiting (gold), the week's card with its days left, and the profile with the member's rat at the foot, after the account |
+| challenge-attempt | the week's page with today's attempt to play (gold) above the practice, the week's best so far (8,105) in a note, and the way to the challenge's ranking under the hint |
+| challenge-board | the same with today's attempt played: the teal note, the practice alone, the way to the ranking |
+| end-standing | end-escaped's life, for a member: where its score stands among forty others' (77%), in the score's frame |
+| new-ranked | the page where a life is chosen, for a member: ranked or their own, side by side above the start |
+
+- **The way to the challenge's ranking** is underlined words (the web's `underline`, its offset the browser's own): the phone's `LinkText` draws it
+  2 under the baseline. To be measured in the shot.
+- **A choice's count in the sheet of all of them** follows the choice after a space (the web's `ml-1`, 4 px).
+- **The game's own result of the week** (`ChallengeResult`, at the end of a ranked attempt) and **the quick game after a life alone** (`VersusOthers`,
+  Task 9) have no scene: a ranked life ends on the server.

@@ -1,16 +1,19 @@
 import { lives, weekOf } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
 import { rankingsOpening, sceneCommunity } from './sceneCommunity';
-import { SCENE_NOW, SCENES, sceneStore } from './scenes';
+import { SCENE_NOW, sceneCloud, SCENES, sceneStore } from './scenes';
 
 const DAY = 86_400_000;
 const RANKINGS = SCENES.filter((scene) => scene.name.startsWith('rankings-')).map((scene) => scene.name);
+/** The scenes of the game online beside the game alone: the front door, the week's challenge, a life's end and a new life, for a member. */
+const ONLINE = ['home-member', 'challenge-attempt', 'challenge-board', 'end-standing', 'new-ranked'];
 
 describe('the other players of a scene of the rankings', () => {
-  it('are there for the rankings\' scenes only: every other scene asks nobody', () => {
+  it('are there for the rankings\' scenes and those of the game online only: every other scene asks nobody', () => {
     expect(RANKINGS).toEqual(['rankings-all', 'rankings-week', 'rankings-friends', 'rankings-challenge', 'rankings-nickname']);
-    for (const name of RANKINGS) expect(sceneCommunity(name), name).not.toBeNull();
-    for (const { name } of SCENES.filter((scene) => !RANKINGS.includes(scene.name))) expect(sceneCommunity(name), name).toBeNull();
+    for (const name of [...RANKINGS, ...ONLINE]) expect(sceneCommunity(name), name).not.toBeNull();
+    for (const { name } of SCENES.filter((scene) => !RANKINGS.includes(scene.name) && !ONLINE.includes(scene.name))) expect(sceneCommunity(name), name).toBeNull();
+    for (const name of ONLINE) expect(SCENES.map((scene) => scene.name), name).toContain(name);
   });
 
   it('open each scene on the tab its name says, and the name being changed on all time\'s', () => {
@@ -62,5 +65,40 @@ describe('the other players of a scene of the rankings', () => {
     expect(board.entrants).toBe(40);
     expect(board.rows.find((row) => row.mine)?.place).toBe(5);
     for (const row of board.rows) expect(row.finishedAt).toBeGreaterThan(SCENE_NOW - 4 * DAY);
+  });
+});
+
+describe('the other players of a scene of the game online', () => {
+  it('tell the front door today\'s attempt is still to play, and the friend request waiting', async () => {
+    const community = sceneCommunity('home-member')!;
+    expect(await community.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: false, score: null });
+    expect((await community.friends())!.incoming).toHaveLength(1);
+  });
+
+  it('tell the challenge\'s page the attempt is still to play with the week\'s best so far, or played today, the best the ranking shows', async () => {
+    const mine = (await sceneCommunity('rankings-challenge')!.challengeRanking(weekOf(SCENE_NOW)))!.rows.find((row) => row.mine)!;
+    expect(await sceneCommunity('challenge-attempt')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: false, score: mine.score });
+    expect(await sceneCommunity('challenge-board')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: true, score: mine.score });
+    // The rankings' player has played today's too.
+    expect(await sceneCommunity('rankings-all')!.challengeEntry(weekOf(SCENE_NOW))).toEqual({ entered: true, score: mine.score });
+  });
+
+  it('tell the end of a life where it stands among enough others to say, and nobody else where a score stands', async () => {
+    expect(await sceneCommunity('end-standing')!.compare({ lifeId: 'engineer', score: 1 })).toEqual({ below: 31, total: 40 });
+    for (const name of [...RANKINGS, 'home-member', 'new-ranked']) expect(await sceneCommunity(name)!.compare({ lifeId: 'engineer', score: 1 }), name).toBeNull();
+  });
+
+  it('are told by a member, signed in from the start with nothing waiting in the account: the scene\'s cloud', async () => {
+    for (const name of ONLINE) {
+      const cloud = sceneCloud(name);
+      expect(cloud.account?.state().kind, name).toBe('member');
+      expect(cloud.saves?.offer(), name).toBeNull();
+    }
+  });
+
+  it('are on the device the scene says: a life in progress at the door, an end, and nothing on the pages that begin one', async () => {
+    expect(((await (await sceneStore('home-member')).loadGame()) as { lifeId: string }).lifeId).toBe('nurse');
+    expect(((await (await sceneStore('end-standing')).loadGame()) as { lifeId: string }).lifeId).toBe('engineer');
+    for (const name of ['challenge-attempt', 'challenge-board', 'new-ranked']) expect(await (await sceneStore(name)).loadGame(), name).toBeNull();
   });
 });

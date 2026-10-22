@@ -1,19 +1,27 @@
 // @vitest-environment jsdom
-import { endingArt, lives, rarityOf, textFor } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, endingArt, lives, rarityOf, textFor, weekOf } from '@ratrace/content';
 import type { Ending } from '@ratrace/content';
 import { prizedBadge } from '@ratrace/core/game/present';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { RankedSessions } from '@ratrace/core/session/ranked';
+import { GameSessions } from '@ratrace/core/session/sessions';
 import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { GameSession, SavedGame } from '@ratrace/core/session/types';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { rankedServer } from '../../../../web/src/testing/rankedServer';
+import { network } from '../../testing/fakes';
 import { heard, memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { settled, steady } from '../../testing/renders';
 import { KEYFRAMES } from '../../ui/motion';
 import { rea } from '../../ui/testing/reanimated';
 import { GameProvider, useGame } from '../context';
-import { End } from './End';
+import { COMPARE_MIN, End } from './End';
 import { Home } from './Home';
 import { Play } from './Play';
 import { RankGain } from './RankCard';
@@ -290,5 +298,110 @@ describe('what is drawn again', () => {
     const still = await screen.findByRole('group', { name: 'Score' });
     await waitFor(() => expect(within(still).getAllByText(full)).toHaveLength(2));
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('the end of a life, beside the lives of others', () => {
+  /** A community that answers the comparison as told, and nothing else. */
+  const others = (answer: { below: number; total: number } | null, asked: unknown[]): Community =>
+    ({ compare: async (query: unknown) => (asked.push(query), answer) }) as unknown as Community;
+  const ended = async (answer: { below: number; total: number } | null) => {
+    const asked: unknown[] = [];
+    const { services } = await aWholeLife();
+    const community = others(answer, asked);
+    renderGame(<End />, { ...services, community: () => community });
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    const [run] = await services.store.listRuns();
+    return { asked, run };
+  };
+
+  it('says how many of the lives others played from the same start scored less', async () => {
+    const { asked, run } = await ended({ below: 31, total: 40 });
+    const score = screen.getByRole('group', { name: 'Score' });
+    expect(await within(score).findByText('Better than 77% of the Nurse lives others have played (40).')).toBeTruthy();
+    expect(within(score).getByRole('status').querySelector('[data-sprite="icon.percentile"]')).not.toBeNull();
+    // Asked of this life and its score, however many times the screen is drawn.
+    expect(asked.length).toBeGreaterThan(0);
+    for (const query of asked) expect(query).toEqual({ lifeId: 'nurse', score: run.score });
+  });
+
+  it('says nothing with too few to compare with, or with nobody to ask', async () => {
+    await ended({ below: 3, total: COMPARE_MIN - 1 });
+    await settled();
+    expect(screen.queryByText(/lives others have played/)).toBeNull();
+    cleanup();
+    await ended(null);
+    await settled();
+    expect(screen.queryByText(/lives others have played/)).toBeNull();
+  });
+
+  it('is not drawn again once the others have answered, nor for the connection coming and going', async () => {
+    const asked: unknown[] = [];
+    const { services } = await aWholeLife();
+    const community = others({ below: 31, total: 40 }, asked);
+    // Someone signed in: with a connection their lives are ranked, and without one they are not, which the end of this life does not draw.
+    const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
+    renderGame(<End />, { ...services, account, community: () => community });
+    await screen.findByText('Better than 77% of the Nurse lives others have played (40).');
+    const ending = endingArt(document.querySelector('[data-ending]')?.getAttribute('data-ending') as Ending);
+    await steady(() => spriteRenders.get(ending));
+    const before = spriteRenders.get(ending);
+    await settled(() => network.set(false));
+    await settled(() => network.set(true));
+    expect(spriteRenders.get(ending)).toBe(before);
+  });
+});
+
+describe('the end of a ranked life', { timeout: 60_000 }, () => {
+  const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
+  /** The game over sessions of both kinds, and a server of ranked lives on the day it says it is. */
+  function rankedGame() {
+    const server = rankedServer();
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    return { server, services: { sessions, store, account, tapGuardMs: 0 } };
+  }
+
+  it('says at the end of a ranked life that it is in the rankings, and leads to them; a casual life says nothing of them', async () => {
+    const ranked = rankedGame();
+    await playRounds(await ranked.services.sessions.start('nurse', { ranked: true }), content.rounds);
+    renderGame(<End />, ranked.services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    const link = screen.getByRole('link', { name: 'This life is ranked: see the rankings' });
+    expect(within(screen.getByRole('group', { name: 'Score' })).getByRole('link', { name: 'This life is ranked: see the rankings' })).toBe(link);
+    fireEvent.click(link);
+    expect(router.push).toHaveBeenCalledWith('/rankings');
+    cleanup();
+
+    const casual = rankedGame();
+    await playRounds(await casual.services.sessions.start('nurse'), content.rounds);
+    renderGame(<End />, casual.services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(screen.queryByText(/in the rankings/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /see the rankings/ })).toBeNull();
+  });
+
+  it('says where the week\'s attempt stands among everyone\'s, at the end of a ranked life of the week\'s challenge', async () => {
+    const SERVER_NOW = Date.UTC(2026, 9, 13, 12);
+    const served = challengeOf(weekOf(SERVER_NOW), lives);
+    if (!served) throw new Error('no challenge the server\'s week');
+    const { services } = rankedGame();
+    await playRounds(await services.sessions.start(served.lifeId, { ranked: true, challenge: served.week }), content.rounds);
+    const asked: string[] = [];
+    const community = {
+      compare: async () => null,
+      challengeRanking: async (week: string) => (asked.push(week), { rows: [{ place: 2, userId: 'u', nickname: null, score: 900, finishedAt: 0, mine: true }], entrants: 30 }),
+      challengeChoices: async () => [],
+    } as unknown as Community;
+    renderGame(<End />, { ...services, now: () => SERVER_NOW, community: () => community });
+    expect(await screen.findByText('Place 2 of 30 · Top 10%')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'This life is ranked: see the rankings' })).toBeTruthy();
+    expect(asked).toContain(served.week);
   });
 });

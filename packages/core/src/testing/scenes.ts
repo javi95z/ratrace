@@ -123,6 +123,14 @@ export const SCENES: readonly Scene[] = [
   { name: 'player-editor-wear', locale: 'en' },
   { name: 'player-editor-scene', locale: 'en' },
   { name: 'player-friend-code', locale: 'en' },
+  // The game online beside the game alone, for a member (`CLOUDS`), told of the scene's other players (`sceneCommunity`): the front door with the way
+  // to the rankings, a friend request and the profile; the week's challenge with its attempt to play, and with today's played; the end of a life with
+  // where its score stands among others'; and a new life, ranked or not.
+  { name: 'home-member', locale: 'en' },
+  { name: 'challenge-attempt', locale: 'en' },
+  { name: 'challenge-board', locale: 'en' },
+  { name: 'end-standing', locale: 'en' },
+  { name: 'new-ranked', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -308,6 +316,15 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'player-editor-wear': null,
   'player-editor-scene': null,
   'player-friend-code': null,
+  // home-continue's life, for a member: what the front door adds for them.
+  'home-member': { life: 'nurse', round: 3, stage: 'news' },
+  // The week's challenge for a member: the attempt still to play today (with the week's best so far), and today's had. No life in progress.
+  'challenge-attempt': null,
+  'challenge-board': null,
+  // end-escaped's life, for a member: where its score stands among the lives others played from the same start.
+  'end-standing': { life: 'engineer', round: 1, stage: 'end' },
+  // The page where a life is chosen, for a member: ranked or their own.
+  'new-ranked': null,
 };
 
 /**
@@ -427,7 +444,7 @@ const STILL: ReadonlySet<string> = new Set([
   'hud-race', 'hud-crisis', 'hud-crisis-details', 'celebrate-legendary', 'celebrate-earned',
   // The end of a life: its score counts up, its story rises a paragraph at a time, the portrait walks its line and lights each mark, and a rare badge's
   // confetti falls for ever. Left out, everything stands where it ends, as a shot can see it.
-  'end-escaped', 'end-bankrupt', 'end-share', 'end-ru',
+  'end-escaped', 'end-bankrupt', 'end-share', 'end-ru', 'end-standing',
   // The ledger (play-resolve-r6) and the moments over it or over the news: the wheel of its title turns for ever, its lines rise one by one, its
   // figures count and its coins fly; a crisis's lamp pulses. Left out, the lines stand risen and the figures where they end, as a shot can see them.
   'play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis',
@@ -679,6 +696,12 @@ const CLOUDS: Readonly<Record<string, { who: SceneWho; offer?: SceneLife }>> = {
   // An engineer of the fifth round, in Madrid, left on another device.
   'home-offer': { who: MEMBER, offer: { gameId: 'scene-elsewhere', lifeId: 'engineer', round: 4, cityId: 'madrid' } },
   'home-account-taken': { who: { kind: 'guest', userId: 'scene-player', notice: 'joining' } },
+  // The game online beside the game alone: a member, with nothing waiting in the account. What the other players say is `sceneCommunity`'s.
+  'home-member': { who: MEMBER },
+  'challenge-attempt': { who: MEMBER },
+  'challenge-board': { who: MEMBER },
+  'end-standing': { who: MEMBER },
+  'new-ranked': { who: MEMBER },
 };
 
 /**

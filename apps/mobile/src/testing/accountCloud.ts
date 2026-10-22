@@ -97,7 +97,8 @@ export function accountCloud({ signedIn = null, existing = null, email = 'ana.ga
   const cloud: Cloud = {
     ranked: {} as Cloud['ranked'],
     rooms: {} as Cloud['rooms'],
-    community: { me: async () => null, friends: async () => null } as unknown as Community,
+    // What the front door asks of the other players: the player's profile, their friends, today's attempt at the week's challenge.
+    community: { me: async () => null, friends: async () => null, challengeEntry: async () => null } as unknown as Community,
     currentUser: async () => state.user,
     signInAsGuest: async () => {
       state.guests += 1;

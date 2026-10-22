@@ -1,9 +1,10 @@
 import { SCENE_NOW } from './scenes';
 
 /*
- * The other players of a scene of the rankings, the same on both clients: what they answer the screen (the rankings of all time, of the week and
- * among friends, the player's own name and code, their friends, the ranking of the week's challenge, the life behind a line). Both registries give
- * the screen a community made of it (`sceneCommunity`) in place of the cloud, so a shot of the web and one of the phone show the same players.
+ * The other players of a scene of the game online, the same on both clients: what they answer the screen (the rankings of all time, of the week and
+ * among friends, the player's own name and code, their friends, the ranking of the week's challenge and the player's attempt at it, where a score
+ * stands among others', the life behind a line). Both registries give the screen a community made of it (`sceneCommunity`) in place of the cloud, so
+ * a shot of the web and one of the phone show the same players.
  *
  * The core knows nothing of the online client (`@ratrace/online`), so the community is written here in its shape (`SceneCommunity`) and taken by
  * each client as its `Community`, which the type checker holds to the same shape.
@@ -166,6 +167,25 @@ const DETAIL: SceneLifeDetail = {
 /** The scenes of the rankings, by name: each answers the same players, and each opens on what its name says (`rankingsOpening`). */
 const RANKING_SCENES: ReadonlySet<string> = new Set(['rankings-all', 'rankings-week', 'rankings-friends', 'rankings-challenge', 'rankings-nickname']);
 
+/** The player's attempt at the week's challenge: today's had, the week's best so far. */
+type Entry = { entered: boolean; score: number | null };
+/** What the rankings' player has done of the week's challenge: today's attempt played, their best the one the ranking shows. */
+const PLAYED_TODAY: Entry = { entered: true, score: CHALLENGE.rows[4].score };
+
+/**
+ * The scenes of the game online beside the game alone, by name, and what the other players tell each of the player beyond the rankings' answers:
+ * their attempt at the week's challenge (`entry`), and where a life's score stands among those others played from the same start (`standing`).
+ * The front door has today's attempt still to play; the challenge's page has it still to play with the week's best so far (played on another day),
+ * and played; the end of a life stands better than three in four of the forty others.
+ */
+const ONLINE_SCENES: Readonly<Record<string, { entry?: Entry; standing?: { below: number; total: number } }>> = {
+  'home-member': { entry: { entered: false, score: null } },
+  'challenge-attempt': { entry: { entered: false, score: CHALLENGE.rows[4].score } },
+  'challenge-board': { entry: PLAYED_TODAY },
+  'end-standing': { standing: { below: 31, total: 40 } },
+  'new-ranked': {},
+};
+
 /**
  * The tab a scene of the rankings opens on: the one its name says, all time unless it names another (the name being changed is all time's, as the
  * page first is). Null for a scene that is not one of the rankings'.
@@ -177,11 +197,15 @@ export function rankingsOpening(name: string): { tab: 'all' | 'week' | 'friends'
 }
 
 /**
- * The other players of a scene, or null for a scene that has none (every scene but the rankings', whose screens ask nobody). A new object each
- * time, answering the same: nothing a scene does changes what it is told, so a shot shows what the scene says whatever was pressed on it.
+ * The other players of a scene, or null for a scene that has none (every scene but the rankings' and those of the game online beside the game alone,
+ * `ONLINE_SCENES`: the others ask nobody). A new object each time, answering the same: nothing a scene does changes what it is told, so a shot shows
+ * what the scene says whatever was pressed on it.
  */
 export function sceneCommunity(name: string): SceneCommunity | null {
-  if (!RANKING_SCENES.has(name)) return null;
+  const online = Object.hasOwn(ONLINE_SCENES, name) ? ONLINE_SCENES[name] : null;
+  if (!RANKING_SCENES.has(name) && online === null) return null;
+  const entry = online === null ? PLAYED_TODAY : (online.entry ?? null);
+  const standing = online?.standing ?? null;
   const ranking = (query: { period: 'all' | 'week'; friends: boolean; lifeId: string | null }): SceneRankingRow[] => {
     const rows = query.friends ? AMONG_FRIENDS : query.period === 'week' ? THIS_WEEK : ALL_TIME;
     return rows.filter((row) => query.lifeId === null || row.lifeId === query.lifeId).map((row) => ({ ...row }));
@@ -192,12 +216,12 @@ export function sceneCommunity(name: string): SceneCommunity | null {
     setAvatar: async () => false,
     ranking: async (query) => ranking(query),
     friends: async () => ({ friends: [...FRIENDS.friends], incoming: [...FRIENDS.incoming], outgoing: [...FRIENDS.outgoing] }),
-    compare: async () => null,
+    compare: async () => (standing === null ? null : { ...standing }),
     run: async () => ({ ...DETAIL }),
     befriend: async () => 'failed',
     answerFriend: async () => 'failed',
     unfriend: async () => false,
-    challengeEntry: async () => ({ entered: true, score: CHALLENGE.rows[4].score }),
+    challengeEntry: async () => (entry === null ? null : { ...entry }),
     challengeRanking: async () => ({ entrants: CHALLENGE.entrants, rows: CHALLENGE.rows.map((row) => ({ ...row })) }),
     challengeChoices: async () => [],
     notifyMe: async () => false,

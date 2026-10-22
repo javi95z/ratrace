@@ -1,14 +1,26 @@
 // @vitest-environment jsdom
-import { challengeOf, lives, textFor, weekOf, weekStart } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, lives, textFor, weekOf, weekStart } from '@ratrace/content';
 import { messagesFor } from '@ratrace/i18n';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { RankedSessions } from '@ratrace/core/session/ranked';
+import { GameSessions } from '@ratrace/core/session/sessions';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SavedGame } from '@ratrace/core/session/types';
-import { useGame } from '../context';
+import type { RankedGame, SavedGame } from '@ratrace/core/session/types';
+import { rankedServer } from '../../../../web/src/testing/rankedServer';
+import { GameProvider, useGame } from '../context';
+import type { Services } from '../context';
+import { network } from '../../testing/fakes';
+import { speaking } from '../../testing/memoryServices';
 import { memoryServices, renderGame, router } from '../../testing/render';
-import { useRuleText, useThisWeek, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';
+import { Counted, settled, steady } from '../../testing/renders';
+import type { Renders } from '../../testing/renders';
+import { ChallengeResult, useRuleText, useThisWeek, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';
 import { bannerSize } from '../../ui/sprites';
 
 afterEach(cleanup);
@@ -56,7 +68,7 @@ describe('the weekly challenge page', () => {
     renderGame(<WeeklyChallenge />, services);
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
-    expect(asked).toEqual([[week.lifeId, { challenge: week.week }]]);
+    expect(asked).toEqual([[week.lifeId, { ranked: false, challenge: week.week, replace: undefined }]]);
     expect(((await saved(services)) as { ranked?: boolean }).ranked).toBeUndefined();
   });
 
@@ -225,5 +237,245 @@ describe('the banner of the page', () => {
     expect(bannerSize(378, { w: 288, h: 120 })).toEqual({ w: 378, h: 158 });
     expect(bannerSize(288, { w: 288, h: 120 })).toEqual({ w: 288, h: 120 });
     expect(bannerSize(448 - 24, { w: 288, h: 120 })).toEqual({ w: 424, h: 177 });
+  });
+});
+
+describe('the weekly challenge page, for a player signed in', () => {
+  const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const accountAs = (state: AccountState): Account => ({ state: () => state, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false });
+
+  /** A signed-in player and what the account says of today's ranked attempt and the week's best. */
+  function withAccount(entry: { entered: boolean; score: number | null } | null) {
+    const services = memoryServices();
+    const asked: unknown[] = [];
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string, options?: Parameters<typeof start>[1]) => {
+      asked.push({ lifeId, ...options });
+      // There is no server in this test of the page: the same challenge begins on the phone, once the request is remembered.
+      return start(lifeId, options?.challenge ? { challenge: options.challenge } : undefined);
+    };
+    const community = { challengeEntry: async () => entry } as unknown as Community;
+    return { services: { ...services, account: accountAs(guest), community: () => community }, asked };
+  }
+
+  it('offers the day\'s ranked attempt to a signed-in player who has not had it today, and begins it ranked', async () => {
+    const { services, asked } = withAccount({ entered: false, score: null });
+    renderGame(<WeeklyChallenge />, services);
+    fireEvent.click(await screen.findByRole('button', { name: "Play today's attempt" }));
+    await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: true, challenge: week.week, replace: undefined }]));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    // Nobody is told to sign in who is.
+    expect(document.body.textContent).not.toContain('To play the attempt that counts');
+  });
+
+  it('practises unranked beside the attempt', async () => {
+    const { services, asked } = withAccount({ entered: false, score: null });
+    renderGame(<WeeklyChallenge />, services);
+    await screen.findByRole('button', { name: "Play today's attempt" });
+    fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
+    await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: false, challenge: week.week, replace: undefined }]));
+  });
+
+  it('offers today\'s attempt again to a player who played on another day, with their best of the week', async () => {
+    const { services } = withAccount({ entered: false, score: 640 });
+    renderGame(<WeeklyChallenge />, services);
+    expect(await screen.findByText('Your best this week: 640 points.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: "Play today's attempt" })).toBeTruthy();
+  });
+
+  it('shows today\'s attempt had, the best of the week, and leaves practice available', async () => {
+    const { services } = withAccount({ entered: true, score: 777 });
+    renderGame(<WeeklyChallenge />, services);
+    expect(await screen.findByText("You have played today's attempt. Your best this week: 777 points.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Practise' })).toBeTruthy();
+  });
+
+  it('leads to the week\'s ranking, among the rankings', async () => {
+    const { services } = withAccount(null);
+    renderGame(<WeeklyChallenge />, services);
+    fireEvent.click(await screen.findByRole('link', { name: "See the challenge ranking" }));
+    expect(router.push).toHaveBeenCalledWith('/rankings?tab=challenge');
+  });
+
+  it('offers no attempt with no connection, and tells the player to sign in only where nobody is', async () => {
+    network.connected = false;
+    const { services } = withAccount({ entered: false, score: null });
+    renderGame(<WeeklyChallenge />, services);
+    await screen.findByRole('link', { name: "See the challenge ranking" });
+    await waitFor(() => expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull());
+    expect(screen.getByRole('button', { name: 'Practise' })).toBeTruthy();
+  });
+});
+
+describe('a ranked attempt with a ranked life in progress on another device', { timeout: 60_000 }, () => {
+  const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
+  /** A button of a sheet once it can be pressed: the sheet opens as the start that asked it ends, a moment before its buttons are free. */
+  async function ready(sheet: HTMLElement, name: string) {
+    const button = within(sheet).getByRole('button', { name });
+    await waitFor(() => expect(button.getAttribute('aria-disabled')).not.toBe('true'));
+    return button;
+  }
+  /** A device of the player, over a server of ranked lives several devices share. */
+  function deviceOf(server: ReturnType<typeof rankedServer>) {
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    // The day the server says it is (testing/rankedServer.ts): its week is the one it plays.
+    return { sessions, store, account, tapGuardMs: 0, now: () => SERVER_NOW };
+  }
+  const SERVER_NOW = Date.UTC(2026, 9, 13, 12);
+  const served = challengeOf(weekOf(SERVER_NOW), lives);
+  if (!served) throw new Error('no challenge the server\'s week');
+
+  it('asks first, and begins the attempt in its place only once the player says so and the question has gone', async () => {
+    const server = rankedServer();
+    const there = await deviceOf(server).sessions.start('nurse', { ranked: true });
+    const phone = deviceOf(server);
+    let gone: () => void = () => undefined;
+    renderGame(<WeeklyChallenge />, phone);
+    fireEvent.click(await screen.findByRole('button', { name: "Play today's attempt" }));
+    const sheet = (await screen.findByRole('heading', { name: 'A ranked life in progress' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(sheet.textContent).toContain('Nurse, round 1 of 20.');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(await ready(sheet, 'End it and start this one'));
+    await waitFor(() => expect(server.games.get(there.gameId)?.status).toBe('abandoned'));
+    await waitFor(async () => expect((await phone.store.loadGame()) as RankedGame).toMatchObject({ ranked: true, lifeId: served.lifeId, challenge: served.week }));
+    await new Promise((done) => setTimeout(done, 30));
+    expect(router.replace).not.toHaveBeenCalled();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+  });
+
+  it('is taken up in place of the attempt when the player would rather go on with it, once the sheet has gone', async () => {
+    const server = rankedServer();
+    const there = await deviceOf(server).sessions.start('nurse', { ranked: true });
+    const phone = deviceOf(server);
+    renderGame(<WeeklyChallenge />, phone);
+    fireEvent.click(await screen.findByRole('button', { name: "Play today's attempt" }));
+    const sheet = (await screen.findByRole('heading', { name: 'A ranked life in progress' })).closest('[aria-modal="true"]') as HTMLElement;
+    let gone: () => void = () => undefined;
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(await ready(sheet, 'Continue that life'));
+    await waitFor(async () => expect(((await phone.store.loadGame()) as RankedGame | null)?.gameId).toBe(there.gameId));
+    // Taken up, the page waits for the sheet to leave before it changes under it.
+    await new Promise((done) => setTimeout(done, 30));
+    expect(router.replace).not.toHaveBeenCalled();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+  });
+});
+
+describe('the result of the week\'s attempt', () => {
+  const cards = textFor('en').text.cards;
+  const show = (ranking: ChallengeRanking | null, choices: ChallengeChoice[] | null) => {
+    const community = { challengeRanking: async () => ranking, challengeChoices: async () => choices } as unknown as Community;
+    return renderGame(<ChallengeResult week="2026-W42" />, { ...memoryServices(), community: () => community });
+  };
+
+  it('says where it stands, and the three choices fewest others made, the least followed first, with all of them in a sheet', async () => {
+    show(
+      { rows: [{ place: 2, userId: 'me', nickname: null, score: 900, finishedAt: 0, mine: true }], entrants: 30 },
+      [
+        { cardId: 'health_illness', option: 0, same: 9, answered: 10 },
+        { cardId: 'tax_advisor', option: 1, same: 3, answered: 10 },
+        { cardId: 'career_raise', option: 1, same: 1, answered: 4 },
+        { cardId: 'late_will', option: 1, same: 5, answered: 10 },
+        // A card this build does not know is left out, rather than shown with no name.
+        { cardId: 'gone_card', option: 0, same: 1, answered: 100 },
+      ],
+    );
+    expect(await screen.findByText('Place 2 of 30 · Top 10%')).toBeTruthy();
+    expect(document.querySelector('[data-sprite="icon.top_tenth"]')).not.toBeNull();
+    const rare = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(rare).toEqual([
+      `"${cards.career_raise.title}": you chose "${cards.career_raise.options[1].label}", like 25% of 4.`,
+      `"${cards.tax_advisor.title}": you chose "${cards.tax_advisor.options[1].label}", like 30% of 10.`,
+      `"${cards.late_will.title}": you chose "${cards.late_will.options[1].label}", like 50% of 10.`,
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'See all your choices (4)' }));
+    const sheet = (await screen.findByRole('heading', { name: "Your choices, beside everyone's" })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(sheet).getAllByRole('listitem')[0].textContent).toContain(cards.health_illness.title);
+    expect(within(sheet).getAllByRole('listitem')[0].textContent).toContain('9/10');
+  });
+
+  it('says where it stands alone before the week is over, when nobody has been told how others chose', async () => {
+    show({ rows: [{ place: 7, userId: 'me', nickname: null, score: 900, finishedAt: 0, mine: true }], entrants: 30 }, []);
+    expect(await screen.findByText('Place 7 of 30')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /See all your choices/ })).toBeNull();
+  });
+
+  it('shows nothing while there is nothing to say', async () => {
+    const { container } = show(null, null);
+    await settled();
+    expect(container.textContent).toBe('');
+  });
+});
+
+describe('the weekly challenge on the front door, for a player signed in', () => {
+  const draw = (community: Partial<Community> | null) => renderGame(<WeeklyChallengeCard />, { ...memoryServices(), community: () => community as Community | null });
+
+  it('says the attempt is still to play, and how long the week has left', async () => {
+    draw({ challengeEntry: async () => ({ entered: false, score: null }) });
+    expect(await screen.findByText(/^(Ends today|\d days? left)$/)).toBeTruthy();
+  });
+
+  it('says only that today\'s is played, once it is', async () => {
+    draw({ challengeEntry: async () => ({ entered: true, score: 300 }) });
+    expect(await screen.findByText('Played today')).toBeTruthy();
+    expect(screen.queryByText(/^(Ends today|\d days? left)$/)).toBeNull();
+  });
+});
+
+describe('what the challenge\'s page is drawn again for', () => {
+  /** The page in a counter, beside a hand on the game, with a life in progress that is not the week's. */
+  async function counted(extra: Partial<Services> = {}) {
+    const services = memoryServices();
+    await services.sessions.start('engineer');
+    const renders: Renders = { count: 0 };
+    let leave: (() => void) | null = null;
+    function Hand() {
+      leave = useGame((s) => s.leaveNews);
+      return null;
+    }
+    render(
+      <GameProvider services={speaking({ ...services, ...extra }, 'en')}>
+        <Counted into={renders}>
+          <WeeklyChallenge />
+        </Counted>
+        <Hand />
+      </GameProvider>,
+    );
+    return { renders, leave: () => leave!() };
+  }
+
+  it('is not drawn again for a change of the game it does not show, nor for the connection where nobody is signed in', async () => {
+    const { renders, leave } = await counted();
+    await screen.findByRole('button', { name: 'Practise' });
+    await steady(() => renders.count);
+    const before = renders.count;
+    await settled(() => leave());
+    await settled(() => network.set(false));
+    await settled(() => network.set(true));
+    expect(renders.count).toBe(before);
+  });
+
+  it('is not drawn again for a change of the game it does not show once today\'s attempt is known', async () => {
+    const community = { challengeEntry: async () => ({ entered: true, score: 777 }) } as unknown as Community;
+    const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
+    const { renders, leave } = await counted({ account, community: () => community });
+    await screen.findByText("You have played today's attempt. Your best this week: 777 points.");
+    await steady(() => renders.count);
+    const before = renders.count;
+    await settled(() => leave());
+    expect(renders.count).toBe(before);
   });
 });
