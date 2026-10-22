@@ -2078,6 +2078,9 @@
     "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google."
   },
   "phone": {
+    "captcha": {
+      "title": "A quick check"
+    },
     "lostNewer": "Your saved life was written by a newer version of the game. Update the app to carry on with it.",
     "lostWaiting": "Your life began on an earlier version of the game, and this version of the app cannot open it. It is kept: update the app to carry on with it.",
     "notSaved": "This phone is not saving right now. Keep the game open: closing it would lose what you have played.",

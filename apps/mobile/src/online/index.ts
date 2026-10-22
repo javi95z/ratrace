@@ -14,6 +14,7 @@ import type { Cloud } from '@ratrace/online/supabase';
 import type { Account, AccountSaves, Community } from '@ratrace/online/types';
 import { kvSession, kvText } from '../kvStore';
 import type { KeptText } from '../kvStore';
+import { phoneTurnstile } from './captcha';
 import { phoneErrors, watchErrors } from './errors';
 import { phonePage, whileActive } from './page';
 
@@ -116,7 +117,7 @@ const offline = (device: PlayerStore): Online => ({ account: offlineAccount, sto
  * session from the phone, not only those the client knows of. `stop` stops the renewal and the listening to the app (the app never does: it lasts
  * as long as the app).
  */
-export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
+export function onThePhone(): { connected(cloud: Cloud): Cloud; cloud(): Cloud | null; stop(): void } {
   let current: Cloud | null = null;
   let active = false;
   const renew = (cloud: Cloud | null, on: boolean) => void cloud?.autoRefresh?.(on).catch(() => undefined);
@@ -138,6 +139,7 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
       renew(current, active);
       return current;
     },
+    cloud: () => current,
     stop() {
       stopListening();
       renew(current, false);
@@ -148,6 +150,12 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
 
 /** The phone's one renewal of the session, made with the first cloud: whichever start connects, every client before it is stopped. */
 let thePhone: ReturnType<typeof onThePhone> | null = null;
+/**
+ * The client the account connected last, signed in or not, or null before one has (and in a build with no project): what the game counts of how it
+ * is played is sent through it (`track.ts`), which a guest who never signed in may do.
+ */
+export const phonesCloud = (): Cloud | null => thePhone?.cloud() ?? null;
+
 /** How to stop watching the phone's errors: they are watched once, for the cloud made last. */
 let stopWatching: (() => void) | null = null;
 
@@ -174,10 +182,13 @@ export function phoneOnline(device: PlayerStore): Online {
   if (!url || !key) return offline(device);
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.EXPO_PUBLIC_SUPABASE_REGION || undefined;
+  // The guard at the door of guest sign-in, where the project has one (`captcha.tsx`): with no site key, none is asked for, as on the web.
+  const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || undefined;
+  const captcha = siteKey ? phoneTurnstile(siteKey) : undefined;
   const phone = (thePhone ??= onThePhone());
   const online = onlineOver(device, {
     // The session in the phone's store, and renewed only while the app is in front (`onThePhone`), never by a timer of the client's own.
-    connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false })),
+    connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha })),
     // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean.
     address: () => null,
     clean: () => undefined,

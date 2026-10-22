@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Unreachable } from '@ratrace/core/session/errors';
-import { connectSupabase } from './connect';
+import { cloudOf, connectSupabase } from './connect';
 
 /** The parts of the Supabase client the game uses, answering as told and remembering what they were asked. */
 const client = vi.hoisted(() => {
@@ -362,6 +362,43 @@ describe('what the cloud keeps of a player', () => {
       client.answers.invoke = { data: null, error: { context } };
       expect(await cloud.reportErrors(reports)).toBe('later');
     }
+  });
+
+  it('counts an event of how the game is played through the `track` function, and tells what it will never take from what is worth another try', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    expect(client.created).toHaveLength(1);
+    const event = { name: 'life_end', props: { mode: 'solo', escaped: true }, platform: 'ios' };
+    client.answers.invoke = { data: '', error: null };
+    expect(await cloud.track?.(event)).toBe('sent');
+    // The body is the event, as the function reads it: nothing added, nothing of who.
+    expect(client.asked).toEqual([['invoke', 'track', { body: event }]]);
+    // Sent through a client of its own, made the first time and only once: one with no session, so no player's token goes with it, and nothing
+    // kept or renewed. The player's client is not the one asked.
+    expect(client.created).toHaveLength(2);
+    const [url, key, options] = client.created[1] as [string, string, { accessToken?: () => Promise<string | null>; auth?: unknown; global?: { fetch?: unknown } }];
+    expect([url, key]).toEqual(['u', 'k']);
+    expect(await options.accessToken?.()).toBeNull();
+    expect(options.auth).toBeUndefined();
+    expect(options.global?.fetch).toBe((client.created[0][2] as { global: { fetch: unknown } }).global.fetch);
+    await cloud.track?.(event);
+    expect(client.created).toHaveLength(2);
+    // A cloud made from a client alone has nothing to count with: it counts nothing, rather than through the player's session.
+    client.asked.length = 0;
+    expect(await cloudOf(client.make() as never).track?.(event)).toBe('never');
+    expect(client.asked).toEqual([]);
+    // The function's own no: not an event it knows, no key, or too many of it today.
+    const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
+    for (const [status, word] of [[400, 'bad-request'], [401, 'no-key'], [429, 'too-many']] as const) {
+      client.answers.invoke = said(status, { error: word });
+      expect(await cloud.track?.(event), word).toBe('never');
+    }
+    // Anything else: not deployed yet, the server down, no network. And a client that throws is no throw of the game's.
+    for (const context of [new Response('Not Found', { status: 404 }), new Response('{"error":"server"}', { status: 500 }), undefined, new TypeError('failed to fetch')]) {
+      client.answers.invoke = { data: null, error: { context } };
+      expect(await cloud.track?.(event)).toBe('later');
+    }
+    client.answers.invoke = Promise.reject(new TypeError('failed to fetch'));
+    expect(await cloud.track?.(event)).toBe('later');
   });
 
   it('gives up on a request that gets no answer, so that one stuck request does not stop everything after it', async () => {

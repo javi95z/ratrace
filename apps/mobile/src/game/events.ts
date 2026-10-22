@@ -4,7 +4,7 @@ import type { RoomState } from '@ratrace/core/session/room';
 
 /*
  * What the game counts of how it is played: a copy of the web's (apps/web/src/pwa/events.ts), but for where the web sends it (Vercel), which is the
- * web's own: the phone's sender comes with its own project (`track` is left a no-op in `game/context.tsx` until then). The file cannot be shared,
+ * web's own: the phone sends to the game's own project (`online/track.ts`, wired in `game/context.tsx`). The file cannot be shared,
  * because the web's imports Vercel's library. `events.test.ts` holds the copy to the original: both are run over the same lives and rooms.
  */
 
