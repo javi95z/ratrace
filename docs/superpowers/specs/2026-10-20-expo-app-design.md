@@ -234,3 +234,28 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
 - Test tooling for the app (jest-expo or vitest with react-native-web), as long as the repo's
   `pnpm -s test` keeps running everything.
 - The order of screens within a phase.
+
+## Phase 3 design (decided with the user, 2026-10-23)
+
+**Goal.** Everything online the web has, in the app, with the same look and behaviour: the guest account from the first launch, keeping it with Google, cloud saves (a life goes on on any device), ranked lives, the week's challenge with its attempts and boards, rankings, friends, games with others (Realtime), push, the eight analytics events and error reports. The phase ends when a life begun on the web is finished in the app and the reverse.
+
+**Decisions taken with the user**
+- **Google sign-in** goes through the system browser. `expo-web-browser`'s auth session opens Supabase's own Google page and comes back to `theratrace://`. That is the same Google client the web uses, so no native SDK and no new OAuth clients are needed. It works in Expo Go. The user adds `theratrace://**` to the hosted project's redirect URLs, and the repo's `config.toml` lists it too.
+- **Server changes** (Expo push tokens, the events table, error pages from the app) are made on `dev`, apart from the app, in small additive commits that change nothing the web does. They go live only with the user's go-ahead, through the usual deploy order.
+- **Push** is written now (app and server), with tests. It turns on once the user has created the Expo/EAS account and the Firebase project for FCM, and on iPhone in phase 6 with the Apple account.
+
+**How it is built (the builder's calls; the user may overrule)**
+- **One wiring file.** `apps/mobile/src/online/` holds the phone's twin of the web's `online/index.ts`, and nothing else in the app names `@ratrace/online` beyond types. It covers:
+  - the Supabase session kept on the phone's key-value store;
+  - token refresh tied to the app being in the foreground;
+  - a `crypto.subtle.digest` for PKCE, from `expo-crypto`;
+  - the page's online and shown events, from AppState and the network state;
+  - the kept "given up" and "refused" lists, in the KV store;
+  - error reports from React Native's global handler.
+- **`packages/online` changes are additive and leave the web alone.** `CloudOptions` gains a `storage`. The Google calls gain a way to hand back the URL to open instead of leaving the page. The web keeps its redirect.
+- **Screens.** The context's stand-ins (`game/offline.ts`) give way to the real hooks with the web's names. The online screens are ported as phase 2 ported the rest: same names, exports, props and tests, with scenes shot beside the web's. Those screens are Rankings, Room with its loans and history, PlayerProfile with the RatEditor, the account in Settings and its notices, the cloud-saves offer, and the online parts of Home, Challenge, End, NewLife and Records.
+- **New kit pieces:** a text field in the game's look, the Google mark, and a copy-to-clipboard. Room invitations open the app through `theratrace://room?code=`.
+- **The eight events** go to the game's own Supabase as the user decided: a table only the server writes, and a function the app calls. They carry no id, name or score, as on the web.
+- **Captcha.** If the hosted project asks for one on guest sign-in, Turnstile is shown in a WebView and its token is handed to `@ratrace/online`.
+- **Tests.** They use the web's in-memory ranked and room servers (`apps/web/src/testing/*Server.ts`, already reused by the tools), with no live project. The phase's end check, a life begun on one client and finished on the other, runs against the live project only with the user's go-ahead, as a guest, and cleans its own rows.
+- **The legal notice.** The phone's notice says that nothing is sent. Phase 3 makes that false, so the notice must change before any build reaches a player. The words are the user's to settle (deferred by them); the code shows the web's online notice until they do.
