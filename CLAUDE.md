@@ -31,11 +31,11 @@ pnpm -s typecheck && pnpm -s lint
 pnpm build          # web production build
 pnpm balance        # simulated lives; check balance changes with it
 pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts   # art/raw → sprites
-pnpm online:stats [days]   # usage numbers from the live project, read-only (days played: private.player_days)
+pnpm online:stats [days]   # usage numbers from the live project, read-only (days played: private.player_days; events: private.app_events)
 pnpm online:health         # is the live game up: site, guest, engine, a game with friends (hourly on GitHub, docs/backups.md)
 ```
 
-Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`.
+Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`. The same eight can be counted in the game's own project through the function `track` (`_shared/events.ts`; `private.app_events`, by day and platform, nothing of who; anyone may call it, 200 a day per hashed address), and `pnpm online:stats` prints them.
 
 ## Versions and games in progress
 

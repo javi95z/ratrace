@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { daysAsked, daysSql, DEFAULT_DAYS, share, statsLines, TOTAL_SQL } from './stats-list';
-import type { DayRow } from './stats-list';
+import { daysAsked, daysSql, DEFAULT_DAYS, eventLines, eventsSql, share, statsLines, TOTAL_SQL } from './stats-list';
+import type { DayRow, EventRow } from './stats-list';
 
 const day = (over: Partial<DayRow> = {}): DayRow => ({
   day: '2026-10-19', new_players: 5, new_kept: 1, active: 7, begun_casual: 9, begun_ranked: 2, begun_room: 4, finished: 6,
@@ -42,5 +42,28 @@ describe('the usage numbers', () => {
     // Columns line up, whatever the numbers.
     expect(new Set(lines.slice(2, 5).map((line) => line.length)).size).toBe(1);
     expect(lines.at(-1)).toMatch(/^friends, quick, slow:/);
+  });
+
+  it('asks for the events of the days wanted, by platform, and changes nothing', () => {
+    expect(eventsSql(7)).toContain('private.app_events');
+    expect(eventsSql(7)).toContain('private.today() - 6');
+    expect(eventsSql(500)).toContain('private.today() - 89');
+    expect(eventsSql(14)).toMatch(/group by e\.day, e\.platform/);
+    expect(eventsSql(14)).not.toMatch(/\b(insert|update|delete|drop|alter)\b/i);
+  });
+
+  it('prints the events a row a day and platform, the latest first, and what each column means', () => {
+    const row = (over: Partial<EventRow> = {}): EventRow => ({
+      day: '2026-10-23', platform: 'ios', life_start: 12, life_end: 7, escaped: 2, challenge_attempt: 3, game_start: 1, game_join: 4, account_kept: 1, app_installed: 5, share: 6, ...over,
+    });
+    const lines = eventLines([row(), row({ platform: 'web', life_start: 120 }), row({ day: '2026-10-22', platform: 'android' })]);
+    expect(lines[0]).toBe('Events, as the game counted them');
+    expect(lines[2]).toMatch(/^day\s+on\s+begun\s+ended\s+escaped\s+challenge\s+started\s+joined\s+kept\s+installed\s+shared$/);
+    expect(lines[3]).toMatch(/^2026-10-23\s+ios\s+12\s+7\s+2\s+3\s+1\s+4\s+1\s+5\s+6$/);
+    expect(lines[4]).toMatch(/^2026-10-23\s+web\s+120\s/);
+    expect(lines[5]).toMatch(/^2026-10-22\s+android\s/);
+    expect(new Set(lines.slice(2, 6).map((line) => line.length)).size).toBe(1);
+    expect(lines.at(-1)).toMatch(/^started, joined:/);
+    expect(eventLines([])).toEqual(['Events, as the game counted them', '', 'None in these days.']);
   });
 });

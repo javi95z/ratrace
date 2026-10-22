@@ -1330,6 +1330,122 @@ begin
     failed := array_append(failed, format('the phones stopped on: %s (%s)', sqlerrm, sqlstate));
   end;
 
+  -- ---------------------------------------------------------------- the events the game counts, with nothing of who
+  -- Counts are read as what a call added, never as a total: the live project has its own counts of the day.
+  reset role;
+  begin
+  if (select array_agg(column_name::text order by column_name::text) from information_schema.columns where table_schema = 'private' and table_name = 'app_events') = array['count', 'day', 'name', 'platform', 'props']
+    then passed := passed + 1; else failed := array_append(failed, 'the events keep a column that could name a player'); end if;
+
+  select coalesce(sum(e.count), 0) into held from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": true}' and e.platform = 'android';
+  select coalesce(sum(e.count), 0) into n from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": false}' and e.platform = 'android';
+  perform public.count_event('life_end', '{"mode": "practice", "escaped": true}', 'android');
+  perform public.count_event('life_end', '{"escaped": true, "mode": "practice"}', 'android');
+  perform public.count_event('life_end', '{"mode": "practice", "escaped": false}', 'android');
+  if (select sum(e.count) from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": true}' and e.platform = 'android') = held + 2
+     and (select count(*) from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": true}' and e.platform = 'android') = 1
+     and (select sum(e.count) from private.app_events e where e.day = private.today() and e.name = 'life_end' and e.props = '{"mode": "practice", "escaped": false}' and e.platform = 'android') = n + 1
+    then passed := passed + 1; else failed := array_append(failed, 'an event was not counted once a call, in one row a day, kind and platform'); end if;
+
+  -- Each of the eight, with each value of its props, on each platform.
+  begin
+    perform public.count_event(x.name, x.props, p.platform)
+    from (values
+      ('life_start', '{"mode": "solo"}'::jsonb), ('life_start', '{"mode": "ranked"}'), ('life_start', '{"mode": "challenge"}'), ('life_start', '{"mode": "practice"}'),
+      ('life_end', '{"mode": "solo", "escaped": true}'), ('life_end', '{"mode": "solo", "escaped": false}'), ('life_end', '{"mode": "ranked", "escaped": true}'), ('life_end', '{"mode": "ranked", "escaped": false}'),
+      ('life_end', '{"mode": "challenge", "escaped": true}'), ('life_end', '{"mode": "challenge", "escaped": false}'), ('life_end', '{"mode": "practice", "escaped": true}'), ('life_end', '{"mode": "practice", "escaped": false}'),
+      ('challenge_attempt', '{}'), ('game_start', '{"kind": "friends"}'), ('game_start', '{"kind": "public"}'),
+      ('game_join', '{"via": "code"}'), ('game_join', '{"via": "link"}'), ('game_join', '{"via": "quick"}'),
+      ('account_kept', '{}'), ('app_installed', '{}'), ('share', '{"what": "card"}'), ('share', '{"what": "invite"}')
+    ) as x(name, props), (values ('ios'), ('android'), ('web')) as p(platform);
+    passed := passed + 1;
+  exception when others then failed := array_append(failed, format('an event the game counts was refused: %s', sqlerrm));
+  end;
+
+  -- What the game does not count is refused, whoever writes it.
+  yes1 := true;
+  foreach nm in array array['page_view', 'LIFE_START', ''] loop
+    begin
+      perform public.count_event(nm, '{}', 'web');
+      yes1 := false;
+    exception when check_violation then null;
+    end;
+  end loop;
+  if yes1 then passed := passed + 1; else failed := array_append(failed, 'an event the game does not count was kept'); end if;
+  yes1 := true;
+  foreach j in array array['{"mode": "solo", "life": "nurse"}'::jsonb, '{}', '{"kind": "solo"}'] loop
+    begin
+      perform public.count_event('life_start', j, 'ios');
+      yes1 := false;
+    exception when check_violation then null;
+    end;
+  end loop;
+  if yes1 then passed := passed + 1; else failed := array_append(failed, 'an event was kept with props it does not have, or without one it has'); end if;
+  yes1 := true;
+  foreach j in array array['{"mode": "solo", "escaped": "true"}'::jsonb, '{"mode": "solo", "escaped": 1}', '{"mode": "hardcore", "escaped": true}', '{"mode": null, "escaped": true}'] loop
+    begin
+      perform public.count_event('life_end', j, 'ios');
+      yes1 := false;
+    exception when check_violation then null;
+    end;
+  end loop;
+  if yes1 then passed := passed + 1; else failed := array_append(failed, 'a prop was kept with a value it may not take'); end if;
+  yes1 := true;
+  foreach j in array array['{"mode": "0a4fb313-975e-4fbb-a503-2087414daddf"}'::jsonb, '{"mode": "solo", "id": "0a4fb313-975e-4fbb-a503-2087414daddf"}', '{"mode": "solo", "score": 1234}', '{"mode": "solo", "user": "ana@example.com"}'] loop
+    begin
+      perform public.count_event('life_start', j, 'web');
+      yes1 := false;
+    exception when check_violation then null;
+    end;
+  end loop;
+  if yes1 then passed := passed + 1; else failed := array_append(failed, 'an event was kept with something that could name a player'); end if;
+  yes1 := true;
+  foreach nm in array array['windows', 'IOS', ''] loop
+    begin
+      perform public.count_event('app_installed', '{}', nm);
+      yes1 := false;
+    exception when check_violation then null;
+    end;
+  end loop;
+  begin
+    perform public.count_event('app_installed', '[]', 'ios');
+    yes1 := false;
+  exception when check_violation then null;
+  end;
+  if yes1 then passed := passed + 1; else failed := array_append(failed, 'an event was kept on a platform the game does not run on, or with props that are not an object'); end if;
+  begin
+    insert into private.app_events (day, name, props, platform) values (private.today(), 'life_start', '{"mode": "solo", "id": "x"}', 'ios');
+    failed := array_append(failed, 'the table itself kept an event with a prop the game does not count');
+  exception when check_violation then passed := passed + 1;
+  end;
+
+  -- Only the server counts, and nobody else reads the counts.
+  if not has_function_privilege('anon', 'public.count_event(text, jsonb, text)', 'execute') and not has_function_privilege('authenticated', 'public.count_event(text, jsonb, text)', 'execute')
+     and not has_function_privilege('anon', 'public.take_rate_by_hash(text, text, integer, integer)', 'execute') and not has_function_privilege('authenticated', 'public.take_rate_by_hash(text, text, integer, integer)', 'execute')
+     and not has_table_privilege('anon', 'private.app_events', 'select') and not has_table_privilege('authenticated', 'private.app_events', 'select')
+     and not has_table_privilege('anon', 'private.rate_by_hash', 'select') and not has_table_privilege('authenticated', 'private.rate_by_hash', 'select')
+    then passed := passed + 1; else failed := array_append(failed, 'a player or a visitor can count events, take calls or read them'); end if;
+
+  -- The limit by a caller's hash: so many, then no, and another caller is not held by it.
+  nm := md5(gen_random_uuid()::text);
+  select count(*) filter (where public.take_rate_by_hash(nm, 'events', 200, 86400)) into n from generate_series(1, 201);
+  if n = 200 and not public.take_rate_by_hash(nm, 'events', 200, 86400) and public.take_rate_by_hash(md5(gen_random_uuid()::text), 'events', 200, 86400)
+    then passed := passed + 1; else failed := array_append(failed, (format('the limit by hash let %s of 201 calls through', n))::text); end if;
+  begin
+    perform public.take_rate_by_hash('203.0.113.7', 'events', 200, 86400);
+    failed := array_append(failed, 'a caller was counted by something that is not a hash, such as their address');
+  exception when check_violation then passed := passed + 1;
+  end;
+  -- A caller's hash changes every day: what is three days old is of no use, and goes.
+  nm := md5(gen_random_uuid()::text);
+  insert into private.rate_by_hash (hash, bucket, window_start, used) values (nm, 'events', clock_timestamp() - interval '3 days', 5);
+  perform public.take_rate_by_hash(md5(gen_random_uuid()::text), 'events', 200, 86400);
+  if not exists (select 1 from private.rate_by_hash where hash = nm)
+    then passed := passed + 1; else failed := array_append(failed, 'the count of a caller of days ago was kept'); end if;
+  exception when others then
+    failed := array_append(failed, format('the events stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
+
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;
   delete from auth.users where id = a;

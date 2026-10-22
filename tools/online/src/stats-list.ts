@@ -121,3 +121,66 @@ export function statsLines(days: readonly DayRow[], total: TotalRow): string[] {
     'friends, quick, slow: games with others opened: among friends, public played together, public a round a day',
   ];
 }
+
+/** One day of the events the game counted on one platform (`private.app_events`, kept by the function `track`). */
+export interface EventRow {
+  day: string;
+  platform: string;
+  life_start: number;
+  life_end: number;
+  /** Of the lives ended, those that escaped the rat race. */
+  escaped: number;
+  challenge_attempt: number;
+  game_start: number;
+  game_join: number;
+  account_kept: number;
+  app_installed: number;
+  share: number;
+}
+
+const EVENT_NAMES = ['life_start', 'life_end', 'challenge_attempt', 'game_start', 'game_join', 'account_kept', 'app_installed', 'share'] as const;
+
+/** One row a day and platform that counted anything, the latest first, for the last `days` days. */
+export function eventsSql(days: number): string {
+  const n = Math.max(1, Math.min(MOST_DAYS, Math.floor(days)));
+  const sums = EVENT_NAMES.map((name) => `  coalesce(sum(e.count) filter (where e.name = '${name}'), 0)::int as ${name},`);
+  return `
+select e.day::text as day, e.platform,
+${sums.join('\n')}
+  coalesce(sum(e.count) filter (where e.name = 'life_end' and e.props ->> 'escaped' = 'true'), 0)::int as escaped
+from private.app_events e
+where e.day >= private.today() - ${n - 1}
+group by e.day, e.platform
+order by e.day desc, e.platform`.trim();
+}
+
+const EVENT_COLUMNS: Array<{ title: string; width: number; of(row: EventRow): string }> = [
+  { title: 'day', width: 10, of: (row) => row.day },
+  { title: 'on', width: 7, of: (row) => row.platform },
+  { title: 'begun', width: 5, of: (row) => String(row.life_start) },
+  { title: 'ended', width: 5, of: (row) => String(row.life_end) },
+  { title: 'escaped', width: 7, of: (row) => String(row.escaped) },
+  { title: 'challenge', width: 9, of: (row) => String(row.challenge_attempt) },
+  { title: 'started', width: 7, of: (row) => String(row.game_start) },
+  { title: 'joined', width: 6, of: (row) => String(row.game_join) },
+  { title: 'kept', width: 4, of: (row) => String(row.account_kept) },
+  { title: 'installed', width: 9, of: (row) => String(row.app_installed) },
+  { title: 'shared', width: 6, of: (row) => String(row.share) },
+];
+
+/** The events as lines for a terminal: a row a day and platform, the latest first, and what each column means. */
+export function eventLines(rows: readonly EventRow[]): string[] {
+  const title = 'Events, as the game counted them';
+  if (rows.length === 0) return [title, '', 'None in these days.'];
+  const line = (cells: string[]) => cells.map((cell, at) => (at < 2 ? cell.padEnd(EVENT_COLUMNS[at].width) : cell.padStart(EVENT_COLUMNS[at].width))).join('  ');
+  return [
+    title,
+    '',
+    line(EVENT_COLUMNS.map((column) => column.title)),
+    ...rows.map((row) => line(EVENT_COLUMNS.map((column) => column.of(row)))),
+    '',
+    'on: ios, android or web · begun, ended: lives (escaped: of them, out of the rat race) · challenge: attempts that counted',
+    'kept: guests who kept their account with Google · installed: the game installed as an app · shared: cards and invitations',
+    'started, joined: games with others begun as a player saw them, and joined by code, link or a quick game',
+  ];
+}

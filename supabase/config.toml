@@ -450,3 +450,8 @@ verify_jwt = false
 # The errors a page met, kept in one place without anything of who met them. Signed-in players only.
 [functions.report-error]
 verify_jwt = true
+
+# The events the game counts, by the day and the platform, with nothing of who. Anyone may call it: a guest
+# who never signed in still counts. It holds itself to a small body and a limit by a hash of the caller.
+[functions.track]
+verify_jwt = false
