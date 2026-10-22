@@ -35,7 +35,7 @@ import { phoneConnection, phonePage } from '../online/page';
 import { phonePush } from '../online/push';
 import type { Push } from '../online/push';
 import { phoneTrack } from '../online/track';
-import { closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
+import { closeAllSheets, closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
@@ -314,46 +314,40 @@ function Place(): null {
   return null;
 }
 
-/** How long a tap waits for the screen it opened to be in front before the sheets may open again all the same. */
-const IN_FRONT_PATIENCE = 1_000;
+/** How long a tap waits for the sheets it closed to be gone: one that will not close by then keeps the tap from opening anything. */
+const SHEETS_PATIENCE = 2_000;
 
 /**
  * A tap on one of the game's notices opens the screen it names: the tap that opened the app (once the router is there), and each one while it runs.
- * The sheets open over whatever was shown are shut first, and the screen changes once they are gone (a screen pushed under a sheet still shown is left
- * under it); they may open again once that screen is in front (a sheet of the screen under it stays hidden while it is not, ui/overlay.tsx). The
- * screen in front already is opened anew in its place, never a second copy over it. Inside the router, round every screen, once for the app: a game
- * started again does not open the same tap again.
+ * The sheets open over whatever was shown are closed first, each as the player would close it (as a page left on the web takes its sheets with it),
+ * and the screen changes once they are gone: nothing is left open behind it to come back. A sheet that will not close in a while (a question being
+ * answered) keeps the tap from opening anything rather than leave its Modal over the new screen. The screen in front already is opened anew in its
+ * place, never a second copy over it. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
  */
 function Taps({ push }: { push: Push }): null {
   const router = useRouter();
   const pathname = usePathname();
-  // The screen in front, as the router last said, and the screen a tap is waiting to see in front (with how to stop waiting).
+  // The screen in front, as the router last said.
   const shown = useRef(pathname);
   shown.current = pathname;
-  const waiting = useRef<{ page: string; done: () => void } | null>(null);
-  useEffect(() => {
-    if (waiting.current?.page === pathname) waiting.current.done();
-  }, [pathname]);
   useEffect(() => {
     let live = true;
     const stop = push.onTap((path) => {
-      const page = path.split('?')[0];
-      const letGo = closeEverySheet();
-      void sheetsGone().then(() => {
-        if (!live) return letGo();
-        const same = shown.current === page;
-        if (same) router.replace(path);
-        else router.push(path);
-        // The sheets may open again once the screen is in front (a turn later, for the one under it to have heard it is not), or after a while.
-        const clock: { timer?: ReturnType<typeof setTimeout> } = {};
-        const done = () => {
-          if (waiting.current?.done === done) waiting.current = null;
-          clearTimeout(clock.timer);
-          setTimeout(letGo, 0);
-        };
-        if (same) return done();
-        waiting.current = { page, done };
-        clock.timer = setTimeout(done, IN_FRONT_PATIENCE);
+      closeAllSheets();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const late = new Promise<false>((resolve) => {
+        timer = setTimeout(() => resolve(false), SHEETS_PATIENCE);
+      });
+      void Promise.race([sheetsGone().then(() => true as const), late]).then((gone) => {
+        clearTimeout(timer);
+        if (!live || !gone) return;
+        const page = path.split('?')[0];
+        try {
+          if (shown.current === page) router.replace(path);
+          else router.push(path);
+        } catch {
+          // The router could not go there: the screen stays as it is, with nothing of the tap left behind.
+        }
       });
     });
     return () => {

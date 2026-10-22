@@ -5,7 +5,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GameProvider } from '../game/context';
 import { useGameFonts } from '../ui/fonts';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
-import { InFront } from '../ui/inFront';
 import { Page } from '../ui/Page';
 import { PerfFrames, perfTouched, perfTouchStarted } from '../ui/perf';
 
@@ -32,8 +31,7 @@ export default function RootLayout() {
         <StatusBar style="light" />
         <Page>
           <ThemeProvider value={GROUND_THEME}>
-            {/* Each screen tells its sheets whether it is in front: a screen pushed over another hides the other's (ui/overlay.tsx). */}
-            <Stack screenOptions={SCREENS} screenLayout={({ navigation, children }) => <InFront navigation={navigation}>{children}</InFront>} />
+            <Stack screenOptions={SCREENS} />
           </ThemeProvider>
         </Page>
       </GameProvider>

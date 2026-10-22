@@ -3,7 +3,7 @@ import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty,
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { ageAt, insuranceCover } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
-import { createContext, memo, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { PAY_DROP, webLine } from '../../ui/fonts';
@@ -217,12 +217,6 @@ export function ProfileBody() {
     setLine(null);
     if (itemId !== null) setOpen(itemId);
   }, []);
-  // What is open here, kept by the sheet the profile is drawn in: hidden a while (every sheet shut for a notice's tap) the body is drawn anew, and
-  // opens what it had open.
-  useEffect(() => {
-    opened.line = line !== null && lineOpen ? line : undefined;
-    opened.item = open ?? undefined;
-  }, [opened, line, lineOpen, open]);
 
   let invested = 0;
   for (const held of Object.values(p.positions)) invested += held.value;
@@ -582,20 +576,9 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
 export function ProfileSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('profile');
   const common = useT('common');
-  // What the body has open (a line of the balance sheet, a thing owned), from what a scene opens: kept while the sheet is only hidden, so it comes
-  // back as it was left, and forgotten once the sheet is closed.
-  const outer = useContext(ProfileOpened);
-  const [kept] = useState<{ item?: string; line?: BalanceLine }>(() => ({ ...outer }));
-  useEffect(() => {
-    if (open) return;
-    kept.item = undefined;
-    kept.line = undefined;
-  }, [open, kept]);
   return (
     <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
-      <ProfileOpened value={kept}>
-        <ProfileBody />
-      </ProfileOpened>
+      <ProfileBody />
       <Leave onLeave={onClose} />
     </Sheet>
   );

@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
 import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeOf } from '../../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../../supabase/functions/_shared/notice.ts';
 import { Preferences } from '../game/screens/Settings';
 import { notices, pathname, tapOn } from '../testing/fakes';
-import { closeEverySheet, sheetOpened, sheetsGone, sheetsShut } from '../ui/back';
-import { GameProvider } from '../game/context';
+import { closeEverySheet, sheetOpened, sheetsShut } from '../ui/back';
 import { Play } from '../game/screens/Play';
-import { InFront } from '../ui/inFront';
 import { Sheet } from '../ui/overlay';
 import { memoryServices, renderGame, router } from '../testing/render';
 import { pageOf, phonePush } from './push';
@@ -222,14 +221,20 @@ describe('a tap on a notice', () => {
     expect(notices.tokens.size).toBe(0);
   });
 
-  it('shuts the sheets that are open first, and opens the screen once they are gone', async () => {
+  it('closes the sheets that are open as the player would, and opens the screen once they are gone', async () => {
     const push = phonePush(memoryNote(), { platform: 'ios' });
+    function Open() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Sheet open={open} onClose={() => setOpen(false)} title="Something open" closeLabel="Close">
+          <></>
+        </Sheet>
+      );
+    }
     renderGame(
       <>
         <Preferences />
-        <Sheet open onClose={() => undefined} title="Something open" closeLabel="Close">
-          <></>
-        </Sheet>
+        <Open />
       </>,
       { ...memoryServices(), push },
     );
@@ -240,11 +245,13 @@ describe('a tap on a notice', () => {
     act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room'));
     expect(sheetWhenOpened).toBe(false);
-    // The sheets may open again once the screen opened is in front (here, where no screen comes to the front, after a while).
-    await waitFor(() => expect(sheetsShut()).toBe(false), { timeout: 3_000 });
+    // Closed for good: nothing comes back after.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(screen.queryByRole('heading', { name: 'Something open' })).toBeNull();
+    expect(sheetsShut()).toBe(false);
   });
 
-  it('hides a sheet of the profile for the screen it opens, and the same sheet is there again on coming back (the balance\'s line, as it was left)', async () => {
+  it('closes the profile and its balance line for the screen it opens, and the profile is there again with nothing open over it', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
     renderGame(<Play />, { ...services, push: phonePush(memoryNote(), { platform: 'ios' }) });
@@ -256,36 +263,55 @@ describe('a tap on a notice', () => {
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
     expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull();
-    // Back (here, where no screen comes in front, once the tap has waited its while): the line's sheet, as it was, over the profile.
-    expect(await screen.findByRole('heading', { name: 'Cash' }, { timeout: 3_000 })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
+    // Back on the life: nothing was left open to come back over it, and the profile opens as ever, its balance line closed.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
+    expect(await screen.findByRole('heading', { name: 'Your life' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull();
   });
 
-  it('lets a sheet hidden for a while come back without telling it it is gone; one its screen closes is', async () => {
-    const gone = vi.fn();
-    function Host({ asked }: { asked: boolean }) {
-      return (
-        <Sheet open={asked} onClose={() => undefined} onGone={gone} title="Kept" closeLabel="Close">
+  it('opens nothing where a sheet will not close in a while: never a Modal left over the new screen', async () => {
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(
+      <>
+        <Preferences />
+        <Sheet open onClose={() => undefined} title="Being answered" closeLabel="Close">
           <></>
         </Sheet>
-      );
-    }
-    const { rerender } = renderGame(<Host asked />, memoryServices());
-    await screen.findByRole('heading', { name: 'Kept' });
-    const letGo = closeEverySheet();
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Kept' })).toBeNull());
-    await sheetsGone();
-    expect(gone).not.toHaveBeenCalled();
-    act(() => letGo());
-    await screen.findByRole('heading', { name: 'Kept' });
-    rerender(<GameProvider services={memoryServices()}><Host asked={false} /></GameProvider>);
-    await waitFor(() => expect(gone).toHaveBeenCalledTimes(1));
+      </>,
+      { ...memoryServices(), push },
+    );
+    await screen.findByRole('heading', { name: 'Being answered' });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
+    await new Promise((resolve) => setTimeout(resolve, 2_300));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Being answered' })).toBeTruthy();
   });
 
-  it('keeps the sheets shut while anyone holds them so: a tap that lands as the game starts again opens none under the start', async () => {
+  it('closes the question of signing out for good when it lands while the game starts again: it cannot come back', async () => {
+    const signedIn = accountAt({ kind: 'member', userId: 'member-1', email: null });
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), account: signedIn.account, push });
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
+    await screen.findByRole('heading', { name: 'Sign out?' });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    // The game starting again holds every sheet shut, as it does once the player has said yes.
     const forStart = closeEverySheet();
-    const forTap = closeEverySheet();
-    forTap();
+    act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+    act(() => forStart());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(screen.queryByRole('heading', { name: 'Sign out?' })).toBeNull();
+  });
+
+  it('keeps the sheets shut while anyone holds them so', async () => {
+    const forStart = closeEverySheet();
+    const another = closeEverySheet();
+    another();
     expect(sheetsShut()).toBe(true);
     forStart();
     expect(sheetsShut()).toBe(false);
@@ -300,7 +326,6 @@ describe('a tap on a notice', () => {
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
     await settle();
     await settle();
-    expect(sheetsShut()).toBe(true);
     expect(router.push).not.toHaveBeenCalled();
     act(() => gone());
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
@@ -314,37 +339,20 @@ describe('a tap on a notice', () => {
     act(() => notices.tap(tapOn('theratrace://room?code=K7Q2XM', 'notice-2')));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/room?code=K7Q2XM'));
     expect(router.push).not.toHaveBeenCalled();
-    await waitFor(() => expect(sheetsShut()).toBe(false));
   });
-});
 
-describe('a sheet of a screen that is not in front', () => {
-  it('is hidden while another screen is over it, and shown again as it was when its screen is back', async () => {
-    const listeners = { focus: new Set<() => void>(), blur: new Set<() => void>() };
-    let focused = true;
-    const navigation = {
-      isFocused: () => focused,
-      addListener: (event: 'focus' | 'blur', listener: () => void) => (listeners[event].add(listener), () => void listeners[event].delete(listener)),
-    };
-    const say = (event: 'focus' | 'blur') => {
-      focused = event === 'focus';
-      for (const listener of [...listeners[event]]) listener();
-    };
-    renderGame(
-      <InFront navigation={navigation}>
-        <Sheet open onClose={() => undefined} title="Under the room" closeLabel="Close">
-          <></>
-        </Sheet>
-      </InFront>,
-      memoryServices(),
-    );
-    await screen.findByRole('heading', { name: 'Under the room' });
-    act(() => say('blur'));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Under the room' })).toBeNull());
-    act(() => say('focus'));
-    expect(await screen.findByRole('heading', { name: 'Under the room' })).toBeTruthy();
-    cleanup();
-    expect(listeners.focus.size + listeners.blur.size).toBe(0);
+  it('lives through a router that cannot go there: the next tap opens its screen', async () => {
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), push });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    router.push.mockImplementationOnce(() => {
+      throw new Error('no such route');
+    });
+    act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledTimes(1));
+    act(() => notices.tap(tapOn('theratrace://challenge', 'notice-3')));
+    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith('/challenge'));
+    expect(sheetsShut()).toBe(false);
   });
 });
 
@@ -580,6 +588,27 @@ describe('never a crash', () => {
     const { all } = community({ stopNotifying: async () => Promise.reject(new Error('offline')) });
     await expect(push.pushOff(all)).resolves.toBe(false);
     expect(note.now).toEqual({ state: 'on', token: FIRST });
+  });
+
+  it('turns off once, however many times it is asked while it is under way: a second ask joins the first', async () => {
+    notices.status = 'granted';
+    const push = phonePush(memoryNote('on'), { platform: 'ios' });
+    let answer: (done: boolean) => void = () => undefined;
+    const { all, asked } = community({
+      stopNotifying: (target: { expo: string } | string) => {
+        asked.push(`stop ${typeof target === 'string' ? target : target.expo}`);
+        return new Promise<boolean>((resolve) => (answer = resolve));
+      },
+    });
+    const first = push.pushOff(all);
+    const second = push.pushOff(all);
+    expect(second).toBe(first);
+    await settle();
+    answer(true);
+    await expect(first).resolves.toBe(true);
+    expect(asked).toEqual([`stop ${FIRST}`]);
+    // Done, the next is a new one.
+    expect(push.pushOff(all)).not.toBe(first);
   });
 
   it('lets a sign-out go on where the account does not answer: it waits a while at most', async () => {

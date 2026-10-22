@@ -42,6 +42,27 @@ export function sheetsGone(): Promise<void> {
 }
 
 /*
+ * Every sheet its screen asks to be open, by how it is closed (its `onClose`, as the player closes it: the backdrop, Close, Back). A notice tapped closes
+ * them all so (`closeAllSheets`), as a page left on the web takes its sheets with it: nothing is left open behind the screen the notice opens.
+ */
+const closers = new Set<{ close(): void }>();
+/** Counts a sheet its screen asks to be open, by how it is closed. Returns what to call when it is asked no more. */
+export function sheetAsked(sheet: { close(): void }): () => void {
+  closers.add(sheet);
+  return () => void closers.delete(sheet);
+}
+/** Closes every sheet that is open, each as the player would close it. One that will not close (a question being answered) stays open. */
+export function closeAllSheets(): void {
+  for (const sheet of [...closers]) {
+    try {
+      sheet.close();
+    } catch {
+      // A sheet that cannot be closed stays: `sheetsGone` says so to whoever waits.
+    }
+  }
+}
+
+/*
  * Every sheet shut at once, whatever its screen holds (`closeEverySheet`): the game is about to start again under them (the player signed out), and
  * a sheet is not left presented while the screens under it are taken away. Each closes as a sheet closes (the Sheet reads `sheetsShut`), so
  * `sheetsGone` tells when they are gone. They may open again once the game has started again (`openSheetsAgain`): the screens drawn anew have none open.

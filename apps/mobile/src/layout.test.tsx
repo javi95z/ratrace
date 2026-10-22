@@ -10,7 +10,7 @@ const box = (name: string) => ({ children, style }: { children?: ReactNode; styl
 vi.mock('react-native-gesture-handler', () => ({ GestureHandlerRootView: box('gestures') }));
 vi.mock('expo-router', () => ({
   SplashScreen: { preventAutoHideAsync: async () => undefined, hideAsync: async () => undefined },
-  Stack: ({ screenLayout }: { screenLayout?: unknown }) => <div data-piece="stack" data-layout={typeof screenLayout} />,
+  Stack: () => <div data-piece="stack" />,
   ThemeProvider: box('theme'),
   DarkTheme: { dark: true, colors: {}, fonts: {} },
 }));
@@ -27,9 +27,4 @@ test('the whole app is inside one gesture root that fills the screen, so a drag 
   expect(root.dataset.piece).toBe('gestures');
   expect(JSON.parse(root.dataset.style!)).toMatchObject({ flex: 1 });
   expect(root.querySelector('[data-piece="stack"]')).not.toBeNull();
-});
-
-test('tells each screen of the stack whether it is in front, for its sheets: a screen opened over another hides the other\'s (ui/inFront.tsx)', () => {
-  const { container } = render(<RootLayout />);
-  expect((container.querySelector('[data-piece="stack"]') as HTMLElement).dataset.layout).toBe('function');
 });

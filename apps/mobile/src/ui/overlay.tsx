@@ -2,8 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { holdingTurn, sheetOpened, sheetsShut, subscribeShut } from './back';
-import { ScreenInFront } from './inFront';
+import { holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -54,7 +53,6 @@ interface Turn {
 const turns: Turn[] = [];
 /** The sheet a sheet is drawn inside: the one that presents it. */
 const SheetParent = createContext<number | null>(null);
-
 const within = (id: number, outer: number): boolean => {
   for (let at = turns.find((turn) => turn.id === id)?.parent ?? null; at !== null; at = turns.find((turn) => turn.id === at)?.parent ?? null) if (at === outer) return true;
   return false;
@@ -105,15 +103,14 @@ function endTurnOnceGone(id: number): void {
  *
  * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
  * can tell a screen that moves on after closing its sheets when they are gone. Every opening is a panel of its own,
- * so its rise plays from its first frame. `onGone` is told when a sheet its screen closed has gone, its Modal dismissed (not one only hidden a while): a sheet
+ * so its rise plays from its first frame. `onGone` is told when a sheet that closed has gone, its Modal dismissed: a sheet
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
 export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
-  // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`), or its screen is not the one in front.
+  // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
   const shut = useSyncExternalStore(subscribeShut, sheetsShut, () => false);
-  const inFront = useContext(ScreenInFront);
-  const open = asked && !shut && inFront;
+  const open = asked && !shut;
   const [held, setHeld] = useState({ was: open, opening: open ? 1 : 0, mounted: open });
   let now = held;
   if (open !== held.was) {
@@ -132,23 +129,23 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
   // The latest opening, and who is told when a sheet has gone, as they are when the Modal says it has dismissed.
   const latest = useRef(opening);
   const told = useRef(onGone);
-  // Whether its screen still asks for it: a sheet hidden for a while (every sheet shut for a notice's tap, or its screen not in front) has not been
-  // closed, and its `onGone` is not told; it comes back as it was left.
-  const stillAsked = useRef(asked);
-  // Before the panel's own effects say it has gone (theirs run before this sheet's, being its children's).
-  useLayoutEffect(() => {
-    stillAsked.current = asked;
-  });
+  const closing = useRef(onClose);
   useEffect(() => {
     latest.current = opening;
     told.current = onGone;
+    closing.current = onClose;
   });
+  // Known, while its screen asks for it, by how it is closed: a notice tapped closes it as the player would (`closeAllSheets`).
+  useEffect(() => {
+    if (!asked) return;
+    return sheetAsked({ close: () => closing.current() });
+  }, [asked]);
   // Said by the panel that is leaving; one that was replaced by another opening has nothing left to say.
   const leave = useCallback(() => {
     setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current));
     if (latest.current === opening) {
       endTurn(id);
-      if (!stillAsked.current) told.current?.();
+      told.current?.();
     }
   }, [opening, id]);
   // Closed while it waited for its turn: never shown, so nothing to wait for.
@@ -157,7 +154,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
     if (open || !waiting) return;
     endTurn(id);
     setHeld((current) => ({ ...current, mounted: false }));
-    if (!stillAsked.current) told.current?.();
+    told.current?.();
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>

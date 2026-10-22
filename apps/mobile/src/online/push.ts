@@ -161,11 +161,12 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
   let following: Account | null = null;
   /**
    * The player's last word wins: each "off" is a new intent, and a claim begun before it (a start's, in flight) neither notes the notices on again
-   * when it lands, nor is left to land after the account forgot the phone (the "off" waits for it). While an "off" is under way, nothing is claimed.
+   * when it lands, nor is left to land after the account forgot the phone (the "off" waits for it). One "off" at a time: a second joins the one under
+   * way, and while it is, nothing is claimed.
    */
   let intent = 0;
   let claiming: Promise<boolean> | null = null;
-  let stopping = false;
+  let stopping: Promise<boolean> | null = null;
   /** The taps opened already, by the notice's id: the tap that opened the app is heard again by the listener on Android. */
   const opened = new Set<string>();
 
@@ -233,7 +234,7 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
    */
   const tell = async (community: Community, given: string, userId: string | null, locale: string): Promise<boolean> => {
     if (told !== null && told.token === given && told.userId === userId && told.locale === locale) return true;
-    if (stopping) return false;
+    if (stopping !== null) return false;
     const mine = intent;
     const before = told;
     told = { token: given, userId, locale };
@@ -264,10 +265,10 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
       return asking;
     },
     register: async (community, locale) => (token === null ? false : tell(community, token, following ? whoIn(following) : null, locale)),
-    pushOff: async (community) => {
+    pushOff: (community) => {
+      if (stopping !== null) return stopping;
       intent += 1;
-      stopping = true;
-      try {
+      const off = (async () => {
         // A claim in flight lands first: the account forgets the phone after it, never before.
         if (claiming !== null) await claiming;
         // The token the account has: the one it was last given, or this phone's own.
@@ -276,9 +277,11 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
         told = null;
         note.write({ state: 'off', token: null });
         return true;
-      } finally {
-        stopping = false;
-      }
+      })().finally(() => {
+        if (stopping === off) stopping = null;
+      });
+      stopping = off;
+      return off;
     },
     release: async (community, patience = 5_000) => {
       const held = noted().token;
