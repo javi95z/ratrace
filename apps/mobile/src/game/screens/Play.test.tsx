@@ -2,6 +2,7 @@
 import { content, lives, textFor } from '@ratrace/content';
 import { memoryBasket } from '@ratrace/core/game/basket';
 import { LocalSessions } from '@ratrace/core/session/local';
+import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { GameSession, PlayerStore, SavedGame } from '@ratrace/core/session/types';
 import type { Order } from '@ratrace/engine';
 import { messagesFor } from '@ratrace/i18n';
@@ -87,7 +88,13 @@ describe('the play screen in a room', () => {
     expect(screen.getByText('the room bar')).toBeTruthy();
   });
 
-  it('puts the room\'s wait in place of the round\'s button, the cards\' stage too', async () => {
+  it('puts the room\'s wait in place of the round\'s button on the cards\' stage too, which has none of its own', async () => {
+    renderGame(<Play room={slots('waiting for the others')} />, memoryServices(await sceneStore('play-cards-r1')));
+    await stageIs(/^Card \d of/);
+    expect(screen.getByText('waiting for the others')).toBeTruthy();
+  });
+
+  it('puts the room\'s wait in place of the round\'s button', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { content, CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
+import type { RoomState } from '@ratrace/core/game/room';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { Unreachable } from '@ratrace/core/session/errors';
 import type { SavedGame } from '@ratrace/core/session/types';
@@ -48,6 +49,21 @@ vi.mock('../../ui/RatAvatar', async () => {
     },
   };
 });
+
+// The bar's button (a Raised named for the game), counted each time it is drawn: the one piece of the bar the clock draws again.
+const bars = vi.hoisted(() => ({ drawn: 0 }));
+vi.mock('../../ui/kit', async (original) => {
+  const kit = await original<typeof import('../../ui/kit')>();
+  const { createElement } = await import('react');
+  return {
+    ...kit,
+    Raised: (props: Parameters<typeof kit.Raised>[0]) => {
+      if (props.label?.startsWith('The game: ')) bars.drawn += 1;
+      return createElement(kit.Raised, props);
+    },
+  };
+});
+const barDrawn = () => bars.drawn;
 
 // Lives played a round at a time on the server: a moment alone, several times that on a busy machine.
 vi.setConfig({ testTimeout: 120_000 });
@@ -828,6 +844,127 @@ describe('a public game over', () => {
   });
 });
 
+describe('the room\'s bar through a round turning', () => {
+  it('keeps the terms of a loan being typed when the round turns under them, and the order open after', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    press(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance();
+    press(button(/Play the round/));
+    await screen.findByText('Waiting for the others');
+    press(screen.getByRole('button', { name: /^The game: / }));
+    press(within(await sheetOf(/^Round 1 of/)).getByRole('button', { name: /Rat BBBB/ }));
+    press(within(await sheetOf('Rat BBBB')).getByRole('button', { name: 'Offer a loan' }));
+    const field = within(await sheetOf('Lend to Rat BBBB')).getByRole('textbox', { name: 'Amount' }) as HTMLInputElement;
+    type(field, '4321');
+    // The last to play plays: the round turns, the stage goes from the finances to the ledger, and the bar is drawn where the ledger has it.
+    await bPlays(server, room.id);
+    await screen.findByRole('region', { name: 'After round 1' }, { timeout: 5_000 });
+    const still = await sheetOf('Lend to Rat BBBB');
+    expect((within(still).getByRole('textbox', { name: 'Amount' }) as HTMLInputElement).value).toBe('4321');
+    press(within(still).getByRole('button', { name: 'Close' }));
+    // The order, opened in the ledger and kept open while the next round begins.
+    press(await screen.findByRole('button', { name: /^The game: / }));
+    expect(await sheetOf(/^Round 2 of/)).toBeTruthy();
+    press(button('Next round'));
+    await screen.findByRole('heading', { name: 'News' });
+    expect(await sheetOf(/^Round 2 of/)).toBeTruthy();
+  });
+
+  it('keeps the shout\'s wait when the bar moves with the stage', async () => {
+    const server = roomServer();
+    await lobby(server);
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    press(await screen.findByRole('button', { name: 'Start' }));
+    // The bar's square, once the game is on (the lobby's own way to shout goes with the lobby).
+    await screen.findByRole('button', { name: /^The game: / }, { timeout: 10_000 });
+    press(button('Say something'));
+    press(within(await sheetOf('Say something')).getByRole('button', { name: 'Well played!' }));
+    await settled();
+    // To the finances: the bar is drawn over their tabs now.
+    await toFinance();
+    press(button('Say something'));
+    expect(within(await sheetOf('Say something')).getByText(/^You can say something again in \d+ s$/)).toBeTruthy();
+  });
+
+  it('holds a shout heard while a sheet is open, and shows it its whole time once the sheet has gone', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    press(await screen.findByRole('button', { name: /^The game: / }, { timeout: 10_000 }));
+    const order = await sheetOf(/^Round 1 of/);
+    const shown = () => screen.queryAllByRole('status').some((status) => status.textContent?.endsWith('Rat BBBB😂'));
+    const live = new Set<unknown>();
+    const set = globalThis.setTimeout;
+    const clear = globalThis.clearTimeout;
+    const spySet = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((run: () => void, ms?: number, ...rest: unknown[]) => {
+      const id = set(() => {
+        live.delete(id);
+        run();
+      }, ms, ...rest);
+      if (ms === 4_000) live.add(id);
+      return id;
+    }) as typeof setTimeout);
+    const spyClear = vi.spyOn(globalThis, 'clearTimeout').mockImplementation(((id: ReturnType<typeof setTimeout>) => {
+      live.delete(id);
+      clear(id);
+    }) as typeof clearTimeout);
+    try {
+      await meanwhile(() => server.ask(B, { action: 'shout', roomId: room.id, shout: 0 }));
+      await settled();
+      // Behind the sheet: not shown, and its time not running.
+      expect(shown()).toBe(false);
+      expect(live.size).toBe(0);
+      press(within(order).getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(shown()).toBe(true));
+      expect(live.size).toBe(1);
+    } finally {
+      spySet.mockRestore();
+      spyClear.mockRestore();
+    }
+  });
+
+  it('tells the loans of the round before that came to nothing for want of cash, from the player\'s side', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    for (const who of [HOST, B]) await playRoundOf(server, room.id, who);
+    // The server tells of two loans of the first round that failed: one the player was to lend, one they were to borrow.
+    const link = server.link(HOST);
+    const failed = (state: RoomState): RoomState => ({
+      ...state,
+      loans: [
+        ...state.loans,
+        { id: 'failed-lend', round: state.round - 1, lend: true, other: B, mine: true, amount: 100_000, rateBp: 500, rounds: 2, status: 'failed' },
+        { id: 'failed-borrow', round: state.round - 1, lend: false, other: B, mine: false, amount: 200_000, rateBp: 0, rounds: 3, status: 'failed' },
+      ],
+    });
+    const told = {
+      ...link,
+      api: {
+        ...link.api,
+        mine: async () => {
+          const now = await link.api.mine();
+          return now === null ? null : failed(now);
+        },
+        state: async (id: string) => {
+          const now = await link.api.state(id);
+          return now === 'gone' ? now : failed(now);
+        },
+      },
+    };
+    const { services } = inRooms(server);
+    renderGame(<Room />, { ...services, rooms: () => told });
+    expect(await screen.findByText('Not lent: you were short of cash', { exact: false }, { timeout: 10_000 })).toBeTruthy();
+    expect(screen.getByText('Not lent: Rat BBBB was short of cash', { exact: false })).toBeTruthy();
+  });
+});
+
 describe('what a room in play draws again', () => {
   it('draws no rat of the bar again when another player shouts or offers a loan elsewhere: only a seat that played', async () => {
     const server = roomServer();
@@ -842,6 +979,7 @@ describe('what a room in play draws again', () => {
     const ratOf = (user: string) => [...rats.keys()].find((key) => !key.endsWith('/md') && key.includes(user === HOST ? 'gold' : user === B ? 'teal' : 'wine'))!;
     const drawn = () => [HOST, B, C].map((user) => rats.get(ratOf(user)));
     const [host, b, c] = drawn();
+    const barBefore = barDrawn();
     // Another player shouts, and one offers a loan to a third: nothing the bar shows has changed.
     await meanwhile(() => server.ask(B, { action: 'shout', roomId: room.id, shout: 1 }));
     await meanwhile(() => server.ask(B, { action: 'loan', roomId: room.id, to: C, lend: true, amount: 200_000, rateBp: 500, rounds: 3 }));
@@ -849,6 +987,8 @@ describe('what a room in play draws again', () => {
     // (The shout shows B's rat, larger, in a toast of its own: counted apart.)
     expect(rats.get(ratOf(B) + '/md')).toBeGreaterThan(0);
     expect(drawn()).toEqual([host, b, c]);
+    // Nor its button: the room's clock is the same moment at every look, though the skew measured with it moves by a few milliseconds.
+    expect(barDrawn()).toBe(barBefore);
     // B plays: B's seat on the bar is drawn again, with its tick; the others are not.
     await playRoundOf(server, room.id, B);
     await meanwhile(() => server.ask(B, { action: 'state', roomId: room.id }));
@@ -874,6 +1014,7 @@ describe('what a room in play draws again', () => {
     const bar = await screen.findByRole('button', { name: /^The game: / }, { timeout: 10_000 });
     await steady(() => [renders.count, ...rats.values()]);
     const before = renders.count;
+    const barBefore = barDrawn();
     const seats = [...rats.values()];
     const shown = bar.getAttribute('aria-label');
     for (let tenth = 0; tenth < 23; tenth++) {
@@ -884,6 +1025,9 @@ describe('what a room in play draws again', () => {
     expect(bar.getAttribute('aria-label')).not.toBe(shown);
     expect(renders.count - before).toBeGreaterThanOrEqual(1);
     expect(renders.count - before).toBeLessThanOrEqual(5);
+    // The bar's button, the one thing that ticks: once a second over 2.3 s is two or three drawings; a clock told twice a second would be four or five.
+    expect(barDrawn() - barBefore).toBeGreaterThanOrEqual(2);
+    expect(barDrawn() - barBefore).toBeLessThanOrEqual(3);
     expect([...rats.values()]).toEqual(seats);
     void room;
   });

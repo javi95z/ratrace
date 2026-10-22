@@ -1,7 +1,7 @@
 import { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS } from '@ratrace/core/game/room';
 import type { RoomLoan, RoomMember } from '@ratrace/core/game/room';
 import { applyBp } from '@ratrace/engine';
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { Button, Panel, Raised, Segmented, usePress } from '../../ui/kit';
@@ -80,6 +80,10 @@ export function LinkButton({ onPress, disabled = false, padX = 12, children }: {
   );
 }
 
+/** The offer an answer is on its way to, and how to say so: kept above what draws the offers, so a round that moves them keeps it. */
+export type LoanReply = [string | null, (id: string | null) => void];
+export const LoanReplies = createContext<LoanReply | null>(null);
+
 /** What the offers of the room draw: the round, whether it is played, its loans and who they are with. Plain data, compared as a whole. */
 type Offers = { round: number; playing: boolean; loans: RoomLoan[]; who: Record<string, Pick<RoomMember, 'name' | 'bot' | 'userId'>> };
 
@@ -91,7 +95,9 @@ export function LoanOffers({ nameOf }: { nameOf(member: Pick<RoomMember, 'name' 
   const t = useT('room.loan');
   const { content, fmt } = useWords();
   const answer = useRoom((s) => s.answerLoan);
-  const [busy, setBusy] = useState<string | null>(null);
+  // An answer on its way, kept by whoever holds the bar (`LoanReplies`) where one does, so the bar moving as the round turns does not forget it.
+  const own = useState<string | null>(null);
+  const [busy, setBusy] = useContext(LoanReplies) ?? own;
   const terms = useTerms();
   const offers = useRoomSlice<Offers | null>(({ room }) => {
     if (room === null) return null;

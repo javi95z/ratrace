@@ -5,7 +5,7 @@ import type { PublicPace, RoomMember, RoomState, RoundSeconds } from '@ratrace/c
 import type { GameStore } from '@ratrace/core/game/store';
 import { indexed } from '@ratrace/engine';
 import { useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,14 +16,14 @@ import { CREAM, GOLD } from '../../ui/frames';
 import { Framed } from '../../ui/Frame';
 import { Button, Notice, Panel, pressDown, Raised, Segmented, SrOnly, Tag, usePress, Well } from '../../ui/kit';
 import { Loading } from '../../ui/Loading';
-import { Sheet, Toast } from '../../ui/overlay';
+import { Sheet, Toast, useSheetsShowing } from '../../ui/overlay';
 import { Screen } from '../../ui/Page';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA } from '../../ui/theme';
-import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useTrack, useWords } from '../context';
+import { GameScope, useCommunity, useGame, useProfile, useRoom, useRooms, useSettings, useTrack, useWords } from '../context';
 import { lifeRows } from '../lives';
 import { RoomPaper } from '../roomStory';
 import { useRoomSlice } from '../roomSlice';
@@ -35,7 +35,8 @@ import { LifeBrief, LifeSummary } from './LifeSummary';
 import { Play } from './Play';
 import type { RoomSlots } from './Play';
 import { NAME } from './Rankings';
-import { LinkButton, LoanOffers, PlayerSheet } from './RoomLoans';
+import { LinkButton, LoanOffers, LoanReplies, PlayerSheet } from './RoomLoans';
+import type { LoanReply } from './RoomLoans';
 
 /*
  * The web's Room.tsx, on the phone: the way into a game with others (a public one, one of the player's own, one joined by its code or by an
@@ -89,19 +90,27 @@ function useCountdown(at: number | null, skew: number): number | null {
   return at === null ? null : Math.max(0, Math.ceil((at - (Date.now() + skew)) / 1_000));
 }
 
+/**
+ * When a moment of the server's clock (`at`) comes by the phone's: the server's minus the room's `skew`, taken once for that moment. The skew is
+ * measured again at every look at the room and moves by a few milliseconds each time; read with it, the clocks would be drawn again, and set again,
+ * for every look. The moment changes, and is taken again, when the room gives another (a round turned, a lobby's start moved).
+ */
+function useLocal(at: number | null): number | null {
+  const rooms = useRooms();
+  return useMemo(() => (at === null ? null : at - rooms.getState().skew), [at, rooms]);
+}
+
 /** The seconds left before a public lobby starts by itself, by the server's clock, counted down as the page is shown. Null for any other room. */
 function useSecondsToStart(): number | null {
-  const startsAt = useRoom((s) => (s.room?.status === 'open' ? s.room.startsAt : null));
-  const skew = useRoom((s) => s.skew);
-  return useCountdown(startsAt, skew);
+  const startsAt = useLocal(useRoom((s) => (s.room?.status === 'open' ? s.room.startsAt : null)));
+  return useCountdown(startsAt, 0);
 }
 
 /** The seconds left before the room's deadline, by the server's clock, counted down as the page is shown. Null outside play. Not counted while not `shown`. */
 function useSecondsLeft(shown = true): number | null {
-  const deadline = useRoom((s) => s.room?.deadline ?? null);
+  const deadline = useLocal(useRoom((s) => s.room?.deadline ?? null));
   const seconds = useRoom((s) => s.room?.seconds ?? 0);
-  const skew = useRoom((s) => s.skew);
-  const left = useCountdown(shown ? deadline : null, skew);
+  const left = useCountdown(shown ? deadline : null, 0);
   return left === null ? null : Math.min(seconds, left);
 }
 
@@ -256,9 +265,11 @@ function RoomScreens() {
   const slots = useMemo<RoomSlots>(() => ({ bar: <RoomTop />, actions: waiting ? <Waiting /> : null, resolved: <RoomOrder />, end: <RoomEnd /> }), [waiting]);
   return (
     <View style={{ flex: 1 }}>
-      <RoomPaper.Provider value={paper}>
-        <Play room={slots} />
-      </RoomPaper.Provider>
+      <BarHost>
+        <RoomPaper.Provider value={paper}>
+          <Play room={slots} />
+        </RoomPaper.Provider>
+      </BarHost>
       <Heard />
       <Toast message={missed > 0 ? t('missed', { count: missed }) : null} onDone={clearMissed} ms={6_000} />
     </View>
@@ -293,8 +304,10 @@ type BarSlice = {
 /** A seat on the bar: the rat, ringed in gold for the player, faded until it has played, with a tick once it has. Drawn again only when it plays. */
 const BarSeat = memo(function BarSeat({ userId, avatar, ready, me }: { userId: string; avatar: string | null; ready: boolean; me: boolean }) {
   return (
-    <View style={{ flexShrink: 0, opacity: ready ? 1 : 0.6, ...(me ? { borderWidth: 2, borderColor: COLORS['gold-500'] } : null) }}>
+    <View style={{ flexShrink: 0, opacity: ready ? 1 : 0.6 }}>
       <MemberRat member={{ userId, avatar }} />
+      {/* The player's ring, outside the seat's box as the web's outline is: it takes no room, and moves nothing. */}
+      {me ? <View pointerEvents="none" style={{ position: 'absolute', left: -2, top: -2, right: -2, bottom: -2, borderWidth: 2, borderColor: COLORS['gold-500'] }} /> : null}
       {ready ? (
         <View style={{ position: 'absolute', right: -6, top: -6, width: 16, height: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS['teal-300'] }}>
           <ReadText size={10} weight={600} tone="night-900" lineHeight={10}>{'✓'}</ReadText>
@@ -340,14 +353,85 @@ function BarButton({ ready, total, place, playing, seconds, seats, onPress }: { 
   );
 }
 
-/** Above the round: the time left and how it runs out, who has played, the player's place, and the way to the room's order, to leaving and to shouting. */
-function RoomBar() {
+/**
+ * What the room's bar opens, and what the loans of the round are waiting for: kept by `BarHost`, which stands round Play and never moves. The bar
+ * itself is drawn where the stage puts it (over the finances' tabs, or at the top of any other stage), and is made anew as the stage changes: its
+ * sheets, the shout's wait and an answer to a loan on its way are not its own, so they outlive it.
+ */
+type BarOpens = { order(): void; shout(): void };
+const BarOpens = createContext<BarOpens>({ order: () => undefined, shout: () => undefined });
+
+/**
+ * The room's bar's sheets and what they hold, kept through the round: the room's order, the question of leaving, another player (and the terms of a
+ * loan being typed), and the shouts with their wait. A round turning, which moves the bar, leaves every one of them as it was.
+ */
+function BarHost({ children }: { children: ReactNode }) {
+  const t = useT('room');
+  const common = useT('common');
   const nameOf = useNameOf();
+  const shout = useRoom((s) => s.shout);
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
+  const [shouting, setShouting] = useState(false);
+  // When the next shout is taken: the sheet counts down to it while it is open, and nothing else is drawn for it.
+  const [until, setUntil] = useState(0);
+  const [replying, setReplying] = useState<string | null>(null);
+  const replies = useMemo<LoanReply>(() => [replying, setReplying], [replying]);
   // Loans need a life on rules that know them: a game begun before them goes on without.
   const loans = useGame((s) => (s.view ? Object.hasOwn(s.view.player.life.flags, 'in_room') : false));
+  const room = useRoomSlice(({ room: now }) => (now === null ? null : { playing: now.status === 'playing', round: now.round, rounds: now.rounds, public: now.public }));
+  const opens = useMemo<BarOpens>(() => ({ order: () => setOpen(true), shout: () => setShouting(true) }), []);
+  const pick = useCallback((userId: string) => {
+    // One sheet at a time: the order gives way to the player.
+    setOpen(false);
+    setPicked(userId);
+  }, []);
+  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once.
+  const send = useCallback(
+    (n: number) => {
+      setUntil(Date.now() + SHOUT_EVERY_MS);
+      setShouting(false);
+      void shout(n);
+    },
+    [shout],
+  );
+  return (
+    <BarOpens.Provider value={opens}>
+      <LoanReplies.Provider value={replies}>
+        {children}
+        {room ? (
+          <>
+            <BarSheet
+              open={open}
+              onClose={() => setOpen(false)}
+              playing={room.playing}
+              round={room.round}
+              rounds={room.rounds}
+              loans={loans}
+              onPick={loans || room.public ? pick : undefined}
+              onLeave={() => {
+                // One sheet at a time: the order gives way to the question.
+                setOpen(false);
+                setLeaving(true);
+              }}
+            />
+            <LeaveSheet open={leaving} onClose={() => setLeaving(false)} />
+            <PlayerSheet member={picked === null ? null : { userId: picked }} nameOf={nameOf} loans={loans} onClose={() => setPicked(null)} />
+          </>
+        ) : null}
+        <Sheet open={shouting} onClose={() => setShouting(false)} title={t('shoutTitle')} closeLabel={common('close')}>
+          <ShoutChoices until={until} onSend={send} />
+        </Sheet>
+      </LoanReplies.Provider>
+    </BarOpens.Provider>
+  );
+}
+
+/** Above the round: the time left and how it runs out, who has played, the player's place, and the way to the room's order, to leaving and to shouting. */
+function RoomBar() {
+  const t = useT('room');
+  const opens = useContext(BarOpens);
   const bar = useRoomSlice<BarSlice | null>(({ room }) => {
     if (room === null) return null;
     const here = room.members.filter((member) => !member.left);
@@ -362,10 +446,6 @@ function RoomBar() {
       public: room.public,
     };
   });
-  const pick = useCallback((userId: string) => {
-    setOpen(false);
-    setPicked(userId);
-  }, []);
   const seats = useMemo(
     () =>
       bar === null ? null : (
@@ -381,15 +461,10 @@ function RoomBar() {
   const ready = bar.here.filter((member) => member.ready).length;
   return (
     <View style={{ flexDirection: 'row', gap: 8 }}>
-      <BarButton ready={ready} total={bar.here.length} place={bar.place} playing={bar.playing} seconds={bar.seconds} seats={seats} onPress={() => setOpen(true)} />
-      <BarSheet open={open} onClose={() => setOpen(false)} playing={bar.playing} round={bar.round} rounds={bar.rounds} loans={loans} onPick={loans || bar.public ? pick : undefined} onLeave={() => {
-        // One sheet at a time: the order gives way to the question.
-        setOpen(false);
-        setLeaving(true);
-      }} />
-      <LeaveSheet open={leaving} onClose={() => setLeaving(false)} />
-      <PlayerSheet member={picked === null ? null : { userId: picked }} nameOf={nameOf} loans={loans} onClose={() => setPicked(null)} />
-      <ShoutButton />
+      <BarButton ready={ready} total={bar.here.length} place={bar.place} playing={bar.playing} seconds={bar.seconds} seats={seats} onPress={opens.order} />
+      <Raised label={t('shoutTitle')} bg="night-700" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} onPress={opens.shout}>
+        <Sprite id="icon.room_shout" />
+      </Raised>
     </View>
   );
 }
@@ -754,8 +829,8 @@ function useShoutText() {
   return (n: number) => (n < SHOUT_FACES.length ? SHOUT_FACES[n] : t(PHRASES[Math.min(n - SHOUT_FACES.length, SHOUT_PHRASES - 1)]));
 }
 
-/** The way to shout to the others: a face or a phrase from a short list, one every ten seconds. Wide in the lobby; a square beside the bar in play. */
-function ShoutButton({ wide = false }: { wide?: boolean }) {
+/** The way to shout to the others from the lobby: a face or a phrase from a short list, one every ten seconds. (In play, the bar's square: `BarHost`.) */
+function ShoutButton() {
   const t = useT('room');
   const common = useT('common');
   const shout = useRoom((s) => s.shout);
@@ -773,16 +848,10 @@ function ShoutButton({ wide = false }: { wide?: boolean }) {
   );
   return (
     <>
-      {wide ? (
-        <Button variant="secondary" wide onPress={() => setOpen(true)}>
-          <Sprite id="icon.room_shout" />
-          {t('shoutTitle')}
-        </Button>
-      ) : (
-        <Raised label={t('shoutTitle')} bg="night-700" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => setOpen(true)}>
-          <Sprite id="icon.room_shout" />
-        </Raised>
-      )}
+      <Button variant="secondary" wide onPress={() => setOpen(true)}>
+        <Sprite id="icon.room_shout" />
+        {t('shoutTitle')}
+      </Button>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('shoutTitle')} closeLabel={common('close')}>
         <ShoutChoices until={until} onSend={send} />
       </Sheet>
@@ -824,7 +893,7 @@ type Shouter = { userId: string; name: string | null; bot: string | null; avatar
 
 /**
  * What the others shouted, each for a moment at the top of the screen, as they come: one timer at a time, for the first on screen, however many
- * come. Over the page, not over a sheet that is open (a sheet is a window of its own on the phone).
+ * come. Over the page, not over a sheet (a sheet is a window of its own on the phone): those heard while one is open wait for it to go.
  */
 function Heard() {
   const heard = useRoom((s) => s.heard);
@@ -833,13 +902,15 @@ function Heard() {
   const shouters = useRoomSlice<Shouter[]>(({ room, heard: now }) =>
     room === null ? [] : room.members.filter((member) => now.some((shout) => shout.userId === member.userId)).map((member) => ({ userId: member.userId, name: member.name, bot: member.bot, avatar: member.avatar })),
   );
+  // A sheet stands over the page, where the shouts are: they wait for it to go (the room keeps the latest three), and each is then shown its whole time.
+  const covered = useSheetsShowing();
   const first = heard[0];
   useEffect(() => {
-    if (!first) return;
+    if (!first || covered) return;
     const timer = setTimeout(() => dismiss(first.key), SHOUT_SHOWN_MS);
     return () => clearTimeout(timer);
-  }, [first, dismiss]);
-  if (heard.length === 0) return null;
+  }, [first, dismiss, covered]);
+  if (heard.length === 0 || covered) return null;
   return (
     <View
       accessible
@@ -1298,7 +1369,7 @@ function Lobby({ room }: { room: RoomState }) {
         </View>
       )}
       <Refusal />
-      <ShoutButton wide />
+      <ShoutButton />
       <Button variant="quiet" wide disabled={busy} onPress={() => (me?.host && !room.public ? setAsking(true) : void leave())}>
         {t('leave')}
       </Button>

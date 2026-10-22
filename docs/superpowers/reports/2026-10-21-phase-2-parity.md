@@ -1608,7 +1608,10 @@ takes the scene's own steps on it (`runRoomScene`), before the screen is first d
   by the bar and handed in, the same each second. The line of the round's time jumps once a second; the web eases its width over 300 ms.
 - **The bar hides "n/m played"** as the web does below 640 px (`max-sm:hidden`): the ticks on the rats say it.
 - **Shouts stand over the page, not over a sheet** that is open: a sheet is a window of its own on the phone. The web's stand over its sheets.
+  Those heard while a sheet is open wait for it to go (the room keeps the latest three), and each is then shown its whole four seconds.
   Their shadow is drawn (two strips of `EXTRA.shoutShadow`, as the paper's), not a CSS shadow.
+- **The bar is drawn where the stage puts it** (over the finances' tabs, or at the top of any other stage), as the web's is in one place: its
+  sheets, the shout's wait and an answer to a loan on its way are kept above it (`BarHost`), so a round turning under an open sheet leaves it open.
 - **Sheets take turns**: the room's order gives way to the question of leaving, and to the sheet of a player (closed, then the other opened); the
   web opens the question over the order.
 - **The loan's amount** is the kit's `TextField kind="amount"` (digits only, on the number pad); the four amounts a tap gives are buttons, gold when
