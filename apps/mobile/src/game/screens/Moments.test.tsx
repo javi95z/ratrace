@@ -3,11 +3,15 @@ import type { Milestone } from '@ratrace/content';
 import type { GameSession } from '@ratrace/core/session/types';
 import type { GameEvent, GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heard, memoryServices, renderGame } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { COLORS } from '../../ui/theme';
 import { Play } from './Play';
+
+// The early escape's module also writes a life where the phone keeps it (the device's database): only its life is played here.
+vi.mock('../../kvStore', async (original) => ({ ...(await original<typeof import('../../kvStore')>()), KvStore: class {} }));
+const { earlyEscape } = await import('../../testing/perfLife');
 
 /*
  * The web's Moments.test.tsx on the phone: a moment of a life takes the screen in a sheet of its own over Play, one at a time, the gravest first;
@@ -131,6 +135,29 @@ describe('a moment of a life', () => {
     expect(sheetOpen()).toBeNull();
     expect(heard).toContain('round');
   });
+});
+
+describe('a moment and a legendary badge of the same round', () => {
+  it('take their turns, one sheet at a time (iOS presents one Modal at a time): the moments first, as the web draws them on top, then the badge', async () => {
+    // The influencer of the early escape, at the finances of the round that takes her out of the rat race at 38 and earns `escaped_before_40`.
+    const { store } = await earlyEscape();
+    renderGame(<Play />, memoryServices(store));
+    fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    const moment = await sheet('Out of the rat race!');
+    // The badge's sheet waits its turn: not drawn while the moment's is.
+    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
+    expect(screen.queryByText('Legendary badge')).toBeNull();
+    fireEvent.click(within(moment).getByRole('button', { name: 'Carry on, for the fun of it' }));
+    // The round's other moment, the first million, in its turn among the moments (one sheet, one moment after the other, as on the web).
+    const million = await sheet('Your first million');
+    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
+    fireEvent.click(within(million).getAllByRole('button').at(-1)!);
+    const badge = await sheet('Out before 40');
+    expect(within(badge).getByText('Legendary badge')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Out of the rat race!' })).toBeNull();
+    fireEvent.click(within(badge).getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(sheetOpen()).toBeNull());
+  }, 60_000);
 });
 
 describe('a crisis', () => {

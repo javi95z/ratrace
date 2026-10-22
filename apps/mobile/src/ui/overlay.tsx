@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,6 +35,49 @@ function changeTop(change: () => void): void {
 /** Whether a sheet is open, which the toasts are then drawn in. */
 const useSheetOpen = (): boolean => useSyncExternalStore(subscribeTop, () => top.sheets.length > 0, () => false);
 
+/*
+ * Sheets in turn. On iOS a Modal is a view controller presented by the one under it, and one cannot present a second while it presents the first
+ * (UIKit: "Attempt to present … which is already presenting"): two sheets opened side by side (the moment of leaving the rat race and a legendary
+ * badge, by the same step) left the second never shown, and the player never saw it. The web draws both, one over the other. Here one at a time:
+ * each sheet that is open takes its turn (`turns`), from when it opens until its Modal has gone. A sheet drawn inside another (`SheetParent`) is
+ * presented by that one, and shows at once. Of sheets that open together, the last opened shows first, as the web's last portal is drawn on top;
+ * one that opens while another is shown (or still leaving) waits until it has gone.
+ */
+interface Turn {
+  id: number;
+  /** The sheet this one is drawn inside, if any. */
+  parent: number | null;
+  /** Its Modal has been presented (and has not gone yet). */
+  shown: boolean;
+}
+const turns: Turn[] = [];
+/** The sheet a sheet is drawn inside: the one that presents it. */
+const SheetParent = createContext<number | null>(null);
+const within = (id: number, outer: number): boolean => {
+  for (let at = turns.find((turn) => turn.id === id)?.parent ?? null; at !== null; at = turns.find((turn) => turn.id === at)?.parent ?? null) if (at === outer) return true;
+  return false;
+};
+/** Whether a sheet that is open may show now: no other sheet but its own (one it is in, or one in it) is shown, and none waiting with it opened after it. */
+function hasTurn(id: number): boolean {
+  const at = turns.findIndex((turn) => turn.id === id);
+  if (at < 0) return false;
+  if (turns[at].shown) return true;
+  const others = turns.filter((turn, i) => i !== at && !within(id, turn.id) && !within(turn.id, id));
+  return !others.some((turn) => turn.shown) && others.every((turn) => turns.indexOf(turn) < at);
+}
+function takeTurn(id: number, parent: number | null): void {
+  if (turns.some((turn) => turn.id === id)) return;
+  changeTop(() => void turns.push({ id, parent, shown: false }));
+}
+function turnShown(id: number): void {
+  const turn = turns.find((one) => one.id === id);
+  if (turn && !turn.shown) changeTop(() => void (turn.shown = true));
+}
+function endTurn(id: number): void {
+  const at = turns.findIndex((turn) => turn.id === id);
+  if (at >= 0) changeTop(() => void turns.splice(at, 1));
+}
+
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet): the backdrop closes it,
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
@@ -55,6 +98,14 @@ export function Sheet({ open, onClose, onGone, title, closeLabel, tone, children
     setHeld(now);
   }
   const opening = now.opening;
+  // Its turn among the sheets (`turns`): taken as it opens, before it is drawn, and given up once its Modal has gone, or as it closes unshown.
+  const parent = useContext(SheetParent);
+  const [id] = useState(() => nextId++);
+  useLayoutEffect(() => {
+    if (open) takeTurn(id, parent);
+  }, [open, id, parent]);
+  useLayoutEffect(() => () => endTurn(id), [id]);
+  const turn = useSyncExternalStore(subscribeTop, () => hasTurn(id), () => false);
   // The latest opening, and who is told when a sheet has gone, as they are when the Modal says it has dismissed.
   const latest = useRef(opening);
   const told = useRef(onGone);
@@ -65,20 +116,38 @@ export function Sheet({ open, onClose, onGone, title, closeLabel, tone, children
   // Said by the panel that is leaving; one that was replaced by another opening has nothing left to say.
   const leave = useCallback(() => {
     setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current));
-    if (latest.current === opening) told.current?.();
-  }, [opening]);
-  return now.mounted ? (
-    <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} title={title} closeLabel={closeLabel} tone={tone}>
-      {children}
-    </SheetPanel>
+    if (latest.current === opening) {
+      endTurn(id);
+      told.current?.();
+    }
+  }, [opening, id]);
+  // Closed while it waited for its turn: never shown, so nothing to wait for.
+  const waiting = now.mounted && !turn;
+  useEffect(() => {
+    if (open || !waiting) return;
+    endTurn(id);
+    setHeld((current) => ({ ...current, mounted: false }));
+    told.current?.();
+  }, [open, waiting, id]);
+  return now.mounted && turn ? (
+    <SheetParent.Provider value={id}>
+      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone}>
+        {children}
+      </SheetPanel>
+    </SheetParent.Provider>
   ) : null;
 }
 
 /** How long a Modal that says nothing of its dismissal is waited for on iOS: it was never shown, so there is nothing to wait for. */
 const DISMISS_MS = 600;
 
-function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
+function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone(): void; onShown(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const inset = useSafeAreaInsets();
+  // Presented: its turn is held until it has gone.
+  const shown = useRef(onShown);
+  useLayoutEffect(() => {
+    shown.current();
+  }, []);
   const { height } = useWindowDimensions();
   const rise = useRise();
   const close = usePress({ onPress: onClose });

@@ -489,3 +489,66 @@ test('a sheet that closes says when it has gone (onGone): once its Modal has dis
   act(() => (modal.props!.onDismiss as () => void)());
   expect(gone).toHaveBeenCalledTimes(2);
 });
+
+/** Two sheets side by side, as two parts of a screen open theirs (a moment of the round, a badge it earned), each open as told. */
+function Two({ first, second, nested = false }: { first: boolean; second: boolean; nested?: boolean }) {
+  const inner = (
+    <Sheet open={second} onClose={() => {}} title="Second" closeLabel="Close">
+      <span>second inside</span>
+    </Sheet>
+  );
+  return (
+    <>
+      <Sheet open={first} onClose={() => {}} title="First" closeLabel="Close">
+        <span>first inside</span>
+        {nested ? inner : null}
+      </Sheet>
+      {nested ? null : inner}
+    </>
+  );
+}
+const shownSheets = () => ['first inside', 'second inside'].filter((words) => screen.queryByText(words) !== null);
+
+test('two sheets opened side by side take turns, as iOS presents one Modal at a time: the last opened first, as the web draws it on top, then the other', () => {
+  platform.OS = 'android';
+  const { rerender } = render(<Two first={false} second={false} />);
+  rerender(<Two first second />);
+  expect(shownSheets()).toEqual(['second inside']);
+  expect(modals()).toEqual(['true']);
+  // The second closed and gone: the first takes its turn, rising from its first frame.
+  rerender(<Two first second={false} />);
+  expect(shownSheets()).toEqual(['first inside']);
+  expect(modals()).toEqual(['true']);
+  rerender(<Two first={false} second={false} />);
+  expect(modals()).toEqual([]);
+});
+
+test('a sheet that opens while another is shown waits until that one has gone, its Modal dismissed (iOS cannot present while it dismisses)', async () => {
+  platform.OS = 'ios';
+  const { rerender } = render(<Two first second={false} />);
+  expect(shownSheets()).toEqual(['first inside']);
+  rerender(<Two first second />);
+  expect(shownSheets()).toEqual(['first inside']);
+  // Closed, but still leaving: the second still waits.
+  rerender(<Two first={false} second />);
+  expect(shownSheets()).toEqual([]);
+  expect(modals()).toEqual(['false']);
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(shownSheets()).toEqual(['second inside']);
+});
+
+test('a sheet drawn inside another is presented by it, at once; and one closed before its turn came is never shown', () => {
+  platform.OS = 'android';
+  const { rerender } = render(<Two first second={false} nested />);
+  rerender(<Two first second nested />);
+  expect(shownSheets()).toEqual(['first inside', 'second inside']);
+  expect(modals()).toEqual(['true', 'true']);
+  cleanup();
+  render(<Two first second={false} />);
+  const waiting = render(<Two first={false} second />);
+  waiting.rerender(<Two first={false} second={false} />);
+  cleanup();
+  // Nothing left waiting: a sheet opened next is shown at once.
+  render(<Wrapper open />);
+  expect(screen.getByText('inside')).toBeTruthy();
+});
