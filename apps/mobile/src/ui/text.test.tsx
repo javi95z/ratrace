@@ -65,6 +65,16 @@ test('on a Russian page each space of a title is set 0.16 em tighter, as the web
   expect(spans(en.container).every((s) => s.style.letterSpacing === '')).toBe(true);
 });
 
+test('a Russian title spaced by its style (a panel\'s tab, 0.1 em) takes the word spacing off that spacing, not off its face\'s 0.03 em', () => {
+  // The web adds `word-spacing` to whatever `letter-spacing` the element has: a tab's `tracking-[0.1em]` and `-0.16em` make a space of -0.06 em.
+  const ru = render(<Language.Provider value="ru"><PixelText size={14} style={{ letterSpacing: 1.4 }}>{'ТВОИ ИНВЕСТИЦИИ'}</PixelText></Language.Provider>);
+  const space = spans(ru.container).find((s) => s.textContent === ' ')!;
+  expect(parseFloat(space.style.letterSpacing)).toBeCloseTo(1.4 + 14 * RU_WORD_SPACING, 5);
+  // The words take the text's own (the style's), set on the whole.
+  expect(parseFloat((ru.container.firstElementChild as HTMLElement).style.letterSpacing)).toBeCloseTo(1.4, 5);
+  expect(spans(ru.container).filter((s) => s.textContent !== ' ').every((s) => s.style.letterSpacing === '')).toBe(true);
+});
+
 test('a reading text never takes the word spacing', () => {
   const { container } = render(<Language.Provider value="ru"><ReadText>{'Ранг 3'}</ReadText></Language.Provider>);
   expect(spans(container).every((s) => s.style.letterSpacing === '')).toBe(true);

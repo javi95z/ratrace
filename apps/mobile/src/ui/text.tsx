@@ -122,6 +122,9 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const runs = runsOf(children, role, weight, language, italic);
   const words = role === 'pixel' && language === 'ru';
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
+  // The letter spacing the text is set in: its face's, or the one its style gives it (a tab's title, 0.1 em). A Russian title's word spaces take theirs off
+  // that one, as the web's `word-spacing` is added to whatever `letter-spacing` the element has.
+  const spacing = typeof flat.letterSpacing === 'number' ? flat.letterSpacing : letterSpacing;
   const line = lineHeight ?? standard;
   const ios = Platform.OS === 'ios';
   const density = PixelRatio.get();
@@ -166,7 +169,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       // whatever stands above or below it, and must not take a tap meant for a button there.
       style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
-      {runs.flatMap((run) => pieces(run, size, size, letterSpacing, words)).map((piece, i) => (
+      {runs.flatMap((run) => pieces(run, size, size, spacing, words)).map((piece, i) => (
         <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
           {piece.text}
         </Text>
@@ -174,7 +177,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       {/* A nested text takes the letter spacing and the word spacing of the one it is in, as the web's span does: the title's, in the size of the title. */}
       {ran.map((aside, a) => (
         <Text key={`aside-${a}`} style={[{ fontSize: aside.size, includeFontPadding: false }, aside.tone ? { color: COLORS[aside.tone] } : null, aside.spacing === null ? null : { letterSpacing: aside.spacing }]}>
-          {aside.runs.flatMap((run) => pieces(run, aside.size, size, aside.spacing ?? letterSpacing, aside.words)).map((piece, i) => (
+          {aside.runs.flatMap((run) => pieces(run, aside.size, size, aside.spacing ?? spacing, aside.words)).map((piece, i) => (
             <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
               {piece.text}
             </Text>
