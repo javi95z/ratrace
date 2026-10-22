@@ -304,6 +304,44 @@ test('a life lived to its end reads the finished lives again, once: the one that
   read.unmount();
 }, 120_000);
 
+test('a life that ends with a badge of the gallery is held among the finished lives with that badge: the run written again with it is the one read', async () => {
+  // `sameRuns` keeps the list held when one read again has as many lives and the same latest: right only if the lives are read once the run
+  // is written for the last time. The step that ends a life writes its run, then again with the badges of the gallery the profile counts as its
+  // own (core's session); the round store tells the screens of the end only after that step, and the lives are read then.
+  const store = new MemoryStore();
+  const owned = content.items.filter((item) => item.id !== 'watch_casio').slice(0, 19).map((item) => item.id);
+  await store.saveProfile({ ...(await store.loadProfile()), gallery: owned });
+  const session = await memoryServices(store).sessions.start('nurse');
+  while (session.view().round < content.rounds - 1) {
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [] });
+  }
+  const { hold, Hand } = player();
+  const held = { runs: null as ReturnType<typeof useRuns> };
+  function Runs() {
+    held.runs = useRuns();
+    return null;
+  }
+  const read = renderGame(<><Hand /><Runs /></>, memoryServices(store));
+  await settled();
+  expect(held.runs).toEqual([]);
+  for (let guard = 0; guard < 40 && hold.state!.stage !== 'finance'; guard++) {
+    const state = hold.state!;
+    if (state.stage === 'news') await settled(() => state.leaveNews(), 0);
+    else if (state.stage === 'cards') await settled(() => state.pick(0), 0);
+    else if (state.stage === 'outcome') await settled(() => state.afterCard(), 0);
+  }
+  // The twentieth thing, bought on the last round: the gallery's badge is earned by the step that ends the life.
+  await settled(() => void hold.state!.addOrder({ type: 'buyItem', itemId: 'watch_casio' }), 0);
+  await settled(() => hold.state!.play());
+  await waitFor(() => expect(held.runs).toHaveLength(1));
+  await settled();
+  expect(hold.state!.view?.finished).toBe(true);
+  expect(held.runs![0].badges).toContain('twenty_items');
+  expect((await store.listRuns())[0].badges).toContain('twenty_items');
+  read.unmount();
+}, 120_000);
+
 /** Counts how often each kind of screen is drawn: the game's own (what is played), the words, the date, the settings, the lives, the profile. */
 function drawings() {
   const count = { game: 0, words: 0, clock: 0, text: 0, settings: 0, runs: 0, profile: 0, guide: 0 };
