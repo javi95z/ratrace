@@ -75,7 +75,6 @@ const PastLife = memo(function PastLife({ runId, lifeId, name, tag, day, score, 
 /** The room between two past lives (the web's `gap-1.5`). */
 const BETWEEN = 6;
 
-
 /** A line's name in the list. */
 const keyOf = (line: Line): string => line.runId;
 

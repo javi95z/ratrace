@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
 import { formatFor } from '@ratrace/core/lib/format';
-import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@ratrace/online/types';
+import type { ChallengeRow, Community, Friend, Friends, RankedLifeDetail, RankingQuery, RankingRow } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clipboard } from '../../testing/fakes';
@@ -140,6 +140,16 @@ const friendsPanel = async () => {
   await screen.findByText('YOUR FRIENDS');
   return document.body;
 };
+/**
+ * Does `work` and lets everything it starts come to its end, inside `act` (which draws what it brings before it returns): every promise already
+ * answered is followed to its last `then`, however many there are in a row. No timer: it waits on nothing but what is already settled.
+ */
+async function drained(work: () => unknown = () => undefined): Promise<void> {
+  await act(async () => {
+    work();
+    for (let i = 0; i < 50; i++) await Promise.resolve();
+  });
+}
 /** Types into a field, as the keyboard does: the whole of what it then holds. */
 const type = (field: HTMLElement, text: string) => fireEvent.change(field, { target: { value: text } });
 
@@ -671,18 +681,26 @@ describe('what the rankings are drawn again for', () => {
   });
 
   it('draws no friend\'s line again when a request is answered: only the request\'s line is told an answer is on its way', async () => {
-    const { community: c, state } = community();
+    // Every answer of the cloud is the test's to give (`friendsAsked`), and each is given inside `act`, which draws everything it brings before it
+    // returns: the test reads the page once it is drawn, never after a wait of so long, however slow the machine.
+    const friendsAsked: Array<(found: Friends) => void> = [];
+    const { community: c, state } = community({ friends: () => new Promise((answer) => friendsAsked.push(answer)) });
     const friend: Friend = { userId: 'ffff6666-0000', nickname: 'Amiga', avatar: 'rat_teal' };
     state.friends = { friends: [friend], incoming: [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }], outgoing: [] };
     show(c, 'en', { tab: 'friends' });
-    const friends = await friendsPanel();
-    await within(friends).findByRole('button', { name: 'Amiga' });
-    await settled();
-    const look = within(friends).getByRole('button', { name: 'Amiga' }).querySelector('[data-rat]')!.getAttribute('data-rat')!;
+    await drained();
+    expect(friendsAsked).toHaveLength(1);
+    await drained(() => friendsAsked[0](state.friends));
+    const line = screen.getByRole('button', { name: 'Amiga' });
+    const look = line.querySelector('[data-rat]')!.getAttribute('data-rat')!;
     const before = rats.get(look);
-    fireEvent.click(within(friends).getByRole('button', { name: 'Decline' }));
-    await waitFor(() => expect(within(friends).queryByRole('button', { name: 'Decline' })).toBeNull());
-    await settled();
+    expect(before).toBeGreaterThan(0);
+    // The request declined: the answer on its way (only the request's line is told), then the friends read again.
+    await drained(() => fireEvent.click(screen.getByRole('button', { name: 'Decline' })));
+    expect(friendsAsked).toHaveLength(2);
+    await drained(() => friendsAsked[1](state.friends));
+    expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Amiga' })).toBe(line);
     expect(rats.get(look)).toBe(before);
   });
 });

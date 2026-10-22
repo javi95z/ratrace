@@ -170,7 +170,6 @@ export function Home() {
   );
 }
 
-
 /** The room under the last thing of the page (the web's `pb-8`). */
 const FOOT = 32;
 

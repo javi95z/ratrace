@@ -244,7 +244,6 @@ export function useChallengeBoard(community: Community | null, open = true): Cha
   return answer?.to === n ? answer.board : undefined;
 }
 
-
 /**
  * The head of the ranking of this week's challenge (the web's `ChallengeBoard` down to its list): the week's life and rule, and what the ranking
  * came to: on its way, unreadable, empty, or how many took part and how many of them are its best tenth. Its lines are a list's rows of their own

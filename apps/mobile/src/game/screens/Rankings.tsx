@@ -691,7 +691,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
     // A line of the friends' panel: its part of the panel, the first with the panel's title, and the page's gap over the panel.
     return (
       <View style={line.first ? { paddingTop: PAGE_GAP } : null}>
-        <PanelPart part={line.part} title={line.first ? t('following') : undefined} style={{ paddingTop: line.first ? undefined : line.pad }}>
+        <PanelPart part={line.part} title={line.first ? t('following') : undefined} style={line.first ? undefined : { paddingTop: line.pad }}>
           {line.kind === 'group' ? (
             <GroupHeading tone={line.tone}>{line.title}</GroupHeading>
           ) : line.kind === 'nobody' ? (
