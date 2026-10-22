@@ -6,7 +6,7 @@
 // What is said is worked out in `_shared/market.ts`, where it is tested: the life is played again
 // from its seed and log, and only the world the player is already in is read, never the next round.
 // A player is claimed their notice of the day only when there is something to say, and who has had
-// theirs already is left alone. A browser that turned this notice off is not even read.
+// theirs already is left alone. A browser or a phone that turned this notice off is not even read.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
 import { noting } from '../_deno/errors.ts';
@@ -15,7 +15,6 @@ import { json } from '../_shared/http.ts';
 import { GAMES } from '../_shared/game/index.ts';
 import { marketMover } from '../_shared/market.ts';
 import type { MarketRow } from '../_shared/market.ts';
-import { noticeOf } from '../_shared/notice.ts';
 import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
@@ -35,7 +34,7 @@ export default {
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await db.rpc('notice_market', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
       if (error) return json(500, { error: 'read-failed', sent, removed, skipped, quiet });
-      const rows = (data ?? []) as Array<Omit<Browser, 'game_id'> & { game_id: string }>;
+      const rows = (data ?? []) as Browser[];
       for (const [user, browsers] of byPlayer(rows)) {
         const life = browsers[0];
         const seedRow = await db.from('game_secrets').select('seed').eq('game_id', life.game_id).maybeSingle();
@@ -49,7 +48,7 @@ export default {
           skipped += 1;
           continue;
         }
-        const done = await deliver(db, browsers, (row) => noticeOf(row.locale, { kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
+        const done = await deliver(db, browsers, () => ({ kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
         sent += done.sent;
         removed += done.removed;
       }

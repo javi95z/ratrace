@@ -167,6 +167,22 @@ export interface Friends {
  */
 export type Befriended = 'sent' | 'accepted' | 'pending' | 'friends' | 'unknown' | 'self' | 'full' | 'failed';
 
+/** Where a browser can be told: its push subscription's endpoint and keys. */
+export interface PushKeys {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+/** Where a phone with the app can be told: the token Expo's push service gave it, and what the phone is. */
+export interface AppPushToken {
+  expo: string;
+  platform: 'ios' | 'android';
+}
+
+/** A browser that asked for notices, by its endpoint, or a phone, by its Expo token. */
+export type PushTarget = string | { expo: string };
+
 /**
  * The other players, as far as a screen is told of them: the rankings, the player's own name and
  * friend code, and their friends. It needs someone signed in and a connection; what cannot be
@@ -205,12 +221,12 @@ export interface Community {
   challengeRanking(week: string): Promise<ChallengeRanking | null>;
   /** The player's choices in their attempt at a week, card by card, beside everyone's. Empty until the attempt is over. */
   challengeChoices(week: string): Promise<ChallengeChoice[] | null>;
-  /** Keeps where this browser can be told of the weekly challenge, in a language. False if it could not. */
-  notifyMe(keys: { endpoint: string; p256dh: string; auth: string }, locale: string): Promise<boolean>;
-  /** Forgets a browser that no longer wants to be told. */
-  stopNotifying(endpoint: string): Promise<boolean>;
-  /** Whether this browser is told when something the player holds in a ranked life moved. Null where it cannot be read. */
-  marketNotice(endpoint: string): Promise<boolean | null>;
-  /** Turns "your market moved" on or off for this browser, apart from the other notices. False if it could not. */
-  setMarketNotice(endpoint: string, on: boolean): Promise<boolean>;
+  /** Keeps where this browser, or this phone with the app, can be told of the weekly challenge, in a language. False if it could not. */
+  notifyMe(keys: PushKeys | AppPushToken, locale: string): Promise<boolean>;
+  /** Forgets a browser, or a phone, that no longer wants to be told. */
+  stopNotifying(target: PushTarget): Promise<boolean>;
+  /** Whether this browser, or this phone, is told when something the player holds in a ranked life moved. Null where it cannot be read. */
+  marketNotice(target: PushTarget): Promise<boolean | null>;
+  /** Turns "your market moved" on or off for this browser, or this phone, apart from the other notices. False if it could not. */
+  setMarketNotice(target: PushTarget, on: boolean): Promise<boolean>;
 }

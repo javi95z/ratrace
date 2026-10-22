@@ -4,20 +4,22 @@
 //   week before if they played it.
 // - `idle`, every evening: a life left untouched for a week, once, to a player who has not played
 //   any other since.
-// Neither is sent to a player who has had their notice of the day already.
+// Neither is sent to a player who has had their notice of the day already, on any of their
+// browsers and phones: each is told on all of them, or on none.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
 import { noting } from '../_deno/errors.ts';
 import { watched } from '../_shared/watch.ts';
 import { json, readJson } from '../_shared/http.ts';
-import { isoWeek, noticeOf } from '../_shared/notice.ts';
+import { isoWeek } from '../_shared/notice.ts';
 import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
-interface Placed extends Subscription {
+/** A browser or a phone, with its player's place in last week's challenge (null in the idle notice's rows). */
+type Placed = Subscription & {
   place: number | null;
   entrants: number | null;
-}
+};
 
 const PAGE = 500;
 const WEEK_MS = 7 * 86_400_000;
@@ -32,7 +34,7 @@ export default {
     let sent = 0;
     let removed = 0;
     let skipped = 0;
-    // Whose notice of the day this very call took: their other browsers, on the next page, are sent it too.
+    // Whose notice of the day this very call took: their other browsers and phones, on the next page, are sent it too.
     const taken = new Set<string>();
     for (let from = 0; ; from += PAGE) {
       const { data, error } =
@@ -52,7 +54,7 @@ export default {
         const done = await deliver(
           db,
           browsers,
-          (row) => noticeOf(row.locale, kind === 'weekly' ? { kind: 'weekly', place: (row as Placed).place, entrants: (row as Placed).entrants } : { kind: 'idle' }),
+          (row) => (kind === 'weekly' ? { kind: 'weekly', place: row.place, entrants: row.entrants } : { kind: 'idle' }),
           // A day to be delivered: a Monday notice is no use on Wednesday.
           86_400,
         );

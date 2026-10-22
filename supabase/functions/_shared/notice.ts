@@ -9,7 +9,7 @@ export type NoticeLocale = 'en' | 'es' | 'ru';
 export interface Notice {
   title: string;
   body: string;
-  /** The page a tap opens, on the site the browser was subscribed on. */
+  /** The page a tap opens: on the site the browser was subscribed on, or the app's screen (`theratrace://<page>`) on a phone. */
   url: string;
   /** Notices of one kind take each other's place: a newer one replaces an older one still unread. */
   tag: string;
@@ -56,7 +56,7 @@ const SHOUT_PHRASES: Record<NoticeLocale, readonly string[]> = {
 /** What a shout says: a face, or a phrase. */
 export const shoutText = (n: number, lang: NoticeLocale): string => (n < SHOUT_FACES.length ? SHOUT_FACES[n] : (SHOUT_PHRASES[lang][n - SHOUT_FACES.length] ?? ''));
 
-const langOf = (locale: string): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
+const langOf = (locale: string | null): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
 
 /** Seconds as a clock shows them: 1:05. */
 export const clock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(Math.max(0, Math.round(seconds % 60))).padStart(2, '0')}`;
@@ -147,11 +147,18 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
 const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room', shout: 'room', friendRequest: 'rankings#friends', friendAccepted: 'rankings#friends' };
 const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan', shout: 'room-shout', friendRequest: 'friends', friendAccepted: 'friends' };
 
-/** The notice for a browser that asked for notices in a language; one the game does not have reads in English. */
-export function noticeOf(locale: string, about: NoticeAbout): Notice {
+/** Where a tap on a phone's notice leads: the app's own links. */
+export const APP_LINK = 'theratrace://';
+
+/**
+ * The notice for a browser, or a phone with the app (`on: 'app'`), that asked for notices in a
+ * language; one the game does not have, or none, reads in English. The words are the same on both:
+ * a browser is led to the page on the site in its language, a phone to the screen in the app.
+ */
+export function noticeOf(locale: string | null, about: NoticeAbout, on: 'web' | 'app' = 'web'): Notice {
   const lang = langOf(locale);
   const words = (WORDS[lang][about.kind] as Words)(about as never);
-  return { ...words, url: `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
+  return { ...words, url: on === 'app' ? `${APP_LINK}${PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
 }
 
 /** True where a push service says a subscription is gone for good: the browser unsubscribed, or it expired. */

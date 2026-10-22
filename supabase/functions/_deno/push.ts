@@ -1,20 +1,20 @@
-// Sending notices to the browsers that asked for them, from any function. Deno only: the tests of
-// the game do not reach it, and what it sends is worked out in `_shared/notice.ts`, where they do.
+// Sending notices to the browsers and the phones that asked for them, from any function. Deno only:
+// the tests of the game do not reach it. What each is sent, and how, is worked out in
+// `_shared/notice.ts` and `_shared/push.ts`, where they do.
 //
-// It needs the VAPID keys of the game as secrets: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and
-// VAPID_SUBJECT, a mailto: or https: address push services can reach the game at.
+// Browsers need the VAPID keys of the game as secrets: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and
+// VAPID_SUBJECT, a mailto: or https: address push services can reach the game at. Phones are told
+// through Expo's push service, which needs no key; EXPO_ACCESS_TOKEN is sent where it is set, for a
+// project that asks for one.
 import webpush from 'npm:web-push@3.6.7';
-import { gone } from '../_shared/notice.ts';
-import type { Notice } from '../_shared/notice.ts';
+import { byPlayer, deliverExpo as sendExpo, deliverTo, isApp } from '../_shared/push.ts';
+import type { AppDevice, Device, Senders, Urgency } from '../_shared/push.ts';
+import type { Notice, NoticeAbout } from '../_shared/notice.ts';
 
-/** A browser that asked for notices, and whose it is. */
-export interface Subscription {
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  locale: string;
-  user_id: string;
-}
+export { byPlayer };
+
+/** A browser or a phone that asked for notices, and whose it is. */
+export type Subscription = Device;
 
 /** The database client of the function: its own types are too deep to restate here. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +22,7 @@ type Db = any;
 
 let keyed: boolean | null = null;
 
-/** Sets the game's keys once. False where they are missing: then nothing is sent. */
+/** Sets the game's keys once. False where they are missing: then nothing is sent to browsers. */
 export function vapid(): boolean {
   if (keyed !== null) return keyed;
   const publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
@@ -33,51 +33,53 @@ export function vapid(): boolean {
   return keyed;
 }
 
-/**
- * Sends each browser its notice. A browser the push service says is gone is forgotten. `ttl` is how
- * long a notice may wait for a device that is off, in seconds: after that it is no news.
- */
-export async function deliver(db: Db, rows: readonly Subscription[], noticeFor: (row: Subscription) => Notice, ttl: number, urgency: 'normal' | 'high' = 'normal'): Promise<{ sent: number; removed: number }> {
-  let sent = 0;
-  let removed = 0;
-  if (!vapid()) return { sent, removed };
-  await Promise.all(
-    rows.map(async (row) => {
-      try {
-        await webpush.sendNotification({ endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }, JSON.stringify(noticeFor(row)), { TTL: ttl, urgency });
-        sent += 1;
-      } catch (failure) {
-        if (gone((failure as { statusCode?: number }).statusCode)) {
-          await db.from('push_subscriptions').delete().eq('endpoint', row.endpoint);
-          removed += 1;
-        }
-      }
-    }),
-  );
-  return { sent, removed };
+/** What sends, and what forgets a device that is gone, for a function's database. */
+function sendersOf(db: Db): Senders {
+  return {
+    web: vapid() ? (subscription, payload, options) => webpush.sendNotification(subscription, payload, options) : null,
+    post: (url, init) => fetch(url, init),
+    expoToken: Deno.env.get('EXPO_ACCESS_TOKEN') || undefined,
+    forget: async (row) => {
+      if (isApp(row)) await db.from('push_tokens').delete().eq('token', row.token);
+      else await db.from('push_subscriptions').delete().eq('endpoint', row.endpoint);
+    },
+  };
 }
 
-/** The browsers of some players. */
+/**
+ * Sends each browser and phone its notice. A browser the push service says is gone, or a phone
+ * Expo says is no longer registered, is forgotten. `ttl` is how long a notice may wait for a device
+ * that is off, in seconds: after that it is no news.
+ */
+export function deliver<T extends Device>(db: Db, rows: readonly T[], aboutOf: (row: T) => NoticeAbout, ttl: number, urgency: Urgency = 'normal'): Promise<{ sent: number; removed: number }> {
+  return deliverTo(rows, aboutOf, ttl, urgency, sendersOf(db));
+}
+
+/** Sends phones alone their notice, through Expo's push service, a hundred at a time. */
+export function deliverExpo<T extends AppDevice>(db: Db, tokens: readonly T[], message: (row: T) => Notice, ttl: number, urgency: Urgency = 'normal'): Promise<{ sent: number; removed: number }> {
+  return sendExpo(tokens, message, ttl, urgency, sendersOf(db));
+}
+
+/**
+ * The browsers and phones of some players. A phone that cannot be read leaves the browsers to be
+ * told as they always were.
+ */
 export async function subscriptionsOf(db: Db, userIds: readonly string[]): Promise<Subscription[]> {
   if (userIds.length === 0) return [];
   const { data, error } = await db.from('push_subscriptions').select('endpoint, p256dh, auth, locale, user_id').in('user_id', userIds);
   if (error) throw new Error(error.message);
-  return (data ?? []) as Subscription[];
+  const phones = await db.from('push_tokens').select('token, locale, user_id').in('user_id', userIds);
+  if (phones.error) console.error('phones not read:', phones.error.message);
+  return [...((data ?? []) as Subscription[]), ...((phones.error ? [] : (phones.data ?? [])) as Subscription[])];
 }
 
 /**
  * Takes a player's one notice of the day, if it is still there. Notices that are not urgent ask
- * first, so that nobody is told more than once a day. A player with no subscription is never asked.
+ * first, so that nobody is told more than once a day, on all their browsers and phones together.
+ * A player with no browser and no phone is never asked.
  */
 export async function claimDay(db: Db, userId: string, now: Date): Promise<boolean> {
   const { data, error } = await db.rpc('notice_claim', { p_user: userId, p_day: now.toISOString().slice(0, 10) });
   if (error) throw new Error(error.message);
   return data === true;
-}
-
-/** Rows grouped by whose they are. */
-export function byPlayer<T extends { user_id: string }>(rows: readonly T[]): Map<string, T[]> {
-  const out = new Map<string, T[]>();
-  for (const row of rows) out.set(row.user_id, [...(out.get(row.user_id) ?? []), row]);
-  return out;
 }

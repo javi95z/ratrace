@@ -13,7 +13,6 @@ import { noting } from '../_deno/errors.ts';
 import type { RunRow } from '../_shared/finish.ts';
 import { CURRENT, GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
-import { noticeOf } from '../_shared/notice.ts';
 import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { allowed } from '../_shared/rate.ts';
 import { rooms } from '../_shared/rooms.ts';
@@ -169,7 +168,7 @@ export default {
         notify: async (users, about) => {
           // Sent after the answer, so that a player's move does not wait on push services.
           const sending = subscriptionsOf(db, users)
-            .then((rows) => deliver(db, rows, (row) => noticeOf(row.locale, about), about.kind === 'yourTurn' ? Math.max(1, about.secondsLeft) : about.kind === 'newRound' ? about.seconds : about.kind === 'shout' ? 60 : 3_600, 'high'))
+            .then((rows) => deliver(db, rows, () => about, about.kind === 'yourTurn' ? Math.max(1, about.secondsLeft) : about.kind === 'newRound' ? about.seconds : about.kind === 'shout' ? 60 : 3_600, 'high'))
             .catch((error: unknown) => console.error('room notice failed:', error instanceof Error ? error.message : error));
           const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
           if (runtime) runtime.waitUntil(sending);

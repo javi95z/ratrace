@@ -33,6 +33,16 @@ describe('what a notice says', () => {
     expect(noticeOf('ru', { kind: 'friendRequest', who: null }).body.startsWith('Игрок')).toBe(true);
   });
 
+  it('leads a phone to the screen in the app, with the same words and kind as the browser\'s', () => {
+    expect(noticeOf('es', { kind: 'weekly', place: 3, entrants: 41 }, 'app')).toEqual({ ...noticeOf('es', { kind: 'weekly', place: 3, entrants: 41 }), url: 'theratrace://challenge' });
+    expect(noticeOf('ru', { kind: 'yourTurn', round: 6, rounds: 20, secondsLeft: 72 }, 'app')).toMatchObject({ url: 'theratrace://room', tag: 'room' });
+    expect(noticeOf('en', { kind: 'idle' }, 'app').url).toBe('theratrace://play');
+    expect(noticeOf('en', { kind: 'marketMoved', asset: 'gold', percent: 6 }, 'app').url).toBe('theratrace://play');
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://rankings#friends');
+    expect(noticeOf('es', { kind: 'idle' }, 'web')).toEqual(noticeOf('es', { kind: 'idle' }));
+    expect(noticeOf(null, { kind: 'idle' }, 'app').title).toBe('Your life is waiting');
+  });
+
   it('says a shout as the player who sent it, in the words of the page', () => {
     expect(noticeOf('es', { kind: 'shout', who: 'Ana', n: 13 })).toEqual({ title: 'Ana dice:', body: '¡Date prisa!', url: '/es/room', tag: 'room-shout' });
     expect(noticeOf('en', { kind: 'shout', who: null, n: 2 })).toMatchObject({ title: 'A rival says:', body: '🔥' });

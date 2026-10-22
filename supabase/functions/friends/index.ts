@@ -10,7 +10,6 @@ import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { friends } from '../_shared/friends.ts';
 import type { Befriended, FriendRow } from '../_shared/friends.ts';
 import { json, readJson } from '../_shared/http.ts';
-import { noticeOf } from '../_shared/notice.ts';
 import { allowed } from '../_shared/rate.ts';
 import { watched } from '../_shared/watch.ts';
 
@@ -63,7 +62,7 @@ export default {
         notify: async (users, about) => {
           // Sent after the answer, so that nobody waits on push services.
           const sending = subscriptionsOf(db, users)
-            .then((subs) => deliver(db, subs, (row) => noticeOf(row.locale, about), 86_400))
+            .then((subs) => deliver(db, subs, () => about, 86_400))
             .catch((error: unknown) => console.error('friend notice failed:', error instanceof Error ? error.message : error));
           const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
           if (runtime) runtime.waitUntil(sending);

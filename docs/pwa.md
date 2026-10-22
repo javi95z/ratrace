@@ -65,6 +65,13 @@ installed to the Home screen (iOS 16.4 or later).
   (`push_subscriptions.market_moved`, per browser).
 - Browsers the push service reports gone (404/410) are deleted when a notice to them fails.
 - A tap opens the notice's page, in an open window of the game if there is one.
+- Phones with the app are told too, through Expo's push service (`_shared/push.ts`): one row per
+  phone in `public.push_tokens` (its `ExponentPushToken[…]`, platform, language, and its own
+  `market_moved`, off until turned on), owned by the player through RLS. The clock's notice
+  functions list a player's browsers and phones together, so the day's one notice is claimed once for
+  all of them. A phone is sent the same words, in batches of 100, and a tap opens the app's screen
+  (`theratrace://<page>`). A phone Expo answers `DeviceNotRegistered` is deleted. `EXPO_ACCESS_TOKEN`
+  is sent as a bearer token where it is set as a secret; without it, Expo needs no key.
 
 ### Setup, once
 

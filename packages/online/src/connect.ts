@@ -4,7 +4,7 @@ import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
 import { roomsApi } from './rooms';
 import type { Cloud, CloudUser } from './supabase';
-import type { Friend } from './types';
+import type { Friend, PushTarget } from './types';
 
 const userOf = (user: User | null | undefined): CloudUser | null => (user ? { id: user.id, is_anonymous: user.is_anonymous === true, email: user.email } : null);
 
@@ -48,6 +48,10 @@ const runOf = (row: RunRow): CloudRun => ({
   escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
   ...(typeof row.challenge === 'string' ? { challenge: row.challenge } : {}),
 });
+
+/** Where a browser's row of notices is kept, by its endpoint, or a phone's, by its Expo token. */
+const pushRow = (target: PushTarget): ['push_subscriptions', 'endpoint', string] | ['push_tokens', 'token', string] =>
+  typeof target === 'string' ? ['push_subscriptions', 'endpoint', target] : ['push_tokens', 'token', target.expo];
 
 /** The database's own word for "the rules of this table do not let you". */
 const NOT_ALLOWED = '42501';
@@ -338,32 +342,38 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       },
       async notifyMe(keys, locale) {
         try {
-          const { error } = await client.from('push_subscriptions').upsert({ endpoint: keys.endpoint, p256dh: keys.p256dh, auth: keys.auth, locale, user_id: await me() }, { onConflict: 'endpoint' });
+          const { error } =
+            'expo' in keys
+              ? await client.from('push_tokens').upsert({ token: keys.expo, platform: keys.platform, locale, user_id: await me() }, { onConflict: 'token' })
+              : await client.from('push_subscriptions').upsert({ endpoint: keys.endpoint, p256dh: keys.p256dh, auth: keys.auth, locale, user_id: await me() }, { onConflict: 'endpoint' });
           return !error;
         } catch {
           return false;
         }
       },
-      async stopNotifying(endpoint) {
+      async stopNotifying(target) {
         try {
-          const { error } = await client.from('push_subscriptions').delete().eq('endpoint', endpoint);
+          const [table, column, value] = pushRow(target);
+          const { error } = await client.from(table).delete().eq(column, value);
           return !error;
         } catch {
           return false;
         }
       },
-      async marketNotice(endpoint) {
+      async marketNotice(target) {
         try {
-          const { data, error } = await client.from('push_subscriptions').select('market_moved').eq('endpoint', endpoint).maybeSingle();
+          const [table, column, value] = pushRow(target);
+          const { data, error } = await client.from(table).select('market_moved').eq(column, value).maybeSingle();
           const row = data as { market_moved: boolean } | null;
           return error || row === null ? null : row.market_moved;
         } catch {
           return null;
         }
       },
-      async setMarketNotice(endpoint, on) {
+      async setMarketNotice(target, on) {
         try {
-          const { error } = await client.from('push_subscriptions').update({ market_moved: on }).eq('endpoint', endpoint);
+          const [table, column, value] = pushRow(target);
+          const { error } = await client.from(table).update({ market_moved: on }).eq(column, value);
           return !error;
         } catch {
           return false;

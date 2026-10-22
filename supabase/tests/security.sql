@@ -62,6 +62,11 @@ declare
   k uuid := gen_random_uuid();
   room_w uuid := gen_random_uuid();
   room_x uuid := gen_random_uuid();
+  ap uuid := gen_random_uuid();
+  aw uuid := gen_random_uuid();
+  tok_a text := 'ExponentPushToken[test-a-' || replace(gen_random_uuid()::text, '-', '') || ']';
+  tok_p text := 'ExponentPushToken[test-p-' || replace(gen_random_uuid()::text, '-', '') || ']';
+  tok_w text := 'ExponentPushToken[test-w-' || replace(gen_random_uuid()::text, '-', '') || ']';
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -1218,6 +1223,86 @@ begin
     failed := array_append(failed, format('the days played stopped on: %s (%s)', sqlerrm, sqlstate));
   end;
 
+  -- ---------------------------------------------------------------- phones with the app, told through Expo
+  reset role;
+  begin
+  insert into auth.users (id, aud, role, is_anonymous) values (ap, 'authenticated', 'authenticated', true), (aw, 'authenticated', 'authenticated', true);
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  -- A player keeps where their own phone is told, and it is told nothing of the market until they ask.
+  insert into public.push_tokens (token, user_id, locale, platform) values (tok_a, a, 'es', 'ios');
+  if (select market_moved from public.push_tokens where token = tok_a) = false
+    then passed := passed + 1; else failed := array_append(failed, 'a phone was told of the market before it asked'); end if;
+  update public.push_tokens set market_moved = true where token = tok_a;
+  if (select market_moved from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'a player could not turn on the market notice of their own phone'); end if;
+  begin
+    insert into public.push_tokens (token, user_id, platform) values ('ExponentPushToken[test-of-b]', b, 'android');
+    failed := array_append(failed, 'A kept a phone for B');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    insert into public.push_tokens (token, user_id, platform) values ('https://push.example/not-a-phone', a, 'android');
+    failed := array_append(failed, 'a token that is not Expo''s was kept');
+  exception when check_violation then passed := passed + 1;
+  end;
+  begin
+    insert into public.push_tokens (token, user_id, platform) values ('ExponentPushToken[test-web]', a, 'web');
+    failed := array_append(failed, 'a phone of no platform the app runs on was kept');
+  exception when check_violation then passed := passed + 1;
+  end;
+  begin
+    insert into public.push_tokens (token, user_id, locale, platform) values ('ExponentPushToken[test-fr]', a, 'fr', 'ios');
+    failed := array_append(failed, 'a phone in a language the game does not have was kept');
+  exception when check_violation then passed := passed + 1;
+  end;
+
+  -- Another player sees, changes, takes and removes none of them.
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  select count(*) into n from public.push_tokens where token = tok_a;
+  update public.push_tokens set market_moved = false, user_id = b where token = tok_a;
+  delete from public.push_tokens where token = tok_a;
+  reset role;
+  if n = 0 and (select market_moved and user_id = a from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'B saw, changed or removed A''s phone'); end if;
+  set local role anon;
+  begin
+    select count(*) into n from public.push_tokens;
+    failed := array_append(failed, 'a visitor with no account read the phones');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  reset role;
+
+  -- The clock's notices reach a player with only a phone, and one with a browser and a phone gets
+  -- both together: the browser's row as it always was, the phone's with its token alone.
+  insert into public.push_tokens (token, user_id, locale, platform, market_moved) values (tok_p, ap, 'ru', 'android', true), (tok_w, aw, null, 'ios', false);
+  insert into public.push_subscriptions (endpoint, user_id, p256dh, auth, locale) values ('https://push.example/test-' || aw, aw, 'p', 'k', 'es');
+  insert into public.runs (id, user_id, mode, life_id, engine_version, content_version, score, net_worth, status, verified, finished_at, challenge) values (gen_random_uuid(), ap, 'ranked', 'nurse', '0.4.0', '1.3.0', 321, 100, 20, true, now(), '2099-W22');
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, seed) values (gen_random_uuid(), ap, 'casual', 'nurse', '0.4.0', '1.3.0', 's'), (gen_random_uuid(), aw, 'casual', 'nurse', '0.4.0', '1.3.0', 's');
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version) values (gen_random_uuid(), ap, 'ranked', 'nurse', '0.4.0', '1.3.0'), (gen_random_uuid(), aw, 'ranked', 'nurse', '0.4.0', '1.3.0');
+
+  if (select count(*) from public.notice_week('2099-W22') w where w.user_id = ap) = 1
+     and exists (select 1 from public.notice_week('2099-W22') w where w.user_id = ap and w.token = tok_p and w.endpoint is null and w.p256dh is null and w.auth is null and w.locale = 'ru' and w.place = 1 and w.entrants = 1)
+    then passed := passed + 1; else failed := array_append(failed, 'a player with only a phone was not told of the weekly challenge, with their place'); end if;
+  if (select count(*) = 2 and max(w.ord) - min(w.ord) = 1 from public.notice_week('2099-W22') with ordinality as w(endpoint, p256dh, auth, locale, user_id, place, entrants, token, ord) where w.user_id = aw)
+     and exists (select 1 from public.notice_week('2099-W22') w where w.user_id = aw and w.endpoint = 'https://push.example/test-' || aw and w.p256dh = 'p' and w.auth = 'k' and w.locale = 'es' and w.token is null and w.place is null)
+     and exists (select 1 from public.notice_week('2099-W22') w where w.user_id = aw and w.token = tok_w and w.endpoint is null and w.locale = 'en')
+    then passed := passed + 1; else failed := array_append(failed, 'a player''s browser and phone were not told of the week together, each as itself'); end if;
+  if exists (select 1 from public.notice_idle(now() + interval '7 days 12 hours') i where i.user_id = ap and i.token = tok_p and i.endpoint is null and i.locale = 'ru')
+     and (select count(*) from public.notice_idle(now() + interval '7 days 12 hours') i where i.user_id = aw) = 2
+     and not exists (select 1 from public.notice_idle(now()) i where i.user_id in (ap, aw))
+    then passed := passed + 1; else failed := array_append(failed, 'a life left halfway was not told of to a phone, or was too soon'); end if;
+  if exists (select 1 from public.notice_market(now() + interval '1 day') m where m.user_id = ap and m.token = tok_p and m.endpoint is null and m.locale = 'ru' and m.life_id = 'nurse')
+     and (select count(*) from public.notice_market(now() + interval '1 day') m where m.user_id = aw and m.token is null) = 1
+     and not exists (select 1 from public.notice_market(now() + interval '1 day') m where m.token = tok_w)
+    then passed := passed + 1; else failed := array_append(failed, 'the market notice missed a phone that asked for it, or reached one that did not'); end if;
+  if not has_function_privilege('authenticated', 'public.notice_week(text)', 'execute') and not has_function_privilege('authenticated', 'public.notice_idle(timestamptz)', 'execute')
+     and not has_function_privilege('authenticated', 'public.notice_market(timestamptz)', 'execute') and not has_function_privilege('anon', 'public.notice_week(text)', 'execute')
+    then passed := passed + 1; else failed := array_append(failed, 'a player can list who is told of the clock''s notices'); end if;
+  exception when others then
+    failed := array_append(failed, format('the phones stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
+
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;
   delete from auth.users where id = a;
@@ -1225,7 +1310,7 @@ begin
        + (select count(*) from public.game_secrets where game_id = ranked_a) + (select count(*) from public.runs where user_id = a)
        + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from public.friend_requests where a in (from_user, to_user)) + (select count(*) from private.rate_use where user_id = a)
        + (select count(*) from public.rooms where host = a) + (select count(*) from public.room_players where user_id = a) + (select count(*) from public.room_orders where user_id = a)
-       + (select count(*) from private.player_days where user_id = a) into n;
+       + (select count(*) from private.player_days where user_id = a) + (select count(*) from public.push_tokens where user_id = a) into n;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, (format('%s rows of a deleted account were left behind', n))::text); end if;
 
   -- The outcome travels as hex, so no quote in a message can be mistaken for the end of it.

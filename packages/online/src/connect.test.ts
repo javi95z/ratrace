@@ -521,6 +521,41 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.setMarketNotice('https://push.example/1', false)).toBe(false);
   });
 
+  it('keeps where a phone with the app can be told, by its Expo token, apart from the browsers', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.push_tokens = { data: null, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    const phone = 'ExponentPushToken[abc123]';
+    expect(await cloud.community.notifyMe({ expo: phone, platform: 'ios' }, 'ru')).toBe(true);
+    expect(await cloud.community.stopNotifying({ expo: phone })).toBe(true);
+    expect(client.asked).toEqual([
+      ['push_tokens', ['upsert', { token: phone, platform: 'ios', locale: 'ru', user_id: 'u-1' }, { onConflict: 'token' }]],
+      ['push_tokens', ['delete'], ['eq', 'token', phone]],
+    ]);
+    client.answers.push_tokens = { data: null, error: new Error('offline') };
+    expect(await cloud.community.notifyMe({ expo: phone, platform: 'android' }, 'es')).toBe(false);
+    expect(await cloud.community.stopNotifying({ expo: phone })).toBe(false);
+  });
+
+  it('reads and sets whether a phone is told that the market moved', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.push_tokens = { data: { market_moved: true }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    const phone = 'ExponentPushToken[abc123]';
+    expect(await cloud.community.marketNotice({ expo: phone })).toBe(true);
+    client.answers.push_tokens = { data: null, error: null };
+    expect(await cloud.community.marketNotice({ expo: phone })).toBeNull();
+    expect(await cloud.community.setMarketNotice({ expo: phone }, false)).toBe(true);
+    expect(client.asked).toEqual([
+      ['push_tokens', ['select', 'market_moved'], ['eq', 'token', phone], ['maybeSingle']],
+      ['push_tokens', ['select', 'market_moved'], ['eq', 'token', phone], ['maybeSingle']],
+      ['push_tokens', ['update', { market_moved: false }], ['eq', 'token', phone]],
+    ]);
+    client.answers.push_tokens = { data: null, error: new Error('offline') };
+    expect(await cloud.community.marketNotice({ expo: phone })).toBeNull();
+    expect(await cloud.community.setMarketNotice({ expo: phone }, true)).toBe(false);
+  });
+
   it('says whether the player has had today\'s attempt at a week, by the UTC day, and their best score of the week', async () => {
     client.answers.getSession = signedIn;
     client.answers.challenge_entries = { data: [{ week: '2026-W42' }], error: null };
