@@ -258,7 +258,7 @@ describe('an account on a phone, where Google is a browser that comes back', () 
       trips.push(`${name} ${returnTo}`);
       if (open === undefined) return true;
       const back = await open(`https://google/${name}`);
-      if (back === null || !new URL(back).searchParams.has('code')) return false;
+      if (back === null || !back.startsWith(returnTo) || !new URL(back).searchParams.has('code')) return false;
       tell(member);
       return true;
     };
@@ -344,6 +344,53 @@ describe('an account on a phone, where Google is a browser that comes back', () 
     expect(await other.keepWithGoogle('theratrace://auth', refused.open)).toBe(false);
     expect(refused.opened).toEqual([]);
     expect(other.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
+  });
+
+  it('hears nothing from an address it did not send the browser back to: no session, no word said', async () => {
+    for (const back of ['https://evil/?code=X', 'https://evil/?error_code=identity_already_exists', 'https://evil/?error=access_denied']) {
+      const { cloud, trips, open } = phoneCloud([back]);
+      const account = onPhone(cloud);
+      await account.start('en');
+      const heard = vi.fn();
+      account.subscribe(heard);
+      expect(await account.keepWithGoogle('theratrace://auth', open), back).toBe(false);
+      expect(trips, back).toEqual(['link theratrace://auth']);
+      expect(account.state(), back).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+      expect(heard, back).not.toHaveBeenCalled();
+    }
+  });
+
+  it('opens the browser once for a second call while a trip is under way, and answers both with that trip', async () => {
+    let comeBack: (address: string | null) => void = () => {};
+    const { cloud, trips } = phoneCloud([]);
+    const opened: string[] = [];
+    const open = (url: string) => new Promise<string | null>((resolve) => {
+      opened.push(url);
+      comeBack = resolve;
+    });
+    const account = onPhone(cloud);
+    await account.start('en');
+    const first = account.keepWithGoogle('theratrace://auth', open);
+    const second = account.keepWithGoogle('theratrace://auth', open);
+    const third = account.useExistingAccount('theratrace://auth', open);
+    await vi.waitFor(() => expect(opened).toHaveLength(1));
+    comeBack('theratrace://auth?code=X');
+    expect(await Promise.all([first, second, third])).toEqual([true, true, true]);
+    expect(trips).toEqual(['link theratrace://auth']);
+    // Once back, a new call is a new trip.
+    const again = phoneCloud(['theratrace://auth?code=Y']);
+    expect(await account.keepWithGoogle('theratrace://auth', again.open)).toBe(true);
+    expect(again.opened).toHaveLength(1);
+  });
+
+  it('lets the listeners hear the word taken back when a trip ends kept and the cloud has not yet said who the player is', async () => {
+    const { cloud, open } = phoneCloud(['theratrace://auth?error_code=identity_already_exists', 'theratrace://auth?code=Y'], { signInWithGoogle: async (_returnTo, opener) => (await opener?.('https://google/sign-in')) !== null });
+    const account = onPhone(cloud);
+    await account.start('en');
+    const seen: unknown[] = [];
+    account.subscribe(() => seen.push(account.state()));
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(true);
+    expect(seen).toEqual([{ kind: 'guest', userId: 'user-1', notice: 'joining' }, { kind: 'guest', userId: 'user-1', notice: null }]);
   });
 
   it('signs in as the player a Google account belongs to, on a second phone', async () => {

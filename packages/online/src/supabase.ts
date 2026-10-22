@@ -71,6 +71,16 @@ export function noticeIn(address: string): 'taken' | 'failed' | null {
   return null;
 }
 
+/**
+ * Whether a browser came back to the address it was sent back to (`to` itself, or `to` and then its query, its hash or a path
+ * below it), and not somewhere else: only that address speaks for the trip. A code or a word from any other is nobody's.
+ */
+export function cameBackTo(address: string, to: string): boolean {
+  if (!address.startsWith(to)) return false;
+  const next = address.charAt(to.length);
+  return next === '' || to.endsWith('/') || next === '?' || next === '#' || next === '/';
+}
+
 /** The same address without what `noticeIn` read, so a reload does not say it again. */
 function withoutFailure(address: string): string {
   const parts = failureParams(address);
@@ -94,6 +104,8 @@ export class SupabaseAccount implements Account {
   private link: Cloud | null = null;
   private starting: Promise<void> | null = null;
   private notice: AccountNotice | null = null;
+  /** The trip to Google under way on a phone: a second call while the browser is open is answered by it, never a second browser. */
+  private trip: Promise<boolean> | null = null;
   private stopListening: (() => void) | null = null;
   /** The language the account was last started in, for trying again. */
   private language: string | null = null;
@@ -177,10 +189,17 @@ export class SupabaseAccount implements Account {
 
   // The web's calls carry the address alone, as they always have: `open` is passed on only where there is one.
   readonly keepWithGoogle = async (returnTo: string, open?: Opener): Promise<boolean> =>
-    open ? this.travel(returnTo, open, 'link') : this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
+    open ? this.once(() => this.travel(returnTo, open, 'link')) : this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
 
   readonly useExistingAccount = async (returnTo: string, open?: Opener): Promise<boolean> =>
-    open ? this.travel(returnTo, open, 'sign-in') : this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+    open ? this.once(() => this.travel(returnTo, open, 'sign-in')) : this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+
+  /** One trip to Google at a time: asked again while one is under way, that one answers. */
+  private once(go: () => Promise<boolean>): Promise<boolean> {
+    return (this.trip ??= go().finally(() => {
+      this.trip = null;
+    }));
+  }
 
   /**
    * Google through a browser that comes back (a phone). Nothing is left, so the call waits for the
@@ -196,12 +215,14 @@ export class SupabaseAccount implements Account {
     const watched: Opener = async (url) => (back = await open(url));
     const done = await (way === 'link' ? cloud.linkGoogle(returnTo, watched) : cloud.signInWithGoogle(returnTo, watched)).catch(() => false);
     if (done) {
-      // The session is the account's now: the cloud tells who it is, and there is nothing left to say.
+      // The session is the account's now: the cloud tells who it is, and there is nothing left to say (and the listeners hear it taken back).
       this.notice = null;
+      this.say(null);
       return true;
     }
-    if (back === null) {
-      // Closed by the player. Nothing went wrong, and a word that the player is being taken into their account no longer holds.
+    if (back === null || (back !== undefined && !cameBackTo(back, returnTo))) {
+      // Closed by the player, or back somewhere it was not sent: nothing the trip says. A word that the player is being taken into their
+      // account no longer holds.
       if (joining) this.say(null);
       return false;
     }

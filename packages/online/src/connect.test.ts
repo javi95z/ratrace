@@ -176,11 +176,24 @@ describe('the cloud, made from the Supabase client', () => {
       client.answers.linkIdentity = { data: { provider: 'google', url: null }, error: new Error('manual linking is disabled') };
       expect(await cloud.linkGoogle('theratrace://auth', open)).toBe(false);
       expect(open).not.toHaveBeenCalled();
-      client.answers.signInWithOAuth = { data: { provider: 'google', url: google, flowId: null }, error: null };
       client.answers.exchangeCodeForSession = { data: { session: null, user: null }, error: new Error('code verifier missing') };
       expect(await cloud.signInWithGoogle('theratrace://auth', open)).toBe(false);
-      // A trip with no flow of its own exchanges as the client always has.
-      expect(client.asked.at(-1)).toStrictEqual(['exchangeCodeForSession', 'X']);
+      expect(client.asked.at(-1)).toStrictEqual(['exchangeCodeForSession', 'X', { flowId: 'flow-2' }]);
+    });
+
+    it('exchanges nothing for a trip with no flow of its own: no other trip\'s verifier is ever used', async () => {
+      const cloud = await connectSupabase('u', 'k');
+      client.answers.signInWithOAuth = { data: { provider: 'google', url: google, flowId: null }, error: null };
+      expect(await cloud.signInWithGoogle('theratrace://auth', async () => 'theratrace://auth?code=X')).toBe(false);
+      expect(client.asked.map(([name]) => name)).toEqual(['signInWithOAuth']);
+    });
+
+    it('takes a code only from the address it sent the browser back to, and never one that comes with an error', async () => {
+      const cloud = await connectSupabase('u', 'k');
+      for (const back of ['https://evil/?code=X', 'theratrace://authority?code=X', 'theratrace://auth?code=X&error=server_error', 'theratrace://auth?code=X&error_code=bad_oauth_state', 'theratrace://auth?code=X#error=server_error']) {
+        expect(await cloud.linkGoogle('theratrace://auth', async () => back), back).toBe(false);
+      }
+      expect(client.asked.map(([name]) => name)).not.toContain('exchangeCodeForSession');
     });
   });
 

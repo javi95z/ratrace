@@ -3,6 +3,7 @@ import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
 import { roomsApi } from './rooms';
+import { cameBackTo, noticeIn } from './supabase';
 import type { Cloud, CloudUser } from './supabase';
 import type { Friend, Opener, PushTarget } from './types';
 
@@ -118,15 +119,17 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
   /**
    * Google through a browser that comes back, for a client that cannot leave its page (a phone): the
    * address the client asked for is opened, and the code the browser comes back with is exchanged for
-   * the session, against the verifier of this very trip. An error, or a browser closed, exchanges nothing.
+   * the session, against the verifier of this very trip. An error, a browser closed, an address it was
+   * not sent back to, or a trip with no flow of its own (whose verifier could be another trip's) exchanges nothing.
    */
-  const throughBrowser = async (asked: Promise<OAuthResponse>, open: Opener): Promise<boolean> => {
+  const throughBrowser = async (asked: Promise<OAuthResponse>, redirectTo: string, open: Opener): Promise<boolean> => {
     const { data, error } = await asked;
-    if (error || !data.url) return false;
+    if (error || !data.url || !data.flowId) return false;
     const back = await open(data.url);
-    const code = back === null ? null : queryOf(back, 'code');
+    if (back === null || !cameBackTo(back, redirectTo) || noticeIn(back) !== null) return false;
+    const code = queryOf(back, 'code');
     if (code === null) return false;
-    const exchanged = await (data.flowId ? client.auth.exchangeCodeForSession(code, { flowId: data.flowId }) : client.auth.exchangeCodeForSession(code));
+    const exchanged = await client.auth.exchangeCodeForSession(code, { flowId: data.flowId });
     return exchanged.error === null;
   };
   /** Who is signed in, for the two things that must name their owner. */
@@ -175,14 +178,14 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       return error ? null : userOf(data.user);
     },
     async linkGoogle(redirectTo, open) {
-      if (open) return throughBrowser(client.auth.linkIdentity({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), open);
+      if (open) return throughBrowser(client.auth.linkIdentity({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), redirectTo, open);
       // On success the client itself sends the browser to Google.
       const { error } = await client.auth.linkIdentity({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
     async signInWithGoogle(redirectTo, open) {
       // Replaces whoever is signed in here with the player the Google account belongs to.
-      if (open) return throughBrowser(client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), open);
+      if (open) return throughBrowser(client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), redirectTo, open);
       const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
