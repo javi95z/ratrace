@@ -1,5 +1,5 @@
 import { execFileSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, openSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -227,6 +227,27 @@ export async function waitFor(url: string, ms: number): Promise<void> {
   throw new Error(`${url} did not answer in ${ms} ms`);
 }
 
+/** What Next.js says when it stops a dev server to recommend an upgrade (`next/dist/lib/upgrade/nudge.js`). */
+export const NUDGE = 'This command stopped to show the upgrade recommendation';
+/** How long a server that answers is watched for that stop: it comes once Next has asked the registry about its version. */
+const NUDGE_MS = 8_000;
+
+/** Whether a child process has stopped, or stops within `ms`. */
+export function stoppedWithin(child: ChildProcess, ms: number): Promise<boolean> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve(true);
+  return new Promise((done) => {
+    const timer = setTimeout(() => {
+      child.off('exit', stopped);
+      done(false);
+    }, ms);
+    const stopped = () => {
+      clearTimeout(timer);
+      done(true);
+    };
+    child.once('exit', stopped);
+  });
+}
+
 /**
  * Runs `shoot` with a page of Chrome shaped like the iPhone's, in front of the web's own dev server, started here (on a
  * port that is not answering) and stopped after. `probe` is a page of the web that answers once the server is up. The
@@ -238,14 +259,30 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
   refuseServerInUse(up, PORT);
   execFileSync('pnpm', ['exec', 'tsx', 'scripts/sprites.ts'], { cwd: web, stdio: 'inherit' });
   // No cloud: the pages have nothing to save, and a dev page must never write to the live project. (The browser is kept from it as well.)
-  const server: ChildProcess = spawn('pnpm', ['exec', 'next', 'dev', '-p', String(PORT)], {
-    cwd: web,
-    stdio: 'ignore',
-    detached: true,
-    env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' },
-  });
+  // What the server says goes to a file beside the raw shots (`web-server.log`): a server that stops on its own says why there.
+  mkdirSync(raw, { recursive: true });
+  const logFile = join(raw, 'web-server.log');
+  const start = (): ChildProcess => {
+    const log = openSync(logFile, 'w');
+    return spawn('pnpm', ['exec', 'next', 'dev', '-p', String(PORT)], {
+      cwd: web,
+      stdio: ['ignore', log, log],
+      detached: true,
+      env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' },
+    });
+  };
+  let server = start();
   try {
     await waitFor(probe, 180_000);
+    // Next 16.4 stops a dev server it sees started by an agent, once, a moment after it answers, to recommend an upgrade (its "upgrade nudge"),
+    // and lets the same command run if it is started again within five minutes. The shots' server is started once more if it stopped so: the
+    // recommendation is in its log, for whoever runs the shots to pass on.
+    if (await stoppedWithin(server, NUDGE_MS) && readFileSync(logFile, 'utf8').includes(NUDGE)) {
+      console.error(`the web's server stopped to recommend an upgrade of Next.js (${logFile}); started again`);
+      server = start();
+      await waitFor(probe, 180_000);
+      if (await stoppedWithin(server, NUDGE_MS)) throw new Error(`the web's server stopped again: see ${logFile}`);
+    }
     const { chromium } = fromWeb('@playwright/test') as { chromium: Chromium };
     // The Chrome already on this machine, as the web's e2e tests use: nothing is downloaded.
     const browser = await chromium.launch({ channel: 'chrome' });
@@ -267,7 +304,15 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
       console.log(kept.size === 0 ? 'the browser asked nothing of any other host' : `the browser was kept from: ${[...kept].join(', ')}`);
     }
   } finally {
-    if (server.pid) process.kill(-server.pid, 'SIGTERM');
+    // A server that is gone already (it stopped on its own) is not an error to hide the one the shots met behind.
+    if (server.pid) {
+      try {
+        process.kill(-server.pid, 'SIGTERM');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+        console.error(`the web's server (${server.pid}) had stopped before the shots were done`);
+      }
+    }
   }
 }
 

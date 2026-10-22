@@ -1,6 +1,7 @@
+import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, NUDGE, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stoppedWithin, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -317,4 +318,19 @@ test('a command to the simulator that fails is tried again a second later, up to
       pause: () => undefined,
     }),
   ).toThrow('gone 3');
+});
+
+test('tells a server that stopped on its own from one still serving: the web\'s server, stopped by Next to recommend an upgrade, is started again', async () => {
+  const done = spawn(process.execPath, ['-e', 'process.exit(0)']);
+  expect(await stoppedWithin(done, 5_000)).toBe(true);
+  // Asked again once it has stopped: said at once.
+  expect(await stoppedWithin(done, 10)).toBe(true);
+  const serving = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10_000)']);
+  try {
+    expect(await stoppedWithin(serving, 200)).toBe(false);
+  } finally {
+    serving.kill();
+  }
+  // The words Next.js stops a dev server with (next/dist/lib/upgrade/nudge.js), which the driver looks for in the server's log.
+  expect(NUDGE).toBe('This command stopped to show the upgrade recommendation');
 });
