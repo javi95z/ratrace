@@ -245,6 +245,18 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(/\bhitSlop\b/.test('const a = 1; // no hitSlop here'.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).toBe(false);
   });
 
+  it('plays the phone\'s own sounds: no file of the app takes `@/ui/sound`, which the tsconfig maps to the web\'s synth for one test (game/cues.test.ts)', () => {
+    // `@/ui/sound` is not the phone's ui/sound.tsx: it is the web's Web Audio board, there only so a test can run the web's cues. Imported by the app,
+    // it would type-check and then fail on the phone (no AudioContext). The phone's sounds are `ui/sound` by a relative path.
+    // Read as written: a relative path to the phone's own `ui/sound` is placed as `@/ui/sound` by the wall's reader, and is the right one.
+    const WEB_SOUND = /(?:from\s*|import\(\s*|require\(\s*|import\s+)['"]@\/ui\/sound['"]/;
+    const webSound = mine.filter((path) => WEB_SOUND.test(readFileSync(path, 'utf8'))).map(rel);
+    expect(webSound).toEqual([]);
+    expect(WEB_SOUND.test("import { useSound } from '@/ui/sound';")).toBe(true);
+    expect(WEB_SOUND.test("const s = require('@/ui/sound');")).toBe(true);
+    expect(WEB_SOUND.test("import { useSound } from '../../ui/sound';")).toBe(false);
+  });
+
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {
     // The engine's quotes, previews and score breakdown give every figure. A screen that reads one of
     // these tables is working a figure out itself. (Tax rates are shown, not used: they come from `effectiveTax`.)
