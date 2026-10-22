@@ -3,6 +3,7 @@
 // opened on Play, for what only a long life reaches: `theratrace:///perf?life=moment-escape`, the finances of the round that ends a fifteen-round life.
 // With `&last=1`, the same life played on to the finances of its last round, where the round played ends it (resolve, then the end).
 // And a scene's finished lives, many times over, opened on the records: `theratrace:///perf?runs=records-three&copies=20`, sixty lives to fling.
+// And `theratrace:///perf?escape=early`: a life at the finances of the round that takes it out of the rat race at 38 and earns a legendary badge.
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useGame } from '../game/context';
@@ -14,8 +15,9 @@ type Lives = typeof import('../testing/perfLife');
 const lives: Lives | null = process.env.EXPO_PUBLIC_PERF === '1' ? (require('../testing/perfLife') as Lives) : null;
 
 export default function PerfRoute() {
-  const { life, last, runs, copies } = useLocalSearchParams<{ life?: string; last?: string; runs?: string; copies?: string }>();
+  const { life, last, runs, copies, escape } = useLocalSearchParams<{ life?: string; last?: string; runs?: string; copies?: string; escape?: string }>();
   if (lives === null) return <Redirect href="/" />;
+  if (escape === 'early') return <PutAndOpen put={() => lives.putEarlyEscape()} what="an early escape" to="/play" />;
   if (life !== undefined) return <PutAndOpen put={() => lives.putSceneLife(life, last === '1')} what={life} to="/play" />;
   if (runs !== undefined) return <PutAndOpen put={() => lives.putSceneRuns(runs, Number(copies ?? 1))} what={`${runs} × ${copies ?? 1}`} to="/records" />;
   return <Redirect href="/" />;

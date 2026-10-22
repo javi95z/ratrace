@@ -1,5 +1,8 @@
-import { bots, content } from '@ratrace/content';
+import { bots, content, lives } from '@ratrace/content';
 import { fixedSessions } from '@ratrace/core/session/fixed';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { newProfile } from '@ratrace/core/session/types';
 import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { FinishedRun, StoredGame } from '@ratrace/core/session/types';
 import { KvStore } from '../kvStore';
@@ -44,4 +47,39 @@ export async function putSceneRuns(name: string, copies: number): Promise<void> 
   for (let copy = 0; copy < copies; copy++) {
     for (const run of runs) await store.addRun({ ...run, runId: `${run.runId}-${copy}`, finishedAt: run.finishedAt - copy * 86_400_000 });
   }
+}
+
+/**
+ * A life whose next round both takes it out of the rat race and earns a legendary badge (`escaped_before_40`): the influencer of this seed, played by
+ * the saver to the finances of her eighth round (age 36), where playing the round leaves the rat race at 38. For the device check of two sheets at once
+ * (the moment of leaving, and the legendary badge's). Found by playing every life with every bot from a few seeds; held by this file's test.
+ */
+export const EARLY_ESCAPE = { life: 'influencer', bot: 'saver', seed: 'escape-influencer-saver-3'.padEnd(64, '0'), round: 7 } as const;
+
+/** That life, played on a store of its own (every life open to it) to its round, at the finances: the store, and its session. */
+export async function earlyEscape(): Promise<{ store: MemoryStore; session: NonNullable<Awaited<ReturnType<LocalSessions['resume']>>['session']> }> {
+  const store = new MemoryStore();
+  await store.saveProfile({ ...newProfile(), unlocked: Object.fromEntries(lives.map((life) => [life.id, { at: 0, gameId: 'perf' }])) });
+  let n = 0;
+  const sessions = new LocalSessions(store, content, lives, { newId: () => `early-escape-${(n += 1)}`, newSeed: () => EARLY_ESCAPE.seed, now: () => 0 });
+  const session = await sessions.start(EARLY_ESCAPE.life);
+  const bot = bots.find((one) => one.id === EARLY_ESCAPE.bot);
+  if (bot === undefined) throw new Error(`no ${EARLY_ESCAPE.bot} among the bots`);
+  const atFinances = async () => {
+    while (session.view().phase === 'cards') await session.answerCard(bot.pick(content, session.view()));
+  };
+  await atFinances();
+  while (session.view().round < EARLY_ESCAPE.round) {
+    await session.playRound({ orders: bot.orders(content, session.view()) });
+    await atFinances();
+  }
+  return { store, session };
+}
+
+/** That life put where the phone keeps its life in progress (only the life: the profile stays the phone's own). */
+export async function putEarlyEscape(): Promise<void> {
+  const { store } = await earlyEscape();
+  const game = (await store.loadGame()) as StoredGame | null;
+  if (game === null) throw new Error('the early escape has no life to put on the phone');
+  await new KvStore().saveGame(game);
 }
