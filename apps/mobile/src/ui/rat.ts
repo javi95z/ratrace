@@ -19,7 +19,7 @@ export const RAT_GROUND: Record<RatColour, ColorToken> = {
 export const AVATAR_BOX = { sm: 32, md: 44, lg: 96, border: 2 } as const;
 
 /** Back to front. */
-export const RAT_ORDER: readonly RatLayer[] = ['backdrop', 'body', 'face', 'outfit', 'eyes', 'hat'];
+const RAT_ORDER: readonly RatLayer[] = ['backdrop', 'body', 'face', 'outfit', 'eyes', 'hat'];
 
 export interface RatPiece {
   layer: RatLayer;

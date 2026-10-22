@@ -56,3 +56,23 @@ export function checkerCells(w: number, h: number): Array<{ x: number; y: number
   }
   return cells;
 }
+
+/**
+ * The box a picture of a thing is drawn into, where it must shrink to stand in `room` (the web's `max-h-full max-w-full object-contain`): none where it
+ * fits at its own size. Chrome lays a shrunk image on whole CSS pixels: so are its sides here.
+ */
+export function shrunkTo(id: string, fallback: Size, room: Size): Size | undefined {
+  const art = spriteBox(id, 1, 1, fallback);
+  if (art.w <= room.w && art.h <= room.h) return undefined;
+  const scale = Math.min(room.w / art.w, room.h / art.h);
+  return { w: Math.round(art.w * scale), h: Math.round(art.h * scale) };
+}
+
+/**
+ * The box the banner picture is drawn into at a width: the width, and the height its aspect gives, to a whole point. The web lays the
+ * image out at the exact height (157.5 on a 402 phone) and Chrome paints it snapped to CSS pixels (158), so that is the size its
+ * rows of art come to; the layout box keeps the exact one, and clips what is over.
+ */
+export function bannerSize(width: number, art: { w: number; h: number }): { w: number; h: number } {
+  return { w: width, h: Math.round((width * art.h) / art.w) };
+}

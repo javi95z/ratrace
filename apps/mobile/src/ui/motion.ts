@@ -322,7 +322,7 @@ export function holoShift(bgX: number, width: number): number {
 }
 
 /** Ease-out cubic: fast at first, slowing to the last. */
-export function easeOutCubic(t: number): number {
+function easeOutCubic(t: number): number {
   'worklet';
   return 1 - (1 - t) ** 3;
 }

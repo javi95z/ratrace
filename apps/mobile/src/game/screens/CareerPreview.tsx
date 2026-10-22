@@ -6,15 +6,13 @@ import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Bare, Tag } from '../../ui/kit';
-import { webBaseline } from '../../ui/fonts';
+import { PAY_DROP } from '../../ui/fonts';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useT, useWords } from '../context';
 
-/** How far under the top of the title the top of the pay stands, for the two to share a baseline. */
-export const PAY_DROP = webBaseline('pixel', 400, 16, 16 * 1.1) - webBaseline('pixel', 400, 15, 15 * 1.1);
 
 /**
  * A career a card offers, before it is taken: every rung with what it pays in the player's city

@@ -8,7 +8,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { useGame } from '../context';
 import { memoryServices, renderGame, router } from '../../testing/render';
-import { bannerSize, useRuleText, useThisWeek, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';
+import { useRuleText, useThisWeek, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';
+import { bannerSize } from '../../ui/sprites';
 
 afterEach(cleanup);
 

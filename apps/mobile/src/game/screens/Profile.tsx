@@ -6,20 +6,18 @@ import { useRouter } from 'expo-router';
 import { createContext, memo, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
-import { webLine } from '../../ui/fonts';
+import { PAY_DROP, webLine } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bare, Button, LineTag, Notice, Panel, pressDown, Raised, Row, Tag, usePress } from '../../ui/kit';
+import { Bare, Button, Figure, LineTag, Notice, Panel, pressDown, Raised, Row, Tag, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
-import { spriteBox } from '../../ui/sprites';
+import { bannerSize, shrunkTo, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useInRoom, useSaving, useSettings, useT, useWords } from '../context';
-import { BalanceSheet, shrunkTo } from './Balance';
+import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
-import { PAY_DROP } from './CareerPreview';
-import { bannerSize } from './Challenge';
 import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
@@ -45,12 +43,6 @@ export const ProfileOpened = createContext<{ item?: string; line?: BalanceLine }
 const TOTAL: ViewStyle = { marginTop: 4, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 };
 
 /** A figure of a line in a colour (the web's `<span className="text-…">` in a Row's pixel cell). */
-const Figure = ({ tone, children }: { tone: ColorToken; children: string }) => (
-  <PixelText size={15} tone={tone} style={{ textAlign: 'right' }}>
-    {children}
-  </PixelText>
-);
-
 /** The mark of a row that opens (the web's `ml-1.5 text-[11px] text-ink-300` ▸, inline after the figure, in its pixel cell's letter spacing). */
 const More = ({ top }: { top: number }) => (
   <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ marginLeft: 6, marginTop: top }}>

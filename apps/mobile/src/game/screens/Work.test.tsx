@@ -9,7 +9,7 @@ import { memoryServices, renderGame } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { useGame } from '../context';
 import { spriteBox } from '../../ui/sprites';
-import { bannerSize } from './Challenge';
+import { bannerSize } from '../../ui/sprites';
 import { useShown } from './Hud';
 import { Play } from './Play';
 import { WorkPanel } from './Work';

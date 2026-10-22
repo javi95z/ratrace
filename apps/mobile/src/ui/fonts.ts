@@ -280,3 +280,6 @@ export function baselineShift(runs: readonly Run[], role: Role, weight: Weight, 
   const native = drawnLine - deepest - Math.max(0, (drawnLine - tallest) / 2);
   return web - native;
 }
+
+/** How far under the top of a career's title (pixel 16) the top of its pay (pixel 15) stands, for the two to share a baseline (CareerPreview, Profile). */
+export const PAY_DROP = webBaseline('pixel', 400, 16, 16 * 1.1) - webBaseline('pixel', 400, 15, 15 * 1.1);

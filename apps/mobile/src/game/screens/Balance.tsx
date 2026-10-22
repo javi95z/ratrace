@@ -5,12 +5,12 @@ import { ageAt, debtLabel } from '@ratrace/core/game/present';
 import { memo, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
-import { Bare, Notice, Panel, Row, Tag, TickerBadge, usePress } from '../../ui/kit';
+import { Bare, Figure, Notice, Panel, Row, Tag, TickerBadge, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
-import { spriteBox, type Size } from '../../ui/sprites';
+import { shrunkTo, type Size } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
-import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
+import { COLORS, TOUCH } from '../../ui/theme';
 import { useGame, useT, useWords } from '../context';
 import { WorthGraph } from './WorthGraph';
 
@@ -38,25 +38,9 @@ const Empty = ({ children }: { children: string }) => (
     {children}
   </Notice>
 );
-/** A figure of a line in a colour (the web's `<span className="text-…">` in a Row's pixel cell). */
-const Figure = ({ tone, children }: { tone: ColorToken; children: string }) => (
-  <PixelText size={15} tone={tone} style={{ textAlign: 'right' }}>
-    {children}
-  </PixelText>
-);
 /** A gain in green, a loss in red, with its sign. */
 const Gain = ({ cents, text }: { cents: number; text: string }) => <Figure tone={cents < 0 ? 'wine-300' : 'teal-300'}>{text}</Figure>;
 
-/**
- * The box a picture of a thing is drawn into, where it must shrink to stand in `room` (the web's `max-h-full max-w-full object-contain`): none where it
- * fits at its own size. Chrome lays a shrunk image on whole CSS pixels: so are its sides here.
- */
-export function shrunkTo(id: string, fallback: Size, room: Size): Size | undefined {
-  const art = spriteBox(id, 1, 1, fallback);
-  if (art.w <= room.w && art.h <= room.h) return undefined;
-  const scale = Math.min(room.w / art.w, room.h / art.h);
-  return { w: Math.round(art.w * scale), h: Math.round(art.h * scale) };
-}
 
 const THING_ROOM: Size = { w: 40, h: 40 };
 

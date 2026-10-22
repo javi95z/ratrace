@@ -12,13 +12,12 @@ import { GOLD } from '../../ui/frames';
 import { Bar, Bare, KeyFigure, LineTag, Panel, Row, Tag, Toggle, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
-import { spriteBox } from '../../ui/sprites';
+import { bannerSize, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import type { ColorToken } from '../../ui/theme';
 import { useGame, useKnows, useSettings, useT, useWords } from '../context';
 import { CareerMoves } from './CareerMoves';
-import { bannerSize } from './Challenge';
 import { Explain } from './Explain';
 import { splitMastered, useFocusNote } from './focusNote';
 

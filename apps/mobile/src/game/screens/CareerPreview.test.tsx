@@ -5,7 +5,8 @@ import { quoteCareer } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
-import { CareerPreview, PAY_DROP } from './CareerPreview';
+import { CareerPreview } from './CareerPreview';
+import { PAY_DROP } from '../../ui/fonts';
 
 afterEach(cleanup);
 

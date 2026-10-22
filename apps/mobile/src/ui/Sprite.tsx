@@ -120,7 +120,7 @@ function useCheckerPath(w: number, h: number) {
 }
 
 /** The web's placeholder: an 8 pt checkerboard of night-600 and night-700, whatever the scale. */
-export function Checker({ w, h }: Size): ReactNode {
+function Checker({ w, h }: Size): ReactNode {
   const path = useCheckerPath(w, h);
   return (
     <Canvas style={{ width: w, height: h }}>

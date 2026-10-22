@@ -391,7 +391,7 @@ export function Row({ left, right, sub, size = BODY.size, style }: { left: React
 
 /**
  * A figure on the right of a `Row` in a colour of its own (the web's `<span className="text-…">` in a Row's `right`, which the Row sets in the pixel
- * face), at the Row's size unless `size` says another.
+ * face). Without `size` it is PixelText's own size (the body's 15, which is also a Row's), not whatever size the Row it stands in was given.
  */
 export function Figure({ tone, size, children }: { tone: ColorToken; size?: number; children: string }) {
   return <PixelText size={size} tone={tone} style={{ textAlign: 'right' }}>{children}</PixelText>;
@@ -444,7 +444,7 @@ export function StatRow({ children }: { children: ReactNode }) {
 }
 
 /** The web's rules for a figure by the width of its container (all inclusive at the top): icon gone to 340, 14 pt to 357, 15 pt to 371. */
-export function statLook(width: number | null): { icon: boolean; size: number } {
+function statLook(width: number | null): { icon: boolean; size: number } {
   if (width === null) return { icon: true, size: 16 };
   if (width <= 340) return { icon: false, size: 16 };
   if (width <= 357) return { icon: true, size: 14 };

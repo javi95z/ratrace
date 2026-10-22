@@ -9,7 +9,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFall, useReveal } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
-import { Button, Row } from '../../ui/kit';
+import { Button, Figure, Row } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
@@ -76,9 +76,6 @@ function Picture({ id }: { id: string }) {
 function Figures({ children }: { children: ReactNode }) {
   return <Framed kind="frame" style={{ backgroundColor: COLORS['night-900'], paddingHorizontal: 12, paddingVertical: 4 }}>{children}</Framed>;
 }
-
-/** A figure of a moment, in its colour (the web's `span` in the Row's pixel figure). */
-const Figure = ({ tone, children }: { tone: ColorToken; children: string }) => <PixelText size={15} tone={tone} style={{ textAlign: 'right' }}>{children}</PixelText>;
 
 /** What each moment says, in the figures the game gave. */
 function Body({ moment, view }: { moment: Moment; view: GameView }) {

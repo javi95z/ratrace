@@ -11,7 +11,7 @@ import { Button, Notice, Panel, Raised, Well } from '../../ui/kit';
 import { Screen } from '../../ui/Page';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
-import { spriteBox } from '../../ui/sprites';
+import { bannerSize, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useCanSignIn, useClock, useGame, useRanking, useWords } from '../context';
@@ -70,14 +70,6 @@ export function WeeklyChallengeCard() {
   );
 }
 
-/**
- * The box the banner picture is drawn into at a width: the width, and the height its aspect gives, to a whole point. The web lays the
- * image out at the exact height (157.5 on a 402 phone) and Chrome paints it snapped to CSS pixels (158), so that is the size its
- * rows of art come to; the layout box keeps the exact one, and clips what is over.
- */
-export function bannerSize(width: number, art: { w: number; h: number }): { w: number; h: number } {
-  return { w: width, h: Math.round((width * art.h) / art.w) };
-}
 
 /** The banner of the page, filling the width it is given, on a phone as on a desk, in the web's double frame. */
 function Banner() {
