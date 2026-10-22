@@ -10,7 +10,7 @@ import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { useGame } from '../context';
-import { CODE_REACH, Rankings } from './Rankings';
+import { CODE_REACH, friendLines, Rankings } from './Rankings';
 import type { Kind } from './Rankings';
 import { useState } from 'react';
 
@@ -775,5 +775,19 @@ describe('the rankings, followed and kept up to date', () => {
     expect(CODE_REACH.short).toBe(0);
     expect(CODE_REACH.box).toBeGreaterThanOrEqual(44);
     expect([CODE_REACH.top, CODE_REACH.bottom]).toEqual([8, 20]);
+  });
+
+  it('keeps the room between two lines of the friends\' panel in the upper line\'s part, where its frame\'s shadow is drawn, not under the next part', () => {
+    const friend = (userId: string): Friend => ({ userId, nickname: userId, avatar: null });
+    const rows = friendLines({ incoming: [friend('in-1')], friends: [friend('f-1'), friend('f-2')], outgoing: [friend('out-1')] }, (f) => f.nickname ?? '', false, { requests: 'Requests', nobody: 'Nobody', sent: 'Sent' });
+    // The web's gaps: 6 inside a group, 8 between the groups, 8 over the foot; each the room under the line above it.
+    expect(rows.map((row) => [row.key, row.under])).toEqual([
+      ['group-requests', 6],
+      ['incoming-in-1', 8],
+      ['friend-f-1', 6],
+      ['friend-f-2', 8],
+      ['group-sent', 6],
+      ['outgoing-out-1', 8],
+    ]);
   });
 });

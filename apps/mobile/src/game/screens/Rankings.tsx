@@ -15,11 +15,12 @@ import { ListScreen } from '../../ui/Page';
 import { PerfDrawn } from '../../ui/perf';
 import { Picker } from '../../ui/Picker';
 import { RatAvatar } from '../../ui/RatAvatar';
+import { webLine } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA, type ColorToken } from '../../ui/theme';
-import { useAccount, useCommunity, useWords } from '../context';
+import { useAccount, useCommunity, useSettings, useWords } from '../context';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ChallengeBoard, ChallengeEntry, topTenth, useChallengeBoard } from './Challenge';
@@ -38,6 +39,11 @@ const tagOf = (userId: string) => userId.slice(0, 4).toUpperCase();
 /** The line of the friend code (the web's `text-[12px]` paragraph round a `pixel text-[15px]` code): the code's own line, in the pixel face. */
 const CODE_LINE = 15 * 1.1;
 /**
+ * Where the words and the code stand in the paragraph's line, as the browser sets them on one baseline (the paragraph's strut, its words, the code):
+ * the code's taller ascent lowers the line's baseline, and the line is as tall as what it holds.
+ */
+export const codeLineOf = (language: string) => webLine([['read', 12, 12 * 1.45], ['read', 12, 12 * 1.45], ['pixel', 15, CODE_LINE]], language);
+/**
  * The code's touch box, the 44 a thumb needs: 8 up, to the name's line above it (its button takes the touches there), and 20 down, through the
  * panel's foot (12) and 8 into the page's gap of 16 under the panel, short of the tabs. A phone selects nothing in a line of text (the web's
  * `select-all`): the code copies itself when it is pressed.
@@ -48,6 +54,8 @@ export const CODE_REACH = reach(CODE_LINE, { above: 8, below: 12 + 16 + 8 });
 function You({ community, onRenamed, onTold, naming }: { community: Community; onRenamed(): void; onTold(message: string): void; naming: boolean }) {
   const t = useT('rankings');
   const player = useT('player');
+  const { locale } = useSettings();
+  const codeLine = codeLineOf(locale);
   const [me, setMe] = useState<{ nickname: string | null; friendCode: string } | null>(null);
   const [editing, setEditing] = useState(naming);
   const [name, setName] = useState('');
@@ -126,11 +134,14 @@ function You({ community, onRenamed, onTold, naming }: { community: Community; o
               </View>
             </View>
           ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <ReadText size={12} tone="ink-300">{`${t('code')}: `}</ReadText>
-            <Pressable accessibilityRole="button" accessibilityLabel={`${t('code')}: ${me.friendCode}`} accessibilityHint={player('copy')} onPress={copyCode} style={({ pressed }) => [CODE_REACH.style, pressDown(pressed)]}>
-              <PixelText size={15} tone="gold-500" lineHeight={CODE_LINE} style={{ letterSpacing: 15 * 0.12 }}>{me.friendCode}</PixelText>
-            </Pressable>
+          {/* The browser's line: the words and the code on one baseline, as tall as the line they make (not a native row on its baselines). */}
+          <View style={{ flexDirection: 'row', height: codeLine.height }}>
+            <ReadText size={12} tone="ink-300" style={{ marginTop: codeLine.tops[1] }}>{`${t('code')}: `}</ReadText>
+            <View style={{ marginTop: codeLine.tops[2] }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`${t('code')}: ${me.friendCode}`} accessibilityHint={player('copy')} onPress={copyCode} style={({ pressed }) => [CODE_REACH.style, pressDown(pressed)]}>
+                <PixelText size={15} tone="gold-500" lineHeight={CODE_LINE} style={{ letterSpacing: 15 * 0.12 }}>{me.friendCode}</PixelText>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Panel>
@@ -333,7 +344,7 @@ function FriendForm({ busy, said, onAsk }: { busy: boolean; said: Said | null; o
  * friends are on their way, or could not be read (the ranking among friends above already shows them): the panel is then its foot alone. `pad` is the
  * room over a line inside the panel: the panel's `gap-2` between its groups, a group's `gap-1.5` between its lines, none over the first.
  */
-function friendLines(list: Friends | null | undefined, nameOf: (friend: Friend) => string, busy: boolean, words: { requests: string; nobody: string; sent: string }): FriendRow[] {
+export function friendLines(list: Friends | null | undefined, nameOf: (friend: Friend) => string, busy: boolean, words: { requests: string; nobody: string; sent: string }): FriendRow[] {
   if (!list) return [];
   const rows: Unplaced[] = [];
   const group = (pad: number) => (rows.length === 0 ? 0 : pad);
@@ -349,14 +360,19 @@ function friendLines(list: Friends | null | undefined, nameOf: (friend: Friend) 
     rows.push({ kind: 'group', key: 'group-sent', pad: group(8), title: words.sent, tone: 'ink-300' });
     for (const friend of list.outgoing) line(friend, 'outgoing', 6);
   }
-  return rows.map((row, i) => ({ ...row, first: i === 0, part: i === 0 ? 'top' : 'middle' }) as FriendRow);
+  // The room between two lines is the upper line's (`under`), not the lower's: a line's frame stands 2 under its box (the web's bevel, a shadow that
+  // takes no room), and a part of the panel drawn after it, as the next row of the list, would paint its ground over that strip.
+  return rows.map((row, i) => ({ ...row, first: i === 0, part: i === 0 ? 'top' : 'middle', under: rows[i + 1]?.pad ?? FOOT_ROOM }) as FriendRow);
 }
 
+/** The room over the panel's foot (the friend code to ask with): the panel's `gap-2`, under its last line. */
+const FOOT_ROOM = 8;
+
 /** A line of the friends' panel before it is placed in the panel: all of it but whether it is its first, and which part of the panel it is. */
-type Unplaced = FriendRow extends infer R ? (R extends FriendRow ? Omit<R, 'first' | 'part'> : never) : never;
+type Unplaced = FriendRow extends infer R ? (R extends FriendRow ? Omit<R, 'first' | 'part' | 'under'> : never) : never;
 
 /** A line of the friends' panel, as a row of the page's list: a group's heading, "no friends yet", or another player. */
-type FriendRow = { key: string; first: boolean; part: 'top' | 'middle'; pad: number } & (
+type FriendRow = { key: string; first: boolean; part: 'top' | 'middle'; pad: number; under: number } & (
   | { kind: 'group'; title: string; tone: ColorToken }
   | { kind: 'nobody'; text: string }
   | { kind: 'friend'; userId: string; name: string; avatar: string | null; bond: Bond; busy: boolean }
@@ -691,7 +707,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
     // A line of the friends' panel: its part of the panel, the first with the panel's title, and the page's gap over the panel.
     return (
       <View style={line.first ? { paddingTop: PAGE_GAP } : null}>
-        <PanelPart part={line.part} title={line.first ? t('following') : undefined} style={line.first ? undefined : { paddingTop: line.pad }}>
+        <PanelPart part={line.part} title={line.first ? t('following') : undefined} style={{ paddingBottom: line.under }}>
           {line.kind === 'group' ? (
             <GroupHeading tone={line.tone}>{line.title}</GroupHeading>
           ) : line.kind === 'nobody' ? (
@@ -708,7 +724,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
   const panelFoot =
     community !== null && kind === 'friends' ? (
       <View style={friendRows.length === 0 ? { paddingTop: PAGE_GAP } : null}>
-        <PanelPart part={friendRows.length === 0 ? 'whole' : 'bottom'} title={friendRows.length === 0 ? t('following') : undefined} style={friendRows.length === 0 ? undefined : { paddingTop: 8 }}>
+        <PanelPart part={friendRows.length === 0 ? 'whole' : 'bottom'} title={friendRows.length === 0 ? t('following') : undefined}>
           <FriendForm busy={friends.busy} said={friends.said} onAsk={friends.ask} />
         </PanelPart>
       </View>

@@ -63,6 +63,17 @@ const run = (runId: string, over: Partial<FinishedRun> = {}): FinishedRun => ({
 });
 
 describe('the player\'s profile', () => {
+  it('draws the big rat once the member is read, in the look they wear: no canvas of another look first, hidden', async () => {
+    const { community } = profile();
+    let answer: (found: { nickname: string; friendCode: string; avatar: string | null }) => void = () => {};
+    const waiting = { ...community, me: () => new Promise((done) => (answer = done)) } as unknown as Community;
+    const { container } = show(member, waiting);
+    const big = () => container.querySelectorAll('[data-skia="Canvas"][data-size="128x128"]');
+    expect(big()).toHaveLength(0);
+    await act(async () => answer({ nickname: 'Rata_Uno', friendCode: 'ABCD2345', avatar: null }));
+    await waitFor(() => expect(big()).toHaveLength(1));
+  });
+
   it('asks nobody to sign in before the account has tried to', () => {
     renderGame(<PlayerProfile />, { ...memoryServices(), account: { ...accountAs({ kind: 'offline' }), settled: () => false }, community: () => null });
     expect(screen.queryByText('Sign in with Google to have a profile others can see.')).toBeNull();

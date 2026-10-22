@@ -175,10 +175,9 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
           <View style={{ alignItems: 'center', gap: 8 }}>
             <View aria-hidden importantForAccessibility="no-hide-descendants">
               <Framed kind="double" tone={{ ring: 'gold-500' }} style={{ backgroundColor: ground }}>
-                {/* The rat at the size it was drawn: every pixel of it, none smudged. */}
-                <View style={{ opacity: me === undefined ? 0 : 1 }}>
-                  <RatLayers look={look} size={128} />
-                </View>
+                {/* The rat at the size it was drawn: every pixel of it, none smudged. Drawn once the member is read, with the look they wear: never
+                    first another look, hidden, its canvas then handed a second picture (left undrawn on iOS when the toast rose at that moment). */}
+                {me === undefined ? <View style={{ width: 128, height: 128 }} /> : <RatLayers look={look} size={128} />}
               </Framed>
             </View>
             {editing ? (

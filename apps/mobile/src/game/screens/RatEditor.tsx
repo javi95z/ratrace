@@ -175,8 +175,11 @@ export function RatEditor({
         // as they are, then the game's own tabs.
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS['night-700'] }}>
           <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ flexShrink: 0 }}>
-            <Framed kind="raised" style={{ width: TOUCH, height: TOUCH, overflow: 'hidden', backgroundColor: COLORS[RAT_GROUND[look.colour]] }}>
-              <RatLayers look={look} size={TOUCH} />
+            {/* The frame's strips stand outside its box, as the web's box-shadow does: what is clipped is the rat inside it, never the frame. */}
+            <Framed kind="raised" style={{ width: TOUCH, height: TOUCH, backgroundColor: COLORS[RAT_GROUND[look.colour]] }}>
+              <View style={{ width: TOUCH, height: TOUCH, overflow: 'hidden' }}>
+                <RatLayers look={look} size={TOUCH} />
+              </View>
             </Framed>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
