@@ -325,7 +325,7 @@ the markets' clipping has no block colour (`bg-teal-500` is no colour of the gam
    two device pixels lower, and the second line of a two-line headline under it 1.33 pt (the web puts each line's baseline on a whole CSS pixel, 18 apart there, the
    phone 18.67). About 2000 of its 3504 shape pixels are the clippings' pictures moved by those two device pixels.
 3. **The turned page (`play-pageturn`).** The torn page is turned 3.6° about its top left corner: its edges, the rings and the red band are antialiased on one side and
-   hard on the other (the exception this phase asks for, below). First shot at 3918 shape pixels and 4.33 pt: the lines of the paper the calendar covers in part
+   hard on the other (the exception this phase asked for, below, accepted by the user on 2026-10-22). First shot at 3918 shape pixels and 4.33 pt: the lines of the paper the calendar covers in part
    ("Survey: everyone is middle class…") were measured through it, the calendar taking no touch (`pointer-events: none`, so the web's `elementFromPoint` passes
    through it), with the calendar's ink in their window. Fix round 1 of the review: in this scene's shot the calendar takes the pointer (`CALENDAR_COVERS`, a
    `WEB_ONLY` rule), and the text check measures a line the decoration covers in part only where it shows, either side, two points short of it (`TEXT_BOXES`,
@@ -656,7 +656,7 @@ bleeding a sliver, a sprite scaled to a fraction: 30 and 47 pixels). Every phase
 pixels. Phase 2 has things that are not: boxes that are turned, scaled and moved by a fraction of a point (the stepped keyframes, held at
 a step), and a smooth price line. At their edges Chrome and iOS draw differently, and *that* is what is left in the motion section.
 
-> **Exception asked for (to be accepted at the end of the phase):** an antialiased one-device-pixel (⅓ pt) edge on a box that is
+> **Exception accepted by the user on 2026-10-22:** an antialiased one-device-pixel (⅓ pt) edge on a box that is
 > transformed (turned, scaled, or moved by a fraction of a point) or on a smooth line, which the comparison counts as a shape difference
 > because the other shot has a hard edge there. No shape, colour or place is more than one device pixel off (two, ⅔ pt, at the worst one:
 > the torn page's top edge). Nothing else differs.
@@ -705,8 +705,8 @@ alarm lamp, lit lamp, page and confetti: none.
 ### What is left
 
 - **The one-pixel edges above** are the platforms'. They can be made to go away on a release build by asking iOS to antialias layer edges
-  (`ios.infoPlist.UIViewEdgeAntialiasing` in `app.json`); Expo Go cannot be given that, so it has not been tried. If the exception is not
-  accepted, that is the next step, and it comes with the release-build check halfway through the phase.
+  (`ios.infoPlist.UIViewEdgeAntialiasing` in `app.json`); Expo Go cannot be given that, so it has not been tried. The exception was accepted
+  (by the user, 2026-10-22), so this is not needed; it stays a way to take the edges away should that ever be wanted.
 - **The turn is flat.** The legendary card and the medal are drawn without real 3D (see 1 above); the card's perspective is exact for the
   plane it turns in. Nothing in the game needs more.
 - **Playing is judged by eye, holding by pixels.** The comparison is of frames held still; the same frames play through Reanimated (every
@@ -1118,3 +1118,10 @@ tried again), a double tap, Spanish and Russian (RED before: no button). `end-sh
 (its size, 1080 × 1348, and that it is the one on screen), and the sheet's words for a refusal (Settings → The Rat Race → Photos → None). Android:
 the plugin still declares `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `READ_MEDIA_VISUAL_USER_SELECTED` (it always does); whether a
 write-only request is granted on Android 10 to 12, where it asks for `WRITE_EXTERNAL_STORAGE`, is for an Android device.
+
+### 4. The motion-2 exception, accepted
+
+The one-device-pixel antialiased ring on a transformed edge and the smooth chart lines (section "The tolerance, and the exception this phase needs",
+and motion-2's residual) are accepted by the user on 2026-10-22 as a residual class: the records that rest on it (`play-pageturn`,
+`finance-buy-stock`, `play-cards-legendary`) stand as they are.
+
