@@ -175,6 +175,20 @@ export function Frames(): null {
   return null;
 }
 
+/** When each sheet was told to close, by its title, until its Modal says it has dismissed. */
+const closing = new Map<string, number>();
+
+export function sheet(phase: 'closing' | 'gone', name: string): void {
+  if (phase === 'closing') {
+    closing.set(name, performance.now());
+    return;
+  }
+  const since = closing.get(name);
+  if (since === undefined) return;
+  closing.delete(name);
+  tell({ kind: 'dismiss', name, ms: +(performance.now() - since).toFixed(1) });
+}
+
 /** The counting figures' steps: the first value set in a frame, and what each frame cost from it to its commit. */
 let setAt: number | null = null;
 const steps: number[] = [];

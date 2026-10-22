@@ -733,7 +733,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
 
   return (
     <View style={{ flex: 1 }}>
-      <PerfDrawn name="rankings" />
+      <PerfDrawn name={lines.length > 0 ? 'rankings: lines' : 'rankings'} />
       <ListScreen
         head={head}
         foot={panelFoot}

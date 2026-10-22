@@ -19,6 +19,7 @@ import { Button, Notice, Panel, pressDown, Raised, Segmented, SrOnly, Tag, usePr
 import { Loading } from '../../ui/Loading';
 import { Sheet, Toast, useSheetsShowing } from '../../ui/overlay';
 import { Screen } from '../../ui/Page';
+import { PerfDrawn } from '../../ui/perf';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -167,6 +168,21 @@ function Refusal({ plain = false }: { plain?: boolean }) {
  * neither. `code` is the code an invitation's link brought (the route's `?code=`: `theratrace://room?code=`, or the web's own link opened on the phone).
  */
 export function Room({ code }: { code?: string } = {}) {
+  return (
+    <>
+      <RoomMark />
+      <RoomShown code={code} />
+    </>
+  );
+}
+
+/** What the room's page shows, told to the timing probe (EXPO_PUBLIC_PERF=1 builds only): its way in, its lobby, its game. */
+function RoomMark() {
+  const where = useRoom((s) => (s.status === 'booting' ? 'booting' : s.status === 'unavailable' || s.status === 'away' ? s.status : s.room === null ? 'door' : s.room.status === 'open' ? 'lobby' : s.game === null ? 'loading' : 'playing'));
+  return <PerfDrawn name={`room: ${where}`} />;
+}
+
+function RoomShown({ code }: { code?: string }) {
   const t = useT('room');
   const phone = useT('phone');
   const common = useT('common');
