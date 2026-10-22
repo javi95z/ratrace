@@ -7,6 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useMedal, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
+import { Glow } from '../../ui/Glow';
 import { Bare, Button } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sparks } from '../../ui/Sparks';
@@ -15,7 +16,7 @@ import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useGame, useT, useWords } from '../context';
 import { Medal } from './Medal';
-import { RARITY_TONE } from './rarityStyle';
+import { RARITY_GLOW, RARITY_TONE } from './rarityStyle';
 
 /** The sparks of a badge won are the colours of its rim: bronze, silver, gold, and the gem's green and cream. */
 const SPARKS: Record<BadgeRarity, readonly ColorToken[]> = {
@@ -82,7 +83,8 @@ function Earned({ badgeId }: { badgeId: string }) {
   return (
     <View accessible role="status" accessibilityLiveRegion="polite">
       <Animated.View style={rise}>
-        {/* The web's `frame frame-gold ... shadow-[…]`: the frame's box-shadow comes later in its stylesheet and is what is drawn (rarityStyle.ts). */}
+        {/* The web's `frame frame-gold … [--glow:…]`: the glow of its rarity, under the frame's strips (rarityStyle.ts). */}
+        <Glow shadow={RARITY_GLOW[rarity]} />
         <Framed kind="frame" tone={GOLD} style={{ backgroundColor: COLORS['night-700'], padding: 8, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Spinning badgeId={badgeId} size="sm" sparks={{ colours: SPARKS[rarity], count: rarity === 'legendary' ? 14 : rarity === 'rare' ? 10 : 8, reach: rarity === 'common' ? 26 : 36 }} />
           <View style={{ minWidth: 0, flexShrink: 1 }}>

@@ -74,15 +74,21 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
   expect(() => lineOf(first, result(first.name, { rawPercent: 70 }))).toThrow('home-new: a wrong page is not a result to keep');
 });
 
-test('every screen is the real one on the app (phase 1\'s stand-ins are retired): every scene is compared, now that batch pass 1 has shot them all', () => {
-  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual(SCENES.map((scene) => scene.name));
+test('every screen is the real one on the app (phase 1\'s stand-ins are retired): every scene is compared, but those waiting for the next batch pass', () => {
+  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual(SCENES.filter((scene) => !PENDING_SHOTS.has(scene.name)).map((scene) => scene.name));
+  for (const name of PENDING_SHOTS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
   // The ledger was the last stage of Play drawn as a stand-in (Task 16), the records and the collection the last screens (Task 19): all shot now.
   expect(isJudged(SCENES.find((scene) => scene.name === 'play-resolve-r6')!)).toBe(true);
 });
 
-test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after batch pass 1 none is waiting', () => {
-  expect([...PENDING_SHOTS]).toEqual([]);
+test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after batch pass 1, those the user\'s decisions changed', () => {
+  expect([...PENDING_SHOTS]).toEqual(['celebrate-earned', 'celebrate-legendary']);
+  // None is held to a record or a baseline while it waits: the batch pass that shoots it sets what it is accepted to differ by, if anything.
+  for (const name of PENDING_SHOTS) {
+    expect(Object.keys(ACCEPTED), name).not.toContain(name);
+    expect(PHONE_WORDS, name).not.toContain(name);
+  }
   // What such a scene says, should a later task register one before the next batch pass: that, and no numbers.
   const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
   expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
@@ -357,7 +363,7 @@ describe('what is accepted of a scene, and no more', () => {
     // The verdicts a run can end in, and which of them fail it.
     const lines = SCENES.map((scene) => (isJudged(scene) ? lineOf(scene, scene.name in ACCEPTED ? measured(scene.name) : PHONE_WORDS.includes(scene.name) ? result(scene.name, { shape: PAGE_BASELINE[scene.name]?.shape ?? 0, texts: [] }) : result(scene.name, { shape: 0, texts: [] })) : unjudgedLine(scene)));
     expect(differing(lines)).toEqual([]);
-    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, layout accepted', 'phone words, not comparable']));
+    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, layout accepted', 'phone words, not comparable', 'unjudged']));
   });
 });
 

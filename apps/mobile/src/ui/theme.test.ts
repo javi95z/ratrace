@@ -35,6 +35,9 @@ test('extra colours the web uses outside the tokens', () => {
     rare: '0 0 12px rgba(233,177,60,0.6)',
     legendary: '0 0 20px rgba(94,224,200,0.7)',
   });
+  // The web's `[--glow:…]` of each rarity (rarityStyle.ts), its spaces written as underscores: the shadow its frame draws under its strips.
+  const rarity = readFileSync(new URL('../../../web/src/game/screens/rarityStyle.ts', import.meta.url), 'utf8');
+  for (const glow of Object.values(EXTRA.glow)) expect(rarity).toContain(`'[--glow:${glow.replaceAll(' ', '_')}]'`);
 });
 
 test('grey is a colour as the web\'s `grayscale` filter draws it (CSS grayscale(1), in sRGB): each channel the luminance of the three', () => {

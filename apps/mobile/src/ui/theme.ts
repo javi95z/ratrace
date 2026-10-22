@@ -66,7 +66,7 @@ export const EXTRA = {
   glint: 'rgba(255,255,255,0.4)',
   /** The common badge's rim (RARITY_TONE.common). */
   bronze: '#c98a4b',
-  /** The glow round a badge card, as a CSS box-shadow (rarityStyle.ts). */
+  /** The glow round a badge card, as the CSS box-shadow the web's frame draws under its strips (rarityStyle.ts), and `Glow` draws on the phone. */
   glow: {
     uncommon: '0 0 6px rgba(240,230,210,0.35)',
     rare: '0 0 12px rgba(233,177,60,0.6)',

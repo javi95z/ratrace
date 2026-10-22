@@ -396,7 +396,8 @@ Measured before writing, so not differences:
 - **No glow round a badge's card.** The web's card is `frame frame-gold … shadow-[0_0_12px_…]` (the rarity's glow, `RARITY_GLOW`). Both are box-shadows of the utilities
   layer, and `.frame` is written after the `shadow-[…]` utilities in the compiled stylesheet (Tailwind 4.3.3, compiled from `globals.css`: `.shadow-[0_0_20px_…]` at line
   1784, `.frame` at 1812), so the frame's four strips are what is drawn and no glow at all; the web's shot of `celebrate-earned` shows none round the legendary card. The
-  phone draws the gold frame and no glow (`RARITY_GLOW` kept as the web's word for it). The web's test only checks the class.
+  phone draws the gold frame and no glow (`RARITY_GLOW` kept as the web's word for it). The web's test only checks the class. (Restored on both sides
+  after batch pass 1, by the user's decision: "Decisions after batch pass 1" below.)
 - **The silver rarity's colour.** `text-ink-100` is no colour of the game's palette (`--color-*: initial` leaves the 31): the word keeps its line's colour (`RARITY_TONE`
   is null for it).
 - **The amount's keyboard help** (`keyboard-hint`) is `display: none` unless the page is driven by a keyboard: not drawn, and no gap for it.
@@ -1039,3 +1040,23 @@ thread kept 60 frames a second, the JS thread missed 42). A press in that time w
 **The simulator is not the phone.** Every time above is from the iPhone 16 Pro simulator on this Mac. The JS thread runs at the Mac's speed (faster
 than a phone's); the UI thread's canvases go through Metal's simulator driver (slower than a phone's GPU). A device, Android above all, was not
 available here: the budgets are to be measured there again before a release.
+
+## Decisions after batch pass 1
+
+The user's decisions of 2026-10-22 on what batch pass 1 left for them, and the controller's ruling on the last round's time. Items 1 and 2 change the
+web on the `expo` branch (they reach `dev` when `expo` is merged, in phase 5). Every scene they change on either side is in `PENDING_SHOTS` for the
+next batch pass, with no record: it is shot, compared and judged there.
+
+### 1. The rarity's glow round a badge's card, drawn on both sides
+
+- **The web.** The card is `frame frame-gold … shadow-[0_0_12px_…]`; `frame` is a box-shadow of the same layer written after the `shadow-[…]`
+  utilities, so no glow was drawn. The frame's box-shadow now ends with the glow the element names, `var(--glow, 0 0 #0000)`, under its four strips;
+  `--glow` is registered as the frame's colours are (`@property`, not inherited; reset in the base layer for a browser without `@property`), and the
+  rarity's class sets it (`[--glow:0_0_12px_rgba(233,177,60,0.6)]`). No other `frame` changes: it gains a transparent shadow of no size, which draws
+  nothing. Held by `Celebrations.test` (web), which compiles `globals.css` with Tailwind for the card's classes and applies them in the stylesheet's
+  order: the frame's four strips, then the glow of each rarity; the bronze card the frame alone (RED before: the strips alone).
+- **The phone.** `Glow` (ui/Glow.tsx), laid under the card as its first child: the card's box in the glow's colour on a canvas of the kit's, blurred
+  by a Gaussian of half the blur (`BlurMask`, the deviation Chrome blurs a box-shadow by), clipped to outside the box (an outer shadow is not drawn
+  under its box), on a canvas three deviations wider each side (6/12/20 px blur: 9, 18, 30 pt). Held by `Glow.test` and `Celebrations.test` (phone).
+- **Scenes.** `celebrate-earned` and `celebrate-legendary` wait for the next batch pass. Neither had a record (both were clean without the glow).
+

@@ -8,9 +8,8 @@ import { COLORS, EXTRA } from '../../ui/theme';
 export const RARITY_TONE: Record<BadgeRarity, string | null> = { common: EXTRA.bronze, uncommon: null, rare: COLORS['gold-500'], legendary: COLORS['teal-300'] };
 
 /**
- * The glow the web asks for round a badge card of each rarity, as its box-shadow: none for bronze, then a rim of light that grows. The card is
- * also `frame frame-gold`, and `frame` is a box-shadow of the same layer that comes later in the web's stylesheet, so the card is drawn with its
- * gold frame and no glow at all: the phone draws the frame, and this is kept as the web's word for when it draws the glow.
+ * The glow round a badge card of each rarity, as the box-shadow the web draws it with: none for bronze, then a rim of light that grows. The web's
+ * card is `frame frame-gold`, and its frame draws the glow under its strips (`--glow`, globals.css); the phone lays it under the card (`Glow`).
  */
 export const RARITY_GLOW: Record<BadgeRarity, string> = {
   common: '',

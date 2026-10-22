@@ -369,8 +369,8 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
 
 /*
  * The colours a frame is drawn in: its outline, its lit edge, its shaded edge, and the ring of a
- * double frame. They belong to the element that names them and to nothing inside it. Left to
- * inherit, a gold panel would gild every button it holds.
+ * double frame; and the glow a plain frame stands in. They belong to the element that names them
+ * and to nothing inside it. Left to inherit, a gold panel would gild every button it holds.
  */
 @property --frame {
   syntax: '*';
@@ -388,6 +388,10 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
   syntax: '*';
   inherits: false;
 }
+@property --glow {
+  syntax: '*';
+  inherits: false;
+}
 /*
  * The same for a browser that does not register properties: each element starts with none of its
  * parent's. In the base layer, so that the element's own `frame-gold` still wins; outside a layer
@@ -401,19 +405,23 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
     --hi: initial;
     --lo: initial;
     --ring: initial;
+    --glow: initial;
   }
 }
 
 /*
  * A 2px pixel border with notched corners: four hard shadows, one per side, so the corner pixels
- * are left empty the way a hand-drawn pixel frame leaves them.
+ * are left empty the way a hand-drawn pixel frame leaves them. Under them, the glow the element
+ * names (`--glow`, a shadow of its own: a badge's rarity), if any. A `shadow-*` utility beside the
+ * frame would not be drawn: it is a box-shadow too, and this one comes after it.
  */
 @utility frame {
   box-shadow:
     0 -2px 0 0 var(--frame, var(--color-night-900)),
     0 2px 0 0 var(--frame, var(--color-night-900)),
     -2px 0 0 0 var(--frame, var(--color-night-900)),
-    2px 0 0 0 var(--frame, var(--color-night-900));
+    2px 0 0 0 var(--frame, var(--color-night-900)),
+    var(--glow, 0 0 #0000);
 }
 
 /*

@@ -95,9 +95,14 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
  * call, 2026-10-21): the batch passes shoot every one of these, compare them and fix what differs, and take each out of this list as it is judged.
  * A scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a result. Batch pass 1 shot and judged the
- * thirty-nine of Tasks 11 to 19 and the merge: none is waiting.
+ * thirty-nine of Tasks 11 to 19 and the merge. Waiting since, for the next batch pass: the scenes the user's decisions after it changed on both
+ * sides (the parity report's "Decisions after batch pass 1"): the badges' glow.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
+  // The rarity's glow round a badge's card, drawn now on the web (its frame's `--glow`) and on the phone (`Glow`).
+  'celebrate-earned',
+  'celebrate-legendary',
+]);
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:

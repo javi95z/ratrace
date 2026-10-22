@@ -11,6 +11,7 @@ import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { COLORS, EXTRA } from '../../ui/theme';
 import { paintOf } from '../../ui/testing/paint';
+import { drawn } from '../../ui/testing/skia';
 
 // As the web's test: what the step on screen earned is the game's to say, so the test says it. `shown.earned` null is the real game.
 const shown = vi.hoisted(() => ({ earned: null as string[] | null, unlocked: [] as string[] }));
@@ -24,14 +25,18 @@ vi.mock('../context', async (original) => {
   };
 });
 
-// What the cards hand their boxes is kept, for what a test cannot read off the page (react-native-web draws nothing for `accessible`).
+// What the cards hand their boxes is kept, for what a test cannot read off the page (react-native-web draws nothing for `accessible`); and the
+// glows' boxes are laid out by the test (onLayout is the phone's to send).
 const statuses = vi.hoisted(() => [] as Array<Record<string, unknown>>);
+type Layout = (event: { nativeEvent: { layout: { x: number; y: number; width: number; height: number } } }) => void;
+const glowBoxes = vi.hoisted(() => [] as Layout[]);
 vi.mock('react-native', async (original) => {
   const rn = await original<typeof import('react-native')>();
   return {
     ...rn,
     View: (props: Record<string, unknown>) => {
       if (props.role === 'status') statuses.push(props);
+      if ((props.dataSet as { glow?: string } | undefined)?.glow !== undefined && typeof props.onLayout === 'function') glowBoxes.push(props.onLayout as Layout);
       return <rn.View {...props} />;
     },
   };
@@ -47,6 +52,7 @@ afterEach(() => {
   cleanup();
   shown.earned = null;
   shown.unlocked = [];
+  glowBoxes.length = 0;
 });
 
 /** The badge's name, as the game words it. */
@@ -77,20 +83,28 @@ describe('a badge earned', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('asks for a glow that grows with the rarity, as the web does; the web\'s gold frame is drawn over it, so neither draws it', () => {
-    // What the web asks for: none for bronze, then a rim of light that grows (rarityStyle.ts).
+  it('stands in a glow that grows with the rarity, under its gold frame, as the web draws it', () => {
+    // What the web draws: none for bronze, then a rim of light that grows (rarityStyle.ts), under the frame's strips (globals.css's `--glow`).
     expect(RARITY_GLOW).toEqual({ common: '', uncommon: EXTRA.glow.uncommon, rare: EXTRA.glow.rare, legendary: EXTRA.glow.legendary });
     const blur = (rarity: BadgeRarity) => Number(/0 0 (\d+)px/.exec(RARITY_GLOW[rarity])?.[1] ?? 0);
     expect([blur('common'), blur('uncommon'), blur('rare'), blur('legendary')]).toEqual([0, 6, 12, 20]);
-    // The web's card is `frame frame-gold ... shadow-[…]`: both are box-shadows of one layer, and `frame` comes later in the stylesheet, so the
-    // card is drawn with its gold frame and no glow. The phone's card is that frame: four gold-900 strips, and nothing blurred.
-    shown.earned = [idOf('legendary')];
-    renderGame(<Celebrations />, memoryServices());
-    const card = screen.getAllByRole('status')[0].firstElementChild as HTMLElement;
-    const frame = card.querySelector(':scope > div') as HTMLElement;
-    expect(frame.style.backgroundColor).toBe(rgb(COLORS['night-700']));
-    expect(strips(frame, COLORS['gold-900'])).toHaveLength(4);
-    expect(card.outerHTML).not.toMatch(/shadow|blur/i);
+    shown.earned = [idOf('legendary'), idOf('common'), idOf('rare'), idOf('uncommon')];
+    renderGame(<Celebrations seen={[idOf('legendary')]} />, memoryServices());
+    const [legendary, common, rare, uncommon] = screen.getAllByRole('status').map((status) => status.firstElementChild as HTMLElement);
+    // Each card is its frame, four gold-900 strips round night-700, with the glow of its rarity laid under it: first, so the card is drawn over it.
+    for (const [card, rarity] of [[legendary, 'legendary'], [rare, 'rare'], [uncommon, 'uncommon']] as const) {
+      const [glow, frame] = Array.from(card.children) as HTMLElement[];
+      expect(glow.getAttribute('data-glow'), rarity).toBe(EXTRA.glow[rarity]);
+      expect(frame.style.backgroundColor).toBe(rgb(COLORS['night-700']));
+      expect(strips(frame, COLORS['gold-900'])).toHaveLength(4);
+    }
+    // A bronze badge's card stands in none.
+    expect(common.querySelector('[data-glow]')).toBeNull();
+    expect(common.children).toHaveLength(1);
+    // Laid out, the legendary one is drawn: the card blurred by half its 20, outside it only.
+    act(() => glowBoxes[0]({ nativeEvent: { layout: { x: 0, y: 0, width: 360, height: 90 } } }));
+    expect(drawn(legendary, 'BlurMask')).toEqual([{ blur: 10, style: 'normal' }]);
+    expect(drawn(legendary, 'Rect')).toEqual([{ x: 30, y: 30, width: 360, height: 90, color: 'rgba(94,224,200,0.7)' }]);
   });
 
   it('names each rarity in the colour of its rim: bronze, the line\'s own (the web\'s ink-100 is no colour of its palette), gold and the gem\'s green', () => {
