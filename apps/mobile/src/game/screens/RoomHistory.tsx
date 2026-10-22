@@ -35,7 +35,7 @@ function Line({ lifeId, name, tag, sub, figure, gold }: { lifeId: string; name: 
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <PixelText size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{name}</PixelText>
-          {tag ? <Tag>{tag}</Tag> : null}
+          {tag ? <Tag item>{tag}</Tag> : null}
         </View>
         <ReadText size={12} tone="ink-300">{sub}</ReadText>
       </View>
@@ -164,7 +164,7 @@ export function RoomHistory({ runs, opened }: { runs: FinishedRun[]; opened?: st
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <ReadText size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{nameOf(player)}</ReadText>
-                        {player.me ? <Tag tone="good">{room('you')}</Tag> : null}
+                        {player.me ? <Tag tone="good" item>{room('you')}</Tag> : null}
                         {player.left ? <ReadText size={12} tone="ink-300">{room('left')}</ReadText> : null}
                       </View>
                       {lived ? <ReadText size={12} tone="ink-300" numberOfLines={1}>{lived}</ReadText> : null}

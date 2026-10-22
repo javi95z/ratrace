@@ -1223,6 +1223,21 @@ describe('public games: who is waiting, and who is gone', () => {
   });
 });
 
+describe('the clocks of a room', () => {
+  it('count by the game\'s clock: one held still (a scene\'s day, as the web\'s shot holds the browser\'s) holds the count still', async () => {
+    const { services } = inRooms();
+    // A day long past, held: the count is the server's start less the server's now, whatever the phone's clock says.
+    renderGame(<Room />, { ...services, now: () => Date.UTC(2026, 9, 22, 12) });
+    press(await screen.findByRole('button', { name: 'Quick game' }));
+    const clock = await screen.findByRole('region', { name: 'Looking for players' });
+    const first = within(clock).getByRole('timer').textContent;
+    expect(first).toMatch(/^Starts in [12]:\d\d$/);
+    // More than a second later, by the phone's own clock: nothing has moved.
+    await act(() => new Promise((done) => setTimeout(done, 1_200)));
+    expect(within(clock).getByRole('timer').textContent).toBe(first);
+  });
+});
+
 describe('a public game of a round a day', () => {
   it('is chosen by its pace on the door, and its lobby says how such a game is played', async () => {
     const { server, services } = inRooms();

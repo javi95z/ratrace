@@ -55,6 +55,12 @@ const keptEntry = (found: ChallengeEntryAnswer, drawn: ChallengeEntryAnswer): bo
 /** The places of a challenge's ranking that are in its best tenth: the first, at least. */
 export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
 
+/**
+ * The week's life over its board, as the web draws it: its 64-point portrait in a 52-point well, held to the well's width by the page's
+ * `img { max-width: 100% }` and left its own height (measured on the web's page: 52 × 64, standing 6 over the well and 6 under it).
+ */
+const BOARD_FACE = { w: 52, h: 64 };
+
 /** The challenge on the front door, built from the same raised card, portrait well and type hierarchy as the rest of the game. */
 export function WeeklyChallengeCard() {
   const t = useT('challenge');
@@ -285,7 +291,9 @@ function RankingLink({ label, onPress }: { label: string; onPress(): void }) {
   const press = usePress({ onPress });
   return (
     <Pressable accessibilityRole="link" onPress={press} style={[reach(13 * 1.45, { above: 12, below: 32 }).style, { alignSelf: 'center' }]}>
-      <LinkText size={13} offset={2} tone="teal-300">{label}</LinkText>
+      {/* The web's `underline` with no offset of its own: Chakra's own (its post table, −75 of 1000 at 13), drawn by Chrome 1.5 under the baseline,
+          measured on the web's shot (Task 14's batch pass). */}
+      <LinkText size={13} offset={1.5} tone="teal-300">{label}</LinkText>
     </Pressable>
   );
 }
@@ -336,7 +344,7 @@ export function ChallengeBoard({ board }: { board: ChallengeRanking | null | und
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Well style={{ width: 52, height: 52 }}>
-          <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} />
+          <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} size={BOARD_FACE} />
         </Well>
         <View style={{ minWidth: 0, flexShrink: 1 }}>
           <PixelText size={17} numberOfLines={1}>{text.lives[week.lifeId]?.name ?? week.lifeId}</PixelText>
@@ -376,7 +384,7 @@ export const ChallengeEntry = memo(function ChallengeEntry({ place, name, day, s
         {top ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <Sprite id={CHALLENGE_ART.topTenth} />
-            <Tag tone="good">{t('topTenth')}</Tag>
+            <Tag tone="good" item>{t('topTenth')}</Tag>
           </View>
         ) : null}
         <PixelText size={18} style={{ flexShrink: 0 }}>{score}</PixelText>

@@ -11,7 +11,8 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePop, useRise } from '../../ui/animations';
 import { copy } from '../../ui/copy';
-import { adjustedRead } from '../../ui/fonts';
+import { DiscItem } from '../../ui/DiscItem';
+import { adjustedRead, webLine } from '../../ui/fonts';
 import { CREAM, GOLD } from '../../ui/frames';
 import { Framed } from '../../ui/Frame';
 import { Button, Notice, Panel, pressDown, Raised, Segmented, SrOnly, Tag, usePress, Well } from '../../ui/kit';
@@ -23,7 +24,7 @@ import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA } from '../../ui/theme';
-import { GameScope, useCommunity, useGame, useProfile, useRoom, useRooms, useSettings, useTrack, useWords } from '../context';
+import { GameScope, useClock, useCommunity, useGame, useProfile, useRoom, useRooms, useSettings, useTrack, useWords } from '../context';
 import { lifeRows } from '../lives';
 import { RoomPaper } from '../roomStory';
 import { useRoomSlice } from '../roomSlice';
@@ -68,15 +69,17 @@ const codeOf = (given: string): string => given.replace(/[^A-Za-z0-9]/g, '').toU
 
 /**
  * The whole seconds left until `at` (by the server's clock, `skew` ahead of the phone's), read as the screen is drawn; drawn again once a second, as
- * the count changes, and never more (the web draws it four times a second). Null without `at`.
+ * the count changes, and never more (the web draws it four times a second). Null without `at`. Read by the game's clock (`useClock`), the one the
+ * room store takes its skew by: the phone's, or a scene's held at its day (as the web's shot holds the browser's), where the count stands still.
  */
 function useCountdown(at: number | null, skew: number): number | null {
   const [, tick] = useState(0);
+  const now = useClock();
   useEffect(() => {
     if (at === null) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const next = () => {
-      const ms = at - (Date.now() + skew);
+      const ms = at - (now() + skew);
       if (ms <= 0) return;
       // A moment past the next whole second, when the count reads one less.
       timer = setTimeout(() => {
@@ -86,8 +89,8 @@ function useCountdown(at: number | null, skew: number): number | null {
     };
     next();
     return () => clearTimeout(timer);
-  }, [at, skew]);
-  return at === null ? null : Math.max(0, Math.ceil((at - (Date.now() + skew)) / 1_000));
+  }, [at, skew, now]);
+  return at === null ? null : Math.max(0, Math.ceil((at - (now() + skew)) / 1_000));
 }
 
 /**
@@ -388,14 +391,15 @@ function BarHost({ children }: { children: ReactNode }) {
     setOpen(false);
     setPicked(userId);
   }, []);
-  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once.
+  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once (by the clock the wait is counted by).
+  const now = useClock();
   const send = useCallback(
     (n: number) => {
-      setUntil(Date.now() + SHOUT_EVERY_MS);
+      setUntil(now() + SHOUT_EVERY_MS);
       setShouting(false);
       void shout(n);
     },
-    [shout],
+    [shout, now],
   );
   return (
     <BarOpens.Provider value={opens}>
@@ -586,7 +590,8 @@ const StandingRow = memo(
     const body = (
       <View style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
         <View style={{ width: 28, flexShrink: 0, alignItems: 'center' }}>
-          <PixelText size={16} tone="ink-300" lineHeight={16}>{line.rank}</PixelText>
+          {/* The web's `pixel` sets its own line (1.1) over the column's `leading-none`, as it does the score's over `leading-tight`. */}
+          <PixelText size={16} tone="ink-300">{line.rank}</PixelText>
           {line.moved !== 0 ? (
             <View accessible role="img" aria-label={t(line.moved > 0 ? 'movedUp' : 'movedDown', { n: Math.abs(line.moved) })} style={{ marginTop: 2 }}>
               <ReadText size={11} tone={line.moved > 0 ? 'teal-300' : 'wine-300'} lineHeight={11}>{`${line.moved > 0 ? '▲' : '▼'}${Math.abs(line.moved)}`}</ReadText>
@@ -597,8 +602,8 @@ const StandingRow = memo(
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <MemberRat member={{ userId: line.userId, avatar: line.avatar }} />
             <ReadText size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{nameOf(line)}</ReadText>
-            {line.me ? <Tag tone="good">{t('you')}</Tag> : null}
-            {line.bot ? <Tag>{t('bot')}</Tag> : null}
+            {line.me ? <Tag tone="good" item>{t('you')}</Tag> : null}
+            {line.bot ? <Tag item>{t('bot')}</Tag> : null}
           </View>
           {where ? <ReadText size={12} tone="ink-200" numberOfLines={1}>{where}</ReadText> : null}
           {line.left || line.escaped || line.played !== null ? (
@@ -615,7 +620,7 @@ const StandingRow = memo(
           <SrOnly>{t('worthShort')}</SrOnly>
         </View>
         <View style={{ width: 56, flexShrink: 0, alignItems: 'flex-end' }}>
-          <PixelText size={18} tone="gold-500" lineHeight={18 * TIGHT}>{line.score === null ? '—' : fmt.number(line.score)}</PixelText>
+          <PixelText size={18} tone="gold-500">{line.score === null ? '—' : fmt.number(line.score)}</PixelText>
           <SrOnly>{t('score')}</SrOnly>
           {line.gained !== 0 ? <ReadText size={12} tone={line.gained > 0 ? 'teal-300' : 'wine-300'} lineHeight={12 * TIGHT}>{`${line.gained > 0 ? '+' : '−'}${fmt.number(Math.abs(line.gained))}`}</ReadText> : null}
         </View>
@@ -700,6 +705,8 @@ function RoomEnd() {
   });
   const others = useRoom((s) => s.room?.members.some((member) => !member.left && !member.me && member.bot === null) === true);
   const pick = useCallback((userId: string) => setPicked(userId), []);
+  const { locale } = useSettings();
+  const badgeLine = webLine([['read', 14, 14 * TIGHT], ['pixel', 16, 16 * 1.1]], locale);
   return (
     <View role="region" aria-label={t('final')}>
       <Panel title={t('final')}>
@@ -713,10 +720,14 @@ function RoomEnd() {
           <View role="list" aria-label={t('newBadges')} style={{ marginBottom: 8, gap: 6 }}>
             {earned.map((id) => (
               <View key={id} role="listitem" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Sprite id={badgeArt(id)} size={{ w: 40, h: 40 }} />
+                {/* Its own 64: the web's `size-10` loses to the picture's own size, which its Sprite sets inline. */}
+                <Sprite id={badgeArt(id)} />
+                {/* The web's `text-[14px] leading-tight` box: a block line of 12 (its line 1.25 × 12), then the name, a pixel 16 in a line of the box's 14. */}
                 <View style={{ flexShrink: 1 }}>
-                  <ReadText size={12} tone="ink-300">{t('newBadge')}</ReadText>
-                  <PixelText size={16} tone="gold-500">{text.badges[id]?.name ?? id}</PixelText>
+                  <ReadText size={12} tone="ink-300" lineHeight={12 * TIGHT}>{t('newBadge')}</ReadText>
+                  <View style={{ height: badgeLine.height }}>
+                    <PixelText size={16} tone="gold-500" style={{ marginTop: badgeLine.tops[1] }}>{text.badges[id]?.name ?? id}</PixelText>
+                  </View>
                 </View>
               </View>
             ))}
@@ -838,14 +849,15 @@ function ShoutButton() {
   const [open, setOpen] = useState(false);
   // When the next shout is taken: the sheet counts down to it while it is open, and nothing else is drawn for it.
   const [until, setUntil] = useState(0);
-  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once.
+  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once (by the clock the wait is counted by).
+  const now = useClock();
   const send = useCallback(
     (n: number) => {
-      setUntil(Date.now() + SHOUT_EVERY_MS);
+      setUntil(now() + SHOUT_EVERY_MS);
       setOpen(false);
       void shout(n);
     },
-    [shout],
+    [shout, now],
   );
   return (
     <>
@@ -864,7 +876,8 @@ function ShoutButton() {
 function ShoutChoices({ until, onSend }: { until: number; onSend(n: number): void }) {
   const t = useT('room');
   const textOf = useShoutText();
-  const counted = useCountdown(until > Date.now() ? until : null, 0);
+  const now = useClock();
+  const counted = useCountdown(until > now() ? until : null, 0);
   const wait = counted ?? 0;
   return (
     <View style={{ gap: 12 }}>
@@ -1230,9 +1243,9 @@ const Seat = memo(function Seat({ userId, name, avatar, host, bot, me, first }: 
     >
       <MemberRat member={{ userId, avatar }} />
       <ReadText size={15} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{name}</ReadText>
-      {host ? <Tag>{t('host')}</Tag> : null}
-      {bot ? <Tag>{t('bot')}</Tag> : null}
-      {me ? <Tag tone="good">{t('you')}</Tag> : null}
+      {host ? <Tag item>{t('host')}</Tag> : null}
+      {bot ? <Tag item>{t('bot')}</Tag> : null}
+      {me ? <Tag tone="good" item>{t('you')}</Tag> : null}
       {me ? <RenameButton /> : null}
     </View>
   );
@@ -1325,10 +1338,7 @@ function Lobby({ room }: { room: RoomState }) {
         <Panel title={t('rules.title')}>
           <View role="list" style={{ gap: 4 }}>
             {[t('rules.same'), t('rules.clock', { time: paceOf(room.seconds) }), t('rules.win'), ...(room.public ? [t('rules.idle')] : [])].map((rule) => (
-              <View key={rule} role="listitem" style={{ flexDirection: 'row', paddingLeft: 8, gap: 8 }}>
-                <ReadText size={14} lineHeight={14 * SNUG}>{'•'}</ReadText>
-                <ReadText size={14} lineHeight={14 * SNUG} style={{ flex: 1 }}>{rule}</ReadText>
-              </View>
+              <DiscItem key={rule}>{rule}</DiscItem>
             ))}
           </View>
           <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ marginTop: 8 }}>{t('rules.others')}</ReadText>

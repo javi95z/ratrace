@@ -333,11 +333,14 @@ const TONE: Record<Tone, { bg: ColorToken; fg: ColorToken }> = {
   plain: { bg: 'night-600', fg: 'ink-200' },
 };
 
-/** A small label that says what something does. Green helps, red costs. */
-export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words }) {
+/**
+ * A small label that says what something does. Green helps, red costs. Its own width at the start of a column, as the web's inline block stands in a
+ * block; `item` is a flex item of a row (the web's tag in an `items-center` row: beside a name, a rat, laurels), placed as the row places its items.
+ */
+export function Tag({ tone = 'plain', item = false, children }: { tone?: Tone; item?: boolean; children: Words }) {
   const { bg, fg } = TONE[tone];
   return (
-    <View style={{ alignSelf: 'flex-start', backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
+    <View style={{ ...(item ? null : { alignSelf: 'flex-start' as const }), backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
       <PixelText size={12} tone={fg} lineHeight={12 * TIGHT}>{String(children)}</PixelText>
     </View>
   );

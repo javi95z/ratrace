@@ -62,7 +62,7 @@ const PastLife = memo(function PastLife({ runId, lifeId, name, tag, day, score, 
           <View style={{ flex: 1, minWidth: 0 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <PixelText size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{name}</PixelText>
-              {tag === 'multiplayer' ? <Tag>{t('multiplayer')}</Tag> : tag === 'ranked' ? <Tag tone="good">{t('ranked')}</Tag> : null}
+              {tag === 'multiplayer' ? <Tag item>{t('multiplayer')}</Tag> : tag === 'ranked' ? <Tag tone="good" item>{t('ranked')}</Tag> : null}
             </View>
             <ReadText size={12} tone="ink-300">{day}</ReadText>
           </View>

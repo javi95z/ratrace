@@ -248,6 +248,8 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     versions: VERSIONS,
     tapClock: () => performance.now(),
     tapGuardMs: guard,
+    // The room's clocks by the game's own clock (`now`, the phone's): a scene's, held still, holds a lobby's count and a round's time still with it.
+    now: now ?? (() => Date.now()),
     schedule,
     page: phonePage,
     onSaveError: (error) => console.warn('could not save the life in the room:', error),
