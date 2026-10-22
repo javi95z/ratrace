@@ -79,11 +79,21 @@ function Counting({ said, children }: { said: string; children: ReactNode }) {
 }
 
 /**
- * The cash after the round, counted up from what it was as the coins land. The count is this figure's alone: it is drawn again for each step of
- * it, and nothing round it is.
+ * How long, from now, until the moment `at` (a `Date.now()`): a part put in after the page came (the panels under the ledger, once it is on screen)
+ * waits from when the page came, as the web's do from its page's, and not from its own mount. Read once, as the part is put in.
  */
-function CashCount({ from, to, delay }: { from: number; to: number; delay: number }) {
+function useWaitUntil(at: number): number {
+  const [wait] = useState(() => Math.max(0, at - Date.now()));
+  return wait;
+}
+
+/**
+ * The cash after the round, counted up from what it was as the coins land, from `at` on (a `Date.now()`). The count is this figure's alone: it is
+ * drawn again for each step of it, and nothing round it is.
+ */
+function CashCount({ from, to, at }: { from: number; to: number; at: number }) {
   const { fmt } = useWords();
+  const delay = useWaitUntil(at);
   const shown = useCountUp(to, { from, delay, ms: 800 });
   const place = useCoinTarget(LEDGER_TO);
   return (
@@ -110,13 +120,14 @@ function WorthCount({ from, to, delay, tone }: { from: number; to: number; delay
 }
 
 /**
- * Where the round leaves the player, made to be felt: net worth counts from what it was to what it is, lands with a jump (or sinks, in red), and
- * says by how much. Where motion is left out, it stands where it ends at once.
+ * Where the round leaves the player, made to be felt: net worth counts from what it was to what it is from `at` on (a `Date.now()`), lands with a
+ * jump (or sinks, in red), and says by how much. Where motion is left out, it stands where it ends at once.
  */
-function WorthRise({ from, to, delay }: { from: number; to: number; delay: number }) {
+function WorthRise({ from, to, at }: { from: number; to: number; at: number }) {
   const t = useT('resolve');
   const { fmt } = useWords();
   const still = useStill();
+  const delay = useWaitUntil(at);
   const [landed, setLanded] = useState(still);
   useEffect(() => {
     if (still) return setLanded(true);
@@ -268,8 +279,13 @@ export function Resolve() {
   const view = useGame((s) => s.view);
   const members = useRoom((s) => s.room?.members);
   const room = useT('room');
-  // The panels under the ledger, once the top of the page is on screen (ui/drawnFirst.ts).
-  const rest = useDrawnFirst();
+  const still = useStill();
+  // When the page came: the counts under the ledger start from then, as the web's do, though their panels are put in later.
+  const [came] = useState(() => Date.now());
+  // The panels under the ledger, once the top of the page is on screen (ui/drawnFirst.ts). Where motion is left out the page stands still from
+  // the first frame, every line in place: nothing comes after it, so those panels are put in with it.
+  const drawn = useDrawnFirst();
+  const rest = drawn || still;
   if (!resolved || !view) return null;
 
   const { before, events } = resolved;
@@ -320,12 +336,12 @@ export function Resolve() {
       </Panel>
 
       {/* Where the round leaves the player, and what is said of it: under the first screen of a phone, put in once the ledger is on it (the
-          coins and the counts wait for the ledger to roll, far longer). */}
+          coins and the counts wait for the ledger to roll, far longer, from when the page came). */}
       {rest ? (
         <>
           <Panel>
-            <Row left={[<Loop key="coin" name="coin" />, t('cashNow')]} right={<CashCount from={before.player.cash} to={view.player.cash} delay={rolled + 450} />} />
-            <WorthRise from={worthBefore} to={worthNow} delay={rolled + 450 + 800} />
+            <Row left={[<Loop key="coin" name="coin" />, t('cashNow')]} right={<CashCount from={before.player.cash} to={view.player.cash} at={came + rolled + 450} />} />
+            <WorthRise from={worthBefore} to={worthNow} at={came + rolled + 450 + 800} />
           </Panel>
 
           {/* What is said of the two years, by the bank and at the family's table: for a smile, it changes nothing. */}

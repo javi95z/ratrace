@@ -31,6 +31,36 @@ vi.mock('react-native', async (original) => {
   };
 });
 
+// The panels under the ledger, held back by a test until it lets them in (`drawn.hold`); otherwise as ui/drawnFirst.ts puts them in.
+const drawn = vi.hoisted(() => ({ hold: false, release: () => {} }));
+vi.mock('../../ui/drawnFirst', async (original) => {
+  const real = await original<typeof import('../../ui/drawnFirst')>();
+  const { useEffect, useState } = await import('react');
+  return {
+    ...real,
+    useDrawnFirst: () => {
+      const shown = real.useDrawnFirst();
+      const [free, setFree] = useState(!drawn.hold);
+      useEffect(() => {
+        if (!free) drawn.release = () => setFree(true);
+      }, [free]);
+      return shown && free;
+    },
+  };
+});
+// What each count is asked: how long it waits, and how long it takes.
+const counts = vi.hoisted(() => ({ asked: [] as Array<{ ms?: number; delay?: number }> }));
+vi.mock('../../ui/animations', async (original) => {
+  const real = await original<typeof import('../../ui/animations')>();
+  return {
+    ...real,
+    useCountUp: (target: number, options?: { from?: number; ms?: number; delay?: number }) => {
+      counts.asked.push({ ms: options?.ms, delay: options?.delay });
+      return real.useCountUp(target, options);
+    },
+  };
+});
+
 const { useGame, useGuide, useSettings } = await import('../context');
 const { Play } = await import('./Play');
 const { Resolve } = await import('./Resolve');
@@ -48,9 +78,12 @@ const PASSIVE = ['dividends', 'interest', 'rent', 'otherPassive', 'business'];
 beforeEach(() => {
   rea.assigned.length = 0;
   rows.drawn.length = 0;
+  counts.asked.length = 0;
+  drawn.hold = false;
 });
 afterEach(() => {
   rea.restyle = true;
+  vi.restoreAllMocks();
   cleanup();
 });
 
@@ -213,6 +246,59 @@ describe('the ledger of a round', () => {
   });
 });
 
+describe('the panels under the ledger', () => {
+  /** Plays the round of a life drawn in Play with the panels under the ledger held back, and waits for the ledger. */
+  async function held(life: Life = {}) {
+    drawn.hold = true;
+    const services = await nurse(life);
+    renderGame(
+      <>
+        <Play />
+        <Probe />
+      </>,
+      services,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    return services;
+  }
+
+  it('count from when the page came, as the web\'s do, however late they are put in', async () => {
+    const real = Date.now.bind(Date);
+    const late = { by: 0 };
+    vi.spyOn(Date, 'now').mockImplementation(() => real() + late.by);
+    const came = Date.now();
+    await held();
+    expect(screen.queryByText('Cash now')).toBeNull();
+    // Put in 300 ms after the page came (as a busy phone may): the counts wait 300 ms less, so they start when they would have.
+    late.by = 300;
+    const at = Date.now();
+    drawn.release();
+    await screen.findByText('Cash now');
+    const rolled = linesOf(resolved().events).length * 80 + 280;
+    const cash = counts.asked.find((one) => one.ms === 800)!;
+    const worthCount = counts.asked.find((one) => one.ms === 1100)!;
+    // What was left of the wait when they were put in, give or take the time the test took to let them in (`at - came` less the 300).
+    const slack = at - came - 300;
+    expect(cash.delay).toBeLessThanOrEqual(rolled + 450 - 300);
+    expect(cash.delay).toBeGreaterThanOrEqual(rolled + 450 - 300 - slack - 50);
+    expect(worthCount.delay).toBeLessThanOrEqual(rolled + 450 + 800 - 300);
+    expect(worthCount.delay).toBeGreaterThanOrEqual(rolled + 450 + 800 - 300 - slack - 50);
+  });
+
+  it('come at once, with the ledger, for a player who asked for less motion: the page stands still from its first frame, nothing put in after it', async () => {
+    await held({ still: true });
+    expect(screen.getByText('Cash now')).toBeTruthy();
+    expect(screen.getByText('At the Christmas dinner')).toBeTruthy();
+    cleanup();
+    // With motion, they wait for the ledger to be on screen.
+    await held();
+    expect(screen.queryByText('Cash now')).toBeNull();
+    drawn.release();
+    expect(await screen.findByText('Cash now')).toBeTruthy();
+  });
+});
+
 describe('the coins of a ledger', () => {
   it('fly from the lines that paid on their own to the cash now, once every line has risen, and are heard', async () => {
     await inPlay({ events: (all) => [...all.filter((e) => !(e.kind === 'ledger' && PASSIVE.includes(e.line))), { kind: 'ledger', line: 'dividends', amount: 50_000 }] });
@@ -312,6 +398,8 @@ describe('what is drawn again', () => {
     await waitFor(() => expect(probe.state?.stage).toBe('finance'));
     await settled(() => probe.state!.play());
     await screen.findByRole('heading', { name: 'Two years later' });
+    // The panels under the ledger are in before the count is taken: put in later, they would be counted as a change the screen does not draw.
+    await screen.findByText('Cash now');
     await settled();
     const before = renders.count;
     await settled(() => hands!.read('ledger'));
