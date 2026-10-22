@@ -111,6 +111,13 @@ export const SCENES: readonly Scene[] = [
   { name: 'settings-account-member', locale: 'en', sheet: 'settings' },
   { name: 'home-offer', locale: 'en', sheet: 'offer' },
   { name: 'home-account-taken', locale: 'en' },
+  // The rankings of a player signed in, told by the same other players on both clients (`sceneCommunity`): of all time, of the week, among friends
+  // (the friends' panel under it), the week's challenge, and the player's name being changed (the web's form in its panel, opened from it).
+  { name: 'rankings-all', locale: 'en' },
+  { name: 'rankings-week', locale: 'en' },
+  { name: 'rankings-friends', locale: 'en' },
+  { name: 'rankings-challenge', locale: 'en' },
+  { name: 'rankings-nickname', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -282,6 +289,12 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'settings-account-member': { life: 'nurse', round: 3, stage: 'news' },
   'home-offer': { life: 'nurse', round: 3, stage: 'news' },
   'home-account-taken': { life: 'nurse', round: 3, stage: 'news' },
+  // The rankings ask the cloud, not the device: a device with no life, its other players those of the scene (`sceneCommunity`).
+  'rankings-all': null,
+  'rankings-week': null,
+  'rankings-friends': null,
+  'rankings-challenge': null,
+  'rankings-nickname': null,
 };
 
 /**

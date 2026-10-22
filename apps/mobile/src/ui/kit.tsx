@@ -3,7 +3,7 @@ import { Animated, Easing, Pressable, View, type HostInstance, type LayoutChange
 import type { Tone } from '@ratrace/core/game/present';
 import { webBaseline } from './fonts';
 import { Framed } from './Frame';
-import { CREAM, GOLD, WINE, type FrameTone } from './frames';
+import { CREAM, GOLD, WINE, type FrameCut, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
 import { Language, PixelText, ReadText, TIGHT } from './text';
 import { useTap } from './tap';
@@ -251,6 +251,38 @@ export function Panel({ children, title, label, tone, style }: { children: React
         padding: 12,
         ...(has ? { marginTop: 12, paddingTop: 20 } : null),
         ...style,
+      }}
+    >
+      {has ? <TabTitle>{title}</TabTitle> : null}
+      {children}
+    </Framed>
+  );
+}
+
+/**
+ * A part of a `Panel` drawn across the rows of a list (the friends' panel under the ranking among friends, whose lines are rows of the page's list, so
+ * that only those near the screen are drawn): the panel cut into stacked boxes with nothing between them (`FrameCut`). The top part has the title on
+ * its tab and the panel's room above it; the bottom part the panel's room under it; `whole` is a panel of one part. Each part is the panel's 12 at its
+ * sides and night-700, so the parts stacked are the one panel; what stands apart inside it is apart by the parts' own room (`style`), never by a gap
+ * between them, which would show the page through the panel. A key of `style` left undefined is no room at all, never the panel's own taken away,
+ * and the title's room (12 over the panel for its tab, 20 inside, as `Panel`'s) is the title's whatever `style` says.
+ */
+export function PanelPart({ part, title, children, style }: { part: FrameCut | 'whole'; title?: Words; children: ReactNode; style?: ViewStyle }) {
+  const top = part === 'top' || part === 'whole';
+  const bottom = part === 'bottom' || part === 'whole';
+  const has = top && title !== undefined && title !== '';
+  const own = Object.fromEntries(Object.entries(style ?? {}).filter(([, value]) => value !== undefined)) as ViewStyle;
+  return (
+    <Framed
+      kind="bevel"
+      cut={part === 'whole' ? undefined : part}
+      style={{
+        backgroundColor: COLORS['night-700'],
+        paddingHorizontal: 12,
+        ...(top ? { paddingTop: 12 } : null),
+        ...(bottom ? { paddingBottom: 12 } : null),
+        ...own,
+        ...(has ? { marginTop: 12, paddingTop: 20 } : null),
       }}
     >
       {has ? <TabTitle>{title}</TabTitle> : null}

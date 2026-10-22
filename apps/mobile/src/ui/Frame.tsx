@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { anchorsOf, type Anchor, type FrameKind, type FrameTone } from './frames';
+import { anchorsOf, cutAnchors, type Anchor, type FrameCut, type FrameKind, type FrameTone } from './frames';
 import { COLORS, grey as greyOf } from './theme';
 
 /**
@@ -30,6 +30,8 @@ interface FramedProps {
   tone?: FrameTone;
   /** Its strips in the grey of their colours: the frame of a box the web draws through its `grayscale` filter (the box's own colours are its caller's to grey). */
   grey?: boolean;
+  /** The box is one cut of a frame drawn across several stacked boxes (`FrameCut`): it draws only its part of it. */
+  cut?: FrameCut;
   style?: ViewStyle | ViewStyle[];
   accessibilityLabel?: string;
   testID?: string;
@@ -41,10 +43,10 @@ interface FramedProps {
  * box's edges (so they are there on the first paint and follow every resize), and they take no
  * space: the children lie exactly where they would with no frame at all.
  */
-export function Framed({ kind, tone = {}, grey = false, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
+export function Framed({ kind, tone = {}, grey = false, cut, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
   return (
     <View style={style} accessibilityLabel={accessibilityLabel} testID={testID}>
-      {anchorsOf(kind, tone).map((anchor, i) => (
+      {(cut === undefined ? anchorsOf(kind, tone) : cutAnchors(anchorsOf(kind, tone), cut)).map((anchor, i) => (
         <View key={i} pointerEvents="none" style={placeOf(anchor, grey ? greyOf(COLORS[anchor.color]) : COLORS[anchor.color])} />
       ))}
       {children}

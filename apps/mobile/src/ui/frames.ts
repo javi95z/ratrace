@@ -168,6 +168,24 @@ export function anchorsOf(kind: FrameKind, tone: FrameTone): Anchor[] {
   return css.reverse();
 }
 
+/**
+ * Where a box is cut from a frame drawn across several boxes stacked with nothing between them (a panel whose lines are the rows of a list): the top
+ * box has the frame's top and sides, a middle one its sides only, the bottom one its sides and bottom. A strip along the top or the bottom edge (one
+ * stretched between the left and the right, with a height of its own) belongs to that edge; every other runs down a side, the length of the box, and
+ * so meets the same strip of the box above and below it: the boxes stacked draw the one frame.
+ */
+export type FrameCut = 'top' | 'middle' | 'bottom';
+
+/** The strips of a frame that a box cut from it draws (`FrameCut`). */
+export function cutAnchors(anchors: readonly Anchor[], cut: FrameCut): Anchor[] {
+  return anchors.filter((a) => {
+    const across = a.left !== undefined && a.right !== undefined && a.height !== undefined;
+    if (!across) return true;
+    const atTop = a.top !== undefined;
+    return atTop ? cut === 'top' : cut === 'bottom';
+  });
+}
+
 /** What an anchored strip covers in a w x h box (the inverse of `anchorsOf`, for tests). */
 export function resolveAnchor(a: Anchor, w: number, h: number): Strip {
   const axis = (start: number | undefined, end: number | undefined, size: number | undefined, total: number) => {

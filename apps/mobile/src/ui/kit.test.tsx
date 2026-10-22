@@ -4,7 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
 import { paintOf } from './testing/paint';
-import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, LineTag, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, LineTag, Notice, Panel, PanelPart, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
@@ -173,6 +173,26 @@ test('Panel without a title pads 12 all round', () => {
   const panel = backed(screen.getByText('body'));
   expect(panel.style.paddingTop).toBe('12px');
   expect(panel.style.marginTop).not.toBe('12px');
+});
+
+test('a PanelPart\'s top with a title keeps the title\'s room, as Panel\'s, whatever its style says; a middle part takes the room it is given, and a key left undefined takes none away', () => {
+  for (const style of [undefined, { paddingTop: undefined }, { paddingTop: 6 }, { marginTop: 0 }]) {
+    const { unmount } = render(<PanelPart part="top" title="Your friends" style={style}><span>{'first'}</span></PanelPart>);
+    const part = backed(screen.getByText('first'));
+    expect(part.style.paddingTop, JSON.stringify(style)).toBe('20px');
+    expect(part.style.marginTop, JSON.stringify(style)).toBe('12px');
+    expect(part.style.paddingLeft).toBe('12px');
+    expect(part.style.backgroundColor).toBe(rgb(COLORS['night-700']));
+    expect(textOf('YOUR FRIENDS')).toBeTruthy();
+    unmount();
+  }
+  const middle = render(<PanelPart part="middle" style={{ paddingTop: 6 }}><span>{'line'}</span></PanelPart>);
+  expect(backed(screen.getByText('line')).style.paddingTop).toBe('6px');
+  expect(backed(screen.getByText('line')).style.paddingBottom).toBe('');
+  middle.unmount();
+  render(<PanelPart part="bottom" style={{ paddingTop: undefined }}><span>{'foot'}</span></PanelPart>);
+  expect(backed(screen.getByText('foot')).style.paddingBottom).toBe('12px');
+  expect(backed(screen.getByText('foot')).style.paddingTop).toBe('');
 });
 
 test('Tag tones map to their colours', () => {

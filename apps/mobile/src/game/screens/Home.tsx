@@ -3,13 +3,12 @@ import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
 import { createContext, useContext, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
-import { useBlink } from '../../ui/animations';
 import { adjustedRead } from '../../ui/fonts';
+import { Loading } from '../../ui/Loading';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
@@ -29,6 +28,7 @@ export function Home() {
   const settings = useT('settings');
   const legal = useT('legal');
   const phone = useT('phone');
+  const common = useT('common');
   const { content, text, names } = useWords();
   // Only what the door draws: the round and the city of the life, not the whole view that changes with every step of it.
   const status = useGame((s) => s.status);
@@ -78,7 +78,7 @@ export function Home() {
 
       <View style={{ width: '100%', gap: 12 }}>
         {status === 'booting' ? (
-          <Loading />
+          <Loading>{common('loading')}</Loading>
         ) : (
           <>
             {inProgress ? (
@@ -251,17 +251,6 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
         ) : null}
       </Sheet>
     </>
-  );
-}
-
-/** The game is being opened: the device has not said whether there is a life to carry on with. */
-function Loading() {
-  const common = useT('common');
-  const blink = useBlink();
-  return (
-    <Animated.View style={blink}>
-      <PixelText tone="ink-300" style={{ textAlign: 'center' }}>{common('loading')}</PixelText>
-    </Animated.View>
   );
 }
 

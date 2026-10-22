@@ -29,10 +29,27 @@ vi.mock('react-native-reanimated', async () => (await import('./testing/reanimat
 // hands its list, which is the real one here (this test has none of the phone tests' stand-ins: it windows its rows).
 const seen: Array<{ source: unknown; resizeMode: unknown; style: unknown }> = [];
 const listed: Array<Record<string, unknown>> = [];
+// And what a Screen hands its scroll, which platform the page is drawn on, and the box that leaves the keyboard its room on Android.
+const scrollProps: Array<Record<string, unknown>> = [];
+const avoiding: Array<Record<string, unknown>> = [];
+const platform = vi.hoisted(() => ({ OS: 'ios' as string }));
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   return {
     ...rn,
+    Platform: { ...rn.Platform, get OS() { return platform.OS; } },
+    ScrollView: Object.assign(
+      (props: Record<string, unknown>) => {
+        scrollProps.push(props);
+        const Scroll = rn.ScrollView as unknown as (shown: Record<string, unknown>) => React.ReactElement;
+        return <Scroll {...props} />;
+      },
+      { displayName: 'ScrollView' },
+    ),
+    KeyboardAvoidingView: (props: Record<string, unknown>) => {
+      avoiding.push(props);
+      return <rn.View testID="keyboard-room">{props.children as React.ReactNode}</rn.View>;
+    },
     Image: (props: Record<string, unknown>) => {
       seen.push({ source: props.source, resizeMode: props.resizeMode, style: props.style });
       return <rn.Image {...(props as Record<string, unknown>)} />;
@@ -50,7 +67,12 @@ function wrap(inset: { top: number; bottom: number; left: number; right: number 
   return render(<SafeAreaProvider initialMetrics={{ frame, insets: inset }}>{ui}</SafeAreaProvider>);
 }
 const none = { top: 0, bottom: 0, left: 0, right: 0 };
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  platform.OS = 'ios';
+  scrollProps.length = 0;
+  avoiding.length = 0;
+});
 
 test('Page puts no column round its children: the screens are each their own column, so a bar can span the screen', () => {
   const { getByText } = wrap({ ...none, left: 5, right: 7 }, <Page><Text>hi</Text></Page>);
@@ -358,4 +380,37 @@ test('a ListScreen takes the caller\'s own spacing, names its list for a screen 
   act(() => node.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 800 } } }));
   act(() => node.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 700, height: 800 } } }));
   expect(widths).toEqual([378, 424]);
+});
+
+test('a page\'s scroll gives a tap to the button tapped while a field has the keyboard up, and keeps the field above the keyboard: a Screen, one that follows its scroll on the UI thread, and a ListScreen', () => {
+  wrap(none, <Screen><Text>page</Text></Screen>);
+  expect(scrollProps.at(-1)).toMatchObject({ keyboardShouldPersistTaps: 'handled', automaticallyAdjustKeyboardInsets: true });
+  cleanup();
+  scrollProps.length = 0;
+  function Followed() {
+    const y = useSharedValue(0);
+    return <Screen scrollY={y}><Text>page</Text></Screen>;
+  }
+  wrap(none, <Followed />);
+  expect(scrollProps.at(-1)).toMatchObject({ keyboardShouldPersistTaps: 'handled', automaticallyAdjustKeyboardInsets: true });
+  cleanup();
+  listed.length = 0;
+  wrap(none, <ListScreen head={<Text>head</Text>} data={['a']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} />);
+  expect(listed.at(-1)).toMatchObject({ keyboardShouldPersistTaps: 'handled', automaticallyAdjustKeyboardInsets: true });
+  // On iOS the scroll leaves the keyboard its room itself: no box round it.
+  expect(avoiding).toEqual([]);
+});
+
+test('on Android a page stands in a box that leaves the keyboard its room (the app draws edge to edge, where the window is not made smaller for it), with its bar and what is fixed outside it', () => {
+  platform.OS = 'android';
+  const { getByTestId, getByText } = wrap(none, <Screen bar={<Text>bar</Text>} fixed={<Text>toast</Text>}><Text>page</Text></Screen>);
+  expect(avoiding.at(-1)).toMatchObject({ behavior: 'padding', style: { flex: 1 } });
+  expect(getByTestId('keyboard-room').contains(getByText('page'))).toBe(true);
+  expect(getByTestId('keyboard-room').contains(getByText('bar'))).toBe(false);
+  expect(getByTestId('keyboard-room').contains(getByText('toast'))).toBe(false);
+  cleanup();
+  avoiding.length = 0;
+  const list = wrap(none, <ListScreen head={<Text>head</Text>} data={['a']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} />);
+  expect(avoiding).toHaveLength(1);
+  expect(list.getByTestId('keyboard-room').contains(list.getByText('a'))).toBe(true);
 });

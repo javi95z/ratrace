@@ -217,6 +217,8 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
             style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88 }}
           >
             <ScrollView
+              // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
+              keyboardShouldPersistTaps="handled"
               bounces={false}
               style={{ flexGrow: 0 }}
               contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: Math.max(12, inset.bottom) }}
@@ -275,6 +277,8 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
   return (
     <ScrollView
       horizontal
+      // A tab tapped while a field of the page has the keyboard up is the tab's (Page's `KEYBOARD`).
+      keyboardShouldPersistTaps="handled"
       showsHorizontalScrollIndicator={false}
       accessibilityRole="tablist"
       accessibilityLabel={label}

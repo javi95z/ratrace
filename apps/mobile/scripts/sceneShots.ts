@@ -107,6 +107,12 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
   'settings-account-member',
   'home-offer',
   'home-account-taken',
+  // Phase 3, Task 7: the rankings, on the other players of `sceneCommunity` (no cloud on either side).
+  'rankings-all',
+  'rankings-week',
+  'rankings-friends',
+  'rankings-challenge',
+  'rankings-nickname',
 ]);
 
 /**

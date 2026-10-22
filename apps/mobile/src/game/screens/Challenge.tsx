@@ -1,13 +1,15 @@
 import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
+import type { ChallengeRanking, Community } from '@ratrace/online/types';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Button, Notice, Panel, Raised, Well } from '../../ui/kit';
+import { Button, Notice, Panel, Raised, Tag, Well } from '../../ui/kit';
+import { Loading } from '../../ui/Loading';
 import { Screen } from '../../ui/Page';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
@@ -38,6 +40,9 @@ export function useRuleText() {
 
 /** The day a week's challenge closes: its Sunday. */
 const lastDay = (week: string): number => (weekStart(week) ?? 0) + 6 * 86_400_000;
+
+/** The places of a challenge's ranking that are in its best tenth: the first, at least. */
+export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
 
 /** The challenge on the front door, built from the same raised card, portrait well and type hierarchy as the rest of the game. */
 export function WeeklyChallengeCard() {
@@ -210,3 +215,96 @@ export function WeeklyChallenge() {
 }
 
 export { WeeklyChallenge as Challenge };
+
+/**
+ * The ranking of this week's challenge, as the cloud answers it, while it is `open` (its tab is the one on screen): `undefined` while the answer is
+ * on its way, null where it could not be read. Each opening asks again, from nothing, as the web's board is drawn anew each time its tab is opened;
+ * nobody is asked while it is shut, or where there is nobody to ask.
+ */
+export function useChallengeBoard(community: Community | null, open = true): ChallengeRanking | null | undefined {
+  const week = useThisWeek();
+  const [opening, setOpening] = useState({ open, n: 0 });
+  let now = opening;
+  if (open !== opening.open) {
+    now = { open, n: opening.n + (open ? 1 : 0) };
+    setOpening(now);
+  }
+  const n = now.n;
+  const [answer, setAnswer] = useState<{ to: number; board: ChallengeRanking | null } | null>(null);
+  useEffect(() => {
+    if (!open || community === null || week === null) return;
+    let live = true;
+    void community.challengeRanking(week.week).then((board) => {
+      if (live) setAnswer({ to: n, board });
+    });
+    return () => {
+      live = false;
+    };
+  }, [community, week, open, n]);
+  return answer?.to === n ? answer.board : undefined;
+}
+
+/**
+ * The head of the ranking of this week's challenge (the web's `ChallengeBoard` down to its list): the week's life and rule, and what the ranking
+ * came to: on its way, unreadable, empty, or how many took part and how many of them are its best tenth. Its lines are a list's rows of their own
+ * (`ChallengeEntry`), under it: a screen draws them in its windowed list, as it draws any list that can pass thirty lines.
+ */
+export function ChallengeBoard({ board }: { board: ChallengeRanking | null | undefined }) {
+  const t = useT('challenge');
+  const common = useT('common');
+  const { text } = useWords();
+  const week = useThisWeek();
+  const ruleText = useRuleText();
+  if (week === null) return null;
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Well style={{ width: 52, height: 52 }}>
+          <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} />
+        </Well>
+        <View style={{ minWidth: 0, flexShrink: 1 }}>
+          <PixelText size={17} numberOfLines={1}>{text.lives[week.lifeId]?.name ?? week.lifeId}</PixelText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Sprite id={ruleArt[week.rule]} />
+            <ReadText size={12} tone="ink-200" numberOfLines={1} style={{ flexShrink: 1 }}>{ruleText(week.rule).name}</ReadText>
+          </View>
+        </View>
+      </View>
+      {board === undefined ? <Loading>{common('loading')}</Loading> : null}
+      {board === null ? <Notice role="status">{t('unreachable')}</Notice> : null}
+      {board && board.rows.length === 0 ? (
+        <Framed kind="frame" style={{ backgroundColor: COLORS['night-700'], padding: 12 }}>
+          <ReadText size={14} tone="ink-200">{t('noEntries')}</ReadText>
+        </Framed>
+      ) : null}
+      {board && board.rows.length > 0 ? <ReadText size={12} tone="ink-300">{t('entrants', { n: board.entrants, top: topTenth(board.entrants) })}</ReadText> : null}
+    </View>
+  );
+}
+
+/**
+ * A player's best attempt, a line of the challenge's ranking: the place, the name, the day, the mark of the best tenth, the score. The player's own
+ * is lit gold, and is the line they are on (the web's `aria-current`). Drawn again only when one of these changes.
+ */
+export const ChallengeEntry = memo(function ChallengeEntry({ place, name, day, score, top, mine }: { place: number; name: string; day: string; score: string; top: boolean; mine: boolean }) {
+  const t = useT('challenge');
+  return (
+    // One element for a screen reader, which says it is the player's own (the web's `aria-current`), not each of its words apart.
+    <View role="listitem" accessible accessibilityState={{ selected: mine }} aria-selected={mine}>
+      <Framed kind="bevel" tone={mine ? GOLD : undefined} style={{ backgroundColor: COLORS[mine ? 'night-600' : 'night-700'], flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
+        <PixelText size={17} tone="ink-200" style={{ width: 32, flexShrink: 0, textAlign: 'right' }}>{String(place)}</PixelText>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <ReadText numberOfLines={1}>{name}</ReadText>
+          <ReadText size={12} tone="ink-300" numberOfLines={1}>{day}</ReadText>
+        </View>
+        {top ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <Sprite id={CHALLENGE_ART.topTenth} />
+            <Tag tone="good">{t('topTenth')}</Tag>
+          </View>
+        ) : null}
+        <PixelText size={18} style={{ flexShrink: 0 }}>{score}</PixelText>
+      </Framed>
+    </View>
+  );
+});
