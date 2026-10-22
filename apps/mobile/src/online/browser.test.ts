@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { appState, authBrowser } from '../testing/fakes';
 import { BACK_FROM_GOOGLE, openForGoogle } from './browser';
 
@@ -35,6 +35,41 @@ describe('the browser Google is opened in', () => {
     expect(await second).toBe('theratrace://auth?code=X');
     expect(authBrowser.opened).toHaveLength(2);
     expect(authBrowser.refused).toBe(0);
+  });
+
+  it('waits three seconds at most for the app to come to the front, then opens Google all the same, and leaves nothing listening', async () => {
+    vi.useFakeTimers();
+    try {
+      authBrowser.answer = fromGoogle('code=X');
+      // Behind, and never told it is in front again.
+      appState.set('background');
+      const trip = openForGoogle('https://google');
+      await vi.advanceTimersByTimeAsync(2_990);
+      expect(authBrowser.opened).toHaveLength(0);
+      await vi.advanceTimersByTimeAsync(20);
+      expect(authBrowser.opened).toHaveLength(1);
+      expect(await trip).toBe('theratrace://auth?code=X');
+      expect(appState.listeners.size).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops listening for the app in front once it is, and leaves no timer behind', async () => {
+    vi.useFakeTimers();
+    try {
+      authBrowser.answer = fromGoogle('code=X');
+      appState.set('background');
+      const trip = openForGoogle('https://google');
+      await vi.advanceTimersByTimeAsync(10);
+      appState.set('active');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await trip).toBe('theratrace://auth?code=X');
+      expect(appState.listeners.size).toBe(0);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('tries a refused trip once more when the app next comes to the front', async () => {

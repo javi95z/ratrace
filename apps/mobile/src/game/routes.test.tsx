@@ -12,6 +12,8 @@ import PlayerRoute from '../app/player';
 import RankingsRoute from '../app/rankings';
 import RecordsRoute from '../app/records';
 import RoomRoute from '../app/room';
+import { routerNow } from '../testing/fakes';
+import { GameProvider } from './context';
 import { memoryServices, params, renderGame, router } from '../testing/render';
 
 // Beside app/, not in it: every file there is a route.
@@ -80,6 +82,19 @@ test('Google\'s way back to the app, should Android hand it to the router, goes 
   // The route reads nothing of the address and names nothing of the account: only the router.
   const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../app/auth.tsx'), 'utf8');
   expect([...source.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['expo-router', 'react']);
+});
+
+test('Google\'s way back goes back once, even drawn again as it leaves with a router of a new identity: never a second time, from the screen under it', () => {
+  const services = memoryServices();
+  const { rerender } = renderGame(<AuthRoute />, services);
+  expect(router.back).toHaveBeenCalledTimes(1);
+  // The router drawn anew (as expo-router hands a new one while the stack changes): the same moves, another object.
+  routerNow.is = { ...router };
+  rerender(<GameProvider services={services}><AuthRoute /></GameProvider>);
+  routerNow.is = { ...router };
+  rerender(<GameProvider services={services}><AuthRoute /></GameProvider>);
+  expect(router.back).toHaveBeenCalledTimes(1);
+  expect(router.replace).not.toHaveBeenCalled();
 });
 
 test('the rankings are their own screen, opened on the ranking the link names: a friend request\'s notice is `theratrace://rankings?tab=friends`', async () => {

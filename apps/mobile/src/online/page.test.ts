@@ -200,6 +200,9 @@ describe('whether there is a connection now', () => {
     forgetConnection();
     network.connected = true;
     kept(phoneConnection.subscribe(() => undefined));
+    // The new listening is told by the phone before either answer lands: its own first answer then says nothing, and the old one, if it were
+    // heard, would land last and say "no connection".
+    network.set(true);
     await settled();
     await settled();
     expect(phoneConnection.connected()).toBe(true);

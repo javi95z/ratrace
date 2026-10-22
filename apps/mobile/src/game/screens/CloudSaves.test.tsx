@@ -13,6 +13,7 @@ import { onlineOver } from '../../online';
 import { accountCloud, fromGoogle, heldBrowser } from '../../testing/accountCloud';
 import { authBrowser } from '../../testing/fakes';
 import { renderGame, router } from '../../testing/render';
+import { sheetOpened } from '../../ui/back';
 import { servicesOver, useGame } from '../context';
 import type { Services } from '../context';
 import { Home } from './Home';
@@ -158,8 +159,14 @@ describe('a guest whose Google account is already a player\'s, on the phone', { 
     expect(sheet.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 22.');
     const pushedWithSheet: boolean[] = [];
     router.push.mockImplementation(() => void pushedWithSheet.push(screen.queryByRole('heading', { name: 'A life on another device' }) !== null));
+    // A sheet still leaving, as an iOS Modal takes a moment to dismiss: the game is opened only once it has gone.
+    const leaving = sheetOpened();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Pick it up here' }));
-    // The sheet has gone before the game is opened.
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A life on another device' })).toBeNull());
+    await waitFor(async () => expect(((await phone.device.loadGame()) as SavedGame).lifeId).toBe('engineer'));
+    await new Promise((done) => setTimeout(done, 50));
+    expect(router.push).not.toHaveBeenCalled();
+    act(() => leaving());
     await waitFor(() => expect(pushedWithSheet).toEqual([false]));
     expect(router.push).toHaveBeenCalledWith('/play');
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');

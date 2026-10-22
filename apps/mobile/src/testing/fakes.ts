@@ -12,12 +12,14 @@ import { painted } from '../ui/testing/skia';
 
 /** What a screen asks of the router: every move is a spy. */
 export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn(), canGoBack: vi.fn(() => true) };
+/** The router `useRouter` hands a screen: the one above, unless a test hands another (the same moves, a new identity: a router drawn anew). */
+export const routerNow = { is: router };
 /** The query of the address the screen was opened with (`/scene?name=`): none, unless a test gives it some. A `Redirect` is a box that names where it goes. */
 export const params: Record<string, string> = {};
 /** The path of the screen in front, as the router says it (`usePathname`). */
 export const pathname = { now: '/' };
 export const expoRouter = {
-  useRouter: () => router,
+  useRouter: () => routerNow.is,
   usePathname: () => pathname.now,
   useLocalSearchParams: () => params,
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
@@ -320,6 +322,7 @@ export const resetAlso = (reset: () => void): void => void alsoReset.push(reset)
 export function resetFakes(): void {
   for (const reset of alsoReset) reset();
   for (const spy of Object.values(router)) spy.mockReset();
+  routerNow.is = router;
   backListeners.length = 0;
   device.languages = ['en'];
   device.timeZone = 'UTC';
