@@ -92,9 +92,12 @@ export async function tellProfile(
   lives: ReadonlyArray<LifeDef>,
   life: { gameId: string; at: number; earned: readonly string[]; collection: readonly string[]; over: boolean },
 ): Promise<{ earned: string[]; unlocked: string[]; ofGallery: string[] }> {
-  // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty.
-  const runs = await store.listRuns().catch(() => []);
-  const step: LifeStep = { gameId: life.gameId, at: life.at, earned: life.earned, collection: life.collection, finished: Math.max(runs.length, life.over ? 1 : 0) };
+  // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty. A step that does not end the life needs only
+  // how many there are, which a store that keeps their ids apart tells without reading every life (`runIds`); the step that ends it reads them all, for
+  // its rank.
+  const runs = life.over || store.runIds === undefined ? await store.listRuns().catch(() => []) : undefined;
+  const count = runs?.length ?? (await store.runIds!().catch(() => [])).length;
+  const step: LifeStep = { gameId: life.gameId, at: life.at, earned: life.earned, collection: life.collection, finished: Math.max(count, life.over ? 1 : 0) };
   let news = { earned: [] as string[], unlocked: [] as string[] };
   let profile = await updateProfile(store, (current) => {
     const after = profileAfter(content, lives, current, step);

@@ -201,8 +201,11 @@ export function useCounted(shown: number): void {
   }, [shown]);
 }
 
-/** The device's store, each of its calls timed and told (what a step of the game waits for on the phone's storage). */
-export function timedStore<T extends object>(store: T): T {
+/**
+ * A store, each of its calls timed and told under `layer`'s name: the device's (`device`: what a step of the game waits for on the phone's storage), and
+ * the one the game asks (`saved`: the device's with what the resilient store does over it, its copies).
+ */
+export function timedStore<T extends object>(store: T, layer: string): T {
   return new Proxy(store, {
     get(target, key, receiver) {
       const value = Reflect.get(target, key, receiver) as unknown;
@@ -210,7 +213,7 @@ export function timedStore<T extends object>(store: T): T {
       return (...args: unknown[]) => {
         const began = performance.now();
         const done = (value as (...a: unknown[]) => unknown).apply(target, args);
-        if (done instanceof Promise) void done.then(() => tell({ kind: 'store', op: String(key), ms: +(performance.now() - began).toFixed(1) }), () => undefined);
+        if (done instanceof Promise) void done.then(() => tell({ kind: 'store', layer, op: String(key), ms: +(performance.now() - began).toFixed(1) }), () => undefined);
         return done;
       };
     },

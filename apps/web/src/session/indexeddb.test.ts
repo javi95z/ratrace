@@ -86,6 +86,11 @@ describe.each(stores)('%s', (_name, make) => {
 });
 
 describe('LocalStore', () => {
+  it('tells no ids of its lives apart, so a step of a life asks for the lives as it always did (the phone\'s store tells them, the web\'s does not)', async () => {
+    const store: PlayerStore = new LocalStore(`ratrace-test-${(n += 1)}`);
+    expect(store.runIds).toBeUndefined();
+  });
+
   it('still has everything when the page is opened again', async () => {
     const first = new LocalStore('ratrace-test-reopen');
     await first.saveGame(game());

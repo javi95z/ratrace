@@ -1,9 +1,9 @@
 import { badges, content, lives } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
 import { MemoryStore } from './memory';
-import { profileAfter, readProfile, updateProfile } from './profile';
+import { profileAfter, readProfile, settleRank, tellProfile, updateProfile } from './profile';
 import { newProfile } from './types';
-import type { Profile } from './types';
+import type { FinishedRun, PlayerStore, Profile } from './types';
 
 const earnedIn = (gameId: string, at: number) => ({ at, gameId });
 const step = (over: Partial<Parameters<typeof profileAfter>[3]> = {}) => ({ gameId: 'g1', at: 100, earned: [], collection: [], finished: 0, ...over });
@@ -149,5 +149,59 @@ describe('what a step of a life adds to the profile', () => {
   it('can hold every badge there is', () => {
     const every = profileAfter(content, lives, newProfile(), step({ earned: badges.map((b) => b.id) }));
     expect(Object.keys(every.profile.badges)).toHaveLength(61);
+  });
+});
+
+describe('telling the profile a step of a life', () => {
+  const finished = (runId: string): FinishedRun => ({ format: 1, runId, lifeId: 'nurse', finishedAt: 1, score: 10, netWorth: 0, status: 0, escapedAtRound: null, bankruptcies: 0, history: [], badges: [], cities: [], log: [], seed: '', engineVersion: '', contentVersion: '', verified: false }) as FinishedRun;
+  /** A store with one finished life, counting what it is asked; with `ids`, one that tells the ids of its lives apart (as the phone's does). */
+  async function counted(ids: boolean) {
+    const store = new MemoryStore();
+    await store.addRun(finished('r1'));
+    // The life is counted into the rank, as the step that ended it did.
+    await settleRank(store);
+    expect((await store.loadProfile()).rank.points).toBeGreaterThan(0);
+    const asked = { lists: 0, ids: 0 };
+    const list = store.listRuns;
+    store.listRuns = () => {
+      asked.lists += 1;
+      return list();
+    };
+    const told: PlayerStore = ids
+      ? Object.assign(store, {
+          runIds: async () => {
+            asked.ids += 1;
+            return (await list()).map((run) => run.runId);
+          },
+        })
+      : store;
+    return { store: told, asked };
+  }
+  const life = (over: boolean) => ({ gameId: 'g2', at: 100, earned: [], collection: [], over });
+
+  it('counts the finished lives by their ids on a step that does not end the life, where the store tells them: the lives are not read', async () => {
+    const { store, asked } = await counted(true);
+    const told = await tellProfile(store, content, lives, life(false));
+    // One life finished: the life it unlocks is told, as it would be from the list.
+    expect(told.unlocked).toEqual(['rider']);
+    expect(asked).toEqual({ lists: 0, ids: 1 });
+  });
+
+  it('reads the lives on the step that ends one, for its rank', async () => {
+    const { store, asked } = await counted(true);
+    await store.addRun(finished('r2'));
+    await tellProfile(store, content, lives, life(true));
+    expect(asked.lists).toBe(1);
+    expect(asked.ids).toBe(0);
+    expect(Object.keys((await store.loadProfile()).rank.lives).sort()).toEqual(['r1', 'r2']);
+  });
+
+  it('reads the lives on every step where the store has no ids to tell (the web\'s), as it always did', async () => {
+    const { store, asked } = await counted(false);
+    const told = await tellProfile(store, content, lives, life(false));
+    expect(told.unlocked).toEqual(['rider']);
+    expect(asked.lists).toBe(1);
+    await tellProfile(store, content, lives, life(false));
+    expect(asked.lists).toBe(2);
   });
 });

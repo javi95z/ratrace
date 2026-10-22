@@ -33,5 +33,5 @@ export const PerfFrames: ComponentType = probe ? probe.Frames : none;
 /** A step of a counting figure (`useCountUp`): when its value was set, and its cost on the JS thread once it is drawn. */
 export const perfCountSet: () => void = probe ? probe.countSet : nothing;
 export const usePerfCounted: (shown: number) => void = probe ? probe.useCounted : nothing;
-/** The device's store, its calls timed (the probe's build only; any other gives the store itself). */
-export const perfStore: <T extends object>(store: T) => T = probe ? probe.timedStore : (store) => store;
+/** A store, its calls timed under `layer`'s name (the probe's build only; any other gives the store itself): the device's, and the one the game asks. */
+export const perfStore: <T extends object>(store: T, layer: string) => T = probe ? probe.timedStore : (store) => store;

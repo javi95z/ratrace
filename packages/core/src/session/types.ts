@@ -226,6 +226,12 @@ export interface PlayerStore {
   removeRun(runId: string): Promise<void>;
   /** Finished lives, the latest first. */
   listRuns(): Promise<FinishedRun[]>;
+  /**
+   * The ids of the lives `listRuns` gives, in no order, for a store that can tell them without reading every life (the phone's, which keeps an index
+   * of them): a step that only needs to know how many lives were finished asks this and leaves the lives unread. A store without it is asked for the
+   * lives.
+   */
+  runIds?(): Promise<string[]>;
   loadProfile(): Promise<Profile>;
   saveProfile(profile: Profile): Promise<void>;
 }

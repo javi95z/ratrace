@@ -1,5 +1,6 @@
 import { bots, content, lives } from '@ratrace/content';
 import { LocalSessions } from '@ratrace/core/session/local';
+import { settleRank } from '@ratrace/core/session/profile';
 import { ResilientStore } from '@ratrace/core/session/resilient';
 import { readRun } from '@ratrace/core/session/runs';
 import type { FinishedRun } from '@ratrace/core/session/types';
@@ -223,13 +224,38 @@ describe('the lives read once', () => {
     expect(ids(await app.listRuns())).toEqual(['b']);
   });
 
-  it('are handed out as copies: what a caller does to one is not what the store holds', async () => {
+  it('are handed out as copies: what a caller does to one is not what the store holds, its log neither', async () => {
     const store = new KvStore();
-    await store.addRun(life('a', 1));
+    const logged = { ...life('a', 1), log: [{ picks: [0, 1], orders: [] }] };
+    await store.addRun(logged);
     const [first] = await store.listRuns();
     first.score = -1;
     first.history.push(99);
-    expect(await store.listRuns()).toEqual([life('a', 1)]);
+    first.log[0].picks.push(7);
+    first.log.push({ picks: [], orders: [] });
+    expect(await store.listRuns()).toEqual([logged]);
+    // Each list is made anew: no two hand out the same life.
+    const [one] = await store.listRuns();
+    const [two] = await store.listRuns();
+    expect(one).not.toBe(two);
+    expect(one.log).not.toBe(two.log);
+  });
+
+  it('tell their ids without reading a life: those the list shows, as lives are added and removed', async () => {
+    const store = new KvStore();
+    for (const id of ['a', 'b', 'c']) await store.addRun(life(id, id.charCodeAt(0)));
+    device.values.set(keyOf('bad'), '{"not":"a life"');
+    device.values.set(INDEX, JSON.stringify(['a', 'b', 'c', 'bad']));
+    const fresh = new KvStore();
+    // The bad record is kept, and not counted: the list does not show it.
+    expect((await fresh.runIds()).sort()).toEqual(['a', 'b', 'c']);
+    expect(ids(await fresh.listRuns()).sort()).toEqual(['a', 'b', 'c']);
+    device.calls.length = 0;
+    expect((await fresh.runIds()).sort()).toEqual(['a', 'b', 'c']);
+    expect(device.calls).toEqual([{ op: 'get', key: INDEX }]);
+    await fresh.addRun(life('d', 9));
+    await fresh.removeRun('a');
+    expect((await fresh.runIds()).sort()).toEqual(['b', 'c', 'd']);
   });
 });
 
@@ -266,5 +292,25 @@ describe('the step that ends a life, with 63 lives on the phone', () => {
     // Read: the index, to see that nobody else wrote; never one of the 63.
     expect(step.filter((call) => call.op === 'get' && call.key?.startsWith('ratrace:run:'))).toEqual([]);
     expect(ids(await new KvStore().listRuns())).toHaveLength(64);
+  });
+
+  it('as the phone stacks its stores, a step that does not end the life lists no life: it counts them by the index', async () => {
+    const before = new KvStore();
+    for (let i = 0; i < 63; i++) await before.addRun(life(`kept-${i}`, 1_000 + i));
+    let n = 0;
+    const kv = new KvStore();
+    const listed = vi.spyOn(kv, 'listRuns');
+    const store = new ResilientStore(kv, () => {}, { freshReads: true });
+    const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(n += 1)}`, newSeed: () => 'kv-store-seed', now: () => 10_000 + n });
+    const session = await sessions.start('nurse');
+    // The profile counted the 63 into its rank as the game opened, as the phone's provider does.
+    await settleRank(store);
+    listed.mockClear();
+    device.calls.length = 0;
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [] });
+    expect(session.view().finished).toBe(false);
+    expect(listed).not.toHaveBeenCalled();
+    expect(device.calls.filter((call) => call.op === 'get' && call.key?.startsWith('ratrace:run:'))).toEqual([]);
   });
 });

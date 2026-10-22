@@ -1,6 +1,6 @@
 import Storage from 'expo-sqlite/kv-store';
 import { readProfile } from '@ratrace/core/session/profile';
-import { readRuns } from '@ratrace/core/session/runs';
+import { readRun, readRuns } from '@ratrace/core/session/runs';
 import type { FinishedRun, PlayerStore, Profile, StoredGame } from '@ratrace/core/session/types';
 import type { LanguageKeep } from './game/locale';
 import type { BasketText } from './game/phoneBasket';
@@ -37,11 +37,19 @@ const idsOf = (text: string | null): string[] => {
   return Array.isArray(value) ? [...new Set(value.filter((id): id is string => typeof id === 'string'))] : [];
 };
 
-/** The finished lives as this store last read or wrote them: each as it is on the phone (null where it cannot be read), oldest first; and the index they were under. */
+/**
+ * The finished lives as this store last read or wrote them: each as its text on the phone, oldest first; the ids of those that can be shown (a life
+ * that cannot be read is left out of the list, `readRun`); and the index they were under. Held as text, each life is made anew from it for every
+ * list (parsed): a caller's change to one, its log too, is its own, and the list needs no copy on its way to the game.
+ */
 interface Held {
   index: string | null;
-  runs: Map<string, unknown>;
+  runs: Map<string, string>;
+  shown: Set<string>;
 }
+
+/** Whether a life's text is one the list shows. */
+const shows = (text: string): boolean => readRun(parsed(text)) !== null;
 
 /**
  * Moves the lives kept the old way, in one value, each to a key of its own: every life first, then the index, and the old value taken away last. Killed
@@ -69,24 +77,28 @@ async function readAll(): Promise<Held> {
   const index = await Storage.getItem(INDEX);
   const ids = idsOf(index);
   const texts = await Promise.all(ids.map((id) => Storage.getItem(RUN + id)));
-  const runs = new Map<string, unknown>();
+  const runs = new Map<string, string>();
   ids.forEach((id, i) => {
     const text = texts[i];
-    if (text !== null) runs.set(id, parsed(text));
+    if (text !== null) runs.set(id, text);
   });
   const named = new Set(ids);
   const strays = (await Storage.getAllKeys()).filter((key) => key.startsWith(RUN) && !named.has(key.slice(RUN.length)));
-  const found: Array<[string, unknown]> = [];
+  const found: Array<[string, string]> = [];
   for (const key of strays) {
     const text = await Storage.getItem(key);
-    if (text !== null) found.push([key.slice(RUN.length), parsed(text)]);
+    if (text !== null) found.push([key.slice(RUN.length), text]);
   }
-  const day = (run: unknown) => (typeof run === 'object' && run !== null && typeof (run as { finishedAt?: unknown }).finishedAt === 'number' ? (run as { finishedAt: number }).finishedAt : 0);
-  for (const [id, run] of found.sort((a, b) => day(a[1]) - day(b[1]))) runs.set(id, run);
-  if (runs.size === ids.length && found.length === 0) return { index, runs };
+  const day = (text: string) => {
+    const run = parsed(text);
+    return typeof run === 'object' && run !== null && typeof (run as { finishedAt?: unknown }).finishedAt === 'number' ? (run as { finishedAt: number }).finishedAt : 0;
+  };
+  for (const [id, text] of found.sort((a, b) => day(a[1]) - day(b[1]))) runs.set(id, text);
+  const shown = new Set([...runs].filter(([, text]) => shows(text)).map(([id]) => id));
+  if (runs.size === ids.length && found.length === 0) return { index, runs, shown };
   const mended = JSON.stringify([...runs.keys()]);
   await Storage.setItem(INDEX, mended);
-  return { index: mended, runs };
+  return { index: mended, runs, shown };
 }
 
 /**
@@ -140,7 +152,9 @@ export class KvStore implements PlayerStore {
       const text = JSON.stringify(run);
       await Storage.setItem(RUN + run.runId, text);
       const known = held.runs.has(run.runId);
-      held.runs.set(run.runId, JSON.parse(text));
+      held.runs.set(run.runId, text);
+      if (shows(text)) held.shown.add(run.runId);
+      else held.shown.delete(run.runId);
       if (!known) await this.writeIndex(held);
     });
   /** The life's key taken away, then its id from the index: killed between the two, the next read leaves out an id with no life. */
@@ -148,11 +162,14 @@ export class KvStore implements PlayerStore {
     this.inTurn(async () => {
       const held = await this.lives();
       await Storage.removeItem(RUN + runId);
+      held.shown.delete(runId);
       if (!held.runs.delete(runId)) return;
       await this.writeIndex(held);
     });
-  /** Every finished life that can be shown, the latest first: each made anew from what is held (`readRun`), so a caller's change to one is its own. */
-  listRuns = (): Promise<FinishedRun[]> => this.inTurn(async () => readRuns([...(await this.lives()).runs.values()]));
+  /** Every finished life that can be shown, the latest first: each parsed anew from its text, so a caller's change to one (its log too) is its own. */
+  listRuns = (): Promise<FinishedRun[]> => this.inTurn(async () => readRuns([...(await this.lives()).runs.values()].map(parsed)));
+  /** The ids of the lives the list shows, from the index and what is held: no life is read for them (a step that does not end a life asks only this). */
+  runIds = (): Promise<string[]> => this.inTurn(async () => [...(await this.lives()).shown]);
   loadProfile = async (): Promise<Profile> => readProfile(await read(PROFILE));
   saveProfile = (profile: Profile): Promise<void> => write(PROFILE, profile);
 }

@@ -191,6 +191,50 @@ describe('ResilientStore', () => {
     expect(((await store.loadGame()) as SavedGame).updatedAt).toBe(1);
   });
 
+  it('copies the lives the device gives by default, and hands them on as they come when the device makes them anew (`freshReads`)', async () => {
+    // A device that gives the same objects each time it is asked, as a store that held them would.
+    const held = [run('a', 1), run('b', 2)];
+    const primary = Object.assign(new MemoryStore(), { listRuns: async () => held });
+    const copied = await new ResilientStore(primary).listRuns();
+    expect(copied).toEqual([held[1], held[0]]);
+    expect(copied[0]).not.toBe(held[1]);
+    const fresh = new ResilientStore(primary, () => {}, { freshReads: true });
+    const handed = await fresh.listRuns();
+    expect(handed[0]).toBe(held[1]);
+    expect(handed[1]).toBe(held[0]);
+    // What it holds itself, a life the device has not taken yet, is copied all the same: a change to what was read is not its own.
+    primary.addRun = () => Promise.reject(new Error('disk full'));
+    await fresh.addRun(run('c', 3));
+    const withPending = await fresh.listRuns();
+    expect(withPending.map((one) => one.runId)).toEqual(['c', 'b', 'a']);
+    (withPending[0] as { lifeId: string }).lifeId = 'changed';
+    expect((await fresh.listRuns())[0].lifeId).toBe('nurse');
+  });
+
+  it('tells the ids of the finished lives only where the device does, with what it has not taken yet done to them', async () => {
+    expect(new ResilientStore(new MemoryStore()).runIds).toBeUndefined();
+    const primary = new MemoryStore();
+    await primary.addRun(run('a', 1));
+    await primary.addRun(run('b', 2));
+    const asked = { lists: 0 };
+    const telling = Object.assign(primary, {
+      runIds: async () => ['a', 'b'],
+      listRuns: async () => {
+        asked.lists += 1;
+        return [];
+      },
+    });
+    const store = new ResilientStore(telling, () => {}, { freshReads: true });
+    expect((await store.runIds!()).sort()).toEqual(['a', 'b']);
+    telling.addRun = () => Promise.reject(new Error('disk full'));
+    telling.removeRun = () => Promise.reject(new Error('disk full'));
+    await store.addRun(run('c', 3));
+    await store.removeRun('a');
+    expect((await store.runIds!()).sort()).toEqual(['b', 'c']);
+    // No life was read to tell them.
+    expect(asked.lists).toBe(0);
+  });
+
   it('starts with a default profile either way', async () => {
     expect(await new ResilientStore(new MemoryStore()).loadProfile()).toEqual(newProfile());
     const { down, store } = device();

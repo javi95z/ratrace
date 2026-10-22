@@ -118,12 +118,19 @@ export function phoneDeps(): SessionDeps {
 /** The services of the real game: the engine on this phone, saved on this phone, with the orders of the round kept as they are put in. */
 export function phoneServices(): Services {
   const listeners = new Set<() => void>();
-  const store = new ResilientStore(perfStore(new KvStore()), (degraded, error) => {
-    if (degraded) console.warn('this phone is not saving:', error);
-    for (const listener of listeners) listener();
-  });
+  // The phone's store makes each finished life anew from its text for every list (kvStore.ts): the resilient store hands them on without copying them
+  // again (`freshReads`). The probe times both: the device's calls, and what the game waits for with the resilient store's work over them.
+  const resilient = new ResilientStore(
+    perfStore(new KvStore(), 'device'),
+    (degraded, error) => {
+      if (degraded) console.warn('this phone is not saving:', error);
+      for (const listener of listeners) listener();
+    },
+    { freshReads: true },
+  );
+  const store = perfStore(resilient, 'saved');
   const saving: Saving = {
-    degraded: () => store.degraded,
+    degraded: () => resilient.degraded,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);

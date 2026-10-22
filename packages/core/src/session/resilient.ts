@@ -30,10 +30,32 @@ export class ResilientStore implements PlayerStore {
   /** Writes reach the device one at a time, in the order they were made. */
   private tail: Promise<void> = Promise.resolve();
 
+  /** The ids of the finished lives, as `listRuns` would give them: there only when the device's store tells them (`PlayerStore.runIds`). */
+  readonly runIds?: () => Promise<string[]>;
+
+  /**
+   * `freshReads`: the device's store makes the finished lives it gives anew for each call (the phone's: each parsed from its text), so they are handed
+   * on as they come, not copied again; what this store holds itself is still copied. Off by default (the web's IndexedDB may hand back what it holds).
+   */
   constructor(
     private readonly primary: PlayerStore,
     private readonly onChange: (degraded: boolean, error?: unknown) => void = () => {},
-  ) {}
+    private readonly options: { freshReads?: boolean } = {},
+  ) {
+    const ids = primary.runIds?.bind(primary);
+    if (ids !== undefined) {
+      this.runIds = async () => {
+        const stored = await this.read(ids, () => []);
+        // What the device has, with what it has not taken yet done to it in the same order.
+        const runs = new Set(stored);
+        for (const next of this.pending.runs) {
+          if ('add' in next) runs.add(next.add.runId);
+          else runs.delete(next.remove);
+        }
+        return [...runs];
+      };
+    }
+  }
 
   /**
    * True from the moment the device refuses something until it works again. It changes only when
@@ -144,13 +166,14 @@ export class ResilientStore implements PlayerStore {
       () => this.primary.listRuns(),
       () => [],
     );
-    // What the device has, with what it has not taken yet done to it in the same order.
+    // What the device has, with what it has not taken yet done to it in the same order. What the device gave anew is handed on; what is held here, copied.
+    const fresh = this.options.freshReads === true;
     const runs = new Map(stored.map((run) => [run.runId, run]));
     for (const next of this.pending.runs) {
-      if ('add' in next) runs.set(next.add.runId, next.add);
+      if ('add' in next) runs.set(next.add.runId, fresh ? structuredClone(next.add) : next.add);
       else runs.delete(next.remove);
     }
-    return structuredClone([...runs.values()]).sort((a, b) => b.finishedAt - a.finishedAt);
+    return (fresh ? [...runs.values()] : structuredClone([...runs.values()])).sort((a, b) => b.finishedAt - a.finishedAt);
   };
 
   loadProfile = async (): Promise<Profile> => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { content, lives } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { LocalSessions } from '@ratrace/core/session/local';
@@ -192,6 +192,25 @@ test('the orders in the basket survive the app being closed in the middle of a r
   await waitFor(() => expect(second.state.status).toBe('playing'));
   expect(second.state).toMatchObject({ gameId: where.gameId, stage: 'finance', orders: [study] });
   expect(second.state.view?.round).toBe(where.round);
+});
+
+test('the phone\'s store hands on the finished lives the device makes anew, without copying them again, and counts them by their ids', async () => {
+  const { store } = phoneServices();
+  const run = { format: SAVE_FORMAT, runId: 'r1', lifeId: 'nurse', finishedAt: 5, log: [{ picks: [0], orders: [] }] } as never;
+  await store.addRun(run);
+  expect(await store.runIds!()).toEqual(['r1']);
+  const cloned = vi.spyOn(globalThis, 'structuredClone');
+  try {
+    const [one] = await store.listRuns();
+    const [two] = await store.listRuns();
+    // No copy on the way (`freshReads`): each list is the device's own, made anew from its text.
+    expect(cloned).not.toHaveBeenCalled();
+    expect(one).toEqual(two);
+    expect(one).not.toBe(two);
+    expect(one.log).not.toBe(two.log);
+  } finally {
+    cloned.mockRestore();
+  }
 });
 
 test('the date a screen reads is the services\' own clock, and the phone\'s where they have none', () => {
