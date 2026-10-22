@@ -16,7 +16,9 @@ const modal = vi.hoisted(() => ({ props: null as Record<string, unknown> | null 
 // And the box that leaves the keyboard its room: what it was told.
 const avoiding = vi.hoisted(() => [] as Array<Record<string, unknown>>);
 // And the keyboard put away.
-const keyboard = vi.hoisted(() => ({ dismissed: 0 }));
+const keyboard = vi.hoisted(() => ({ dismissed: 0, listeners: new Map<string, Set<() => void>>() }));
+/** The keyboard comes up or goes, as the phone tells it. */
+const keyboardSays = (event: string) => act(() => keyboard.listeners.get(event)?.forEach((listener) => listener()));
 const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async () => {
   const rn = await vi.importActual<Record<string, unknown> & { Platform: object }>('react-native-web');
@@ -24,7 +26,15 @@ vi.mock('react-native', async () => {
     ...rn,
     Platform: { ...rn.Platform, get OS() { return platform.OS; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
-    Keyboard: { dismiss: () => void (keyboard.dismissed += 1) },
+    Keyboard: {
+      dismiss: () => void (keyboard.dismissed += 1),
+      addListener: (event: string, listener: () => void) => {
+        const set = keyboard.listeners.get(event) ?? new Set<() => void>();
+        set.add(listener);
+        keyboard.listeners.set(event, set);
+        return { remove: () => void set.delete(listener) };
+      },
+    },
     KeyboardAvoidingView: (props: { children: React.ReactNode } & Record<string, unknown>) => {
       avoiding.push(props);
       return <div data-testid="keyboard-room">{props.children}</div>;
@@ -90,6 +100,28 @@ test('a sheet rises over the keyboard on every platform: its window is its own, 
   }
 });
 
+test('with the keyboard up, a sheet\'s foot is its own 12, not the home indicator\'s inset: the keyboard stands over the indicator (34 pt of nothing over it on an iPhone)', () => {
+  for (const [os, up, down] of [['ios', 'keyboardWillShow', 'keyboardWillHide'], ['android', 'keyboardDidShow', 'keyboardDidHide']] as const) {
+    platform.OS = os;
+    sheet();
+    const foot = () => {
+      let el: HTMLElement | null = screen.getByText('inside').parentElement;
+      while (el && el.style.paddingBottom === '') el = el.parentElement;
+      return el?.style.paddingBottom;
+    };
+    // The mocked phone's inset is 20.
+    expect(foot()).toBe('20px');
+    keyboardSays(up);
+    expect(foot()).toBe('12px');
+    keyboardSays(down);
+    expect(foot()).toBe('20px');
+    cleanup();
+    act(() => void vi.runOnlyPendingTimers());
+    // Nothing listens once the sheet has gone.
+    expect([...keyboard.listeners.values()].every((set) => set.size === 0)).toBe(true);
+  }
+});
+
 test('a sheet puts the page\'s keyboard away as it opens: a field focused on the page never stays over the sheet', () => {
   keyboard.dismissed = 0;
   sheet({ open: false });
@@ -111,7 +143,9 @@ test('a sheet the page takes away while it is shown keeps its turn until its Mod
       </Sheet>
     );
   }
-  for (const [os, ms] of [['ios', 600], ['android', 100]] as const) {
+  // iOS: 150 ms, six times the longest dismissal measured on the simulator (16 to 25 ms, Task 14's device checks); Android: not measured (no
+  // emulator), a moment.
+  for (const [os, ms] of [['ios', 150], ['android', 100]] as const) {
     platform.OS = os;
     const { rerender, unmount } = render(<Page first />);
     expect(screen.getByText('first')).toBeTruthy();
@@ -430,7 +464,7 @@ test('a sheet that closes tells its Modal it is hidden, and stays until the Moda
   expect(screen.queryByText('inside')).toBeNull();
   // Still mounted, so that the dismissal can be heard.
   expect(modals()).toEqual(['false']);
-  await wait(599);
+  await wait(149);
   expect(modals()).toEqual(['false']);
   act(() => (modal.props!.onDismiss as () => void)());
   expect(modals()).toEqual([]);
@@ -459,12 +493,12 @@ test('where the platform hides a Modal as it is told to and says nothing of it (
   expect(modals()).toEqual([]);
 });
 
-test('a Modal on iOS that was never shown says nothing when it is hidden: the sheet is let go after 600 ms, and nobody waits for ever', async () => {
+test('a Modal on iOS that was never shown says nothing when it is hidden: the sheet is let go after 150 ms, and nobody waits for ever', async () => {
   platform.OS = 'ios';
   const { rerender } = render(<Wrapper open />);
   rerender(<Wrapper open={false} />);
   const gone = sheetsGone();
-  await wait(599);
+  await wait(149);
   expect(await settledAfter(gone)).toBe(false);
   await wait(2);
   expect(await settledAfter(gone)).toBe(true);

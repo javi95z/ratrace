@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
@@ -37,6 +37,15 @@ const sheetTitled = (title: string) => screen.getByRole('heading', { name: title
 /** The Modals hidden and not yet dismissed. */
 const leaving = () => [...document.querySelectorAll('[data-modal][data-visible="false"]')];
 
+/**
+ * The sheet titled so is hidden: its words gone, its Modal leaving. Waited for in microtasks, not by the clock: a hidden Modal on iOS is let go
+ * after `DISMISS_MS` (150 ms) all the same, and a test that waited by the clock on a busy machine could find it gone already.
+ */
+async function hidden(title: string) {
+  for (let i = 0; i < 20 && screen.queryByRole('heading', { name: title }) !== null; i++) await act(async () => undefined);
+  expect(screen.queryByRole('heading', { name: title })).toBeNull();
+}
+
 describe('a thing opened from the list of things, in the profile', () => {
   it('opens once the list has gone, never while the list is still leaving', async () => {
     const services = memoryServices();
@@ -50,7 +59,7 @@ describe('a thing opened from the list of things, in the profile', () => {
     fireEvent.click(things[0]);
 
     // The list is hidden and leaving; the thing waits for it.
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Things' })).toBeNull());
+    await hidden('Things');
     expect(leaving()).toHaveLength(1);
     expect(screen.queryByRole('heading', { name: 'Casio F-91W' })).toBeNull();
     expect(document.querySelectorAll('[data-modal]')).toHaveLength(2);
@@ -74,11 +83,11 @@ describe('a thing opened from the list of things, in the profile', () => {
     fireEvent.click(within(balance()).getByRole('button', { name: /^Things/ }));
     const things = within(sheetTitled('Things')).getAllByRole('button').filter((b) => b.getAttribute('aria-label') !== 'Close');
     fireEvent.click(things[0]);
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Things' })).toBeNull());
+    await hidden('Things');
     // While the list leaves, another line is opened in its place: the thing pressed in the list is let go.
     fireEvent.click(within(balance()).getByRole('button', { name: /^Cash/ }));
     fireEvent.click(within(sheetTitled('Cash')).getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull());
+    await hidden('Cash');
     for (const one of leaving()) act(() => modals.byId.get(one.getAttribute('data-modal') as string)?.onDismiss?.());
     expect(leaving()).toHaveLength(0);
     expect(screen.queryByRole('heading', { name: 'Casio F-91W' })).toBeNull();
