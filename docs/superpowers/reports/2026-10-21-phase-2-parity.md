@@ -1766,13 +1766,18 @@ release build with the probe (`EXPO_PUBLIC_PERF=1`) and the same two variables f
 | 19 | Captcha | — | unchecked → Task 15: Turnstile needs the site's real address and a site key; Cloudflare's test keys would load its page from the network, not a fake |
 | 20 | The blank big rat (part A's fix 4, the review's I1) | The save of a new look refused (the fake's `/control/fail`, answered at once or after 120 to 700 ms), so the old picture comes back as "It could not be saved" rises; bursts of shots | **not reproduced**: Expo Go before the change, 5 bursts on the big rat and the editor's rat, no blank frame; the release build after it, 3 bursts, none |
 
-**The blank rat, cause and fix.** Part A named the trigger (a picture handed to a canvas while a toast rose), not the mechanism. The mechanism, read in
-react-native-skia 2.14: a view keeps one flag for "asked to draw" (`RNSkView::requestRedraw`), and the main thread clears it once the drawing under way is
-done; an ask that lands while a drawing is under way is let go, and the view keeps the picture before. The kit asked once, from the UI thread, after
-both of Skia's hand-overs (`ui/Canvas.tsx`); a drawing started in that moment by another ask (a frame of a rising toast's, Skia's own ask from the JS
-thread) could still swallow it. The kit now asks again on the next UI frame (`Canvas.test`: two asks, one frame), so the last picture handed is the last
-drawn, whatever was under way. Part A's scene change (no canvas until the member is read) is kept. Which of part A's two variables mattered (the
-canvas mounted at opacity 0, or the second picture during the rise) is not settled: neither reproduced here.
+**The blank rat: its cause not established; the fix kept.** (Corrected after part B's review, I2.) Part A named a trigger (a picture handed to a canvas
+while a toast rose), and part B a mechanism that cannot happen to the kit's own ask on iOS. In react-native-skia 2.14 a view keeps one flag for "asked
+to draw" (`RNSkView::requestRedraw`), set by an ask and cleared by the queued drawing on the main thread once it is done; and it draws only on the main
+thread (`RNSkMetalCanvasProvider::renderToCanvas` returns false off it). The kit asks from a worklet on the UI runtime, which on iOS is the main thread,
+so its ask is serialised with the drawing and never lands during one: either a drawing still queued draws the newest picture (stored by `setRecorder`
+on the JS thread before the kit's timer fired), or a new drawing is queued. A lost ask is real only for asks from the JS thread, which the kit's first
+ask already covers. What the sources do show is a different hole, the likely one but unconfirmed: a drawing that is dropped (no Metal context, no
+drawable from `getSurface()` under GPU load or for a layer with no size yet, or the app in the background) returns false without drawing, and its block
+clears the flag all the same; nothing asks again. The kit's second ask, on the next UI frame (`Canvas.test`: two asks, one frame), covers that case,
+and is kept: it cannot loop (`requestRedraw` hands over no picture) and works only after a picture changes, at the price of each change being drawn
+twice natively (on the Clothes tab's canvas, about one 77 ms frame more before Task 14c took its layers away; the friends fling of check 14 was measured
+with it in). Not reproduced before the change or after it, in 8 bursts; to settle it, a debug build could log `renderToCanvas`'s false returns.
 
 ### The budgets (release build with the probe)
 
@@ -1807,4 +1812,4 @@ as phase 2's shop was on the screen drawn and not its last shelf.
 - The editor grids' ⅓ pt: probed. The grid set on a whole point under the part's name (`marginTop` 6 → 5.7, as if the web rounded 14.3 + 6) made all
   three scenes worse (1048, 1549, 693 px of shape; the dice a further ⅓ pt off): the web does not round there, and part A's arithmetic cause is wrong.
   Reverted, kept accepted with the probe's result in the record.
-- Part A's fix 4 named the trigger of the blank rat, not its cause: the cause is above.
+- Part A's fix 4 named a trigger of the blank rat, not its cause, and part B's mechanism is not it either: the cause is still not established (above, corrected after the review).

@@ -17,8 +17,10 @@ function drawAgain(api: ViewApi | undefined, ids: number[]): void {
   'worklet';
   if (api?.requestRedraw === undefined) return;
   for (const id of ids) api.requestRedraw(id);
-  // And once more on the next frame: an ask the canvas let go because a drawing was under way at that moment (one started by another of Skia's own
-  // asks, or a frame of the picture before it) is made again after that drawing, so the last picture handed is the last one drawn.
+  // And once more on the next frame. This ask runs on the main thread, as the drawing does, so it never lands during one: either a drawing is
+  // queued and will draw the latest picture, or a new one is queued. What the second ask may cover (likely, not confirmed: the blank rat was not
+  // reproduced before or after it) is a drawing that was dropped (no Metal surface or context at that moment, `renderToCanvas` returning false) and
+  // cleared the view's "asked" flag all the same, leaving nothing to draw the picture again. Its cost: a picture handed over is drawn twice.
   requestAnimationFrame(() => {
     for (const id of ids) api.requestRedraw(id);
   });
@@ -55,12 +57,12 @@ function Handed({ canvas }: { canvas: RefObject<CanvasRef | null> }): null {
  * Every canvas the app draws on: Skia's, asked once more to draw each drawing it is handed, from the UI thread.
  *
  * On iOS, react-native-skia (2.14) hands a canvas its drawing from the JS thread, twice a commit (in the commit, and a microtask
- * after it), and asks it there to draw, while the canvas draws on the main thread; asked while it is still drawing, the canvas
- * lets the request go (`RNSkView::requestRedraw` keeps one flag for "asked", and clears it once the drawing under way is done).
- * That drawing was the one before, so the new one is never drawn: an icon left blank or a picture left as it was, until something
- * else redraws the canvas. Seen on a busy phone as a screen opens: its canvases are handed their pictures while they draw for the
- * first time. The UI thread is the main thread: asked from there, after both hand-overs, the canvas is asked once any drawing
- * under way is over, and it draws its last drawing.
+ * after it), and asks it there to draw, while the canvas draws on the main thread. An ask from the JS thread that lands while the
+ * canvas is still drawing is let go (`RNSkView::requestRedraw` keeps one flag for "asked", cleared once the drawing under way is
+ * done), and that drawing was of the picture before: an icon left blank or a picture left as it was, until something else redraws
+ * the canvas. Seen on a busy phone as a screen opens. The UI thread is the main thread: asked from there, after both hand-overs, the
+ * canvas's ask is serialised with its drawing, and it draws its last drawing. The blank big rat of Task 14 (part A's fix 4) is not
+ * explained by this: its cause is not established (see `drawAgain`).
  */
 export function Canvas({ children, ...props }: Omit<CanvasProps, 'ref'>): ReactNode {
   const canvas = useRef<CanvasRef>(null);
