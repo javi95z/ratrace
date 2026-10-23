@@ -368,6 +368,36 @@ export async function withAppWebPage(shoot: (page: Page) => Promise<void>): Prom
   }
 }
 
+/** A box on the screen, in points. */
+export interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/**
+ * Whether every pixel that differs between two shots of a screen (RGBA, `width` pixels wide, at `scale`) lies inside one of `boxes`: a screen whose
+ * only motion is its loops turning (a few frames played over and over, as the Next web's Loop plays them too) stands still but for them, and its
+ * shot is one moment of them, as the web's shot is. Nothing changed is still too.
+ */
+export function changedWithin(a: Uint8Array, b: Uint8Array, width: number, boxes: readonly Box[], scale: number): boolean {
+  for (let i = 0; i < a.length; i += 4) {
+    if (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2] && a[i + 3] === b[i + 3]) continue;
+    const x = ((i / 4) % width) / scale;
+    const y = Math.floor(i / 4 / width) / scale;
+    if (!boxes.some((box) => x >= box.x && x < box.x + box.w && y >= box.y && y < box.y + box.h)) return false;
+  }
+  return true;
+}
+
+/** In the page: the boxes the app's loops turn in (`Loop`'s strip, `data-loop-strip`, moves under a box of one frame), in points. */
+export const LOOP_BOXES = (): Box[] =>
+  [...document.querySelectorAll('[data-loop-strip]')].map((strip) => {
+    const box = (strip.parentElement ?? strip).getBoundingClientRect();
+    return { x: box.left, y: box.top, w: box.width, h: box.height };
+  });
+
 /** In the page: waits for the frame after the next to be painted (a picture's `<img>` may paint a frame after the scene said it was ready). */
 export const NEXT_FRAME = () => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
 

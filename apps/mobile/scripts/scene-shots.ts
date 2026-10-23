@@ -1,11 +1,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
-import { compareShots, wrongPage } from './kitCompare';
+import { compareShots, SCREEN, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
 import { againstOf, APP_WEB, chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
-import { fromWeb, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
+import { changedWithin, fromWeb, LOOP_BOXES, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, STILL_MS, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
+
+/** What is used of sharp here: a picture's raw pixels. */
+type SharpRaw = (input: Buffer) => { ensureAlpha(): { raw(): { toBuffer(): Promise<Buffer> } } };
 
 /**
  * The scenes beside the web's, shot for shot: each named game state (packages/core/src/testing/scenes.ts), drawn by the
@@ -108,8 +112,18 @@ async function main() {
             },
             { ready: () => told.ready(scene.name) },
           );
-          console.log(`appweb ${scene.name}${still ? '' : ' (still moving: the last shot is kept)'}`);
-          if (!still) moving.push(scene.name);
+          // A screen that never stood still may be still but for its loops (a workplace's screens turning): two shots apart, nothing but them changed.
+          let looping = false;
+          if (!still) {
+            const boxes = await page.evaluate(LOOP_BOXES);
+            const first = readFileSync(png);
+            await sleep(STILL_MS);
+            await page.screenshot({ path: png });
+            const pixels = async (shot: Buffer) => new Uint8Array(await (fromWeb('sharp') as SharpRaw)(shot).ensureAlpha().raw().toBuffer());
+            looping = boxes.length > 0 && changedWithin(await pixels(first), await pixels(readFileSync(png)), SCREEN.width * SCREEN.scale, boxes, SCREEN.scale);
+          }
+          console.log(`appweb ${scene.name}${still ? '' : looping ? ' (still but for its loops turning: one moment of them is kept)' : ' (still moving: the last shot is kept)'}`);
+          if (!still && !looping) moving.push(scene.name);
         }
       });
     } finally {

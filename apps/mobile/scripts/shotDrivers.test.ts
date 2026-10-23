@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { appWebAnswering, blocked, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
+import { appWebAnswering, blocked, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -450,4 +450,27 @@ test('a scene of the app\'s web is shot on the day every scene is drawn on, once
   expect(quiet).toBeLessThan(still);
   expect(QUIET_FOCUS).toBe(':focus-visible { outline: none !important; }');
   expect(read('./shotDrivers.ts')).toContain('nextjs-portal { display: none !important; } ${QUIET_FOCUS} ${css}');
+});
+
+test('a screen whose only motion is its loops turning (a workplace\'s screens, a coin) is still, as the web\'s shot of the same moment is: any other change is not', () => {
+  // Two shots of a 4 × 3 screen at scale 1, RGBA: a pixel changed at (1, 1).
+  const shot = () => new Uint8Array(4 * 3 * 4).fill(10);
+  const a = shot();
+  const b = shot();
+  b[(1 * 4 + 1) * 4] = 200;
+  expect(changedWithin(a, b, 4, [{ x: 1, y: 1, w: 1, h: 1 }], 1)).toBe(true);
+  expect(changedWithin(a, b, 4, [{ x: 2, y: 0, w: 2, h: 3 }], 1)).toBe(false);
+  expect(changedWithin(a, b, 4, [], 1)).toBe(false);
+  // At 3× a box of a point holds three pixels each way.
+  const c = new Uint8Array(12 * 9 * 4).fill(10);
+  const d = new Uint8Array(12 * 9 * 4).fill(10);
+  d[(5 * 12 + 5) * 4 + 2] = 99;
+  expect(changedWithin(c, d, 12, [{ x: 1, y: 1, w: 1, h: 1 }], 3)).toBe(true);
+  expect(changedWithin(c, d, 12, [{ x: 2, y: 2, w: 1, h: 1 }], 3)).toBe(false);
+  // Nothing changed: still, loops or not.
+  expect(changedWithin(a, shot(), 4, [], 1)).toBe(true);
+  // The app's web step asks it of a scene that never stood still, with the boxes its loops turn in.
+  const step = read('./scene-shots.ts');
+  expect(step).toContain('changedWithin(');
+  expect(step).toContain('LOOP_BOXES');
 });
