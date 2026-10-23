@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stoppedWithin, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -377,4 +378,26 @@ test('the web\'s server: kept as it is when it serves on; started once more when
 
   const twice = servers([true, true], [`ready\n${NUDGE}`, `ready\n${NUDGE}`]);
   await expect(serveThroughNudge(twice.parts)).rejects.toThrow("the web's server stopped again: see web-server.log");
+});
+
+test('a server that stops while the shots are taken fails them at once, naming its log; one stopped after them is no error', async () => {
+  const server = new EventEmitter();
+  let finish: () => void = () => undefined;
+  const shooting = whileServing(server as never, 'web-server.log', () => new Promise<void>((resolve) => (finish = resolve)));
+  server.emit('exit', 1);
+  await expect(shooting).rejects.toThrow("the web's server stopped during the shots: see web-server.log");
+  finish();
+  const fine = whileServing(server as never, 'web-server.log', async () => 'shot');
+  expect(await fine).toBe('shot');
+  // Stopped after: nobody listens, nothing rejects.
+  expect(server.listenerCount('exit')).toBe(0);
+  server.emit('exit', 0);
+});
+
+test('a server that cannot be stopped after the shots is said, not thrown over the error the shots ended with', () => {
+  const said: string[] = [];
+  stopAfter({ pid: 42 } as never, () => {
+    throw Object.assign(new Error('not permitted'), { code: 'EPERM' });
+  }, (line) => said.push(line));
+  expect(said).toEqual(["the web's server (42) could not be stopped: Error: not permitted"]);
 });

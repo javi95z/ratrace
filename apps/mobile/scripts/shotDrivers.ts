@@ -291,6 +291,33 @@ function stopGroup(child: ChildProcess): void {
 }
 
 /**
+ * Runs `shoot` while `server` serves: a server that stops before the shots are done fails them at once, naming its log, rather than leaving them to
+ * fail later on a page that never comes. Whatever `shoot` ends with, nothing is left listening to the server.
+ */
+export async function whileServing<T>(server: Pick<ChildProcess, 'once' | 'off'>, logFile: string, shoot: () => Promise<T>): Promise<T> {
+  let stopped: (error: Error) => void = () => undefined;
+  const died = new Promise<never>((_, reject) => (stopped = reject));
+  // Raced below; a stop after the shots (the server stopped by whoever started it) is nobody's error.
+  died.catch(() => undefined);
+  const onExit = () => stopped(new Error(`the web's server stopped during the shots: see ${logFile}`));
+  server.once('exit', onExit);
+  try {
+    return await Promise.race([shoot(), died]);
+  } finally {
+    server.off('exit', onExit);
+  }
+}
+
+/** Stops a server after the shots, saying so where it could not, without hiding the error the shots ended with. */
+export function stopAfter(child: ChildProcess, stop: (child: ChildProcess) => void = stopGroup, say: (line: string) => void = console.error): void {
+  try {
+    stop(child);
+  } catch (error) {
+    say(`the web's server (${child.pid}) could not be stopped: ${String(error)}`);
+  }
+}
+
+/**
  * Runs `shoot` with a page of Chrome shaped like the iPhone's, in front of the web's own dev server, started here (on a
  * port that is not answering) and stopped after. `probe` is a page of the web that answers once the server is up. The
  * browser is kept from every host but this machine (`guardedContext`), whatever the page asks for.
@@ -345,7 +372,7 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
       const cdp = await context.newCDPSession(page);
       // The phone's safe areas, so `env(safe-area-inset-*)` is what it is on the iPhone.
       await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: SCREEN.top, bottom: SCREEN.bottom, left: 0, right: 0 } });
-      await shoot(page);
+      await whileServing(server, logFile, () => shoot(page));
     } finally {
       await browser.close();
       // What the pages asked of hosts that are not this machine's, and was kept from them: nothing, with no project in the environment.
@@ -356,7 +383,7 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
     const last = server as ChildProcess | null;
     if (last !== null) {
       if (last.exitCode !== null || last.signalCode !== null) console.error(`the web's server (${last.pid}) had stopped before the shots were done`);
-      stopGroup(last);
+      stopAfter(last);
     }
   }
 }
