@@ -1,4 +1,3 @@
-import { Fill, Path } from '@shopify/react-native-skia';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
@@ -10,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
-import { Canvas } from '../../ui/Canvas';
+import { Rays } from '../../ui/Rays';
 import { usePop } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';
@@ -59,18 +58,7 @@ function useTierUp(status: number): { tier: number; rose: number } {
   return { tier, rose };
 }
 
-/**
- * The web's `repeating-conic-gradient(from 0deg at 50% 100%, gold-700 0 10deg, gold-900 10deg 20deg)` in a box `w` by `h`: rays of
- * gold from the middle of its foot, every other ten degrees, the first one from straight up turning clockwise. The gold-700 rays, as one path.
- */
-export function raysOf(w: number, h: number): string {
-  const reach = 2 * Math.max(w, h);
-  const at = (deg: number) => {
-    const rad = (deg * Math.PI) / 180;
-    return `${(w / 2 + reach * Math.sin(rad)).toFixed(2)} ${(h - reach * Math.cos(rad)).toFixed(2)}`;
-  };
-  return Array.from({ length: 18 }, (_, i) => `M${w / 2} ${h} L${at(i * 20)} L${at(i * 20 + 10)} Z`).join(' ');
-}
+export { raysOf } from '../../ui/Rays';
 
 const FILL: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
 
@@ -92,10 +80,7 @@ function Backdrop({ tier, size }: { tier: number; size: number }) {
   }
   return (
     <View {...marked} style={FILL}>
-      <Canvas style={{ width: size, height: size }}>
-        <Fill color={COLORS['gold-900']} />
-        <Path path={raysOf(size, size)} color={COLORS['gold-700']} />
-      </Canvas>
+      <Rays size={size} />
     </View>
   );
 }

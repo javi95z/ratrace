@@ -357,6 +357,21 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(/\bhitSlop\b/.test('const a = 1; // no hitSlop here'.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).toBe(false);
   });
 
+  it('draws nothing with Skia in the game: no file under game/ names it or takes the kit\'s canvas, so the web export loads none of it for a screen (the share card, whose web twin comes later, is the one exception)', () => {
+    const SKIA = /['"`]@shopify\/react-native-skia(\/[^'"`]*)?['"`]/;
+    const CANVAS = /^@\/ui\/Canvas(\.web)?$/;
+    const inTheGame = mine.filter((path) => rel(path).startsWith('game/') && rel(path) !== 'game/screens/ShareCard.tsx');
+    expect(inTheGame.length).toBeGreaterThan(20);
+    expect(inTheGame.filter((path) => SKIA.test(readFileSync(path, 'utf8'))).map(rel)).toEqual([]);
+    expect(inTheGame.filter((path) => importsOf(path).some((i) => CANVAS.test(i.from))).map(rel)).toEqual([]);
+    // How a file is told: a package's name in quotes (import, require, late import or export from), and the canvas by the place it lives at.
+    expect(SKIA.test("import { Path } from '@shopify/react-native-skia';")).toBe(true);
+    expect(SKIA.test("const { Rect } = require('@shopify/react-native-skia');")).toBe(true);
+    expect(SKIA.test('// draws on a canvas, not with Skia')).toBe(false);
+    expect(importsIn(join(SRC, 'game/screens/X.tsx'), "import { Canvas } from '../../ui/Canvas';").some((i) => CANVAS.test(i.from))).toBe(true);
+    expect(importsIn(join(SRC, 'game/screens/X.tsx'), "import { DashedRule } from '../../ui/DashedRule';").some((i) => CANVAS.test(i.from))).toBe(false);
+  });
+
   it('plays the phone\'s own sounds: no file of the app takes `@/ui/sound`, which the tsconfig maps to the web\'s synth for one test (game/cues.test.ts)', () => {
     // `@/ui/sound` is not the phone's ui/sound.tsx: it is the web's Web Audio board, there only so a test can run the web's cues. Imported by the app,
     // it would type-check and then fail on the phone (no AudioContext). The phone's sounds are `ui/sound` by a relative path.

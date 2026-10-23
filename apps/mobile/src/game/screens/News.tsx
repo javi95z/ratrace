@@ -1,14 +1,13 @@
-import { Path } from '@shopify/react-native-skia';
 import { headlineArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt, headlineText, paperOf } from '@ratrace/core/game/present';
 import { memberName } from '@ratrace/core/game/room';
 import { rivalNews } from '@ratrace/core/game/rivals';
 import type { Headline } from '@ratrace/engine';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Canvas } from '../../ui/Canvas';
+import { DashedRule } from '../../ui/DashedRule';
 import { usePaper } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';
@@ -108,39 +107,7 @@ export function storyText(t: (key: string, values?: Record<string, string | numb
   }
 }
 
-/** Chrome's dashes on a border `width` thick (a dashed rule): each three times as long as it is thick, two widths apart at best. */
-const DASH = 3;
-const GAP = 2;
-
-/**
- * Where the dashes of a dashed rule `length` long start, as Chrome lays them (its `SelectBestDashGap`): a dash at each end, and the gap between
- * them stretched or shrunk from its preferred two widths to whichever whole count of dashes leaves it nearest to that.
- */
-export function dashesOf(length: number, width = 1): number[] {
-  const dash = DASH * width;
-  const gap = GAP * width;
-  const fewest = Math.floor((length + gap) / (dash + gap));
-  const most = fewest + 1;
-  const fewGap = (length - fewest * dash) / (fewest - 1);
-  const mostGap = (length - most * dash) / (most - 1);
-  const [count, between] = mostGap <= 0 || Math.abs(fewGap - gap) < Math.abs(mostGap - gap) ? [fewest, fewGap] : [most, mostGap];
-  return Array.from({ length: count }, (_, i) => i * (dash + between));
-}
-
-/** The dashed rule over each clipping but the first (the web's `border-t border-dashed border-ink-300`): 1 high, its dashes where Chrome draws them. */
-function DashedRule() {
-  const [length, setLength] = useState<number | null>(null);
-  const path = useMemo(() => (length === null ? '' : dashesOf(length).map((x) => `M${x} 0h${DASH}v1h-${DASH}Z`).join(' ')), [length]);
-  return (
-    <View onLayout={(event) => setLength(event.nativeEvent.layout.width)} style={{ height: 1 }}>
-      {length === null ? null : (
-        <Canvas style={{ width: length, height: 1 }}>
-          <Path path={path} color={COLORS['ink-300']} />
-        </Canvas>
-      )}
-    </View>
-  );
-}
+export { dashesOf } from '../../ui/DashedRule';
 
 /** A clipping of the paper: the block with its picture, what it is about, and what it says, under a dashed rule unless it is the first. */
 function Clipping({ first, topic, children, picture }: { first: boolean; topic: string; children: string; picture: ReactNode }) {
