@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
 import { cssLine, RUN_LINE, strut } from './strut';
+import { faceWeight } from './systemFace';
 import { BODY, COLORS, type ColorToken } from './theme';
 
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
@@ -171,7 +172,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, strut(role, weight, size, language), letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
       {runs.flatMap((run) => pieces(run, size, size, spacing, words)).map((piece, i) => (
-        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...RUN_LINE, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
+        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...RUN_LINE, ...faceWeight(piece.family, weight), ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
           {piece.text}
         </Text>
       ))}

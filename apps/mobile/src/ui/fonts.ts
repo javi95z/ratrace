@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { ARIAL_COVERAGE } from './arialCoverage';
 import { EMOJI_X_HEIGHT } from './emojiHeight';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
+import { platformFace } from './systemFace';
 
 /*
  * The web sets type in two stacks (apps/web/src/app/globals.css):
@@ -87,8 +88,8 @@ export interface Run {
   italic?: boolean;
 }
 
-/** The family a run is set in: its slanted face where it has one, else its font. */
-export const faceOf = (run: Run): string => run.face ?? run.family;
+/** The family a run is set in: its slanted face where it has one, else its font, as the platform names it (`platformFace`). */
+export const faceOf = (run: Run): string => run.face ?? platformFace(run.family);
 
 /**
  * The slanted face of each reading font (assets/fonts, made from the fonts by scripts/slant_fonts.py), by the font it is made from. The web has no italic
