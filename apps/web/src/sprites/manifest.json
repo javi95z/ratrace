@@ -734,6 +734,11 @@
     "w": 288,
     "h": 120
   },
+  "card.boss_leaves": {
+    "src": "cards/card.boss_leaves.png",
+    "w": 288,
+    "h": 120
+  },
   "card.breakdown": {
     "src": "cards/card.breakdown.png",
     "w": 288,
@@ -1519,6 +1524,11 @@
     "w": 288,
     "h": 120
   },
+  "card.retreat": {
+    "src": "cards/card.retreat.png",
+    "w": 288,
+    "h": 120
+  },
   "card.ring_light": {
     "src": "cards/card.ring_light.png",
     "w": 288,
@@ -1634,6 +1644,11 @@
     "w": 288,
     "h": 120
   },
+  "card.tax_letter": {
+    "src": "cards/card.tax_letter.png",
+    "w": 288,
+    "h": 120
+  },
   "card.tax_refund": {
     "src": "cards/card.tax_refund.png",
     "w": 288,
@@ -1661,6 +1676,11 @@
   },
   "card.trading_guru": {
     "src": "cards/card.trading_guru.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.trendy_area": {
+    "src": "cards/card.trendy_area.png",
     "w": 288,
     "h": 120
   },

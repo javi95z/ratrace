@@ -396,6 +396,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-37', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-38', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.celeb_bellfort', 'card.celeb_ortiga'] },
+  // v20: four cards to see fewer of the same (stand-ins made from older scenes, to be drawn: art/prompts/v20-prompt-pack.md).
+  { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

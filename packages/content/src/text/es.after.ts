@@ -15,6 +15,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_big_offer: ['Dices que no al gran nombre. Poca gente lo hace.', 'El logo de tu tarjeta ahora abre puertas.', null],
   career_shares_vs_salary: ['Un poco más cada mes, y sin sustos.', null],
   career_remote_work: ['Sigues con el café de máquina y las charlas de pasillo.', 'El trayecto ahora es de la cama a la mesa, y las horas son tuyas.', null],
+  career_boss_leaves: ['Te quedas. Llega un jefe nuevo, que no te conoce.', null, null],
   career_become_manager: ['Sigues con las manos en la masa, y cada vez lo haces mejor.', 'Menos hacer y más reuniones. El equipo es tuyo.'],
   career_law_firm: ['Te quedas. El despacho contrata a alguien más joven.', 'Una mesa junto a la fotocopiadora y una montaña de expedientes. Por algo se empieza.', null],
   career_market: ['Compras tomates y te vas a casa.', 'A mediodía lo has vendido todo. Se te da bien.'],
@@ -81,6 +82,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'Su coche viejo ahora es tuyo, y a buen precio.',
     'Un deportivo en tu plaza. Y una cuota cada mes durante años.',
   ],
+  life_retreat: ['La esterilla se queda en el armario. El portátil, abierto.', 'Una semana sin móvil. Vuelves con otra cara.', null],
+  house_trendy_area: ['Tu barrio de siempre sigue siendo tu barrio de siempre.', 'Ahora tu código postal también habla de ti.', 'Una habitación pequeña, pero con dirección buena.'],
   life_ibiza: [
     'Ves las fotos desde el sofá.',
     'Sol, calas y poca cama. Vuelves con la piel tostada y la cartera más ligera.',
@@ -202,6 +205,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'El máximo. Tu empresa lo iguala y no lo tocas hasta los 62.',
   ],
   tax_optimise: ['La presentas como siempre, el último día.', 'Una tarde entera de facturas. Hacienda devuelve más.'],
+  tax_letter: ['Pagas y archivas la carta con las demás.', null, null],
   tax_audit: ['Pagas lo que piden y archivas la carta.', null],
   tax_undeclared: ['Con factura y con IVA. Duermes en paz.', null],
   tax_residency: [

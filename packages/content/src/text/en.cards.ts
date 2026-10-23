@@ -70,6 +70,11 @@ export const cards: Record<string, CardText> = {
     'Go remote',
     ['Ask for a raise instead', 'They would rather pay you than lose the desk.', 'No.'],
   ]),
+  career_boss_leaves: c('Your boss is leaving', 'Your boss is off to a rival and wants you on the team. More pay, they promise.', [
+    'Stay',
+    ['Go with them', 'The new company takes off, and you with it.', 'Six months in, they are fired. Your sponsor is gone.'],
+    ['Use the offer to negotiate', 'Your company will not lose you, and pays you more.', 'They say the door is open. On the way out.'],
+  ]),
   career_become_manager: c('Lead the team', 'Your manager is leaving and has put your name forward.', [
     'Stay hands-on',
     'Take the team',
@@ -262,6 +267,16 @@ export const cards: Record<string, CardText> = {
     'Shrug',
     'Buy his old {item:car_vw_golf_gti}, cheap',
     'Finance a {item:car_bmw_m3}',
+  ]),
+  life_retreat: c('A retreat in Tulum', 'A friend is back from a week of yoga and silence and will not stop talking about it.', [
+    'Keep working',
+    'A simple week',
+    ['The luxury retreat, with a shaman', 'You come back new. You even sleep better.', 'Lovely, very dear, and the mosquitoes ate you.'],
+  ]),
+  house_trendy_area: c('The neighbourhood of the moment', 'A flat comes free in the neighbourhood everyone talks about. Speciality coffee, galleries and a rent to match.', [
+    'Stay where you are',
+    'Take the whole flat',
+    'Share a flat there',
   ]),
   life_ibiza: c('Ibiza', 'The group chat has a villa, dates and a deposit deadline.', [
     'Stay home',
@@ -524,6 +539,11 @@ export const cards: Record<string, CardText> = {
   tax_optimise: c('Your tax return', 'A shoebox of receipts and a deadline.', [
     'File it as usual',
     'Go through every receipt',
+  ]),
+  tax_letter: c('A letter from the tax office', 'The tax office says your return had a mistake, and says what you owe.', [
+    'Pay and forget it',
+    ['Appeal', 'You were right: the file is closed.', 'You lose, and pay with interest.'],
+    ['Pay an accountant to look at it', 'One phone call sorts it.', 'Not even they can: you pay.'],
   ]),
   tax_audit: c('A tax audit', 'A registered letter. They want three years of paperwork.', [
     'Pay what they ask',

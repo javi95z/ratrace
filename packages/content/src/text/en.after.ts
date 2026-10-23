@@ -15,6 +15,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_big_offer: ['You say no to the big name. Few do.', 'The logo on your card now opens doors.', null],
   career_shares_vs_salary: ['A little more every month, and no surprises.', null],
   career_remote_work: ['You keep the machine coffee and the corridor chats.', 'The commute is now bed to desk, and the hours are yours.', null],
+  career_boss_leaves: ['You stay. A new boss arrives, who does not know you.', null, null],
   career_become_manager: ['You keep your hands on the work, and keep getting better at it.', 'Less doing, more meetings. The team is yours.'],
   career_law_firm: ['You stay. The firm hires someone younger.', 'A desk by the photocopier and a mountain of files. It is a start.', null],
   career_market: ['You buy tomatoes and go home.', 'By noon you have sold out. Selling suits you.'],
@@ -85,6 +86,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'His old car is now yours, and at a good price.',
     'A sports saloon in your space. And a payment every month for years.',
   ],
+  life_retreat: ['The mat stays in the cupboard. The laptop stays open.', 'A week without a phone. You come back with another face.', null],
+  house_trendy_area: ['Your old street is still your old street.', 'Now your postcode speaks for you too.', 'A small room, but a good address.'],
   life_ibiza: [
     'You watch the photos from the sofa.',
     'Sun, coves and little sleep. You come back tanned and lighter in the wallet.',
@@ -210,6 +213,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'The maximum. Your employer matches it, and you cannot touch it until 62.',
   ],
   tax_optimise: ['You file it as usual, on the last day.', 'A whole afternoon of receipts. The taxman sends more back.'],
+  tax_letter: ['You pay and file the letter with the others.', null, null],
   tax_audit: ['You pay what they ask and file the letter away.', null],
   tax_undeclared: ['With an invoice and with tax. You sleep soundly.', null],
   tax_residency: [

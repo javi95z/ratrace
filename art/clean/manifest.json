@@ -4256,6 +4256,26 @@
       "width": 288,
       "height": 120
     },
+    "card.retreat": {
+      "file": "cards/card.retreat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.trendy_area": {
+      "file": "cards/card.trendy_area.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_leaves": {
+      "file": "cards/card.boss_leaves.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tax_letter": {
+      "file": "cards/card.tax_letter.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

@@ -70,6 +70,11 @@ export const cards: Record<string, CardText> = {
     'Pasarte al teletrabajo',
     ['Pedir a cambio un aumento', 'Prefieren pagarte a quedarse sin la mesa.', 'No.'],
   ]),
+  career_boss_leaves: c('Tu jefe se va', 'Tu jefe se marcha a la competencia y te quiere en su equipo. Promete más sueldo.', [
+    'Quedarte',
+    ['Irte con él', 'La nueva empresa va como un tiro. Y tú con ella.', 'A los seis meses lo echan a él. Y tú te quedas sin padrino.'],
+    ['Usar la oferta para negociar', 'Tu empresa no quiere perderte y te sube el sueldo.', 'Te dicen que la puerta está abierta. Para salir.'],
+  ]),
   career_become_manager: c('Dirigir el equipo', 'Tu responsable se va y ha propuesto tu nombre.', [
     'Seguir en lo técnico',
     'Aceptar el equipo',
@@ -262,6 +267,16 @@ export const cards: Record<string, CardText> = {
     'Encogerte de hombros',
     'Comprarle barato su viejo {item:car_vw_golf_gti}',
     'Financiar un {item:car_bmw_m3}',
+  ]),
+  life_retreat: c('Un retiro en Tulum', 'Una amiga vuelve de una semana de yoga y silencio y no para de hablar de ello.', [
+    'Seguir currando',
+    'Una semana sencilla',
+    ['El retiro de lujo, con chamán', 'Vuelves como nuevo. Hasta duermes mejor.', 'Bonito, carísimo y te picaron los mosquitos.'],
+  ]),
+  house_trendy_area: c('El barrio de moda', 'Se queda libre un piso en el barrio del que todo el mundo habla. Cafés de especialidad, galerías y un alquiler a la altura.', [
+    'Quedarte donde estás',
+    'Mudarte al piso entero',
+    'Compartir piso en el barrio',
   ]),
   life_ibiza: c('Ibiza', 'En el grupo ya hay villa, fechas y un plazo para pagar la señal.', [
     'Quedarte en casa',
@@ -524,6 +539,11 @@ export const cards: Record<string, CardText> = {
   tax_optimise: c('La declaración de la renta', 'Una caja de zapatos llena de facturas y una fecha límite.', [
     'Presentarla como siempre',
     'Repasar todas las facturas',
+  ]),
+  tax_letter: c('Una carta de Hacienda', 'Hacienda dice que tu declaración tenía un error y te propone lo que debes.', [
+    'Pagar y olvidarte',
+    ['Recurrir', 'Tenías razón: archivan el expediente.', 'Pierdes, y pagas con intereses.'],
+    ['Pagar a una gestora para que lo mire', 'Lo arregla con una llamada.', 'Ni ella puede: toca pagar.'],
   ]),
   tax_audit: c('Una inspección de Hacienda', 'Una carta certificada. Quieren tres años de papeles.', [
     'Pagar lo que piden',
