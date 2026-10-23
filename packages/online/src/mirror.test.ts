@@ -1228,13 +1228,12 @@ describe('the lives in progress the account offers, played back at a pace (a pho
     const theirs = (await saved(b.store)) as SavedGame;
     // A device with no life: it would take the account's. While the account's is being played back, the player begins a life of their own.
     const store = new MemoryStore();
-    let resume: () => void = () => undefined;
+    let resume: (() => void) | undefined;
     const mirror = paced(cloud, store, () => new Promise<void>((resolve) => (resume = resolve)));
     const meeting = mirror.sync();
-    await vi.waitFor(() => expect(resume).not.toBe(undefined));
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await vi.waitFor(() => expect(resume).toBeDefined());
     const mine = await new LocalSessions(mirror, content, lives, { newId: () => 'mine', newSeed: () => 'seed-mine', now: () => 5 }).start('engineer');
-    resume();
+    resume?.();
     await meeting;
     expect(mine.view().round).toBe(0);
     expect(((await saved(store)) as SavedGame).gameId).toBe('mine');
@@ -1242,25 +1241,61 @@ describe('the lives in progress the account offers, played back at a pace (a pho
   });
 });
 
-describe('whether the account has been read', { timeout: 60_000 }, () => {
+describe('whether the account has been read for the life on the device', { timeout: 60_000 }, () => {
   it('is not, until the mirror has met it; then it is, and who listens is told, once a meeting; someone else signing in makes it not again', async () => {
     const { cloud, hold } = fakeCloud();
     const d = device(cloud);
     const told = vi.fn();
-    d.mirror.onAccountRead(told);
-    expect(d.mirror.accountRead()).toBe(false);
+    d.mirror.onLifeRead(told);
+    expect(d.mirror.lifeRead()).toBe(false);
     const release = hold('games');
     const meeting = d.mirror.sync();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(d.mirror.accountRead()).toBe(false);
+    expect(d.mirror.lifeRead()).toBe(false);
     release();
     await meeting;
-    expect(d.mirror.accountRead()).toBe(true);
+    expect(d.mirror.lifeRead()).toBe(true);
     expect(told).toHaveBeenCalledTimes(1);
     const changing = d.mirror.accountChanged();
-    expect(d.mirror.accountRead()).toBe(false);
+    expect(d.mirror.lifeRead()).toBe(false);
     await changing;
-    expect(d.mirror.accountRead()).toBe(true);
+    expect(d.mirror.lifeRead()).toBe(true);
     expect(told).toHaveBeenCalledTimes(2);
+  });
+
+  it('with a pace, is told as soon as the device holds the further copy of its life, before the lives only offered are played back', async () => {
+    const { cloud } = fakeCloud();
+    const a = device(cloud, 'a');
+    await play(await a.sessions.start('nurse'), 1);
+    await a.mirror.sync();
+    const b = device(cloud, 'b');
+    await b.mirror.sync();
+    await play((await b.sessions.resume()).session as GameSession, 2);
+    await b.mirror.sync();
+    // And another life in the account, only to be offered.
+    const c = device(cloud, 'c');
+    await c.mirror.declineOffer();
+    await play(await c.sessions.start('engineer'), 1);
+    await c.mirror.sync();
+    // The first device starts again, its life at round 1.
+    const store = new MemoryStore();
+    await store.saveGame((await saved(a.store)) as SavedGame);
+    const pauses: Array<() => void> = [];
+    const mirror = new MirroredStore(store, () => cloud, { content, lives, versions: VERSIONS, schedule: () => undefined, newId: () => 'never', pace: () => new Promise<void>((resolve) => pauses.push(resolve)) });
+    const events: string[] = [];
+    mirror.onDeviceChanged((what) => events.push(what));
+    mirror.onLifeRead(() => events.push('life read'));
+    const meeting = mirror.sync();
+    // The further copy of its own life, played back after a pause, before the device is looked at for good.
+    await vi.waitFor(() => expect(pauses).toHaveLength(1));
+    pauses[0]();
+    // Taken and told; then the offer's pause, the device's life already settled.
+    await vi.waitFor(() => expect(pauses).toHaveLength(2));
+    expect(events).toEqual(['game', 'life read']);
+    expect(((await saved(store)) as SavedGame).state.round).toBe(3);
+    expect(mirror.offer()).toBeNull();
+    pauses[1]();
+    await meeting;
+    expect(mirror.offer()?.lifeId).toBe('engineer');
   });
 });

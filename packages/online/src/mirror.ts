@@ -87,8 +87,9 @@ interface Options {
   /** Where the finished lives the server would not take are noted, so that a page opened anew does not send them again. */
   keepRefused?: { read(): string[]; write(ids: string[]): void };
   /**
-   * Given (a phone), the lives in progress the account offers are played back one at a time, `pace` awaited before each, while the device is still to
-   * be looked at for good: each is a whole log through the engine, and five in one go held the JS thread for a second. Left out (the web), they are
+   * Given (a phone), the lives in progress the account holds are played back one at a time, `pace` awaited before each (each is a whole log through
+   * the engine, and five in one go held the JS thread for a second): a copy the device would take, while the device is still to be looked at for
+   * good; a life only offered, once the device's own life is settled (`onLifeRead`), as offering it writes nothing. Left out (the web), they are
    * played back as they are chosen, in one go, as before.
    */
   pace?(): Promise<void>;
@@ -181,8 +182,9 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   /** Pairs of versions the server said it does not hold. No life on them is sent until the page is opened anew. */
   private readonly unheld = new Set<string>();
 
-  /** Who wants to know when the account has been read (`onAccountRead`). */
-  private readonly reads = new Set<() => void>();
+  /** Whether the account has been read for the life on the device since whoever is signed in signed in (`lifeRead`), and who wants to know. */
+  private lifeKnown = false;
+  private readonly lifeReads = new Set<() => void>();
 
   private running: Promise<void> | null = null;
   /** What has been asked for and not begun: nothing, sending what the device has, or reading the account first. */
@@ -268,16 +270,16 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   };
 
   /**
-   * Whether the account of whoever is signed in has been read since they signed in: its lives in progress taken or offered, its finished lives in.
-   * False again when someone else signs in.
+   * Whether the account of whoever is signed in has been read for the life on the device since they signed in: a further copy of it taken (and the
+   * device told, `onDeviceChanged`), or none there. The lives it only offers may still be being played back. False again when someone else signs in.
    */
-  readonly accountRead = (): boolean => this.known !== null;
+  readonly lifeRead = (): boolean => this.lifeKnown;
 
-  /** Calls `listener` each time the account has just been read, once the device holds what it took from it. Returns how to stop. */
-  readonly onAccountRead = (listener: () => void): (() => void) => {
-    this.reads.add(listener);
+  /** Calls `listener` each time the account has just been read for the life on the device (see `lifeRead`). Returns how to stop. */
+  readonly onLifeRead = (listener: () => void): (() => void) => {
+    this.lifeReads.add(listener);
     return () => {
-      this.reads.delete(listener);
+      this.lifeReads.delete(listener);
     };
   };
 
@@ -323,6 +325,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    */
   readonly accountChanged = (): Promise<void> => {
     this.known = null;
+    this.lifeKnown = false;
     this.setOffer(null);
     return this.run('meet');
   };
@@ -375,7 +378,6 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       await this.giveUpThere(cloud);
       const met = meet || this.known === null;
       const known = met ? (this.known = await this.meet(cloud)) : (this.known as Known);
-      if (met) for (const read of this.reads) read();
       const outcome = await this.send(cloud, known, met);
       if (outcome === 'failed') throw new Error('the account did not take it');
       if (outcome === 'meet') {
@@ -445,27 +447,25 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   }
 
   /**
-   * With `pace` (a phone): the lives in progress `meet` would play back, as far as the device as first looked at says, each played back now, `pace`
-   * awaited before it, while the device is still to be looked at for good. A life the device turns out to choose otherwise is played back then, as
-   * without `pace`. Without it, nothing: they are played back as they are chosen.
+   * With `pace` (a phone): the copies `meet` would take for the device, as far as the device as first looked at says (its own life played further,
+   * or the account's for a device with none), each played back now, `pace` awaited before it, while the device is still to be looked at for good. The
+   * lives only offered are played back by `meet`, after the device's own life is settled. A copy the device turns out to choose otherwise is played
+   * back then, as without `pace`.
    */
-  private async playBack(playing: readonly CloudGame[], note: ReturnType<typeof rankedOf>, living: SavedGame | null): Promise<Map<CloudGame, SavedGame | null>> {
+  private async playBack(playing: readonly CloudGame[], note: ReturnType<typeof rankedOf>, living: SavedGame | null, pace: () => Promise<void>): Promise<Map<CloudGame, SavedGame | null>> {
     const played = new Map<CloudGame, SavedGame | null>();
-    const pace = this.options.pace;
-    if (!pace) return played;
-    // The choosing below, as `meet` will do it: a life taken from the account is the device's from then on, and one offered ends it.
+    // The choosing below, as `meet` will do it, as far as what it takes: a life taken from the account is the device's from then on.
     let mine = note !== null ? { gameId: note.gameId, steps: 0, finished: note.view?.finished === true } : living === null ? null : { gameId: living.gameId, steps: stepsOf(living.log), finished: living.state.finished };
     let games = playing.filter((game) => !this.abandoned.has(game.id));
     for (;;) {
       const choice = chooseGame(mine, games, this.options.versions);
-      const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
-      if (candidate === null) return played;
+      if (choice.take === 'device') return played;
+      const candidate = choice.game;
       games = games.filter((game) => game !== candidate);
       await pace();
       const save = this.adopt(candidate);
       played.set(candidate, save);
       if (save === null) continue;
-      if (choice.take === 'device') return played;
       mine = { gameId: save.gameId, steps: stepsOf(save.log), finished: save.state.finished };
     }
   }
@@ -505,7 +505,8 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const there = empty ? await cloud.rankedLife() : null;
     const ranked = there !== null && !this.abandoned.has(`${RANKED}${there.id}`) ? there : null;
     let moved = false;
-    const played = await this.playBack(playing, rankedOf(before), living);
+    const pace = this.options.pace;
+    const played = pace ? await this.playBack(playing, rankedOf(before), living, pace) : new Map<CloudGame, SavedGame | null>();
 
     // The device is looked at for good only now, with everything asked: a life begun meanwhile is the one it has.
     const held = await this.device.loadGame();
@@ -532,12 +533,26 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     // take or to offer; a copy that does not play back to a sound life is passed over, and the next is tried.
     let games = playing.filter((game) => !this.abandoned.has(game.id));
     let waiting: SavedGame | null = null;
+    // The device's own life settled: the device told of a copy taken, and whoever waits for it (`onLifeRead`). Once.
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      if (moved) this.tell('game');
+      this.lifeKnown = true;
+      for (const listener of this.lifeReads) listener();
+    };
     for (;;) {
       const mine = note !== null ? { gameId: note.gameId, steps: 0, finished: note.view?.finished === true } : current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished };
       const choice = chooseGame(mine, games, this.options.versions);
       const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
       if (candidate === null) break;
       games = games.filter((game) => game !== candidate);
+      // A life only offered: with `pace`, the device's own life is settled first, and the offer played back after a pause (offering writes nothing).
+      if (pace && choice.take === 'device' && !played.has(candidate)) {
+        settle();
+        await pace();
+      }
       const save = played.has(candidate) ? (played.get(candidate) as SavedGame | null) : this.adopt(candidate);
       if (save === null) continue;
       if (choice.take === 'device') {
@@ -555,7 +570,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const theirs = playing.find((game) => game.id === current?.gameId);
     this.sent = mine !== null && theirs?.stateHash === mine.stateHash ? standing(mine) : null;
     this.setOffer(waiting);
-    if (moved) this.tell('game');
+    settle();
 
     const { added } = mergeRuns(await this.device.listRuns(), runs.map(asRun));
     for (const run of added) await this.device.addRun(run);

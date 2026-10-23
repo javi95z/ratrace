@@ -598,8 +598,8 @@ describe('the front door of a player with an account', () => {
       onDeviceChanged: (listener: (what: 'game') => void) => (changes.add(listener), () => void changes.delete(listener)),
       takeOffer: async () => false,
       declineOffer: async () => undefined,
-      accountRead: () => read,
-      onAccountRead: (listener: () => void) => (reads.add(listener), () => void reads.delete(listener)),
+      lifeRead: () => read,
+      onLifeRead: (listener: () => void) => (reads.add(listener), () => void reads.delete(listener)),
     };
     const readNow = () =>
       act(() => {

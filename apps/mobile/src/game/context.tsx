@@ -172,33 +172,39 @@ const CloudContext = createContext<Cloud | null>(null);
 /** The longest what acts on the life in progress waits for the account to be read at a start (`untilFresh`). */
 export const FRESH_WAIT_MS = 1500;
 
-/** What the phone's mirror tells besides the web's: whether the account has been read since whoever is signed in signed in (`@ratrace/online/mirror`). */
-type ReadSaves = AccountSaves & { accountRead?(): boolean; onAccountRead?(listener: () => void): () => void };
+/** What the phone's mirror tells besides the web's: whether the account has been read for the life on the device (`@ratrace/online/mirror`). */
+type ReadSaves = AccountSaves & { lifeRead?(): boolean; onLifeRead?(listener: () => void): () => void };
 
 /**
- * Waits, at most `FRESH_WAIT_MS`, while the account is being read: someone is signed in, the mirror has met no account of theirs yet, and its pass is
- * neither off (no cloud) nor failed (no network: `waiting`). Then waits for the life the account brought to be opened (`opening`, null once it is).
- * Null where neither is under way.
+ * Waits, at most `FRESH_WAIT_MS` in all, while the account is being read for the life on the device: someone is signed in, the mirror has not yet
+ * read the account for that life, and its pass is neither off (no cloud) nor failed (no network: `waiting`); then for the copy it brought to be
+ * opened (`opening`, null once it is). Null where neither is under way.
  */
 export function freshLife(saves: ReadSaves, account: Account, opening: () => Promise<unknown> | null, schedule: (run: () => void, ms: number) => unknown = setTimeout): Promise<void> | null {
-  const reading = () => saves.accountRead !== undefined && !saves.accountRead() && account.state().kind !== 'offline' && saves.status() !== 'off' && saves.status() !== 'waiting';
+  const reading = () => saves.lifeRead !== undefined && !saves.lifeRead() && account.state().kind !== 'offline' && saves.status() !== 'off' && saves.status() !== 'waiting';
   if (!reading() && opening() === null) return null;
-  return (async () => {
-    if (reading()) await new Promise<void>((resolve) => {
-      let over = false;
-      const stops: Array<() => void> = [];
-      const done = () => {
-        if (over) return;
-        over = true;
-        for (const stop of stops) stop();
-        resolve();
-      };
-      if (saves.onAccountRead) stops.push(saves.onAccountRead(done));
-      stops.push(saves.subscribe(() => !reading() && done()));
-      schedule(done, FRESH_WAIT_MS);
-    });
-    await opening()?.catch(() => undefined);
-  })();
+  return new Promise<void>((resolve) => {
+    let over = false;
+    const stops: Array<() => void> = [];
+    const done = () => {
+      if (over) return;
+      over = true;
+      for (const stop of stops) stop();
+      resolve();
+    };
+    const opened = () => {
+      const under = opening();
+      if (under === null) done();
+      else void under.then(done, done);
+    };
+    const look = () => {
+      if (!over && !reading()) opened();
+    };
+    if (saves.onLifeRead) stops.push(saves.onLifeRead(look));
+    stops.push(saves.subscribe(look));
+    schedule(done, FRESH_WAIT_MS);
+    look();
+  });
 }
 
 /** What the phone's lives need from the outside world: ids, seeds, the clock. */
