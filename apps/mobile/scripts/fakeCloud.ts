@@ -25,7 +25,8 @@ import { roomServer } from '../../web/src/testing/roomServer.ts';
  *   friends kept here, and `track`, `report-error`, `finish-run` taken and kept.
  * - **Realtime**: a WebSocket that speaks Phoenix (vsn 2.0.0) as Supabase's does, telling a room's channel when its room or its players change.
  * - **The checker's own door** (`/control/*`): another player asks the rooms server as themselves (`/control/rooms`), the state is read
- *   (`/control/state`), and the friends of the next guest are set (`/control/friends`).
+ *   (`/control/state`), the friends of the next guest are set (`/control/friends`), and the finished lives the account was sent are forgotten
+ *   (`/control/unsent`).
  */
 
 export const FAKE_CLOUD_PORT = 54399;
@@ -670,6 +671,15 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
       failing.portrait = body.portrait === true;
       failing.delayMs = Number(body.delayMs ?? 0);
       return send(200, failing);
+    }
+    if (url.pathname === '/control/unsent' && method === 'POST') {
+      // The account forgets the finished lives it was sent, so the phone's next start sends them again: the first starts after signing in with lives
+      // the account lacks. With `playing`, their games stay in the account as lives being played (sent, never finished: a finish that failed).
+      const forgotten = new Set(tables.runs.filter((row) => row.mode === 'casual').map((row) => row.id));
+      tables.runs = tables.runs.filter((row) => !forgotten.has(row.id));
+      if (body.playing === true) for (const game of tables.games) if (forgotten.has(game.id)) game.status = 'playing';
+      if (body.playing !== true) tables.games = tables.games.filter((game) => !forgotten.has(game.id));
+      return send(200, { forgotten: forgotten.size });
     }
     if (url.pathname === '/control/state') {
       return send(200, {

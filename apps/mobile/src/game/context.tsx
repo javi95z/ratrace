@@ -29,6 +29,7 @@ import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
 import { CaptchaHost } from '../online/captcha';
+import { firstScreenDoor } from '../online/held';
 import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
@@ -36,6 +37,7 @@ import { phonePush } from '../online/push';
 import type { Push } from '../online/push';
 import { phoneTrack } from '../online/track';
 import { closeAllSheets, closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
+import { whenShown } from '../ui/drawnFirst';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
@@ -100,6 +102,8 @@ export interface Services {
   track?: Track;
   /** The game's notices on the phone (`online/push.ts`). Left out, the phone's own, over its store. */
   push?: Push;
+  /** Told once the game's first screen is drawn, with the game opened: what waits for it (the account's saves, `online/held.ts`) may go. */
+  firstDrawn?: () => void;
 }
 
 /** Long enough for the second tap of a double tap, short enough that nobody waits for it. */
@@ -199,7 +203,9 @@ export function phoneServices(): Services {
     },
     { freshReads: true },
   );
-  const online = phoneOnline(resilient);
+  // What the account's mirror asks waits for the game's first screen (`online/held.ts`): a start with lives the account lacks draws the front door first.
+  const firstScreen = firstScreenDoor();
+  const online = phoneOnline(resilient, firstScreen.wait);
   const saving: Saving = {
     degraded: () => resilient.degraded,
     subscribe: (listener) => {
@@ -209,7 +215,7 @@ export function phoneServices(): Services {
   };
   const wired = servicesOver({ ...online, store: perfStore(online.store, 'saved') }, phoneDeps());
   // What is counted goes to the game's own project, in a release build only (`online/track.ts`), and the install with it, on the first launch.
-  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, track: phoneTrack(online.account, kvText) };
+  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, firstDrawn: firstScreen.open, track: phoneTrack(online.account, kvText) };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */
@@ -231,13 +237,14 @@ interface Made {
   push: Push;
   basket?: BasketKeep;
   tapGuardMs: number;
+  firstDrawn?: () => void;
 }
 
 /** A round store over the game's sessions, with nothing in it until it is booted. */
 const roundStore = ({ sessions, tapGuardMs, basket }: Pick<Made, 'sessions' | 'tapGuardMs' | 'basket'>): GameStore =>
   createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs, ...(basket ? { basket } : {}) });
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore, push }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore, push, firstDrawn }: Services): Made {
   const guard = tapGuardMs ?? TAP_GUARD_MS;
   const counted = countingStarts(sessions, track);
   const roomStore = createRoomStore({
@@ -272,6 +279,7 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     push: push ?? phonePush(kvPush),
     basket,
     tapGuardMs: guard,
+    firstDrawn,
   };
 }
 
@@ -510,6 +518,10 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     },
     [made],
   );
+
+  // The game opened and its first screen on the phone's screen (the UI thread at its pace again): what waited for it is told, once a start.
+  const opened = useSyncExternalStore(game.subscribe, () => game.getState().status !== 'booting');
+  useEffect(() => (opened && made.firstDrawn ? whenShown(made.firstDrawn) : undefined), [opened, made]);
 
   // Someone signing in on this phone brings the language of their account with them.
   useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, setLocale), [made, locale, setLocale]);

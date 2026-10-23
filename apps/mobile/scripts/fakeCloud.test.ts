@@ -97,3 +97,22 @@ test('the friends of a guest given many: listed through the friends function, th
     await many.close();
   }
 });
+
+test('a finished life sent and finished, then forgotten by the account (`/control/unsent`): the phone sends it again at its next start', async () => {
+  const phone = await connectSupabase(url, FAKE_KEY, { storage: memory(), autoRefresh: false });
+  await phone.signInAsGuest();
+  const life = { id: 'life-1', lifeId: 'nurse', engineVersion: versions.engine, contentVersion: versions.content, seed: 's', round: 40, log: [], stateHash: '' };
+  expect(await phone.pushGame(life)).toBe('saved');
+  expect(await phone.finishRun('life-1')).toBe('done');
+  expect((await phone.listRuns()).map((run) => run.id)).toEqual(['life-1']);
+  const forget = (playing: boolean) => fetch(`${url}/control/unsent`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ playing }) }).then((r) => r.json());
+  // Forgotten whole: no run, no game.
+  expect(await forget(false)).toEqual({ forgotten: 1 });
+  expect(await phone.listRuns()).toEqual([]);
+  expect(await phone.playingGames()).toEqual([]);
+  // Sent again and forgotten with its game left being played (a finish that failed): the account offers it as a life in progress.
+  await phone.pushGame(life);
+  await phone.finishRun('life-1');
+  expect(await forget(true)).toEqual({ forgotten: 1 });
+  expect((await phone.playingGames()).map((game) => game.id)).toEqual(['life-1']);
+});

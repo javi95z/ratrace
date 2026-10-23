@@ -16,6 +16,7 @@ import { kvSession, kvText } from '../kvStore';
 import type { KeptText } from '../kvStore';
 import { phoneTurnstile } from './captcha';
 import { phoneErrors, watchErrors } from './errors';
+import { heldSaves } from './held';
 import { phonePage, whileActive } from './page';
 
 /*
@@ -173,9 +174,10 @@ export function forgetThePhone(): void {
 /**
  * The cloud of this phone, around the phone's store, made once for each start of the app (the game's context holds it, `shared`), whoever signs in
  * or out. With no Supabase project in the build's settings there is none: the store is the phone's
- * own, and the game is exactly what it is without a network (phase 2's game).
+ * own, and the game is exactly what it is without a network (phase 2's game). With `savesAfter`, what the account's mirror asks waits for it (the
+ * game's first screen drawn, `held.ts`): the account still signs in at once.
  */
-export function phoneOnline(device: PlayerStore): Online {
+export function phoneOnline(device: PlayerStore, savesAfter?: () => Promise<void>): Online {
   // Named in full, because the build writes these values into the app only where it sees them so (Expo's `EXPO_PUBLIC_*`).
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -188,7 +190,10 @@ export function phoneOnline(device: PlayerStore): Online {
   const phone = (thePhone ??= onThePhone());
   const online = onlineOver(device, {
     // The session in the phone's store, and renewed only while the app is in front (`onThePhone`), never by a timer of the client's own.
-    connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha })),
+    connect: async () => {
+      const cloud = await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha });
+      return phone.connected(savesAfter ? heldSaves(cloud, savesAfter) : cloud);
+    },
     // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean.
     address: () => null,
     clean: () => undefined,
