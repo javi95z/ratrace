@@ -2060,7 +2060,7 @@
   "legal": {
     "title": "Privacidad y aviso legal",
     "link": "Privacidad y aviso legal",
-    "updated": "Actualizado el 20 de octubre de 2026.",
+    "updated": "Actualizado el 23 de octubre de 2026.",
     "noticeTitle": "Aviso legal",
     "noticeBody": "The Rat Race es un juego gratuito de ficción. Las empresas, personas y noticias que salen son parodias, y nada de lo que dice es consejo financiero.",
     "owner": "Titular: {name}.",
@@ -2070,7 +2070,7 @@
     "whyTitle": "Para qué",
     "whyBody": "Solo para que el juego funcione: guardar tu vida en todos tus dispositivos, las clasificaciones, las partidas con amigos y los avisos que tú enciendas. La base es prestarte el servicio que pides y, para los avisos, tu consentimiento, que retiras cuando quieras en Ajustes. No hay publicidad y no vendemos datos.",
     "whoTitle": "Quién los trata",
-    "whoBody": "Supabase (cuentas y base de datos, en Japón), Vercel (la web y un recuento de visitas sin cookies), Cloudflare Turnstile (frenar bots) y Google, si entras con Google. Fuera de la UE, con las cláusulas contractuales tipo de la Comisión Europea.",
+    "whoBody": "Supabase (cuentas y base de datos, en Japón), Vercel (la web y un recuento de visitas sin cookies) y Google, si entras con Google. Fuera de la UE, con las cláusulas contractuales tipo de la Comisión Europea.",
     "deviceTitle": "Cookies y tu dispositivo",
     "deviceBody": "No usamos cookies de seguimiento. El juego guarda tu vida y tus ajustes en el navegador, porque sin eso no se puede jugar.",
     "rightsTitle": "Cuánto tiempo y tus derechos",
