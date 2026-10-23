@@ -524,6 +524,27 @@ test('a sheet iOS has presented whose Modal never says it has dismissed is let g
   }
 });
 
+test('a sheet whose title changes while it closes is let go when it would have been: its wait is not begun again', async () => {
+  platform.OS = 'ios';
+  vi.useFakeTimers();
+  try {
+    const titled = (open: boolean, title: string) => (
+      <Sheet open={open} onClose={() => {}} title={title} closeLabel="Close">
+        <p>inside</p>
+      </Sheet>
+    );
+    const { rerender } = render(titled(true, 'One'));
+    rerender(titled(false, 'One'));
+    const gone = sheetsGone();
+    act(() => void vi.advanceTimersByTime(100));
+    rerender(titled(false, 'Two'));
+    act(() => void vi.advanceTimersByTime(50));
+    expect(await settledAfter(gone)).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 test('sheetsGone waits for a sheet that is open, and for its Modal to dismiss once it has closed', async () => {
   platform.OS = 'ios';
   expect(await settledAfter(sheetsGone())).toBe(true);

@@ -34,6 +34,6 @@ export const PerfFrames: ComponentType = probe ? probe.Frames : none;
 export const perfCountSet: () => void = probe ? probe.countSet : nothing;
 export const usePerfCounted: (shown: number) => void = probe ? probe.useCounted : nothing;
 /** A sheet told to close (`closing`), and its Modal said to have dismissed (`gone`): the time between, as iOS takes it, told to the collector. */
-export const perfSheet: (phase: 'closing' | 'gone', name: string) => void = probe ? probe.sheet : nothing;
+export const perfSheet: (phase: 'closing' | 'gone', sheet: number, name: string) => void = probe ? probe.sheet : nothing;
 /** A store, its calls timed under `layer`'s name (the probe's build only; any other gives the store itself): the device's, and the one the game asks. */
 export const perfStore: <T extends object>(store: T, layer: string) => T = probe ? probe.timedStore : (store) => store;

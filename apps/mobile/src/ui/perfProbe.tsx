@@ -175,17 +175,17 @@ export function Frames(): null {
   return null;
 }
 
-/** When each sheet was told to close, by its title, until its Modal says it has dismissed. */
-const closing = new Map<string, number>();
+/** When each sheet was told to close, by the sheet (its panel's own number: two sheets of one title are two), until its Modal says it has dismissed. */
+const closing = new Map<number, number>();
 
-export function sheet(phase: 'closing' | 'gone', name: string): void {
+export function sheet(phase: 'closing' | 'gone', id: number, name: string): void {
   if (phase === 'closing') {
-    closing.set(name, performance.now());
+    closing.set(id, performance.now());
     return;
   }
-  const since = closing.get(name);
+  const since = closing.get(id);
   if (since === undefined) return;
-  closing.delete(name);
+  closing.delete(id);
   tell({ kind: 'dismiss', name, ms: +(performance.now() - since).toFixed(1) });
 }
 

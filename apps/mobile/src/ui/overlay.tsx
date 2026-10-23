@@ -227,15 +227,18 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
     release.current = counted;
     return counted;
   }, []);
+  // Who is told it has gone, and its title (the probe's only), as they are when it goes: a title changed while it closes changes nothing of it.
   const left = useRef(onGone);
+  const named = useRef(title);
   useEffect(() => {
     left.current = onGone;
+    named.current = title;
   });
   const dismissed = useCallback(() => {
-    perfSheet('gone', title);
+    perfSheet('gone', me, named.current);
     release.current?.();
     left.current();
-  }, [title]);
+  }, [me]);
   // Whether iOS has presented the Modal (its `onShow`): only then is there a dismissal to wait for.
   const presented = useRef(false);
   const onShow = useCallback(() => {
@@ -246,14 +249,14 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
   // cannot say it has dismissed, so it is let go after a moment. One that was shown is waited for (`DISMISS_BACKSTOP_MS`).
   useEffect(() => {
     if (open) return;
-    perfSheet('closing', title);
+    perfSheet('closing', me, named.current);
     if (Platform.OS !== 'ios') {
       dismissed();
       return;
     }
     const timer = setTimeout(dismissed, presented.current ? DISMISS_BACKSTOP_MS : NEVER_SHOWN_MS);
     return () => clearTimeout(timer);
-  }, [open, dismissed, title]);
+  }, [open, dismissed, me]);
 
   return (
     <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={onShow} onDismiss={open ? undefined : dismissed}>
