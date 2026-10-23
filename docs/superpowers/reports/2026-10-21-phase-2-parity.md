@@ -1790,6 +1790,9 @@ the fake project, kept by the phone from an earlier start (its session in `kvSto
 | … the same, no project reachable | (the fake stopped) | 1313, 1336, 1258 | 1313 | — | the account costs the start nothing |
 | … finished lives the account lacks, their games left "playing" there (part B's state) | Task 14c, before: the account made to forget the runs before each launch, their games set back to playing (`/control/unsent` with `playing`) | 1187, 2335, 2243, 2244, 2256 | **2244** | — | **fails while lives are pending** (part B's first five: median 2074) |
 | … the same, after 14c | the account's saves held until the first screen is drawn (`online/held.ts`) | 1270, 1269, 1270, 1224, 1320 | **1270** | — | pass; the 1.1 s of JS now comes after the front door is drawn |
+| … the same, after 14c's fix round | every ask at once; only the lives in progress handed back after the first screen, played back a life at a time (`pace`) | 1288, 1263, 1279, 1329, 1259 | **1279** | — | pass; longest JS frame after the front door 326 to 404 ms (was 1076 to 1100): the longest a tap waits |
+| … finished lives the account lacks, no game left there, after the fix round | | 1274, 1297, 1243, 1292, 1265 | 1274 | — | pass; longest JS frame 42 ms |
+| … nothing pending, after the fix round | | 1277, 1270, 1300, 1240, 1282 | 1277 | — | pass; longest JS frame 44 ms |
 | … finished lives the account lacks, no game left there | 14c, before: `/control/unsent` (runs and games forgotten) | 1197, 1230, 1262, 1416, 1304 | 1262 | — | pass: sending five lives is not what cost the start |
 | … the same, after 14c | | 1280, 1223, 1211, 1203, 1341 | 1223 | — | pass |
 | … nothing pending, after 14c | | 1296, 1276, 1256, 1282, 1247 | 1276 | — | pass (before: 2070, 1281, 1194, 1465, 1318: 1318) |
@@ -1806,7 +1809,11 @@ with the fake's `/control/unsent`: the account forgetting the runs and their gam
 a finish that failed, gives 2244. The cost is the mirror's first reading of the account: it plays every life in progress the account offers back
 through the engine (`adopt`, a whole 40-round log each) in one synchronous loop, to find them over. Fixed in 14c without touching the mirror (the
 web's): what it asks of the account waits for the game's first screen and then for an idle moment of the JS thread (`online/held.ts`), so the front
-door is drawn at 1270. The 1.1 s of JS still comes, after it (a touch in that second waits): see the concern in the 14c report.
+door is drawn at 1270. The 1.1 s of JS still came, after it. (14c's fix round, after its review:) the account is read at once again, every ask
+going during the start, and only the list of lives in progress is handed to the mirror after the first screen; the mirror plays them back a life at a
+time, a turn of the JS thread between them (its additive `pace`, given by the phone only), so its longest frame is one life's replay, 326 to 404 ms,
+and the front door is still drawn at 1279. Continue, pressed while the account is read at a start, waits for it (1.5 s at most), so no round is
+played on a copy another device has played further.
 
 **Task 14c's other two** (same build, release with the probe, warm = the app's Metal shader cache kept, cold = moved aside before the launch):
 
