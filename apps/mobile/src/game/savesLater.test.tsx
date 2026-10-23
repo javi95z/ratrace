@@ -12,8 +12,9 @@ import { forgetTheGame, GameProvider, useAccount, useGame } from './context';
 
 /*
  * The first start after signing in, with lives finished on the phone that the account lacks: the game as the app starts it (`phoneServices`), over
- * the network's stand-in. The account signs in at once, but nothing of the saves is asked of it until the game's first screen is on the phone's
- * screen (`online/held.ts`); then every life goes up, one after another, in the order the mirror sends them.
+ * the network's stand-in. The account signs in and is read at once, but its lives in progress are handed to the mirror only once the game's first
+ * screen is on the phone's screen (`online/held.ts`): nothing is played back or sent before; then every life goes up, one after another, in the
+ * order the mirror sends them.
  */
 
 // The game's first screen, on the phone's screen only when the test says so: what `whenShown` was asked to tell, held here.
@@ -58,7 +59,7 @@ const life = (n: number): FinishedRun => ({
   verified: false,
 });
 
-it('draws the first screen before any of the saves is asked of the account, then sends every finished life, in order', async () => {
+it('reads the account at once, but sends nothing before the first screen is drawn; then every finished life, in order', async () => {
   vi.stubEnv('EXPO_PUBLIC_SUPABASE_URL', 'https://abcdefghijklmnop.supabase.co');
   vi.stubEnv('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
   const device = new KvStore();
@@ -87,15 +88,17 @@ it('draws the first screen before any of the saves is asked of the account, then
       <Probe />
     </GameProvider>,
   );
-  // Signed in, the game opened, its first screen asked to be told when it is on the phone's screen: and not a word of the saves yet.
+  // Signed in, the game opened, its first screen asked to be told when it is on the phone's screen. The account is read already (its lives and
+  // its lives in progress asked at once), but nothing is played back or sent until the screen is up: no life pushed, none finished.
   await waitFor(() => expect(seen.account?.state.kind).toBe('guest'));
   await waitFor(() => expect(shown.waiting.length).toBeGreaterThan(0));
   expect(seen.status).not.toBe('booting');
+  await waitFor(() => expect(cloud.asked).toEqual(expect.arrayContaining(['GET /rest/v1/runs', 'GET /rest/v1/games'])));
   await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
-  expect(saves()).toEqual([]);
+  expect(pushed).toEqual([]);
   expect(finished).toEqual([]);
 
-  // On the screen: the account is read, and every life goes up and is finished, the latest first, as the mirror sends them.
+  // On the screen: every life goes up and is finished, the latest first, as the mirror sends them.
   act(() => shown.waiting.forEach((tell) => tell()));
   await waitFor(() => expect(finished).toEqual(['life-3', 'life-2', 'life-1']));
   expect(pushed).toEqual(['life-3', 'life-2', 'life-1']);

@@ -29,9 +29,14 @@ describe('the phone\'s cloud is the web\'s', () => {
 
   it('holds the game\'s cloud as the web does, word for word: what it is, what it is made of, and how it is put together', () => {
     const twin = part(web, '/** What the game gets of the cloud', '/**\n * Watches what goes wrong');
-    // A phone has no address: Google comes back to it with the browser instead.
-    const asThePhone = twin.replace('  address(): string;\n', '  address(): string | null;\n');
-    expect(asThePhone).not.toBe(twin);
+    // A phone has no address: Google comes back to it with the browser instead. And it plays back the account's lives in progress at a pace, one at a
+    // time, its JS thread free between them (the mirror's `pace`, which the web leaves out).
+    const asThePhone = twin
+      .replace('  address(): string;\n', '  address(): string | null;\n')
+      .replace('  newId(): string;\n}', '  newId(): string;\n  /** Awaited before each life in progress the account offers is played back (the mirror\'s `pace`). */\n  pace?(): Promise<void>;\n}')
+      .replace('newId: parts.newId });', 'newId: parts.newId, pace: parts.pace });');
+    expect(asThePhone.split('\n').length).toBe(twin.split('\n').length + 2);
+    expect(asThePhone).toContain('pace: parts.pace });');
     expect(phone).toContain(asThePhone);
   });
 

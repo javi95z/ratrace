@@ -16,7 +16,7 @@ import { kvSession, kvText } from '../kvStore';
 import type { KeptText } from '../kvStore';
 import { phoneTurnstile } from './captcha';
 import { phoneErrors, watchErrors } from './errors';
-import { heldSaves } from './held';
+import { heldSaves, pacedLives } from './held';
 import { phonePage, whileActive } from './page';
 
 /*
@@ -58,6 +58,8 @@ export interface OnlineParts {
   schedule?(run: () => Promise<void>, ms: number): void;
   /** Makes an id for a life the account will not take under its own. */
   newId(): string;
+  /** Awaited before each life in progress the account offers is played back (the mirror's `pace`). */
+  pace?(): Promise<void>;
 }
 
 /**
@@ -67,7 +69,7 @@ export interface OnlineParts {
  */
 export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
-  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, keepRefused: parts.keepRefused, schedule: parts.schedule, newId: parts.newId });
+  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, keepRefused: parts.keepRefused, schedule: parts.schedule, newId: parts.newId, pace: parts.pace });
   follow(account, mirror, parts.page);
   return {
     account,
@@ -174,10 +176,10 @@ export function forgetThePhone(): void {
 /**
  * The cloud of this phone, around the phone's store, made once for each start of the app (the game's context holds it, `shared`), whoever signs in
  * or out. With no Supabase project in the build's settings there is none: the store is the phone's
- * own, and the game is exactly what it is without a network (phase 2's game). With `savesAfter`, what the account's mirror asks waits for it (the
- * game's first screen drawn, `held.ts`): the account still signs in at once.
+ * own, and the game is exactly what it is without a network (phase 2's game). With `livesAfter`, the account's lives in progress are handed to the
+ * mirror only once it resolves (the game's first screen drawn, `held.ts`): the account still signs in, and is read, at once.
  */
-export function phoneOnline(device: PlayerStore, savesAfter?: () => Promise<void>): Online {
+export function phoneOnline(device: PlayerStore, livesAfter?: () => Promise<void>): Online {
   // Named in full, because the build writes these values into the app only where it sees them so (Expo's `EXPO_PUBLIC_*`).
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -192,7 +194,7 @@ export function phoneOnline(device: PlayerStore, savesAfter?: () => Promise<void
     // The session in the phone's store, and renewed only while the app is in front (`onThePhone`), never by a timer of the client's own.
     connect: async () => {
       const cloud = await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha });
-      return phone.connected(savesAfter ? heldSaves(cloud, savesAfter) : cloud);
+      return phone.connected(livesAfter ? heldSaves(cloud, livesAfter) : cloud);
     },
     // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean.
     address: () => null,
@@ -201,6 +203,8 @@ export function phoneOnline(device: PlayerStore, savesAfter?: () => Promise<void
     remember: givenUpIn(() => kvText),
     keepRefused: refusedIn(() => kvText),
     newId: () => crypto.randomUUID(),
+    // The account's lives in progress played back one at a time, the JS thread free between them (held.ts).
+    pace: pacedLives,
   });
   // Out of a release build, an error is the developer's to read, not to send. A phone that cannot be watched plays on all the same.
   if (process.env.NODE_ENV === 'production') {

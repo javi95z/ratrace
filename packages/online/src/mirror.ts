@@ -86,6 +86,12 @@ interface Options {
   remember?: { read(): string[]; write(ids: string[]): void };
   /** Where the finished lives the server would not take are noted, so that a page opened anew does not send them again. */
   keepRefused?: { read(): string[]; write(ids: string[]): void };
+  /**
+   * Given (a phone), the lives in progress the account offers are played back one at a time, `pace` awaited before each, while the device is still to
+   * be looked at for good: each is a whole log through the engine, and five in one go held the JS thread for a second. Left out (the web), they are
+   * played back as they are chosen, in one go, as before.
+   */
+  pace?(): Promise<void>;
 }
 
 /** What the account held when it was last read, kept up with what has been sent to it since. */
@@ -420,6 +426,32 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     return save === null || save.state.finished ? null : save;
   }
 
+  /**
+   * With `pace` (a phone): the lives in progress `meet` would play back, as far as the device as first looked at says, each played back now, `pace`
+   * awaited before it, while the device is still to be looked at for good. A life the device turns out to choose otherwise is played back then, as
+   * without `pace`. Without it, nothing: they are played back as they are chosen.
+   */
+  private async playBack(playing: readonly CloudGame[], note: ReturnType<typeof rankedOf>, living: SavedGame | null): Promise<Map<CloudGame, SavedGame | null>> {
+    const played = new Map<CloudGame, SavedGame | null>();
+    const pace = this.options.pace;
+    if (!pace) return played;
+    // The choosing below, as `meet` will do it: a life taken from the account is the device's from then on, and one offered ends it.
+    let mine = note !== null ? { gameId: note.gameId, steps: 0, finished: note.view?.finished === true } : living === null ? null : { gameId: living.gameId, steps: stepsOf(living.log), finished: living.state.finished };
+    let games = playing.filter((game) => !this.abandoned.has(game.id));
+    for (;;) {
+      const choice = chooseGame(mine, games, this.options.versions);
+      const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
+      if (candidate === null) return played;
+      games = games.filter((game) => game !== candidate);
+      await pace();
+      const save = this.adopt(candidate);
+      played.set(candidate, save);
+      if (save === null) continue;
+      if (choice.take === 'device') return played;
+      mine = { gameId: save.gameId, steps: stepsOf(save.log), finished: save.state.finished };
+    }
+  }
+
   /** Marks in the account the lives the device gave up. First of all, or they would come back as lives waiting there. */
   private async giveUpThere(cloud: SyncCloud): Promise<void> {
     if (this.abandoned.size === 0) return;
@@ -455,6 +487,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const there = empty ? await cloud.rankedLife() : null;
     const ranked = there !== null && !this.abandoned.has(`${RANKED}${there.id}`) ? there : null;
     let moved = false;
+    const played = await this.playBack(playing, rankedOf(before), living);
 
     // The device is looked at for good only now, with everything asked: a life begun meanwhile is the one it has.
     const held = await this.device.loadGame();
@@ -487,7 +520,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
       if (candidate === null) break;
       games = games.filter((game) => game !== candidate);
-      const save = this.adopt(candidate);
+      const save = played.has(candidate) ? (played.get(candidate) as SavedGame | null) : this.adopt(candidate);
       if (save === null) continue;
       if (choice.take === 'device') {
         waiting = save;

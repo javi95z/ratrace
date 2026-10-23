@@ -1,53 +1,55 @@
 import type { Cloud } from '@ratrace/online/supabase';
 import { describe, expect, it, vi } from 'vitest';
-import { FIRST_SCREEN_AT_MOST, firstScreenDoor, heldSaves } from './held';
+import { FIRST_SCREEN_AT_MOST, firstScreenDoor, heldSaves, pacedLives } from './held';
 
-/** A cloud whose every ask is noted as it reaches it. */
+/** A cloud whose every ask is noted as it reaches it, and answers at once. */
 function noting() {
   const asked: string[] = [];
-  const ask = (name: string) => async (...args: unknown[]) => {
+  const ask = (name: string, answer: unknown) => async (...args: unknown[]) => {
     asked.push(`${name}(${args.join(',')})`);
-    return name === 'finishRun' ? 'done' : [];
+    return answer;
   };
-  const cloud = { listRuns: ask('listRuns'), pushGame: ask('pushGame'), finishRun: ask('finishRun'), currentUser: ask('currentUser'), signInAsGuest: ask('signInAsGuest') } as unknown as Cloud;
+  const cloud = { listRuns: ask('listRuns', []), playingGames: ask('playingGames', [{ id: 'life-1' }]), pushGame: ask('pushGame', 'saved'), finishRun: ask('finishRun', 'done'), currentUser: ask('currentUser', null) } as unknown as Cloud;
   return { cloud, asked };
 }
 
-describe('the account\'s saves, after the first screen', () => {
-  it('asks nothing of the saves until the door opens, then each as it was asked, in order; signing in never waits', async () => {
+describe('the account\'s lives in progress, handed back after the first screen', () => {
+  it('asks everything at once, and hands back every answer as it comes but the lives in progress, which wait for the door', async () => {
     const door = firstScreenDoor(() => undefined);
     const { cloud, asked } = noting();
-    const held = heldSaves(cloud, door.wait, async () => undefined);
-    const user = held.currentUser();
-    const runs = held.listRuns();
-    const finished = held.finishRun('life-1');
-    await user;
+    const held = heldSaves(cloud, door.wait);
+    let lives: unknown = 'waiting';
+    void held.playingGames().then((answer) => (lives = answer));
+    expect(await held.listRuns()).toEqual([]);
+    expect(await held.finishRun('life-0')).toBe('done');
     await new Promise((resolve) => setTimeout(resolve, 5));
-    expect(asked).toEqual(['currentUser()']);
+    // Asked at once, all of it; the lives' answer held.
+    expect(asked).toEqual(['playingGames()', 'listRuns()', 'finishRun(life-0)']);
+    expect(lives).toBe('waiting');
     door.open();
-    expect(await runs).toEqual([]);
-    expect(await finished).toBe('done');
-    expect(asked).toEqual(['currentUser()', 'listRuns()', 'finishRun(life-1)']);
-    // Open, it stays open: what comes later waits only for the thread to be free.
-    await held.pushGame({ id: 'life-2' } as never);
-    expect(asked.at(-1)).toBe('pushGame([object Object])');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(lives).toEqual([{ id: 'life-1' }]);
   });
 
-  it('waits for a free moment of the JS thread before each ask', async () => {
+  it('hands back a refusal of the lives in progress once the door opens, and never as an unheard rejection before', async () => {
     const door = firstScreenDoor(() => undefined);
-    door.open();
-    const { cloud, asked } = noting();
-    let free: () => void = () => undefined;
-    const held = heldSaves(cloud, door.wait, () => new Promise((resolve) => (free = resolve)));
-    const runs = held.listRuns();
+    const cloud = { playingGames: () => Promise.reject(new Error('no network')) } as unknown as Cloud;
+    const held = heldSaves(cloud, door.wait);
+    const asking = held.playingGames();
     await new Promise((resolve) => setTimeout(resolve, 5));
-    expect(asked).toEqual([]);
-    free();
-    await runs;
-    expect(asked).toEqual(['listRuns()']);
+    door.open();
+    await expect(asking).rejects.toThrow('no network');
   });
 
-  it('opens by itself a while after the saves first came to it, should the first screen never say it is drawn', async () => {
+  it('lets the JS thread turn between two lives played back', async () => {
+    const order: string[] = [];
+    setTimeout(() => order.push('waiting'), 0);
+    await pacedLives();
+    order.push('next life');
+    expect(order).toEqual(['waiting', 'next life']);
+  });
+
+  it('opens by itself a while after the lives first came to it, should the first screen never say it is drawn', async () => {
     const timers: Array<{ run: () => void; ms: number }> = [];
     const door = firstScreenDoor((run, ms) => timers.push({ run, ms }));
     expect(timers).toEqual([]);

@@ -1188,3 +1188,56 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(state.asked.filter((line) => line.startsWith('push') || line.startsWith('finish'))).toEqual([]);
   });
 });
+
+describe('the lives in progress the account offers, played back at a pace (a phone)', { timeout: 60_000 }, () => {
+  /** A mirror over `store` as the phone makes it: `pace` awaited before each life played back. */
+  const paced = (cloud: SyncCloud, store: MemoryStore, pace: () => Promise<void>) =>
+    new MirroredStore(store, () => cloud, { content, lives, versions: VERSIONS, schedule: () => undefined, newId: () => 'never', pace });
+
+  it('plays each back after a pause of its own, and the device ends as it would have without one: the further copy of its life', async () => {
+    const { cloud } = fakeCloud();
+    const a = device(cloud, 'a');
+    const session = await a.sessions.start('nurse');
+    await play(session, 1);
+    await a.mirror.sync();
+    // Another device takes the life up and plays it further.
+    const b = device(cloud, 'b');
+    await b.mirror.sync();
+    await play((await b.sessions.resume()).session as GameSession, 2);
+    await b.mirror.sync();
+    const further = (await saved(b.store)) as SavedGame;
+    expect(further.state.round).toBe(3);
+    // The first device starts again (a new page, a new start of the app): its own copy at round 1.
+    const store = new MemoryStore();
+    await store.saveGame((await saved(a.store)) as SavedGame);
+    const order: string[] = [];
+    const mirror = paced(cloud, store, async () => void order.push('pause'));
+    const told: string[] = [];
+    mirror.onDeviceChanged((what) => told.push(what));
+    await mirror.sync();
+    expect(order).toEqual(['pause']);
+    expect(((await saved(store)) as SavedGame).state.round).toBe(3);
+    expect(told).toContain('game');
+  });
+
+  it('looks at the device for good only after the pauses: a life begun meanwhile is the one it keeps, and the account\'s is offered', async () => {
+    const { cloud } = fakeCloud();
+    const b = device(cloud, 'b');
+    await play(await b.sessions.start('nurse'), 2);
+    await b.mirror.sync();
+    const theirs = (await saved(b.store)) as SavedGame;
+    // A device with no life: it would take the account's. While the account's is being played back, the player begins a life of their own.
+    const store = new MemoryStore();
+    let resume: () => void = () => undefined;
+    const mirror = paced(cloud, store, () => new Promise<void>((resolve) => (resume = resolve)));
+    const meeting = mirror.sync();
+    await vi.waitFor(() => expect(resume).not.toBe(undefined));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const mine = await new LocalSessions(mirror, content, lives, { newId: () => 'mine', newSeed: () => 'seed-mine', now: () => 5 }).start('engineer');
+    resume();
+    await meeting;
+    expect(mine.view().round).toBe(0);
+    expect(((await saved(store)) as SavedGame).gameId).toBe('mine');
+    expect(mirror.offer()?.gameId).toBe(theirs.gameId);
+  });
+});

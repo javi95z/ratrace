@@ -102,7 +102,7 @@ export interface Services {
   track?: Track;
   /** The game's notices on the phone (`online/push.ts`). Left out, the phone's own, over its store. */
   push?: Push;
-  /** Told once the game's first screen is drawn, with the game opened: what waits for it (the account's saves, `online/held.ts`) may go. */
+  /** Told once the game's first screen is drawn, with the game opened: what waits for it (the account's lives in progress, `online/held.ts`) may go. */
   firstDrawn?: () => void;
 }
 
@@ -203,7 +203,8 @@ export function phoneServices(): Services {
     },
     { freshReads: true },
   );
-  // What the account's mirror asks waits for the game's first screen (`online/held.ts`): a start with lives the account lacks draws the front door first.
+  // The account's lives in progress are handed to its mirror once the game's first screen is drawn (`online/held.ts`): what it plays back of them
+  // comes after the front door, a life at a time.
   const firstScreen = firstScreenDoor();
   const online = phoneOnline(resilient, firstScreen.wait);
   const saving: Saving = {
