@@ -142,15 +142,37 @@ describe('the rat, a part at a time', () => {
     const canvas = choicesCanvas()!;
     // As large as the tab: as wide, and down to the foot of its last grid (two rows of 71.2, 6 apart, 430 down).
     expect(canvas.getAttribute('data-size')).toBe(`${WIDTH}x${430 + 2 * 71.2 + 6}`);
-    // Every backdrop, and no rat: a backdrop is shown alone. The three a new rat has not reached the rank for are under a lock.
-    expect(imagesOf(canvas).filter((src) => src !== 'src:icon.locked')).toEqual(['stars', 'city', 'coins', 'chart', 'cheese', 'confetti', 'wheel', 'beach'].map((id) => `src:rat.backdrop.${id}`));
+    // Every backdrop, and no rat: a backdrop is shown alone. The three a new rat has not reached the rank for are under a lock, each drawn faint as
+    // one picture put together once (ui/ratPicture.ts): never through a layer of the canvas's.
+    const backdrops = ['stars', 'city', 'coins', 'chart', 'cheese', 'confetti', 'wheel', 'beach'].map((id) => `src:rat.backdrop.${id}`);
+    const pictures = imagesOf(canvas).filter((src) => src !== 'src:icon.locked');
+    expect(pictures.map((src) => (src?.startsWith('drawn:') ? src.replace(/^drawn:layer faint,(.*),restore$/, '$1') : src))).toEqual(backdrops);
+    expect(pictures.filter((src) => src?.startsWith('drawn:layer faint,'))).toHaveLength(3);
     expect(imagesOf(canvas).filter((src) => src === 'src:icon.locked')).toHaveLength(3);
+    expect(canvas.querySelectorAll('[data-skia="Group"][data-props*=\'"layer":{"element"\']')).toHaveLength(0);
     // A box for each of the nine backdrops and the eight colours, each on its ground; the first, nothing at all, 6 into its choice.
     const boxes = canvas.querySelectorAll(':scope > [data-skia="Group"]');
     expect(boxes).toHaveLength(17);
     expect(JSON.parse(boxes[0].getAttribute('data-props') ?? '{}').clip).toEqual({ x: 6, y: 36, width: 59.2, height: 59.2 });
     // The cross of nothing worn, over its picture.
     expect(screen.getByText('✕')).toBeTruthy();
+  });
+
+  it('reads every tab\'s pictures ahead once the first is on screen: a tab pressed for the first time has its pictures at once', async () => {
+    const read: string[] = [];
+    loadSpritesWith(async (source) => {
+      read.push(String(source));
+      return { src: String(source), width: () => 8, height: () => 8, dispose: () => {} } as never;
+    });
+    editor();
+    await layOut();
+    // On the body tab, the clothes' pictures (each outfit, its clip, the hats, the eyes, the lock) and the backdrops are read already.
+    for (const id of ['rat.outfit.suit', 'rat.clip.suit', 'rat.hat.crown', 'rat.eyes.round', 'rat.backdrop.city', 'icon.locked']) expect(read, id).toContain(`src:${id}`);
+    const before = read.length;
+    fireEvent.click(screen.getByRole('tab', { name: 'Clothes' }));
+    await layOut();
+    expect(choicesCanvas()).toBeDefined();
+    expect(read.length).toBe(before);
   });
 
   it('never wears a prize not won yet: it says how it is won, and the rat is as it was', async () => {
@@ -171,7 +193,13 @@ describe('the rat, a part at a time', () => {
     const locks = imagesOf(canvas).filter((src) => src === 'src:icon.locked');
     expect(locks).toHaveLength(screen.getAllByRole('radio').filter((radio) => radio.getAttribute('data-locked') === 'true').length);
     expect(locks.length).toBeGreaterThan(0);
-    expect(canvas.querySelectorAll('[data-skia="Group"][data-props*=\'"layer":{"element"\']')).toHaveLength(locks.length);
+    // Each one picture put together once (ui/ratPicture.ts), faint; and every outfit's rat with its body cut by the outfit's clip. The canvas
+    // itself draws no layer: no GPU program of its own for the first drawing to make.
+    const pictures = imagesOf(canvas).filter((src) => src !== 'src:icon.locked');
+    expect(pictures.filter((src) => src?.startsWith('drawn:layer faint,'))).toHaveLength(locks.length);
+    expect(pictures).toContain('drawn:layer faint,layer,src:rat.body.brown,src:rat.clip.gold dstIn,restore,src:rat.face.calm,src:rat.outfit.gold,restore');
+    expect(pictures).toContain('drawn:layer,src:rat.body.brown,src:rat.clip.tracksuit dstIn,restore,src:rat.face.calm,src:rat.outfit.tracksuit');
+    expect(canvas.querySelectorAll('[data-skia="Group"][data-props*=\'"layer":{"element"\']')).toHaveLength(0);
   });
 
   it('wears a prize once it is won', async () => {

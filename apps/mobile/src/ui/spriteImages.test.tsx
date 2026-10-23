@@ -27,7 +27,7 @@ vi.mock('../sprites/sources', () => ({
   }),
 }));
 
-const { loadSpritesWith, SPRITE_BUDGET_BYTES, spritesLoading, useSpriteImage, useSpritesLoading } = await import('./spriteImages');
+const { loadSpritesWith, readAhead, SPRITE_BUDGET_BYTES, spritesLoading, useSpriteImage, useSpritesLoading } = await import('./spriteImages');
 const { Sprite } = await import('./Sprite');
 const { RatLayers } = await import('./RatAvatar');
 
@@ -52,6 +52,20 @@ test('two hundred sprites of one id in a list: one read and one decode, shared b
   const later = render(<Sprite id="icon.cash" />);
   expect(all(later.container, 'Image')).toHaveLength(1);
   expect(load).toHaveBeenCalledTimes(1);
+});
+
+test('sprites read ahead are read once, before anything draws them, and drawn at once when something does', async () => {
+  const load = vi.fn(async (source: unknown) => picture(String(source)) as never);
+  loadSpritesWith(load);
+  readAhead(['icon.cash', 'icon.bond', 'icon.cash']);
+  expect(load.mock.calls.map(([source]) => source)).toEqual(['src:icon.cash', 'src:icon.bond']);
+  await settle();
+  expect(spritesLoading()).toBe(0);
+  // Read again ahead, or drawn: nothing is read again, and the picture is there from the first drawing.
+  readAhead(['icon.bond']);
+  const { container } = render(<Sprite id="icon.bond" />);
+  expect(all(container, 'Image').map((i) => i.getAttribute('data-image'))).toEqual(['src:icon.bond']);
+  expect(load).toHaveBeenCalledTimes(2);
 });
 
 test('a read that fails, or a file that does not decode, shows the checkerboard and is told once, never a crash', async () => {

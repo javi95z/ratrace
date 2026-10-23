@@ -4,6 +4,8 @@ import type { RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import { memo, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { Canvas } from './Canvas';
+import { PerfDrawn } from './perf';
+import { composedPicture } from './ratPicture';
 import { AVATAR_BOX, RAT_GROUND, piecesOf, type RatPiece } from './rat';
 import { PIXELATED } from './Sprite';
 import { sourceOf, useSpriteImage, useSpriteImages } from './spriteImages';
@@ -101,6 +103,31 @@ function idsOf(choices: readonly RatChoice[]): string[] {
   return [...ids];
 }
 
+/**
+ * What a choice shows in its box, over its ground: a rat at its place, or a backdrop filling the box. A rat cut by its clip, or a prize not won yet,
+ * is drawn as one picture put together once (`ratPicture.ts`), the same as its pieces through layers of their own (but a level of rounding), which made the
+ * grid's first drawing costly; the rest are drawn as they are, a picture each. Both a rat and a backdrop (no grid asks for it) keep the layer.
+ */
+function pictureIn(choice: RatChoice, box: RatPlace, imageOf: (id: string) => SkImage | null | undefined): ReactNode {
+  const rat = choice.rat;
+  const backdrop = choice.backdrop === null ? null : ratSprite('backdrop', choice.backdrop);
+  const alone = rat && backdrop === null ? { pieces: piecesOf(rat.look), at: { x: box.x + rat.place.x, y: box.y + rat.place.y, w: rat.place.w, h: rat.place.h } } : backdrop !== null && !rat ? { pieces: [{ layer: 'backdrop' as const, id: backdrop, clip: null }], at: box } : null;
+  if (alone && (choice.faint || alone.pieces.some((piece) => piece.clip !== null))) {
+    const one = composedPicture({ pieces: alone.pieces, faint: choice.faint }, imageOf, FAINT);
+    if (one) return <Image image={one} x={alone.at.x} y={alone.at.y} width={alone.at.w} height={alone.at.h} fit="fill" sampling={PIXELATED} />;
+  }
+  const backdropImage = backdrop === null ? null : imageOf(backdrop);
+  return (
+    <Group layer={choice.faint ? <Paint><ColorMatrix matrix={FAINT} /></Paint> : undefined}>
+      {backdropImage ? <Image image={backdropImage} x={box.x} y={box.y} width={box.w} height={box.h} fit="fill" sampling={PIXELATED} /> : null}
+      {rat ? drawRat(piecesOf(rat.look), { x: box.x + rat.place.x, y: box.y + rat.place.y, w: rat.place.w, h: rat.place.h }, imageOf) : null}
+    </Group>
+  );
+}
+
+/** The sprites a grid of choices draws, for reading them ahead of the grid (a tab not opened yet): see `RatChoices`. */
+export const choiceSprites = (choices: readonly RatChoice[]): string[] => idsOf(choices);
+
 /** Two grids alike, choice for choice. */
 const sameChoices = (a: readonly RatChoice[], b: readonly RatChoice[]): boolean =>
   a === b ||
@@ -131,18 +158,16 @@ export const RatChoices = memo(
     const lock = imageOf(LOCK);
     return (
       <View aria-hidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height, pointerEvents: 'none' }}>
+        {/* The probe's (a build with EXPO_PUBLIC_PERF=1 only): the grid's pictures drawn, from the touch that asked for them. */}
+        {ready ? <PerfDrawn name={`rat choices: ${choices.length}`} /> : null}
         {ready ? (
           <Canvas style={{ width, height }}>
             {choices.map((choice, i) => {
               const box = { x: choice.x, y: choice.y, w: choice.side, h: choice.side };
-              const backdrop = choice.backdrop === null ? null : imageOf(ratSprite('backdrop', choice.backdrop));
               return (
                 <Group key={i} clip={rect(box.x, box.y, box.w, box.h)}>
                   <Rect x={box.x} y={box.y} width={box.w} height={box.h} color={COLORS[choice.ground]} />
-                  <Group layer={choice.faint ? <Paint><ColorMatrix matrix={FAINT} /></Paint> : undefined}>
-                    {backdrop ? <Image image={backdrop} x={box.x} y={box.y} width={box.w} height={box.h} fit="fill" sampling={PIXELATED} /> : null}
-                    {choice.rat ? drawRat(piecesOf(choice.rat.look), { x: box.x + choice.rat.place.x, y: box.y + choice.rat.place.y, w: choice.rat.place.w, h: choice.rat.place.h }, imageOf) : null}
-                  </Group>
+                  {pictureIn(choice, box, imageOf)}
                   {choice.locked && lock ? (
                     <Image image={lock} x={box.x + (box.w - LOCK_SIZE) / 2} y={box.y + (box.h - LOCK_SIZE) / 2} width={LOCK_SIZE} height={LOCK_SIZE} fit="fill" sampling={PIXELATED} />
                   ) : null}

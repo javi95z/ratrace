@@ -8,8 +8,10 @@ import { reach, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Tabs } from '../../ui/overlay';
 import { RAT_GROUND } from '../../ui/rat';
+import { useDrawnFirst } from '../../ui/drawnFirst';
 import { PerfDrawn } from '../../ui/perf';
-import { RatChoices, RatLayers, type RatChoice, type RatPlace } from '../../ui/RatAvatar';
+import { choiceSprites, RatChoices, RatLayers, type RatChoice, type RatPlace } from '../../ui/RatAvatar';
+import { readAhead } from '../../ui/spriteImages';
 import { spriteOf } from '../../ui/sprites';
 import { StickyPart } from '../../ui/Sticky';
 import { PixelText, ReadText } from '../../ui/text';
@@ -144,6 +146,14 @@ export function RatEditor({
     return part === 'body' || part === 'face' ? drawn : [{ key: 'none', label: t('none'), locked: null }, ...drawn];
   };
   const chosen = (part: Part, key: string) => (part === 'colour' ? look.colour === key : (look[part] ?? 'none') === key);
+
+  // Every tab's pictures read ahead once the first tab is on screen: a tab pressed for the first time then has them all, and is drawn at once rather
+  // than after its forty-odd pictures are read (part of its first drawing's 110 ms, measured). Once: the pictures of a tab do not change with a pick.
+  const shown = useDrawnFirst();
+  const aheadOf = useRef(() => GROUP_IDS.flatMap((tab) => choiceSprites(GROUPS[tab].flatMap((part) => choices(part).map((choice, i) => pictureOf(part, choice, i, 0, 0))))));
+  useEffect(() => {
+    if (shown) readAhead(aheadOf.current());
+  }, [shown]);
 
   // What a press asks of the rat as it is when pressed: the choices are drawn once, and their one callback reads the latest.
   const latest = useRef({ look, onPick, onLocked });

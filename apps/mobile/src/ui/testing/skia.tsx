@@ -67,10 +67,11 @@ export const painted = {
 
 type Rect = { x: number; y: number; width: number; height: number };
 
-/** The picture a surface's drawing becomes: its size, its PNG, and a way to let go of it. */
-function snapshot(w: number, h: number) {
+/** The picture a surface's drawing becomes: its size, its PNG, what was drawn on it (`src`, see `surface`), and a way to let go of it. */
+function snapshot(w: number, h: number, drawnOn: readonly string[] = []) {
   const image = {
     kind: 'card',
+    src: `drawn:${drawnOn.join(',')}`,
     width: () => w,
     height: () => h,
     encodeToBytes: () => painted.encode(),
@@ -80,15 +81,33 @@ function snapshot(w: number, h: number) {
   return image;
 }
 
+/**
+ * A surface of the double. What is drawn on it is written down twice: in `painted.calls`, and in the picture it becomes, as words (its `src`): each
+ * picture drawn by its own `src` (with ` dstIn` where it cuts what is under it), each layer begun (`layer`, with ` faint` for one drawn through a
+ * colour matrix) and ended (`restore`).
+ */
 function surface(w: number, h: number) {
   painted.asked.push([w, h]);
+  const drawnOn: string[] = [];
   const canvas = {
     drawRect: (rect: Rect, paint: { color: string }) => void painted.calls.push(['rect', paint.color, rect.x, rect.y, rect.width, rect.height]),
-    drawImageRectOptions: (image: unknown, _src: Rect, dest: Rect, filter: number, mipmap: number) =>
-      void painted.calls.push(['image', image, dest.x, dest.y, dest.width, dest.height, filter, mipmap]),
+    drawImageRectOptions: (image: unknown, _src: Rect, dest: Rect, filter: number, mipmap: number, paint?: PaintDouble | null) => {
+      painted.calls.push(['image', image, dest.x, dest.y, dest.width, dest.height, filter, mipmap]);
+      drawnOn.push(`${String((image as { src?: unknown }).src)}${paint?.blendMode === BLEND_DST_IN ? ' dstIn' : ''}`);
+    },
     drawText: (text: string, x: number, y: number, paint: { color: string }, font: FontDouble) => void painted.calls.push(['text', `${font.size}px ${font.family}`, text, x, y, paint.color]),
+    saveLayer: (paint?: PaintDouble) => void drawnOn.push(paint?.colorFilter ? 'layer faint' : 'layer'),
+    restore: () => void drawnOn.push('restore'),
   };
-  return { width: () => w, height: () => h, getCanvas: () => canvas, flush: () => undefined, makeImageSnapshot: () => snapshot(w, h), dispose: () => undefined };
+  return { width: () => w, height: () => h, getCanvas: () => canvas, flush: () => undefined, makeImageSnapshot: () => snapshot(w, h, drawnOn), dispose: () => undefined };
+}
+
+/** Skia's `BlendMode.DstIn`. */
+const BLEND_DST_IN = 6;
+interface PaintDouble {
+  color: string;
+  blendMode?: number;
+  colorFilter?: unknown;
 }
 
 /** The double of `Skia`, for what is drawn by hand: surfaces, paints, fonts, rectangles. */
@@ -99,11 +118,20 @@ const skiaDouble = {
   },
   Paint: () => ({
     color: '',
+    blendMode: undefined as number | undefined,
+    colorFilter: undefined as unknown,
     setColor(color: string) {
       this.color = color;
     },
     setAntiAlias: () => undefined,
+    setBlendMode(mode: number) {
+      this.blendMode = mode;
+    },
+    setColorFilter(filter: unknown) {
+      this.colorFilter = filter;
+    },
   }),
+  ColorFilter: { MakeMatrix: (matrix: number[]) => ({ matrix }) },
   Color: (color: string) => color,
   XYWHRect: (x: number, y: number, width: number, height: number): Rect => ({ x, y, width, height }),
   Font: (face?: FaceDouble | null, size = 12): FontDouble => {
@@ -134,6 +162,7 @@ export function skiaFake() {
     vec: (x: number, y: number) => ({ x, y }),
     rect: (x: number, y: number, width: number, height: number): Rect => ({ x, y, width, height }),
     Skia: skiaDouble,
+    BlendMode: { DstIn: BLEND_DST_IN },
     FilterMode: { Nearest: 0, Linear: 1 },
     MipmapMode: { None: 0, Nearest: 1, Linear: 2 },
     ImageFormat: { JPEG: 3, PNG: 4, WEBP: 6 },

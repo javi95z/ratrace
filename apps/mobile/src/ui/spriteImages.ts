@@ -2,6 +2,7 @@ import { Skia, type SkImage } from '@shopify/react-native-skia';
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Image, type ImageSourcePropType } from 'react-native';
 import { SOURCES } from '../sprites/sources';
+import { forgetComposed } from './ratPicture';
 import { reportMissing } from './sprites';
 
 /** What Skia is given for a sprite's file (a Metro asset id). */
@@ -63,6 +64,8 @@ function toldOfReads(): void {
 export function loadSpritesWith(next: LoadSprite): void {
   load = next;
   cache.clear();
+  // And what was put together from them (ratPicture.ts).
+  forgetComposed();
   held = 0;
   reading.clear();
   toldOfReads();
@@ -192,6 +195,17 @@ export function useSpriteImages(ids: readonly (string | null | undefined)[]): re
     return now;
   }, [entries]);
   return useSyncExternalStore(subscribe, snapshot, snapshot);
+}
+
+/**
+ * Begins reading and decoding sprites a screen will draw soon (the rat editor's other tabs, once its first is on screen), so that they are in when
+ * it draws them: a sprite already asked for is left as it is. Nothing watches them: kept as any other, they may go only past the budget.
+ */
+export function readAhead(ids: readonly string[]): void {
+  for (const id of ids) {
+    const source = sourceOf(id);
+    if (source !== undefined && !cache.has(id)) entryOf(id, source);
+  }
 }
 
 /** How many sprites are being read and decoded right now: none once every picture asked for is in, or has failed. */
