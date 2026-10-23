@@ -49,6 +49,11 @@ test('the app\'s web is judged apart from the phone: its own folder, its own res
   expect(APP_WEB.file).not.toBe(SCENES_FILE);
   expect(APP_WEB.moving).not.toBe(MOVING_FILE);
   expect(APP_WEB.accepted).toBe(ACCEPTED_APP_WEB);
+  // The app's web says the Next web's words where the phone says its own (game/ownWords.web.ts): no scene has lines left out, nor a page held to a baseline.
+  expect(APP_WEB.phoneWords).toEqual({});
+  expect(APP_WEB.phonePages).toEqual([]);
+  const lost = SCENES.find((scene) => scene.name === 'home-lost-newer')!;
+  expect(lineOf(lost, result('home-lost-newer', { shape: 0, texts: [{ text: lineName(MESSAGES.en.home.lostNewer), web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 5 }] }), false, APP_WEB).verdict).toBe('differs');
   // A residual of the phone's (the dice emoji of iOS) is no record for the app's web: the same numbers differ there.
   const newFirst = SCENES.find((scene) => scene.name === 'new-first')!;
   const phoneResidual = result('new-first', { shape: ACCEPTED['new-first'].shape, texts: [] });

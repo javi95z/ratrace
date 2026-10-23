@@ -474,17 +474,17 @@ export interface Side {
 export const PHONE: Side = { folder: SCENES_FOLDER, file: SCENES_FILE, moving: 'scenes-moving.json', accepted: ACCEPTED, phoneWords: PHONE_WORDS, phonePages: PHONE_PAGES, pageBaseline: PAGE_BASELINE };
 
 /**
- * The web beside the app's own web: phase 5a's comparison. The app's web draws the app's screens, so it draws the phone's own words where the phone
- * does (`PHONE_WORDS`), and they are left out of its judgement as they are of the phone's.
+ * The web beside the app's own web: phase 5a's comparison. The app's web says the Next web's words where the phone says its own (game/ownWords.web.ts:
+ * the notice of a newer life, the legal notice), so no line of it is left out: every scene is judged whole.
  */
 export const APP_WEB: Side = {
   folder: 'phase-5a-web-parity',
   file: 'phase-5a-web-parity.json',
   moving: 'scenes-moving-appweb.json',
   accepted: ACCEPTED_APP_WEB,
-  phoneWords: PHONE_WORDS,
-  phonePages: PHONE_PAGES,
-  pageBaseline: PAGE_BASELINE,
+  phoneWords: {},
+  phonePages: [],
+  pageBaseline: {},
 };
 
 /** The side a comparison is against. */
