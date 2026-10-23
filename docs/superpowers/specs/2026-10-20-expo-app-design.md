@@ -186,6 +186,30 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
 3. **Online.** Guest account, Google sign-in, cloud saves, ranked lives, the weekly challenge,
    rankings, friends, games with others (Realtime), push, analytics (the eight events to the game's own Supabase), error reports. Ends when a
    life begun on the web is finished in the app and the reverse.
+
+   **Done, 2026-10-23, but for the live run** (ledger and reviews in the plan's workspace). The
+   server lane (push tokens, the `track` function, error places `app:`) is deployed to the live
+   project. Every seam of `game/offline.ts` now answers through `@ratrace/online`, wired in
+   `apps/mobile/src/online/` and `game/context.tsx` as the web wires it: the guest account with
+   Turnstile, Google through the system browser back to `theratrace://auth`, cloud saves (the lives
+   in progress handed to the mirror once the first screen is drawn, played back a life at a time;
+   Continue waits up to 1.5 s for the account's newest copy), ranked lives, the weekly challenge,
+   rankings, friends, games with others over Realtime, the eight events, error reports, and push
+   through Expo's service. Ninety-three scenes compare with the web (two full clean runs); the
+   device checks ran against a local fake project (`scripts/fakeCloud.ts`); the release build meets
+   its budgets on the iPhone simulator (cold start 1.27 s, home to play 62 ms, rankings 106 ms, a
+   room 46 ms). The accounts are made: EAS project `@javi95z/theratrace` (its id in `app.json`),
+   Firebase project `theratrace-68012` (`google-services.json`, the FCM V1 key in EAS), the redirect
+   address in Supabase. Not done here: the live run of one life on both clients (it needs the
+   user's own Google sign-in on both, and is run with the first Android build in phase 4); Android
+   was never run; the captcha and push were never seen on a device; the minors parked by the final
+   review are in its report.
+
+   **Phase 4 starts from** that app and a first EAS build (`eas.json`: development, preview,
+   production) on an Android phone or emulator: the live run above first, then push and the captcha
+   on the device. The store accounts are to be the user's company (an LLC), not the user: the
+   Google Play organisation account, and later Apple's with a D-U-N-S number; the EAS and Firebase
+   projects, made on the user's own accounts, move to the company before release.
 4. **Google Play.** Account deletion in the app and by URL, data safety form, content rating, store
    listing from the game's art, the closed test (12 testers, 14 days), release.
 5. **The web on Expo.** Desk layout, locale URLs, PWA with its offline cache and service worker
