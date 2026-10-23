@@ -56,6 +56,9 @@ test('under clothes the body is cut to what they let show of it: the clip is its
   const mask = body.parentElement as HTMLElement;
   expect(mask.style.maskImage).toBe('url("/sprites/rat.clip.tuxedo.png")');
   expect(mask.style.maskSize).toBe('100% 100%');
+  // The clip is scaled smooth, as the Next web's mask is (its span has no `image-rendering`): only the pictures are drawn pixel for pixel.
+  expect(mask.style.imageRendering).toBe('');
+  expect(body.style.imageRendering).toBe('pixelated');
   // Only the body is cut.
   expect(imgs(container)[0].parentElement).toBe(imgs(container)[2].parentElement);
   expect((imgs(container)[2].parentElement as HTMLElement).style.maskImage).toBeFalsy();

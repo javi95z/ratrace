@@ -37,7 +37,8 @@ function RatStack({ pieces, at, pictureOf }: { pieces: readonly RatPiece[]; at: 
         if (!clip) return null;
         const mask = `url("${clip.uri}")`;
         return (
-          <div key={piece.id} style={{ position: 'absolute', left: 0, top: 0, width: at.w, height: at.h, maskImage: mask, WebkitMaskImage: mask, maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', ...PIXELATED }}>
+          // The clip scaled smooth, as the Next web's mask is (no `image-rendering` on its span): pixel for pixel, the body's edge was cut on other pixels.
+          <div key={piece.id} style={{ position: 'absolute', left: 0, top: 0, width: at.w, height: at.h, maskImage: mask, WebkitMaskImage: mask, maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }}>
             <Layer uri={picture.uri} at={at} />
           </div>
         );
