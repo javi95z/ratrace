@@ -19,14 +19,14 @@ export interface KeptText {
   setItem(key: string, value: string): void;
 }
 
-/** Where the phone may say it is: the platforms the function knows, but the web's. */
-const PHONES = ['ios', 'android'];
+/** Where the app may say it is: the platforms the function knows, the app's web build among them (`Platform.OS` is `web` there). */
+const PLATFORMS = ['ios', 'android', 'web'];
 
 /** What the sender needs of the world. The phone hands in its own (`phoneTrack`); a test, its stand-ins. */
 export interface TrackParts {
   /** The client the account connected, or null before it has. */
   cloud(): Cloud | null;
-  /** The phone's platform, as React Native names it. */
+  /** The phone's platform, as React Native names it: `ios`, `android`, or `web` in the app's web build. */
   platform: string;
   /** True in a release build only. */
   release: boolean;
@@ -43,7 +43,7 @@ const bodyOf = (event: Counted, platform: string): TrackedEvent => {
 /** Sends one event, or drops it: what came of it, `dropped` when it was not sent at all. Never throws, and never rejects. */
 async function send(parts: TrackParts, event: Counted): Promise<Sent | 'dropped'> {
   try {
-    if (!parts.release || !PHONES.includes(parts.platform)) return 'dropped';
+    if (!parts.release || !PLATFORMS.includes(parts.platform)) return 'dropped';
     const cloud = parts.cloud();
     if (cloud?.track === undefined || !parts.connected()) return 'dropped';
     return await cloud.track(bodyOf(event, parts.platform));
@@ -113,13 +113,14 @@ const isRelease = (): boolean => typeof __DEV__ !== 'undefined' && !__DEV__;
 
 /**
  * The phone's sender: through the client the account connected last (`phonesCloud`), as the phone it is, in a release build only; and the install
- * counted on the first launch, noted in the phone's store (`noted`, which the game's context hands in). Made once for each start of the app (the
- * game's context holds it). A test may say the build and the platform.
+ * counted on the first launch, noted in the phone's store (`noted`, which the game's context hands in), on a phone only. Made once for each start of
+ * the app (the game's context holds it). A test may say the build and the platform.
  */
 export function phoneTrack(account: Pick<Account, 'subscribe'>, noted: KeptText, { release = isRelease(), platform = Platform.OS as string }: { release?: boolean; platform?: string } = {}): Track {
   // Listened to for as long as the app lasts, so that what the phone knows of its connection is never stale when an event is sent.
   if (release) phoneConnection.subscribe(() => undefined);
   const parts: TrackParts = { cloud: phonesCloud, platform, release, connected: phoneConnection.connected };
-  countInstalled(parts, [account, phoneConnection], noted);
+  // A page opened in a browser is not an app installed: the web's install is the PWA's own, which the Next web counts.
+  if (platform !== 'web') countInstalled(parts, [account, phoneConnection], noted);
   return trackTo(parts);
 }

@@ -185,21 +185,26 @@ describe('the wall between the phone\'s screens and the game', () => {
   it('keeps the account\'s session in the phone\'s store, under its own keys, and hands the client no other', () => {
     // The client is made in one file of the phone, with the store's session for its storage, and renews the session only when told to.
     const connecting = all.filter((path) => /\bconnectSupabase\s*\(/.test(readFileSync(path, 'utf8'))).map(rel);
-    expect(connecting).toEqual(['online/index.ts']);
+    expect(connecting).toEqual(['online/index.ts', 'online/index.web.ts']);
     const online = readFileSync(join(SRC, 'online/index.ts'), 'utf8');
     expect(online).toMatch(/connectSupabase\(url, key, \{[^}]*\bstorage: kvSession\b[^}]*\bautoRefresh: false\b[^}]*\}\)/);
+    // And its web twin, as the Next web makes it: no storage (supabase-js's own, the browser's, under the key the Next web's session is kept under),
+    // its own renewal.
+    const web = readFileSync(join(SRC, 'online/index.web.ts'), 'utf8');
+    expect(web.match(/\bconnectSupabase\(.*\)/g)).toEqual(['connectSupabase(url, key, { region, captcha })']);
     expect(importsOf(join(SRC, 'online/index.ts')).find((i) => i.from === '@/kvStore')?.names).toMatch(/\bkvSession\b/);
     expect(readFileSync(STORAGE_FILES[0], 'utf8')).toMatch(/export const kvSession\b/);
   });
 
   it('lets only the tests and their stand-ins (testing/*) name what is there for them alone: nothing the app runs starts its cloud, its game or its connection anew', () => {
-    const TEST_ONLY: Record<string, string> = { forgetThePhone: 'online/index.ts', forgetTheGame: 'game/context.tsx', forgetConnection: 'online/page.ts' };
-    for (const [name, home] of Object.entries(TEST_ONLY)) {
+    // Each made in its file and, where the web has a twin of it, in the twin.
+    const TEST_ONLY: Record<string, string[]> = { forgetThePhone: ['online/index.ts', 'online/index.web.ts'], forgetTheGame: ['game/context.tsx'], forgetConnection: ['online/page.ts', 'online/page.web.ts'] };
+    for (const [name, homes] of Object.entries(TEST_ONLY)) {
       const word = () => new RegExp(`\\b${name}\\b`, 'g');
       const naming = mine.filter((path) => !rel(path).startsWith('testing/') && word().test(readFileSync(path, 'utf8'))).map(rel);
-      expect(naming, name).toEqual([home]);
+      expect(naming.sort(), name).toEqual(homes);
       // Where it is made, it is only made: nothing there calls it.
-      expect(readFileSync(join(SRC, home), 'utf8').match(word()), name).toHaveLength(1);
+      for (const home of homes) expect(readFileSync(join(SRC, home), 'utf8').match(word()), name).toHaveLength(1);
     }
   });
 
@@ -243,7 +248,8 @@ describe('the wall between the phone\'s screens and the game', () => {
     // phone's store, as the web's keeps them in the browser's.
     // And the phone's store's web twin (kvStore.web.ts), which keeps the player's things in the browser's IndexedDB and takes the core's memory store
     // for a browser that has none, as the Next web does.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'kvStore.web.ts', 'online/index.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
+    // And its web twin (online/index.web.ts), which keeps those lists in the browser under the Next web's keys, through the store's twin.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'kvStore.web.ts', 'online/index.ts', 'online/index.web.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/perfLife')).map(rel)).toEqual(['app/perf.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);

@@ -9,6 +9,9 @@ import { AppState } from 'react-native';
  */
 export const BACK_FROM_GOOGLE = 'theratrace://auth';
 
+/** Where Google sends the player back to, asked for when they go: always `BACK_FROM_GOOGLE` on the phone (the web's twin answers the page they are on). */
+export const backFromGoogle = (): string => BACK_FROM_GOOGLE;
+
 /** How long the app is waited for to be in front again before Google is opened all the same (and refused, if it is still held). */
 const IN_FRONT_MS = 3_000;
 

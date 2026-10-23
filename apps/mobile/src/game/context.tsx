@@ -27,7 +27,7 @@ import { useStore } from 'zustand';
 import { kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
-import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
+import { backFromGoogle, openForGoogle } from '../online/browser';
 import { CaptchaHost } from '../online/captcha';
 import { firstScreenDoor } from '../online/held';
 import { usePlace } from '../online/errors';
@@ -791,7 +791,8 @@ export function useAccountSettled(): boolean {
 
 /**
  * Who is playing, as the cloud knows them, and what a player can do about it. Google is opened over the app and comes back to it
- * (`online/browser.ts`): the calls resolve once it has, as the web's resolve once the page has left for it.
+ * (`online/browser.ts`): the calls resolve once it has, as the web's resolve once the page has left for it. On the web (`online/browser.web.ts`) the
+ * page itself leaves for Google and comes back to where it was, as the Next web's does.
  */
 export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
   const { account, store, restart, push, community } = useCloud();
@@ -803,7 +804,7 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
       kvKeeping.set();
       let kept = false;
       try {
-        kept = await account.keepWithGoogle(BACK_FROM_GOOGLE, openForGoogle);
+        kept = await account.keepWithGoogle(backFromGoogle(), openForGoogle);
         return kept;
       } finally {
         // A trip that came to nothing (or broke on the way) leaves no note behind for a later sign-in to be counted by.
@@ -813,7 +814,7 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     useExistingAccount: () => {
       // Signing in to an account that was already a player's is not keeping this one: a note left by a trip the app did not see end is not this.
       kvKeeping.take();
-      return account.useExistingAccount(BACK_FROM_GOOGLE, openForGoogle);
+      return account.useExistingAccount(backFromGoogle(), openForGoogle);
     },
     dismissNotice: () => account.dismissNotice(),
     // What the account keeps goes from this device with it, so that the guest who comes next does not take it into an account of their own: the

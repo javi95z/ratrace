@@ -77,10 +77,19 @@ describe('the events, as the phone counts them', () => {
     expect(android.sent).toEqual([{ name: 'share', props: { what: 'card' }, platform: 'android' }]);
   });
 
-  it('sends nothing in development, as the web counts nothing out of production, nor from anything that is not a phone', async () => {
+  it('sends from the app\'s web build as the web, as the function reads it', async () => {
+    const { cloud, sent } = cloudCounting();
+    trackTo(parts(cloud, { platform: 'web' }))({ name: 'life_start', mode: 'solo' });
+    await settle();
+    expect(sent).toEqual([{ name: 'life_start', props: { mode: 'solo' }, platform: 'web' }]);
+    expect(readEvent(sent[0])).toEqual(sent[0]);
+  });
+
+  it('sends nothing in development, as the web counts nothing out of production, nor from anything that is neither a phone nor the web', async () => {
     const { cloud, sent } = cloudCounting();
     for (const event of EVERY) trackTo(parts(cloud, { release: false }))(event);
-    for (const event of EVERY) trackTo(parts(cloud, { platform: 'web' }))(event);
+    for (const event of EVERY) trackTo(parts(cloud, { release: false, platform: 'web' }))(event);
+    for (const event of EVERY) trackTo(parts(cloud, { platform: 'windows' }))(event);
     await settle();
     expect(sent).toEqual([]);
   });
@@ -269,6 +278,14 @@ describe('the phone\'s sender, over the phone\'s cloud', () => {
     await next.account.start('en');
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(project.fetch.mock.calls.filter(([input]) => String(input).includes('/functions/v1/track'))).toEqual([]);
+  });
+
+  it('counts no install from the app\'s web build: a page opened is not an app installed (the Next web counts the PWA\'s own)', () => {
+    const noted = notes();
+    const changes = account();
+    phoneTrack(changes, noted, { release: true, platform: 'web' });
+    expect(noted.kept.size).toBe(0);
+    expect(changes.listening()).toBe(0);
   });
 
   it('is what the game counts with: the game\'s context hands it the account, once for each start of the app', () => {
