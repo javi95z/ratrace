@@ -5,7 +5,7 @@ import { MESSAGES } from '@ratrace/i18n';
 import { TEXT_WITHIN_PT } from './kitCompare';
 import type { Result } from './kitCompare';
 import type { Accepted } from './sceneShots';
-import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, hasPhoneWords, HUD_ONLY, lineName, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, unjudgedLine } from './sceneShots';
+import { ACCEPTED, ACCEPTED_APP_WEB, againstOf, APP_WEB, APP_WEB_PORT, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, hasPhoneWords, HUD_ONLY, lineName, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, unjudgedLine, sceneAppWebUrl, SCENES_FILE } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -16,9 +16,51 @@ test('the web page of a scene is in the scene\'s language, and the app\'s route 
   expect(sceneAppRoute({ name: 'play-finance-r6', locale: 'es' })).toBe('scene?name=play-finance-r6');
 });
 
-test('each scene writes three pictures, in the report of phase 2', () => {
+test('each scene writes three pictures, in the report of phase 2, and two more beside the app\'s web, in the report of phase 5a', () => {
   expect(SCENES_FOLDER).toBe('phase-2-parity');
-  expect(filesOf('play-news-r1')).toEqual({ web: 'play-news-r1-web.png', app: 'play-news-r1-app.png', diff: 'play-news-r1-diff.png' });
+  expect(filesOf('play-news-r1')).toEqual({
+    web: 'play-news-r1-web.png',
+    app: 'play-news-r1-app.png',
+    diff: 'play-news-r1-diff.png',
+    appweb: 'play-news-r1-appweb.png',
+    appwebDiff: 'play-news-r1-appweb-diff.png',
+  });
+});
+
+test('the app\'s web page of a scene is its route on the app\'s own web server, in any language (the scene sets it)', () => {
+  expect(APP_WEB_PORT).toBe(8091);
+  expect(sceneAppWebUrl({ name: 'home-new', locale: 'en' })).toBe('http://localhost:8091/scene?name=home-new');
+  expect(sceneAppWebUrl({ name: 'end-ru', locale: 'ru' })).toBe('http://localhost:8091/scene?name=end-ru');
+  expect(sceneAppWebUrl({ name: 'end-ru', locale: 'ru' }, 9000)).toBe('http://localhost:9000/scene?name=end-ru');
+});
+
+test('the comparison is against the app on the phone unless asked for the app\'s web; anything else stops the run', () => {
+  expect(againstOf(['compare'])).toBe('app');
+  expect(againstOf(['compare', '--only=home-new'])).toBe('app');
+  expect(againstOf(['compare', '--against=appweb'])).toBe('appweb');
+  expect(againstOf(['--against=app'])).toBe('app');
+  expect(() => againstOf(['--against=web'])).toThrow('--against is app or appweb, not web');
+});
+
+test('the app\'s web is judged apart from the phone: its own folder, its own results file and its own records, so the phone\'s are never written over', () => {
+  expect(APP_WEB.folder).toBe('phase-5a-web-parity');
+  expect(APP_WEB.file).toBe('phase-5a-web-parity.json');
+  expect(APP_WEB.folder).not.toBe(SCENES_FOLDER);
+  expect(APP_WEB.file).not.toBe(SCENES_FILE);
+  expect(APP_WEB.moving).not.toBe(MOVING_FILE);
+  expect(APP_WEB.accepted).toBe(ACCEPTED_APP_WEB);
+  // A residual of the phone's (the dice emoji of iOS) is no record for the app's web: the same numbers differ there.
+  const newFirst = SCENES.find((scene) => scene.name === 'new-first')!;
+  const phoneResidual = result('new-first', { shape: ACCEPTED['new-first'].shape, texts: [] });
+  expect(lineOf(newFirst, phoneResidual).verdict).toBe('accepted');
+  if (!('new-first' in ACCEPTED_APP_WEB)) expect(lineOf(newFirst, phoneResidual, false, APP_WEB).verdict).toBe('differs');
+  // Every record of the app's web says why, and where the report of phase 5a explains it.
+  const report = readFileSync(new URL('../../../docs/superpowers/reports/2026-10-23-phase-5a-web-parity.md', import.meta.url), 'utf8');
+  for (const [name, record] of Object.entries(ACCEPTED_APP_WEB)) {
+    expect(SCENES.map((scene) => scene.name), name).toContain(name);
+    expect(record.reason.length, name).toBeGreaterThan(20);
+    expect(report, name).toContain(`## ${record.report}`);
+  }
 });
 
 test('all the scenes are shot, or the ones named, in the order they are listed; a name that is not a scene stops the run', () => {
@@ -199,7 +241,7 @@ test('a scene whose app shot never stood still fails the run, and its line says 
   expect(movingAfter(['a', 'b'], ['b', 'c', 'd'], ['c'])).toEqual(['a', 'c']);
   const run = read('./scene-shots.ts');
   expect(run).toContain('const moving = await shootApp(');
-  expect(run).toContain('lines.push(lineOf(scene, result, movingNow.includes(scene.name)));');
+  expect(run).toContain('lines.push(lineOf(scene, result, movingNow.includes(scene.name), side));');
 });
 
 describe('a scene with lines in the phone\'s own words', () => {

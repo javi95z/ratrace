@@ -72,8 +72,34 @@ export const sceneWebUrl = (scene: Scene, port: number): string => `http://local
 /** The app's route for a scene, as Expo Go is opened on it. */
 export const sceneAppRoute = (scene: Scene): string => `scene?name=${scene.name}`;
 
-/** What a scene writes: the web's shot, the app's shot, and the picture of what is unlike in them. */
-export const filesOf = (name: string): { web: string; app: string; diff: string } => ({ web: `${name}-web.png`, app: `${name}-app.png`, diff: `${name}-diff.png` });
+/** The port the app's own web is served on for the shots (`npx expo start --web --port 8091` in apps/mobile, in development: `/scene` is `__DEV__` only). */
+export const APP_WEB_PORT = 8091;
+
+/** The app's web page for a scene: its scene route, as on the phone (the scene sets its own language). */
+export const sceneAppWebUrl = (scene: Scene, port = APP_WEB_PORT): string => `http://localhost:${port}/${sceneAppRoute(scene)}`;
+
+/**
+ * What a scene writes: the web's shot, the app's shot, and the picture of what is unlike in them; and, beside the app's web (phase 5a), the
+ * app's web shot and the picture of what is unlike in it and the web's.
+ */
+export const filesOf = (name: string): { web: string; app: string; diff: string; appweb: string; appwebDiff: string } => ({
+  web: `${name}-web.png`,
+  app: `${name}-app.png`,
+  diff: `${name}-diff.png`,
+  appweb: `${name}-appweb.png`,
+  appwebDiff: `${name}-appweb-diff.png`,
+});
+
+/** What the web's shots are compared with: the app on the phone (`app`, phase 2's), or the app's own web (`appweb`, phase 5a's). */
+export type Against = 'app' | 'appweb';
+
+/** What `compare` is asked to compare the web with (`--against=app|appweb`): the phone's app unless the app's web is named. */
+export function againstOf(args: readonly string[]): Against {
+  const said = args.find((arg) => arg.startsWith('--against='))?.slice('--against='.length);
+  if (said === undefined || said === 'app') return 'app';
+  if (said === 'appweb') return 'appweb';
+  throw new Error(`--against is app or appweb, not ${said}`);
+}
 
 /** The scenes named, in the order they are listed (not the order they were named in), or all of them. A name that is none stops the run. */
 export function chooseScenes(only: readonly string[] | undefined): Scene[] {
@@ -420,6 +446,50 @@ export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
   },
 };
 
+/**
+ * What the app's web differs from the Next web by, scene by scene, where the residual is explained in phase 5a's report
+ * (`docs/superpowers/reports/2026-10-23-phase-5a-web-parity.md`): held as the phone's records are (`ACCEPTED`), and apart from them. A residual of
+ * the phone's (iOS's emoji, Skia's antialiasing, device pixels) is no record here: both sides are Chrome.
+ */
+export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {};
+
+/**
+ * How one comparison of the scenes is judged and kept: where its pictures and its results file go, where its moving scenes are noted between steps,
+ * its records, and its lines in other words than the web's.
+ */
+export interface Side {
+  /** The folder under `docs/superpowers/reports` with this comparison's own pictures and results. */
+  folder: string;
+  /** Its results file, in that folder: a line to each scene. */
+  file: string;
+  /** Its scenes whose shots never stood still, beside the raw shots. */
+  moving: string;
+  accepted: Readonly<Record<string, Accepted>>;
+  phoneWords: Readonly<Record<string, readonly string[]>>;
+  phonePages: readonly string[];
+  pageBaseline: Readonly<Record<string, PageBaseline>>;
+}
+
+/** The web beside the app on the phone: phase 2's comparison. */
+export const PHONE: Side = { folder: SCENES_FOLDER, file: SCENES_FILE, moving: 'scenes-moving.json', accepted: ACCEPTED, phoneWords: PHONE_WORDS, phonePages: PHONE_PAGES, pageBaseline: PAGE_BASELINE };
+
+/**
+ * The web beside the app's own web: phase 5a's comparison. The app's web draws the app's screens, so it draws the phone's own words where the phone
+ * does (`PHONE_WORDS`), and they are left out of its judgement as they are of the phone's.
+ */
+export const APP_WEB: Side = {
+  folder: 'phase-5a-web-parity',
+  file: 'phase-5a-web-parity.json',
+  moving: 'scenes-moving-appweb.json',
+  accepted: ACCEPTED_APP_WEB,
+  phoneWords: PHONE_WORDS,
+  phonePages: PHONE_PAGES,
+  pageBaseline: PAGE_BASELINE,
+};
+
+/** The side a comparison is against. */
+export const sideOf = (against: Against): Side => (against === 'appweb' ? APP_WEB : PHONE);
+
 /** Whether a scene is compared: every screen is the real one on the app, so every scene is, once a batch pass has shot it. */
 export const isJudged = (scene: Scene): boolean => !PENDING_SHOTS.has(scene.name);
 
@@ -464,8 +534,8 @@ export const unjudgedLine = (scene: Scene): Line => ({
 export const lineName = (words: string): string => words.trim().slice(0, 40);
 
 /** A result without its lines in the phone's own words: what is judged of it. */
-function judgedOf(scene: Scene, result: Result): Result {
-  const own = (PHONE_WORDS[scene.name] ?? []).map(lineName);
+function judgedOf(scene: Scene, result: Result, side: Side): Result {
+  const own = (side.phoneWords[scene.name] ?? []).map(lineName);
   return own.length === 0 ? result : { ...result, texts: result.texts.filter((text) => !own.includes(text.text)) };
 }
 
@@ -481,10 +551,10 @@ function textWithin(result: Result, record: Accepted | undefined): boolean {
  * some line down, its other lines and where it stands against its baseline. A shape the phone's words make themselves (longer than the web's, past the
  * web's line, where no window of the text check reaches) is a residual like any other: accepted by its record (`ACCEPTED`), and failing on any growth.
  */
-function phoneVerdict(scene: Scene, judged: Result): 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
-  const record = ACCEPTED[scene.name];
-  if (PHONE_PAGES.includes(scene.name)) {
-    const base = PAGE_BASELINE[scene.name];
+function phoneVerdict(scene: Scene, judged: Result, side: Side): 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
+  const record = side.accepted[scene.name];
+  if (side.phonePages.includes(scene.name)) {
+    const base = side.pageBaseline[scene.name];
     if (base !== undefined && Math.abs(judged.shape - base.shape) > base.shape * base.drift) return 'phone words, drifted';
     return textWithin(judged, record) ? 'phone words, not comparable' : 'phone words, layout differs';
   }
@@ -493,17 +563,20 @@ function phoneVerdict(scene: Scene, judged: Result): 'phone words, layout clean'
 }
 
 /** Whether a scene that differs differs by no more than its record says. */
-function withinRecord(scene: Scene, result: Result): boolean {
-  const record = ACCEPTED[scene.name];
+function withinRecord(scene: Scene, result: Result, side: Side): boolean {
+  const record = side.accepted[scene.name];
   return record !== undefined && result.shape <= record.shape && textWithin(result, record);
 }
 
-/** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. `moving`: the app's shot never stood still. */
-export function lineOf(scene: Scene, result: Result, moving = false): Line {
-  const judged = judgedOf(scene, result);
+/**
+ * A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. `moving`: the app's shot never
+ * stood still. `side`: what it is judged by, the phone's records (`PHONE`) or the app's web's (`APP_WEB`).
+ */
+export function lineOf(scene: Scene, result: Result, moving = false, side: Side = PHONE): Line {
+  const judged = judgedOf(scene, result, side);
   const plain = verdictOf(judged);
   if (plain === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
-  const verdict = hasPhoneWords(scene.name) ? phoneVerdict(scene, judged) : plain === 'differs' && withinRecord(scene, judged) ? 'accepted' : plain;
+  const verdict = scene.name in side.phoneWords ? phoneVerdict(scene, judged, side) : plain === 'differs' && withinRecord(scene, judged, side) ? 'accepted' : plain;
   const text = textSummary(judged);
   const far = judged.texts.filter((line) => !line.unmeasured && Number.isFinite(line.apart) && line.apart > TEXT_WITHIN_PT).map((line) => ({ text: line.text, pt: round(line.apart, 2) }));
   const phoneLines = result.texts.length - judged.texts.length;
@@ -534,7 +607,7 @@ export const differing = (lines: readonly Line[]): Line[] =>
   lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs' || line.verdict === 'phone words, drifted' || (line.verdict !== 'unjudged' && line.moving === true));
 
 /** The scenes whose app shot never stood still, kept beside the raw shots from the app's step to the comparison (which may be run apart). */
-export const MOVING_FILE = 'scenes-moving.json';
+export const MOVING_FILE = PHONE.moving;
 
 /** The scenes left moving after an app step: those of the scenes not shot this time as they were, and of those shot now the ones that never stood still. */
 export const movingAfter = (kept: readonly string[], shot: readonly string[], moving: readonly string[]): string[] => [...kept.filter((name) => !shot.includes(name)), ...moving];

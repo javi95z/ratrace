@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { SCREEN } from './kitCompare';
+import { APP_WEB_PORT } from './sceneShots';
 
 /**
  * The two drivers every parity shot is taken with (`kit-shots.ts` for the kit, `scene-shots.ts` for the scenes): the web
@@ -44,7 +45,7 @@ interface Chromium {
 }
 export interface Page {
   goto(url: string, options: object): Promise<unknown>;
-  evaluate<T>(fn: () => T): Promise<T>;
+  evaluate<T>(fn: () => T): Promise<Awaited<T>>;
   waitForFunction(fn: () => boolean): Promise<unknown>;
   addStyleTag(options: { content: string }): Promise<unknown>;
   screenshot(options: { path: string }): Promise<unknown>;
@@ -317,6 +318,59 @@ export function stopAfter(child: ChildProcess, stop: (child: ChildProcess) => vo
   }
 }
 
+/** The Chrome already on this machine, as the web's e2e tests use: nothing is downloaded. */
+async function launchChrome(): Promise<Browser> {
+  const { chromium } = fromWeb('@playwright/test') as { chromium: Chromium };
+  return chromium.launch({ channel: 'chrome' });
+}
+
+/**
+ * A page of Chrome shaped like the iPhone (its size, its scale, its touch, its safe areas, so `env(safe-area-inset-*)` is what it is on the
+ * iPhone), in a context kept from every host but this machine (`guardedContext`): each host it was kept from is added to `kept`.
+ */
+async function phonePage(browser: Browser, kept: Set<string>): Promise<Page> {
+  const context = await guardedContext(
+    browser,
+    { viewport: { width: SCREEN.width, height: SCREEN.height }, deviceScaleFactor: SCREEN.scale, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' },
+    (url) => kept.add(new URL(url).host),
+  );
+  const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: SCREEN.top, bottom: SCREEN.bottom, left: 0, right: 0 } });
+  return page;
+}
+
+/** What the pages asked of hosts that are not this machine's, and was kept from them: nothing, with no project in the environment. */
+const tellKept = (kept: ReadonlySet<string>): void => console.log(kept.size === 0 ? 'the browser asked nothing of any other host' : `the browser was kept from: ${[...kept].join(', ')}`);
+
+/**
+ * The app's web is not started by the shots: Metro serves it, in development (its `/scene` route is `__DEV__` only), from a terminal of its own,
+ * and with no project in its environment. Nothing answering is a run that cannot be shot, and says how to start it.
+ */
+export function appWebAnswering(up: boolean, port: number): void {
+  if (!up) throw new Error(`nothing answers on ${port}: start the app's web in apps/mobile (EXPO_NO_METRO_LAZY=1 npx expo start --web --port ${port}, with no EXPO_PUBLIC_SUPABASE_*)`);
+}
+
+/**
+ * Runs `shoot` with a page of Chrome shaped like the iPhone's (`phonePage`, the web's own), in front of the app's web served on `APP_WEB_PORT`.
+ * The browser is kept from every host but this machine, whatever the page asks for.
+ */
+export async function withAppWebPage(shoot: (page: Page) => Promise<void>): Promise<void> {
+  const up = await fetch(`http://localhost:${APP_WEB_PORT}/`).then(() => true, () => false);
+  appWebAnswering(up, APP_WEB_PORT);
+  const browser = await launchChrome();
+  const kept = new Set<string>();
+  try {
+    await shoot(await phonePage(browser, kept));
+  } finally {
+    await browser.close();
+    tellKept(kept);
+  }
+}
+
+/** In the page: waits for the frame after the next to be painted (a picture's `<img>` may paint a frame after the scene said it was ready). */
+export const NEXT_FRAME = () => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+
 /**
  * Runs `shoot` with a page of Chrome shaped like the iPhone's, in front of the web's own dev server, started here (on a
  * port that is not answering) and stopped after. `probe` is a page of the web that answers once the server is up. The
@@ -358,25 +412,14 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
       logFile,
       tell: (line) => console.error(line),
     });
-    const { chromium } = fromWeb('@playwright/test') as { chromium: Chromium };
-    // The Chrome already on this machine, as the web's e2e tests use: nothing is downloaded.
-    const browser = await chromium.launch({ channel: 'chrome' });
+    const browser = await launchChrome();
     const kept = new Set<string>();
     try {
-      const context = await guardedContext(
-        browser,
-        { viewport: { width: SCREEN.width, height: SCREEN.height }, deviceScaleFactor: SCREEN.scale, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' },
-        (url) => kept.add(new URL(url).host),
-      );
-      const page = await context.newPage();
-      const cdp = await context.newCDPSession(page);
-      // The phone's safe areas, so `env(safe-area-inset-*)` is what it is on the iPhone.
-      await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: SCREEN.top, bottom: SCREEN.bottom, left: 0, right: 0 } });
+      const page = await phonePage(browser, kept);
       await whileServing(server, logFile, () => shoot(page));
     } finally {
       await browser.close();
-      // What the pages asked of hosts that are not this machine's, and was kept from them: nothing, with no project in the environment.
-      console.log(kept.size === 0 ? 'the browser asked nothing of any other host' : `the browser was kept from: ${[...kept].join(', ')}`);
+      tellKept(kept);
     }
   } finally {
     // A server that is gone already (it stopped on its own) is not an error to hide the one the shots met behind.
@@ -428,15 +471,16 @@ export const STILL_SHOTS = 6;
  * screen been given longer. Nothing is judged more loosely for it: the shot kept is the screen as it stands still.
  */
 export async function stillShot(
-  shoot: () => Buffer,
+  shoot: () => Buffer | Promise<Buffer>,
   { wait = sleep, ready = () => true }: { wait?: (ms: number) => Promise<unknown>; ready?: () => boolean } = {},
 ): Promise<{ png: Buffer; still: boolean }> {
   // A shot taken while the scene says it is not ready counts for nothing: the count of shots alike starts again after it.
-  let last = shoot();
+  // (A browser's shot is answered later, the simulator's at once: both are waited for.)
+  let last = await shoot();
   let alike = ready() ? 1 : 0;
   for (let i = 0; i < STILL_SHOTS; i++) {
     await wait(STILL_MS);
-    const next = shoot();
+    const next = await shoot();
     alike = !ready() ? 0 : next.equals(last) && alike > 0 ? alike + 1 : 1;
     last = next;
     if (alike >= STILL_ALIKE) return { png: last, still: true };
@@ -472,7 +516,8 @@ export async function readyServer(port: number): Promise<{ port: number; wait(na
     }
     const known = said.get(name);
     if (known === undefined || n > known.n) said.set(name, { ready: url.searchParams.get('ready') === '1', n });
-    response.writeHead(200).end('ok');
+    // The app's web is another origin than this server's: leave to read the answer keeps an error for each word out of its console.
+    response.writeHead(200, { 'Access-Control-Allow-Origin': '*' }).end('ok');
   });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);

@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
+import { appWebAnswering, blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -400,4 +400,48 @@ test('a server that cannot be stopped after the shots is said, not thrown over t
     throw Object.assign(new Error('not permitted'), { code: 'EPERM' });
   }, (line) => said.push(line));
   expect(said).toEqual(["the web's server (42) could not be stopped: Error: not permitted"]);
+});
+
+test('the app\'s web page, another origin than the driver\'s, is answered with leave to read the answer: its word is heard and its console stays quiet', async () => {
+  const told = await readyServer(0);
+  try {
+    const answer = await fetch(`http://127.0.0.1:${told.port}/ready?name=home-new&ready=1&n=1`);
+    expect(answer.headers.get('access-control-allow-origin')).toBe('*');
+    expect(told.ready('home-new')).toBe(true);
+  } finally {
+    await told.close();
+  }
+});
+
+test('a shot taken by a browser, which answers later, is waited for as the simulator\'s is', async () => {
+  let taken = 0;
+  const shoot = async () => (taken++, Buffer.from('home'));
+  expect(await stillShot(shoot, { wait: async () => undefined })).toEqual({ png: Buffer.from('home'), still: true });
+  expect(taken).toBe(STILL_ALIKE);
+});
+
+test('the app\'s web is shot from the server already serving it on 8091, which the shots do not start: one that is not answering stops the run, saying how to start it', () => {
+  expect(() => appWebAnswering(false, 8091)).toThrow('nothing answers on 8091: start the app\'s web in apps/mobile (EXPO_NO_METRO_LAZY=1 npx expo start --web --port 8091, with no EXPO_PUBLIC_SUPABASE_*)');
+  expect(() => appWebAnswering(true, 8091)).not.toThrow();
+  const source = read('./shotDrivers.ts');
+  // The same browser as the web's, shaped like the same phone, kept from every host but this machine.
+  expect(source).toContain('export async function withAppWebPage(');
+  expect([...source.matchAll(/await phonePage\(browser, /g)]).toHaveLength(2);
+});
+
+test('a scene of the app\'s web is shot on the day every scene is drawn on, once it says it is ready and a frame after, and once it is still', () => {
+  const source = read('./scene-shots.ts');
+  const step = source.slice(source.indexOf("steps.includes('appweb')"));
+  const set = step.indexOf('page.clock.setFixedTime(SCENE_NOW)');
+  const load = step.indexOf('await page.goto(routeTold(sceneAppWebUrl(scene), told.port)');
+  const word = step.indexOf('await told.wait(scene.name, READY_MS)');
+  const frame = step.indexOf('await page.evaluate(NEXT_FRAME)');
+  const still = step.indexOf('await stillShot(');
+  expect(set).toBeGreaterThan(-1);
+  expect(load).toBeGreaterThan(set);
+  expect(word).toBeGreaterThan(load);
+  expect(frame).toBeGreaterThan(word);
+  expect(still).toBeGreaterThan(frame);
+  expect(step).toContain('ready: () => told.ready(scene.name)');
+  expect(step).toContain('join(appWebOut, filesOf(scene.name).appweb)');
 });

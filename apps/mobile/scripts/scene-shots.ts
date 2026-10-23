@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
 import { compareShots, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
-import { chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, MOVING_FILE, movingAfter, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, webRules } from './sceneShots';
+import { againstOf, APP_WEB, chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
-import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
+import { fromWeb, NEXT_FRAME, openPage, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
 
 /**
  * The scenes beside the web's, shot for shot: each named game state (packages/core/src/testing/scenes.ts), drawn by the
@@ -15,8 +15,13 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * `phase-2-parity.json`: its verdict, and its numbers.
  *
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] [app] [compare] [--only=name,name]
+ *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] appweb compare --against=appweb [--only=name,name]
  *
- * With no step named, all three. The web is served by its own `next dev` on port 3021, started and stopped here (a server
+ * With no step named, the first three. The second line is phase 5a's: the app's own web (`appweb`, served by `npx expo start --web --port 8091`
+ * in apps/mobile, started apart and in development, its `/scene` route being `__DEV__` only) shot in the same Chrome as the web's, shaped like the
+ * same phone, each scene once it says it is ready, a frame after, and once it is still; then compared with the web's shots, and judged by its own
+ * records (`APP_WEB` in sceneShots.ts), into its own folder (docs/superpowers/reports/phase-5a-web-parity/: `<name>-appweb.png`,
+ * `<name>-appweb-diff.png`, `phase-5a-web-parity.json`), so the phone's are never written over. The web is served by its own `next dev` on port 3021, started and stopped here (a server
  * already answering there is refused), and its browser is kept from every host but this machine. The app is opened in Expo Go
  * from the Metro running on 8090 (`npx expo start --port 8090` in apps/mobile).
  *
@@ -32,6 +37,7 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * differs beyond that is listed and exits 1, as does a compared scene whose app shot never stood still (`stillShot`; its line says `moving`).
  */
 const out = join(root, 'docs/superpowers/reports', SCENES_FOLDER);
+const appWebOut = join(root, 'docs/superpowers/reports', APP_WEB.folder);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -39,8 +45,11 @@ async function main() {
   const scenes = chooseScenes(only);
   const steps = args.filter((a) => !a.startsWith('--'));
   const all = steps.length === 0;
+  // Asked before anything is shot: a word that is neither stops the run at once.
+  const side = sideOf(againstOf(args));
   mkdirSync(raw, { recursive: true });
   mkdirSync(out, { recursive: true });
+  mkdirSync(appWebOut, { recursive: true });
 
   if (all || steps.includes('web')) {
     await withWebPage(sceneWebUrl(scenes[0], PORT), async (page) => {
@@ -59,25 +68,64 @@ async function main() {
     });
   }
 
-  // Which scenes' app shots never stood still, as the last app step left them: the comparison fails those.
-  const movingFile = join(raw, MOVING_FILE);
-  const movingKept = () => (existsSync(movingFile) ? (JSON.parse(readFileSync(movingFile, 'utf8')) as string[]) : []);
+  // Which scenes' app shots never stood still, as the last app step (or app's web step) left them: the comparison fails those.
+  const movingKept = (file: string) => (existsSync(join(raw, file)) ? (JSON.parse(readFileSync(join(raw, file), 'utf8')) as string[]) : []);
 
   // Expo Go is closed and opened once first: left running, it would show the bundle of the Metro it saw last.
   if (all || steps.includes('app')) {
     // Each scene says when it is ready to be shot (drawn, every picture of it read): the shot waits for that word.
     const moving = await shootApp(scenes.map((scene) => ({ route: sceneAppRoute(scene), png: join(out, filesOf(scene.name).app), name: scene.name })), { fresh: true });
     const names = scenes.filter((scene) => moving.includes(sceneAppRoute(scene))).map((scene) => scene.name);
-    writeFileSync(movingFile, JSON.stringify(movingAfter(movingKept(), scenes.map((scene) => scene.name), names)));
+    writeFileSync(join(raw, PHONE.moving), JSON.stringify(movingAfter(movingKept(PHONE.moving), scenes.map((scene) => scene.name), names)));
+  }
+
+  // The app's own web, from the server already serving it: in the same Chrome as the web's, shaped like the same phone.
+  if (steps.includes('appweb')) {
+    const told = await readyServer(READY_PORT);
+    const moving: string[] = [];
+    try {
+      await withAppWebPage(async (page) => {
+        for (const scene of scenes) {
+          const png = join(appWebOut, filesOf(scene.name).appweb);
+          // The day, before the page is loaded, as the web's.
+          await page.clock.setFixedTime(SCENE_NOW);
+          await page.goto(routeTold(sceneAppWebUrl(scene), told.port), { waitUntil: 'load' });
+          if (!(await told.wait(scene.name, READY_MS))) {
+            console.log(`appweb ${scene.name} (never said it was ready in ${READY_MS / 1000} s)`);
+            moving.push(scene.name);
+            await page.screenshot({ path: png });
+            continue;
+          }
+          // Ready once every picture is read; the last of them may be painted a frame later.
+          await page.evaluate(NEXT_FRAME);
+          await page.evaluate(() => document.fonts.ready);
+          const { still } = await stillShot(
+            async () => {
+              await page.screenshot({ path: png });
+              return readFileSync(png);
+            },
+            { ready: () => told.ready(scene.name) },
+          );
+          console.log(`appweb ${scene.name}${still ? '' : ' (still moving: the last shot is kept)'}`);
+          if (!still) moving.push(scene.name);
+        }
+      });
+    } finally {
+      await told.close();
+    }
+    writeFileSync(join(raw, APP_WEB.moving), JSON.stringify(movingAfter(movingKept(APP_WEB.moving), scenes.map((scene) => scene.name), moving)));
   }
 
   if (all || steps.includes('compare')) {
     const sharp: unknown = fromWeb('sharp');
-    const movingNow = movingKept();
+    const movingNow = movingKept(side.moving);
+    // The other shot, its picture of what is unlike and its results: the phone's, or the app's web's (`--against=appweb`).
+    const appWeb = side === APP_WEB;
+    const sideOut = appWeb ? appWebOut : out;
     const lines: Line[] = [];
     for (const scene of scenes) {
       const files = filesOf(scene.name);
-      const [a, b, text] = [join(out, files.web), join(out, files.app), join(raw, `${scene.name}-text.json`)];
+      const [a, b, text] = [join(out, files.web), join(sideOut, appWeb ? files.appweb : files.app), join(raw, `${scene.name}-text.json`)];
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${scene.name}`);
       if (!isJudged(scene)) {
         // Not shot yet by a batch pass (`PENDING_SHOTS`): nothing to compare, and nothing that could be read as a result.
@@ -85,14 +133,14 @@ async function main() {
         continue;
       }
       if (!existsSync(text)) throw new Error(`missing shots for ${scene.name}`);
-      const result = await compareShots(sharp, scene.name, readFileSync(a), readFileSync(b), JSON.parse(readFileSync(text, 'utf8')) as TextBox[], out, files.diff);
+      const result = await compareShots(sharp, scene.name, readFileSync(a), readFileSync(b), JSON.parse(readFileSync(text, 'utf8')) as TextBox[], sideOut, appWeb ? files.appwebDiff : files.diff);
       // Half the screen unlike is not a difference to list: the app showed something else.
       const wrong = wrongPage(result, 'scene', b);
       if (wrong !== null) throw new Error(wrong);
-      lines.push(lineOf(scene, result, movingNow.includes(scene.name)));
+      lines.push(lineOf(scene, result, movingNow.includes(scene.name), side));
     }
     // A run of some scenes keeps the lines of the others.
-    const file = join(out, SCENES_FILE);
+    const file = join(sideOut, side.file);
     const kept = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Line[]) : [];
     writeFileSync(file, jsonOf(mergeLines(kept, lines)));
     for (const line of lines) {
