@@ -8,12 +8,15 @@ import { fileURLToPath } from 'node:url';
  *
  *   apps/web/public/rules/v<engine>-<content>.js  →  src/rules/v<engine>-<content>.js   (not committed; copied on every install and before every start)
  *                                                  →  src/rules/index.ts                 (committed: one lazy require per bundle, as Metro asks)
+ *                                                  →  public/rules/v<engine>-<content>.js (not committed: the web export serves them at /rules, where the web twin of game/olderRules.ts fetches them)
  *
  *   pnpm --filter @ratrace/mobile rules
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, '../../web/public/rules');
 const out = join(here, '../src/rules');
+/** Expo's web export copies this folder to the root of the export: the files are served at `/rules/...`, as the Next web serves its own. */
+const served = join(here, '../public/rules');
 
 export interface Bundle {
   /** The file, in the web's folder and beside the index. */
@@ -68,6 +71,9 @@ function main(): void {
   for (const stale of bundlesIn(readdirSync(out))) rmSync(join(out, stale.file));
   for (const { file } of bundles) copyFileSync(join(web, file), join(out, file));
   writeFileSync(join(out, 'index.ts'), indexFile(bundles));
+  mkdirSync(served, { recursive: true });
+  for (const stale of bundlesIn(readdirSync(served))) rmSync(join(served, stale.file));
+  for (const { file } of bundles) copyFileSync(join(web, file), join(served, file));
   console.log(`rules: ${bundles.length} copied`);
 }
 

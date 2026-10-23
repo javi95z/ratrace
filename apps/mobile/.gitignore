@@ -46,6 +46,9 @@ yarn-error.*
 # the rules of the older versions, copied from apps/web/public/rules by scripts/rules.ts (same moments); src/rules/index.ts is committed
 /src/rules/v*.js
 
+# the same files, for the web export to serve at /rules (public/ is copied to the export's root; the web fetches older rules from there)
+/public/rules/
+
 # the parity check's raw shots (scripts/kit-shots.ts); the cropped ones are in docs/superpowers/reports
 /.kit-shots/
 

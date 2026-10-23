@@ -45,6 +45,15 @@ test('the bundles are copied next to the index, byte for byte (run `pnpm --filte
   expect(readdirSync(join(here, '../src/rules')).sort()).toEqual([...served, 'index.ts'].sort());
 });
 
+test("the web export serves the same bundles from public/rules, byte for byte: it fetches a life's older rules from there, as the Next web does", () => {
+  const pub = join(here, '../public/rules');
+  for (const file of served) {
+    expect(existsSync(join(pub, file)), file).toBe(true);
+    expect(readFileSync(join(pub, file), 'utf8') === readFileSync(join(web, file), 'utf8'), file).toBe(true);
+  }
+  expect(readdirSync(pub).sort()).toEqual([...served].sort());
+});
+
 test('the bundles are copied on every install, on EAS after its install, and before every start: a fresh checkout or a build bundles with no step of its own', () => {
   const pkg = JSON.parse(read('../package.json')) as { scripts: Record<string, string> };
   expect(pkg.scripts.rules).toBe('tsx scripts/rules.ts');
@@ -53,4 +62,5 @@ test('the bundles are copied on every install, on EAS after its install, and bef
 
 test('the copies are not committed, as the sprites are not; the index is', () => {
   expect(read('../.gitignore')).toMatch(/^\/src\/rules\/v\*\.js$/m);
+  expect(read('../.gitignore')).toMatch(/^\/public\/rules\/$/m);
 });
