@@ -3,7 +3,7 @@ import { roundWarnings } from '@ratrace/core/game/roundWarnings';
 import type { Stage } from '@ratrace/core/game/store';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, BackHandler, View } from 'react-native';
+import { AccessibilityInfo, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useBlink } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
@@ -16,6 +16,7 @@ import { BottomBar, type ScreenScroller } from '../../ui/Page';
 import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
+import { onHardwareBack } from '../../ui/hardwareBack';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { CardStage, Outcome } from './Cards';
 import { CrisisBar } from './Crisis';
@@ -343,11 +344,10 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   // which takes Back itself and closes.
   useFocusEffect(
     useCallback(() => {
-      const listening = BackHandler.addEventListener('hardwareBackPress', () => {
+      return onHardwareBack(() => {
         router.dismissTo('/');
         return true;
       });
-      return () => listening.remove();
     }, [router]),
   );
 
