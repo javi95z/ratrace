@@ -1795,7 +1795,7 @@ the fake project, kept by the phone from an earlier start (its session in `kvSto
 | … nothing pending, after 14c | | 1296, 1276, 1256, 1282, 1247 | 1276 | — | pass (before: 2070, 1281, 1194, 1465, 1318: 1318) |
 | Home → Play ≤ 300 | Continue → the round's news | 59, 111, 61, 131, 62 | **62** | 46 | pass |
 | the rankings ≤ 150 | Rankings pressed → the page drawn | 128, 100, 106, 107, 98 | **106** | 28 | pass |
-| … their lines in | → the ranking's 50 lines drawn (the answer of the network, here 1 ms away) | 151, 163, 230, 229, 213 | 213 | 115 | reported, as phase 2's last shelf |
+| … their lines in | → the ranking's 50 lines drawn (the network here 1 ms away: what is measured is the app's own work) | 151, 163, 230, 229, 213 | 213 | 115 | reported: first drawn at 115, under 150; settled at 213, client cost to watch in phase 4 |
 | a room ≤ 300 | Multiplayer → the way in | 45, 62, 45, 46, 46 | **46** | 29 | pass |
 | a room ≤ 300 | "Back to your game" → the lobby | 128, 45, 46, 46, 79 | **46** | 32 | pass; the lobby the first time, after starting a game: 164 |
 
@@ -1817,9 +1817,11 @@ door is drawn at 1270. The 1.1 s of JS still comes, after it (a touch in that se
 | The friends' tab (200 friends, 50 requests each way), six flings | UI frames missed: 48, 50 (longest 87 and 77 ms) | **4, 4** (longest 42, 45); with the knob alone in the same build 4 and 6 | indicative (the simulator's Metal); a phone should miss fewer |
 
 
-**The rankings' lines** come with the server's answer: 90 to 110 ms after the touch the commit, then up to 55 ms of UI frames making the lines' faces.
-The page and its head are drawn in 106; what follows is the network's (here a millisecond away), as the web's "Loading…" is. Judged on the page drawn,
-as phase 2's shop was on the screen drawn and not its last shelf.
+**The rankings.** The budget is met on the page drawn, 106 ms (first drawn at 28), as phase 2's shop was judged on the screen drawn and not its last
+shelf; the lines are first drawn at 115 ms, under 150 too. (Corrected after part B's review, M3: the record said what follows the page was the
+network's.) The network here is a millisecond away, so the time to the lines is almost all the app's: 90 to 110 ms from the touch to the lines'
+commit (the session read, supabase-js's request and its JSON, the commit of 50 lines), then up to 55 ms of UI frames making their faces, settled at
+213. On a phone, add the round trip to that. The 213 is client cost to watch in phase 4, not the network's.
 
 ### Records the review asked for
 
