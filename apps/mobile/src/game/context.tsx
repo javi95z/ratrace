@@ -176,12 +176,13 @@ export const FRESH_WAIT_MS = 1500;
 type ReadSaves = AccountSaves & { lifeRead?(): boolean; onLifeRead?(listener: () => void): () => void };
 
 /**
- * Waits, at most `FRESH_WAIT_MS` in all, while the account is being read for the life on the device: someone is signed in, the mirror has not yet
- * read the account for that life, and its pass is neither off (no cloud) nor failed (no network: `waiting`); then for the copy it brought to be
- * opened (`opening`, null once it is). Null where neither is under way.
+ * Waits, at most `FRESH_WAIT_MS` in all: while the account is still signing in at a start (not settled: the session read, and renewed over the
+ * network if it has run out), or someone is signed in and the mirror has not yet read the account for the life on the device (its pass not failed:
+ * `waiting`, no network); then for the copy it brought to be opened (`opening`, null once it is). Null where none of it is under way.
  */
 export function freshLife(saves: ReadSaves, account: Account, opening: () => Promise<unknown> | null, schedule: (run: () => void, ms: number) => unknown = setTimeout): Promise<void> | null {
-  const reading = () => saves.lifeRead !== undefined && !saves.lifeRead() && account.state().kind !== 'offline' && saves.status() !== 'off' && saves.status() !== 'waiting';
+  const signingIn = () => account.settled?.() === false;
+  const reading = () => signingIn() || (saves.lifeRead !== undefined && !saves.lifeRead() && account.state().kind !== 'offline' && saves.status() !== 'waiting');
   if (!reading() && opening() === null) return null;
   return new Promise<void>((resolve) => {
     let over = false;
@@ -202,6 +203,7 @@ export function freshLife(saves: ReadSaves, account: Account, opening: () => Pro
     };
     if (saves.onLifeRead) stops.push(saves.onLifeRead(look));
     stops.push(saves.subscribe(look));
+    stops.push(account.subscribe(look));
     schedule(done, FRESH_WAIT_MS);
     look();
   });

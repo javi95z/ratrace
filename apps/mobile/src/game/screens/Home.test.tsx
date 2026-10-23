@@ -561,12 +561,14 @@ describe('the account at the foot of the front door', () => {
 });
 
 describe('the front door of a player with an account', () => {
-  /** An account that only says who is playing, and lets a test change it. */
-  function accountOf(initial: AccountState) {
+  /** An account that only says who is playing, and lets a test change it; `settled` false while it is still signing in at a start. */
+  function accountOf(initial: AccountState, settled = true) {
     let state = initial;
+    let done = settled;
     const watching = new Set<() => void>();
     const account: Account = {
       state: () => state,
+      settled: () => done,
       subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)),
       start: async () => undefined,
       keepWithGoogle: async () => false,
@@ -576,6 +578,7 @@ describe('the front door of a player with an account', () => {
     };
     const become = (next: AccountState) => {
       state = next;
+      done = true;
       act(() => watching.forEach((listener) => listener()));
     };
     return { account, become };
@@ -653,6 +656,41 @@ describe('the front door of a player with an account', () => {
       await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
       expect(opened).toEqual([newerRound]);
       expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).not.toBe(before);
+    } finally {
+      router.push.mockReset();
+    }
+  });
+
+  it('waits too while the account is still signing in (a stored session run out, renewed over the network): the older round is not continued', async () => {
+    const services = memoryServices();
+    const { newer, newerRound } = await behind(services);
+    const cloud = readingAccount();
+    const signing = accountOf({ kind: 'offline' }, false);
+    let roundNow: number | null = null;
+    function Round() {
+      roundNow = useGame((s) => s.view?.round ?? null);
+      return null;
+    }
+    const opened: Array<number | null> = [];
+    router.push.mockImplementation(() => void opened.push(roundNow));
+    try {
+      renderGame(
+        <>
+          <Home />
+          <Round />
+        </>,
+        { ...services, account: signing.account, saves: cloud.saves },
+      );
+      fireEvent.click(await screen.findByRole('link', { name: /Continue your life/ }));
+      expect(router.push).not.toHaveBeenCalled();
+      // Signed in: still waiting, now for the account to be read for the life.
+      signing.become(MEMBER);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(router.push).not.toHaveBeenCalled();
+      await services.store.saveGame(newer as never);
+      cloud.readNow();
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+      expect(opened).toEqual([newerRound]);
     } finally {
       router.push.mockReset();
     }
