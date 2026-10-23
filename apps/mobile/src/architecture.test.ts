@@ -202,6 +202,19 @@ describe('the wall between the phone\'s screens and the game', () => {
     }
   });
 
+  it('keeps the fake project of the device checks out of the app: nothing the app runs imports from scripts/, and nothing under src names the fake\'s address or key', () => {
+    // The fake (scripts/fakeCloud.ts) is reached only through a build's EXPO_PUBLIC_SUPABASE_URL: never wired into the app's code, so no build carries it.
+    // The tests and their stand-ins (testing/*, never in a release bundle: devRoutes.test) may read the scripts' tables (the fonts' advances).
+    const FROM_SCRIPTS = /(?:from\s*|import\(\s*|require\(\s*|import\s+)['"](?:\.\.\/)+scripts\//;
+    expect(FROM_SCRIPTS.test("import { FAKE_KEY } from '../scripts/fakeCloud';")).toBe(true);
+    expect(FROM_SCRIPTS.test("const f = require('../../scripts/fakeCloud');")).toBe(true);
+    const FAKE = /sb_publishable_fake_local_only|127\.0\.0\.1:54399|\bFAKE_CLOUD_PORT\b|\bFAKE_KEY\b/;
+    // This file names them, to look for them.
+    const runs = (path: string) => !rel(path).startsWith('testing/') && !/\.test\.tsx?$/.test(path);
+    expect(mine.filter((path) => runs(path) && FROM_SCRIPTS.test(readFileSync(path, 'utf8'))).map(rel)).toEqual([]);
+    expect(mine.filter((path) => rel(path) !== 'architecture.test.ts' && FAKE.test(readFileSync(path, 'utf8'))).map(rel)).toEqual([]);
+  });
+
   it('keeps the engine and the content out of the phone\'s store', () => {
     const imports = importsOf(join(SRC, 'kvStore.ts')).map((i) => i.from);
     expect(imports).toContain('expo-sqlite/kv-store');
