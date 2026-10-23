@@ -63,6 +63,12 @@
     "backgroundColor": "#141b33",
     "splash": {
       "backgroundColor": "#141b33"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6a550ec5-0a6f-42d7-ad3c-db48820f3f73"
+      }
+    },
+    "owner": "javi95z"
   }
 }
