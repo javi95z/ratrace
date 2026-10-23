@@ -82,8 +82,8 @@ function reachesCloud(path: string, source: string): string[] {
 
 /** Every storage of the device, by name: the phone's SQLite and AsyncStorage, the browser's three. */
 const namesStorage = (source: string): boolean => /\b(expo-sqlite|AsyncStorage|localStorage|sessionStorage|indexedDB)\b/.test(source);
-/** The only files that may name one: the phone's store, the context that wires it into the game, and the stand-in for the phone's store in tests. */
-const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'game/context.tsx'), join(SRC, 'testing/setup.ts')];
+/** The only files that may name one: the phone's store and its web twin (the browser's), the context that wires it into the game, and the stand-in for the phone's store in tests. */
+const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'kvStore.web.ts'), join(SRC, 'game/context.tsx'), join(SRC, 'testing/setup.ts')];
 
 /** What reaches out of the phone: a request, a socket, a stream of events, a beacon. */
 const SENDS = /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bsendBeacon\b/;
@@ -168,17 +168,18 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(broke).toEqual([]);
   });
 
-  it('keeps every storage of the device in three files: the phone\'s store, the game context that wires it, and the tests\' stand-in for the phone\'s store', () => {
+  it('keeps every storage of the device in four files: the phone\'s store and its web twin, the game context that wires it, and the tests\' stand-in for the phone\'s store', () => {
     expect(namesStorage("import Storage from 'expo-sqlite/kv-store';")).toBe(true);
     expect(namesStorage("await AsyncStorage.getItem('x');")).toBe(true);
     expect(namesStorage("const saved = localStorage.getItem('x');")).toBe(true);
     expect(namesStorage("sessionStorage.clear();")).toBe(true);
     expect(namesStorage("indexedDB.open('x');")).toBe(true);
     expect(namesStorage("const storage = props.storage; // an IndexedDB on the web")).toBe(false);
-    expect(STORAGE_FILES.map((file) => relative(SRC, file))).toEqual(['kvStore.ts', 'game/context.tsx', 'testing/setup.ts']);
+    expect(STORAGE_FILES.map((file) => relative(SRC, file))).toEqual(['kvStore.ts', 'kvStore.web.ts', 'game/context.tsx', 'testing/setup.ts']);
     expect(all.filter((path) => namesStorage(readFileSync(path, 'utf8'))).filter((path) => !STORAGE_FILES.includes(path)).map(rel)).toEqual([]);
-    // The two that may name it do (a rule that finds nothing in them would find nothing anywhere).
+    // The two stores that may name it do (a rule that finds nothing in them would find nothing anywhere).
     expect(namesStorage(readFileSync(STORAGE_FILES[0], 'utf8'))).toBe(true);
+    expect(namesStorage(readFileSync(STORAGE_FILES[1], 'utf8'))).toBe(true);
   });
 
   it('keeps the account\'s session in the phone\'s store, under its own keys, and hands the client no other', () => {
@@ -240,7 +241,9 @@ describe('the wall between the phone\'s screens and the game', () => {
     // (ui/perf.test.ts holds that a build without the flag has none of it).
     // And the phone's cloud (online/index.ts), which keeps the account's session and the lists of lives the account is still to be told of in the
     // phone's store, as the web's keeps them in the browser's.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'online/index.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
+    // And the phone's store's web twin (kvStore.web.ts), which keeps the player's things in the browser's IndexedDB and takes the core's memory store
+    // for a browser that has none, as the Next web does.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'kvStore.web.ts', 'online/index.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/perfLife')).map(rel)).toEqual(['app/perf.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);
