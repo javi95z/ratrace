@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
-import { strut } from './strut';
+import { RUN_LINE, strut } from './strut';
 import { BODY, COLORS, type ColorToken } from './theme';
 
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
@@ -171,15 +171,24 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, strut(role, weight, size, language), letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
       {runs.flatMap((run) => pieces(run, size, size, spacing, words)).map((piece, i) => (
-        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
+        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...RUN_LINE, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
           {piece.text}
         </Text>
       ))}
       {/* A nested text takes the letter spacing and the word spacing of the one it is in, as the web's span does: the title's, in the size of the title. */}
       {ran.map((aside, a) => (
-        <Text key={`aside-${a}`} style={[{ fontSize: aside.size, includeFontPadding: false }, aside.tone ? { color: COLORS[aside.tone] } : null, aside.spacing === null ? null : { letterSpacing: aside.spacing }]}>
+        <Text
+          key={`aside-${a}`}
+          style={[
+            { fontSize: aside.size, includeFontPadding: false },
+            // A span of another face, on the web, in that face and with its own line: the Next web's `pixel` span (1.1) or `font-sans text-[Npx]` (1.25).
+            aside.pixel === true ? strut('pixel', 400, aside.size, language, false, aside.size * 1.1) : aside.read !== undefined ? strut('read', 400, aside.size, language, true, aside.size * TIGHT) : strut(role, weight, aside.size, language),
+            aside.tone ? { color: COLORS[aside.tone] } : null,
+            aside.spacing === null ? null : { letterSpacing: aside.spacing },
+          ]}
+        >
           {aside.runs.flatMap((run) => pieces(run, aside.size, size, aside.spacing ?? spacing, aside.words)).map((piece, i) => (
-            <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
+            <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...RUN_LINE, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
               {piece.text}
             </Text>
           ))}

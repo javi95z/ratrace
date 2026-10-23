@@ -172,10 +172,13 @@ function within(ranges: readonly number[], point: number): boolean {
 
 /**
  * The face a line of text is set from in the browser (its strut: the first font of the element's stack, whatever fonts draw its characters), and the
- * scale it is drawn at (Jersey's `font-size-adjust`). `webBaseline` places the baseline by it; the web's twin of the kit sets each text's box in it.
+ * scale it is drawn at (Jersey's `font-size-adjust`; `adjusted`: a reading span that a pixel text's adjust reaches). `webBaseline` places the baseline by
+ * it; the web's twin of the kit sets each text's box, and each span's in it, in it.
  */
-export function strutFace(role: Role, weight: Weight, language: string): { family: string; scale: number } {
+export function strutFace(role: Role, weight: Weight, language: string, adjusted = false): { family: string; scale: number } {
   const first = stackOf(role, weight, language)[0];
+  // A reading span inside a pixel text: its face is the reading one, at the pixel stack's small-letter height (`adjustedRead`).
+  if (adjusted && role === 'read') return { family: first, scale: PIXEL_X_HEIGHT / X_HEIGHT[first] };
   return { family: first, scale: scaleOf(first, role) };
 }
 
