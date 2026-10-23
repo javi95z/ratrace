@@ -16,6 +16,7 @@ import { spriteOf } from '../../ui/sprites';
 import { StickyPart } from '../../ui/Sticky';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS, EXTRA, TOUCH } from '../../ui/theme';
+import { layoutTop } from '../../ui/layoutTop';
 import { useT } from '../context';
 
 /** Each colour, by the word for it: the key of each is written out. */
@@ -282,7 +283,7 @@ function ChoicesOf({
   const rows: Choice[][] = [];
   for (let at = 0; at < choices.length; at += COLUMNS) rows.push(choices.slice(at, at + COLUMNS));
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label} onLayout={(event) => onLaid(part, event.nativeEvent.layout.y)} style={{ marginTop: 6, gap: GAP }}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} onLayout={(event) => onLaid(part, layoutTop(event))} style={{ marginTop: 6, gap: GAP }}>
       {rows.map((row) => (
         <View key={row[0].key} style={{ flexDirection: 'row', gap: GAP }}>
           {row.map((choice) => (
