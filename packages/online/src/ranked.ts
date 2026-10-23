@@ -1,5 +1,5 @@
 import { upToDateView } from '@ratrace/core/session/upgrade';
-import { RankedInProgress, Unreachable } from '@ratrace/core/session/errors';
+import { RankedInProgress, Refused, Unreachable } from '@ratrace/core/session/errors';
 import type { RankedApi, RankedRun, RankedStanding, RankedStep } from '@ratrace/core/session/ranked';
 
 /**
@@ -63,6 +63,8 @@ export function rankedApi(call: RankedCall): RankedApi {
 
   const step = async (body: Record<string, unknown>): Promise<RankedStep | 'moved'> => {
     const reply = await ask(body);
+    // A step the server will not play, as it was asked, is not a life that moved: the player is told so, and keeps it.
+    if (reply.status === 400 || reply.status === 422) throw new Refused(`the server answered ${reply.status}: ${wordOf(reply.body) ?? 'no word'}`);
     if (reply.status !== 200) return 'moved';
     const answer = reply.body;
     if (!isRecord(answer) || typeof answer.step !== 'number' || !isRecord(answer.view) || !isRecord(answer.record) || !Array.isArray(answer.events)) throw new Unreachable('the server answered something that is not a step');

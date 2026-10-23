@@ -239,6 +239,7 @@
       "resolve": "Two years later"
     },
     "unreachable": "The server did not answer. Try again.",
+    "rejected": "The server did not accept this round: one of your orders cannot be played. Look over your orders and try again.",
     "fellBack": "A ranked life could not be started just now, so this one is not ranked. It is saved on this device.",
     "turnYears": "{age, plural, one {year old} other {years old}}"
   },
