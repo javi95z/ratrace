@@ -19,10 +19,13 @@ export interface Composed {
   faint: boolean;
 }
 
-/** The pictures put together, by what they are made of: shared by every grid that draws the same choice, and kept while the app runs (a few MiB). */
+/**
+ * The pictures put together, by what they are made of: shared by every grid that draws the same choice, kept while the app runs, in the order they
+ * were last asked for. Outside the sprites' budget: at most `COMPOSED_KEPT` of 64 KiB, 4 MiB.
+ */
 const made = new Map<string, SkImage>();
-/** At most this many are kept (64 KiB each): past it, the one made longest ago is let go (a grid still drawing it keeps its own reference). */
-export const COMPOSED_KEPT = 160;
+/** At most this many are kept: a tab's cut or faint choices (about twenty) for a few looks. Past it, the one asked for longest ago is let go (a grid still drawing it keeps its own reference). */
+export const COMPOSED_KEPT = 64;
 
 const keyOf = ({ pieces, faint }: Composed): string => `${pieces.map((piece) => (piece.clip ? `${piece.id}/${piece.clip}` : piece.id)).join('+')}${faint ? '~faint' : ''}`;
 
@@ -38,7 +41,12 @@ export function forgetComposed(): void {
 export function composedPicture(what: Composed, imageOf: (id: string) => SkImage | null | undefined, faintMatrix: readonly number[]): SkImage | null {
   const key = keyOf(what);
   const known = made.get(key);
-  if (known) return known;
+  if (known) {
+    // The last asked for: the grid on screen is the last to lose its pictures.
+    made.delete(key);
+    made.set(key, known);
+    return known;
+  }
   const parts = what.pieces.map((piece) => ({ image: imageOf(piece.id), clip: piece.clip === null ? null : imageOf(piece.clip), cut: piece.clip !== null }));
   if (parts.length === 0 || parts.some((part) => !part.image || (part.cut && !part.clip))) return null;
   const first = parts[0].image as SkImage;
