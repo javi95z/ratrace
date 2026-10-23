@@ -1757,8 +1757,8 @@ release build with the probe (`EXPO_PUBLIC_PERF=1`) and the same two variables f
 | 10 | The caret mid-word in the room code | Caret between C and D of a full ABCDXY, typed Q then R | **found, fixed**: a letter was let in and the last cut, the caret held, so QR came out RQ. A full code now takes nothing typed into it, as the web's `maxLength` (`TextField.test`) |
 | 11 | A mixed-script field | "Крыса_Rat" pasted into the name sheet | ok: drawn whole (the field's one face, the platform's for the Cyrillic) |
 | 12 | The rat editor's stuck row and tab switches | Release build, a member: the profile scrolled past the editor's tabs | ok: the row sticks under the screen's top; switched to a shorter tab, the page shortens and the row is back in place; back to Clothes and it sticks again |
-| 13 | The Clothes tab's single canvas | Probe | its first drawing settled in 1112 ms (one UI frame of 986 ms: every picture of the grid decoded into one canvas at once); again 77 and 78 ms. Reported, not a budget (below) |
-| 14 | 200 friends and 50 requests each way | The friends tab, flung down and back four times each | every row comes in (windowed); the UI thread missed 5 to 18 frames a second while flinging (longest 65 ms), none between: phase 2's fling class (rows' canvases made as they come in, Metal's simulator driver). Left for a device measure, as phase 2's Records |
+| 13 | The Clothes tab's single canvas | Probe | its first drawing settled in 1112 ms (one UI frame of 986 ms); again 77 and 78 ms. **Fixed in Task 14c**: not the decoding but the GPU programs of the grid's layers, made at its first drawing; now 93 ms warm, 178 cold (below) |
+| 14 | 200 friends and 50 requests each way | The friends tab, flung down and back four times each | every row comes in (windowed); the UI thread missed 5 to 18 frames a second while flinging (longest 65 ms), none between. **Fixed in Task 14c**: the rows off the screen taken out of the list's views (`removeClippedSubviews`), 48 and 50 missed → 4 and 4 (below) |
 | 15 | `theratrace://room?code=X` | Release build, Mia's room CAAAAA | ok: the invitation with its code; Join → the lobby, Mia the host |
 | 16 | `theratrace://rankings?tab=friends` | Release build | ok: the rankings open on Friends |
 | 17 | Realtime with the in-memory room server | Mia joined, started, shouted from the fake's door | ok: each change reached the phone through its channel; after Mia joined the phone asked for the room 57 ms later and drew her in the lobby; the start took the phone to the round |
@@ -1788,17 +1788,34 @@ the fake project, kept by the phone from an earlier start (its session in `kvSto
 |---|---|---|---|---|---|
 | cold start ≤ 2000, signed-in guest | `simctl launch` to the front door drawn (eight launches) | 1547, 1348, 1305, 1227, 1225, 1264, 1304, 1312 | **1305** | — | pass |
 | … the same, no project reachable | (the fake stopped) | 1313, 1336, 1258 | 1313 | — | the account costs the start nothing |
+| … finished lives the account lacks, their games left "playing" there (part B's state) | Task 14c, before: the account made to forget the runs before each launch, their games set back to playing (`/control/unsent` with `playing`) | 1187, 2335, 2243, 2244, 2256 | **2244** | — | **fails while lives are pending** (part B's first five: median 2074) |
+| … the same, after 14c | the account's saves held until the first screen is drawn (`online/held.ts`) | 1270, 1269, 1270, 1224, 1320 | **1270** | — | pass; the 1.1 s of JS now comes after the front door is drawn |
+| … finished lives the account lacks, no game left there | 14c, before: `/control/unsent` (runs and games forgotten) | 1197, 1230, 1262, 1416, 1304 | 1262 | — | pass: sending five lives is not what cost the start |
+| … the same, after 14c | | 1280, 1223, 1211, 1203, 1341 | 1223 | — | pass |
+| … nothing pending, after 14c | | 1296, 1276, 1256, 1282, 1247 | 1276 | — | pass (before: 2070, 1281, 1194, 1465, 1318: 1318) |
 | Home → Play ≤ 300 | Continue → the round's news | 59, 111, 61, 131, 62 | **62** | 46 | pass |
 | the rankings ≤ 150 | Rankings pressed → the page drawn | 128, 100, 106, 107, 98 | **106** | 28 | pass |
 | … their lines in | → the ranking's 50 lines drawn (the answer of the network, here 1 ms away) | 151, 163, 230, 229, 213 | 213 | 115 | reported, as phase 2's last shelf |
 | a room ≤ 300 | Multiplayer → the way in | 45, 62, 45, 46, 46 | **46** | 29 | pass |
 | a room ≤ 300 | "Back to your game" → the lobby | 128, 45, 46, 46, 79 | **46** | 32 | pass; the lobby the first time, after starting a game: 164 |
 
-**A cold start that sends finished lives.** The first five launches (2359, 1303, 2081, 1304, 2074: median 2074) were each slowed by the account's
-mirror sending five finished lives a start, their whole logs (`finishPerSync`), with JS frames of 800 to 1100 ms in the first two seconds. The fake's
-`finish-run` then kept no run, so the same five went up at every start; it now keeps them, as the server does, and the next eight launches are the
-1305 above. On a real phone this is what the first starts after signing in cost with many lives not yet in the account: a second or so of a busy JS
-thread, five lives a start, until they are all up. Left as a concern, measured.
+**A cold start with finished lives pending.** Part B's first five launches (2359, 1303, 2081, 1304, 2074: median 2074) were each slowed by one JS
+frame of 800 to 1100 ms in the first two seconds; part B put it on the mirror sending five whole logs a start. Task 14c measured the two halves apart
+with the fake's `/control/unsent`: the account forgetting the runs and their games, so that five lives go up at each start, costs the start nothing
+(1262); forgetting the runs but leaving their games "playing", as part B's fake did (its `finish-run` kept no run then) and as the server would after
+a finish that failed, gives 2244. The cost is the mirror's first reading of the account: it plays every life in progress the account offers back
+through the engine (`adopt`, a whole 40-round log each) in one synchronous loop, to find them over. Fixed in 14c without touching the mirror (the
+web's): what it asks of the account waits for the game's first screen and then for an idle moment of the JS thread (`online/held.ts`), so the front
+door is drawn at 1270. The 1.1 s of JS still comes, after it (a touch in that second waits): see the concern in the 14c report.
+
+**Task 14c's other two** (same build, release with the probe, warm = the app's Metal shader cache kept, cold = moved aside before the launch):
+
+| what | before | after | verdict |
+|---|---|---|---|
+| The Clothes tab's first drawing (a touch → its 43 pictures drawn and settled; `rat choices` probe point) | warm 174, 115, 177, 128 (frames ≤ 45); cold 326, 320 (one frame of 197 and 199), and 563 (a frame of 427) the first time the layered programs were made | warm **95, 79, 94, 93, 81: 93** (frames ≤ 51); cold 178 (a frame of 100, the tab's own panel) | pass warm (a tab switch ≤ 150); the first drawing after an install 178 on the simulator |
+| … where the time went | the sprites' decoding: no (decoded on the JS thread ahead, warm 129, 126, 161; cold the same 199 ms frame); the grid's layers: yes, the GPU programs of a dstIn cut and a colour matrix per choice, made at its first drawing; and the reads, begun only once the tab was laid out (the pictures committed 90 to 110 ms after the touch) | one picture per cut or faint choice, made on the JS thread (18 for the tab, 6 ms all told); every tab's sprites read once the editor is on screen (committed 26 to 69 ms after the touch) | |
+| The friends' tab (200 friends, 50 requests each way), six flings | UI frames missed: 48, 50 (longest 87 and 77 ms) | **4, 4** (longest 42, 45); with the knob alone in the same build 4 and 6 | indicative (the simulator's Metal); a phone should miss fewer |
+
 
 **The rankings' lines** come with the server's answer: 90 to 110 ms after the touch the commit, then up to 55 ms of UI frames making the lines' faces.
 The page and its head are drawn in 106; what follows is the network's (here a millisecond away), as the web's "Loading…" is. Judged on the page drawn,
