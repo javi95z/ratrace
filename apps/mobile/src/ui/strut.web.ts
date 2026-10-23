@@ -12,7 +12,7 @@ import { strutFace, type Role, type Weight } from './fonts';
  */
 export function strut(role: Role, weight: Weight, size: number, language: string, adjusted = false, line?: number): TextStyle {
   const face = strutFace(role, weight, language, adjusted);
-  return { fontFamily: face.family, fontSize: size * face.scale, ...(line === undefined ? null : { lineHeight: line }) };
+  return { fontFamily: face.family, fontSize: size * face.scale, ...(line === undefined ? null : { lineHeight: cssLine(line) }) };
 }
 
 /**
@@ -22,3 +22,13 @@ export function strut(role: Role, weight: Weight, size: number, language: string
  * the box's line (its strut, `strut`) and moves nothing; a span that runs on keeps the line it is given (`strut`'s `line`).
  */
 export const RUN_LINE: TextStyle = { lineHeight: 0 };
+
+/**
+ * The line a text is laid out in, on the web: the line the Next web's element has. Its lines are ratios of the size (`leading-snug`, the body's 1.45),
+ * which Chrome lays out at the line's 1/64 px below (12 px at 1.45: 17.390625), where a line in pixels (react-native-web writes every line so) is laid
+ * out at the nearest 1/64 (17.40625): a list of such lines drifted a device pixel down from the Next web's in six rows. The line is given in pixels
+ * already cut to the 1/64 below (a hair over, for a product that falls a hair short of a whole 1/64).
+ */
+export function cssLine(line: number): number {
+  return Math.floor(line * 64 + 1e-6) / 64;
+}

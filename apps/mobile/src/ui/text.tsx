@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
-import { RUN_LINE, strut } from './strut';
+import { cssLine, RUN_LINE, strut } from './strut';
 import { BODY, COLORS, type ColorToken } from './theme';
 
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
@@ -129,7 +129,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const line = lineHeight ?? standard;
   const ios = Platform.OS === 'ios';
   const density = PixelRatio.get();
-  const drawn = ios ? onGrid(line, density) : line;
+  const drawn = ios ? onGrid(line, density) : cssLine(line);
   // What runs on is in the same line: its fonts are among those the line is set from, each at its own size.
   const ran = (after ?? [])
     .filter((aside) => aside.text !== '')

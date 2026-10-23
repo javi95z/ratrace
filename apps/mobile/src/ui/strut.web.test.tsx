@@ -3,7 +3,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { adjustedRead, JERSEY_X_HEIGHT } from './fonts';
-import { RUN_LINE, strut } from './strut.web';
+import { cssLine, RUN_LINE, strut } from './strut.web';
 import { Language, PixelText, ReadText } from './text';
 
 afterEach(cleanup);
@@ -35,7 +35,7 @@ test('the box of a text is in that face: its lines are as tall as their line, no
 
 test('a span that runs on in a text is set in its own face too, as the Next web\'s span is: a reading span in a pixel text at its adjusted size', () => {
   expect(strut('read', 400, 13, 'en', true)).toEqual({ fontFamily: 'ChakraPetch_400Regular', fontSize: adjustedRead(13) });
-  expect(strut('pixel', 400, 13, 'en', false, 14.3)).toEqual({ fontFamily: 'Jersey15_400Regular', fontSize: 13 * (PIXEL_X_HEIGHT / JERSEY_X_HEIGHT), lineHeight: 14.3 });
+  expect(strut('pixel', 400, 13, 'en', false, 14.3)).toEqual({ fontFamily: 'Jersey15_400Regular', fontSize: 13 * (PIXEL_X_HEIGHT / JERSEY_X_HEIGHT), lineHeight: 14.296875 });
   const page = render(
     <Language.Provider value="en">
       <PixelText size={17} after={[{ text: ' · Lucía', read: 13, tone: 'ink-300' }, { text: ' now', tone: 'gold-500' }]}>
@@ -63,4 +63,14 @@ test('a run of another face draws inside the line and sets nothing of it, as the
     ['неделю', 'Exo2_400Regular', '0px'],
     [': 2026', 'ChakraPetch_400Regular', '0px'],
   ]);
+});
+
+test('a line is laid out where Chrome lays out the Next web\'s line of the same ratio: at the 1/64 px below it', () => {
+  // 12 px at the body's 1.45: 17.4, which Chrome lays out at 17.390625 as a ratio and at 17.40625 in pixels.
+  expect(cssLine(12 * 1.45)).toBe(17.390625);
+  // Lines on the 1/64 already are kept, even where the product falls a hair short of them.
+  for (const line of [21.75, 19.25, 16.5, 13.75, 15 * 1.1, 14 * 1.375]) expect(cssLine(line), String(line)).toBe(Math.round(line * 64) / 64);
+  const page = render(<ReadText size={12}>Software engineer</ReadText>);
+  const box = [...page.container.querySelectorAll('div')].find((el) => el.children.length > 0 && [...el.children].every((child) => child.tagName === 'SPAN'))!;
+  expect(box.style.lineHeight).toBe('17.390625px');
 });

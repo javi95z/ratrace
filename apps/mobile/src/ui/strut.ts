@@ -21,3 +21,8 @@ export function strut(role: Role, weight: Weight, size: number, language: string
  * Oswald, a sign in Arial) from setting the line's height, as the browser's own fallback inside one element does not.
  */
 export const RUN_LINE: TextStyle | null = null;
+
+/** The line a text is laid out in, as the platform is given it: on the phone, the line itself (iOS puts it on its pixel grid: `onGrid`). */
+export function cssLine(line: number): number {
+  return line;
+}
