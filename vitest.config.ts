@@ -4,6 +4,8 @@ import { configDefaults, defineConfig } from 'vitest/config';
 
 /** The phone's tests that draw the game, and those of its cloud: they get the native modules' stand-ins (apps/mobile/src/testing/setup.ts). */
 const PHONE_GAME = 'apps/mobile/src/{game,app,testing,online}/**/*.test.{ts,tsx}';
+/** The tests of the phone's web twins (`*.web.ts(x)`, which Metro picks for the web export): the `phone-web` project runs them, and only it. */
+const PHONE_WEB = 'apps/mobile/src/**/*.web.test.{ts,tsx}';
 
 export default defineConfig({
   plugins: [react()],
@@ -29,7 +31,7 @@ export default defineConfig({
         test: {
           name: 'repo',
           include: ['packages/*/src/**/*.test.ts', 'tools/*/src/**/*.test.ts', 'apps/*/src/**/*.test.{ts,tsx}', 'apps/*/scripts/**/*.test.ts'],
-          exclude: [...configDefaults.exclude, PHONE_GAME],
+          exclude: [...configDefaults.exclude, PHONE_GAME, PHONE_WEB],
         },
       },
       {
@@ -37,7 +39,14 @@ export default defineConfig({
         // device's store, the sound, the safe area, the sprites' canvas): every one of these tests has stand-ins for them, made once.
         // The kit's own tests (apps/mobile/src/ui) mock what they need themselves: some of them test the very modules faked here.
         extends: true,
-        test: { name: 'phone', include: [PHONE_GAME], setupFiles: ['apps/mobile/src/testing/setup.ts'] },
+        test: { name: 'phone', include: [PHONE_GAME], exclude: [...configDefaults.exclude, PHONE_WEB], setupFiles: ['apps/mobile/src/testing/setup.ts'] },
+      },
+      {
+        // The web export of the app: its `.web.ts(x)` twins stand in for the phone's files, as Metro picks them for the web, and run in a
+        // browser's own environment (jsdom) on the same stand-ins for the native modules the phone's tests have.
+        extends: true,
+        resolve: { extensions: ['.web.tsx', '.web.ts', '.tsx', '.ts', '.mjs', '.js', '.mts', '.jsx', '.json'] },
+        test: { name: 'phone-web', include: [PHONE_WEB], environment: 'jsdom', setupFiles: ['apps/mobile/src/testing/setup.ts'] },
       },
     ],
   },
