@@ -165,6 +165,22 @@ test('what is given to a sprite is laid over its picture, in its box', async () 
   expect(box.querySelector('[data-testid="over"]')).not.toBeNull();
 });
 
+test('what is laid over a picture blends with it: its layer is no stacking context of its own (a legendary card\'s rainbow, `mix-blend-mode: overlay`)', async () => {
+  const { container } = await drawn(
+    <Sprite id="anim.coin.0">
+      <span data-testid="over" />
+    </Sprite>,
+  );
+  const layer = (container.querySelector('[data-testid="over"]') as HTMLElement).parentElement as HTMLElement;
+  expect(layer.parentElement).toBe(container.firstElementChild);
+  // react-native-web's View is `z-index: 0` (its class), which isolates what is in it: the rainbow blended with nothing, a veil over the picture.
+  expect(layer.className).not.toMatch(/css-view/);
+  expect(layer.style.zIndex).toBe('');
+  expect([layer.style.position, layer.style.inset]).toEqual(['absolute', '0px']);
+  // As on the phone, where it is drawn in the sprite's canvas, it takes no touch.
+  expect(layer.style.pointerEvents).toBe('none');
+});
+
 test('pictures laid one over the other stand in one box, the first at the bottom, each where it lies', async () => {
   const layers = [
     { id: 'anim.coin.0', x: 0, y: 0, w: 48, h: 48 },

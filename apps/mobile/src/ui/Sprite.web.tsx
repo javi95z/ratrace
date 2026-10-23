@@ -134,7 +134,10 @@ function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, 
               setBroken(id);
             }}
           />
-          {children ? <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'box-none' }}>{children}</View> : null}
+          {/* A plain box, not a View: react-native-web's View is `z-index: 0`, a stacking context that kept what is laid over the picture from
+              blending with it (a legendary card's rainbow, `mix-blend-mode: overlay`, was a veil). As on the phone (drawn in the sprite's canvas), it
+              takes no touch. */}
+          {children ? <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{children}</div> : null}
         </>
       ) : null}
     </View>
