@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from 'node:fs';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { ENGINE_VERSION } from '@ratrace/engine';
@@ -26,16 +25,6 @@ vi.mock('@ratrace/online/connect', async (original) => {
   return { ...real, connectSupabase: vi.fn(real.connectSupabase) };
 });
 const connectSupabase = vi.mocked(connect.connectSupabase);
-
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
-/** The text of a file from where `from` begins to where `to` begins. */
-function part(source: string, from: string, to: string): string {
-  const start = source.indexOf(from);
-  const end = source.indexOf(to, start);
-  expect(start, from).toBeGreaterThanOrEqual(0);
-  expect(end, to).toBeGreaterThan(start);
-  return source.slice(start, end);
-}
 
 const REF = 'abcdefghijklmnop';
 const URL_OF_PROJECT = `https://${REF}.supabase.co`;
@@ -73,15 +62,7 @@ afterEach(async () => {
   at('/');
 });
 
-describe('the web\'s cloud is the phone\'s, put together as the Next web\'s', () => {
-  const phone = read('./index.ts');
-  const web = read('./index.web.ts');
-
-  it('holds the game\'s cloud as the phone does, word for word: what it is, what it is made of, how it is put together, and the lists it keeps', () => {
-    expect(web).toContain(part(phone, '/** What the game gets of the cloud', '/**\n * A list of ids a browser keeps'));
-    expect(web).toContain(part(phone, '/**\n * A list of ids a browser keeps', '/** What the phone answers where'));
-  });
-
+describe('the web\'s cloud keeps what the Next web keeps', () => {
   it('keeps the lists of lives the account is still to be told of under the Next web\'s keys, in the browser\'s localStorage', () => {
     givenUpIn(() => kvText).write(['life-1']);
     refusedIn(() => kvText).write(['life-2']);

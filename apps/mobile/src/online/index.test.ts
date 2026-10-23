@@ -25,7 +25,8 @@ function part(source: string, from: string, to: string): string {
 
 describe('the phone\'s cloud is the web\'s', () => {
   const web = read('../../../web/src/online/index.ts');
-  const phone = read('./index.ts');
+  // Shared with the app's web export (index.web.ts), which re-exports it as the phone's file does.
+  const phone = read('./over.ts');
 
   it('holds the game\'s cloud as the web does, word for word: what it is, what it is made of, and how it is put together', () => {
     const twin = part(web, '/** What the game gets of the cloud', '/**\n * Watches what goes wrong');
