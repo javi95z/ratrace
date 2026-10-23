@@ -171,6 +171,15 @@ function within(ranges: readonly number[], point: number): boolean {
   return false;
 }
 
+/**
+ * The face a line of text is set from in the browser (its strut: the first font of the element's stack, whatever fonts draw its characters), and the
+ * scale it is drawn at (Jersey's `font-size-adjust`). `webBaseline` places the baseline by it; the web's twin of the kit sets each text's box in it.
+ */
+export function strutFace(role: Role, weight: Weight, language: string): { family: string; scale: number } {
+  const first = stackOf(role, weight, language)[0];
+  return { family: first, scale: scaleOf(first, role) };
+}
+
 /** Whether the web draws this character in this font: the font file has it, and one of its subsets asks for it. */
 function drawn(family: string, point: number): boolean {
   return within(COVERAGE[family], point) && SUBSETS[family].some((r) => within(r, point));

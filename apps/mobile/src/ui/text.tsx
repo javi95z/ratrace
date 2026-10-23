@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
+import { strut } from './strut';
 import { BODY, COLORS, type ColorToken } from './theme';
 
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
@@ -167,7 +168,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       // No letter spacing at all where there is none: on iOS a spacing of 0 is not nothing, it turns the font's kerning off.
       // Words are never pressed (a pressable holds them): with the headroom a text's box reaches past its line, over
       // whatever stands above or below it, and must not take a tap meant for a button there.
-      style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
+      style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, strut(role, weight, size, language), letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
       {runs.flatMap((run) => pieces(run, size, size, spacing, words)).map((piece, i) => (
         <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
