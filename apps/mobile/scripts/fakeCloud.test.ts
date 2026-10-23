@@ -116,3 +116,25 @@ test('a finished life sent and finished, then forgotten by the account (`/contro
   expect(await forget(true)).toEqual({ forgotten: 1 });
   expect((await phone.playingGames()).map((game) => game.id)).toEqual(['life-1']);
 });
+
+test('a filter the fake does not know is refused by name, never taken to match every row', async () => {
+  const session = await fetch(`${url}/auth/v1/signup`, { method: 'POST', headers: { apikey: FAKE_KEY, 'content-type': 'application/json' }, body: '{}' }).then((r) => r.json() as Promise<{ access_token: string }>);
+  const asked = await fetch(`${url}/rest/v1/runs?select=id&id=like.abc*`, { headers: { apikey: FAKE_KEY, authorization: `Bearer ${session.access_token}` } });
+  expect(asked.status).toBe(500);
+  expect(await asked.text()).toContain('does not know the filter \\"like\\"');
+});
+
+test('closing ends every socket upgraded, one that never joined a channel too', async () => {
+  const { createConnection } = await import('node:net');
+  const port = Number(new URL(url).port);
+  const socket = createConnection(port, '127.0.0.1');
+  await new Promise<void>((resolve) => socket.once('connect', () => resolve()));
+  socket.write(`GET /realtime/v1/websocket?vsn=2.0.0 HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n`);
+  await new Promise<void>((resolve) => socket.once('data', () => resolve()));
+  const ended = new Promise<void>((resolve) => socket.once('close', () => resolve()));
+  await cloud.close();
+  await ended;
+  // Closed already: the afterEach's close is a second one, which must not throw.
+  cloud = fakeCloud();
+  await cloud.listen(0);
+});

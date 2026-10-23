@@ -112,7 +112,8 @@ function filterOf(column: string, raw: string): (row: Row) => boolean {
       return (row) => list.includes(String(row[column]));
     }
     default:
-      return () => true;
+      // A filter the fake does not know would match every row, and a check pass on rows the database would have left out: refused by name instead.
+      throw new Error(`the fake project does not know the filter "${op}" (${column}=${raw})`);
   }
 }
 
@@ -133,10 +134,12 @@ interface Socket {
   close(): void;
 }
 
-/** Accepts a WebSocket on `socket` and hands its text messages to `heard`. */
-function acceptSocket(request: IncomingMessage, socket: Duplex, heard: (text: string, me: Socket) => void, gone: (me: Socket) => void): void {
+/** Accepts a WebSocket on `socket` and hands its text messages to `heard`; `accepted` keeps every socket upgraded, for `close` to end them all. */
+function acceptSocket(request: IncomingMessage, socket: Duplex, heard: (text: string, me: Socket) => void, gone: (me: Socket) => void, accepted: Set<Duplex>): void {
   const key = request.headers['sec-websocket-key'];
   if (typeof key !== 'string') return void socket.destroy();
+  accepted.add(socket);
+  socket.on('close', () => accepted.delete(socket));
   const accept = createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64');
   socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
   const frame = (opcode: number, payload: Buffer) => {
@@ -377,6 +380,8 @@ export function fakeCloud(options: FakeCloudOptions = {}) {
       if (due && someone) void askRooms(someone.user_id, { action: 'state', room: room.id }).catch(() => undefined);
     }
   }, 1000);
+  // A fake made and never listened to or closed (a test's) does not hold the process open for its clock.
+  ticker.unref();
 
   const heardRealtime = (text: string, socket: Socket) => {
     let message: unknown;
@@ -475,7 +480,7 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
       const flow = randomBytes(8).toString('hex');
       const trip: Trip = { kind: link ? 'link' : 'signin', user: link ? caller : null, redirectTo: url.searchParams.get('redirect_to') ?? 'theratrace://auth', challenge: url.searchParams.get('code_challenge') ?? '' };
       trips.set(flow, trip);
-      if (link) return send(200, { url: `${url.origin.replace('127.0.0.1', request.headers.host ?? '127.0.0.1')}/fake-google?flow=${flow}`.replace(/^http:\/\/127\.0\.0\.1(:\d+)?\/\/?/, `http://${request.headers.host}/`) });
+      if (link) return send(200, { url: `http://${request.headers.host ?? '127.0.0.1'}/fake-google?flow=${flow}` });
       response.writeHead(200, { 'content-type': 'text/html' });
       return void response.end(googlePage(flow, trip));
     }
@@ -702,8 +707,10 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
       response.end(JSON.stringify({ error: String(error) }));
     });
   });
+  /** Every socket upgraded, joined to a channel or not: `close` ends them all, or `server.close` would wait on one left open. */
+  const sockets = new Set<Duplex>();
   server.on('upgrade', (request, socket) => {
-    if ((request.url ?? '').startsWith('/realtime/v1/websocket')) acceptSocket(request, socket, heardRealtime, goneRealtime);
+    if ((request.url ?? '').startsWith('/realtime/v1/websocket')) acceptSocket(request, socket, heardRealtime, goneRealtime, sockets);
     else socket.destroy();
   });
 
@@ -727,6 +734,7 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
       new Promise<void>((resolve) => {
         clearInterval(ticker);
         for (const one of joined) one.socket.close();
+        for (const socket of sockets) socket.destroy();
         server.closeAllConnections();
         server.close(() => resolve());
       }),
