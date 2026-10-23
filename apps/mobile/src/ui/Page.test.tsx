@@ -327,11 +327,11 @@ test('a ListScreen is a Screen whose rows are a list that draws only those near 
   expect(queryByText('row 39')).toBeNull();
 });
 
-test('a ListScreen draws little of its list at a time: about a screen at first, a few rows a batch, and only two screens either side of what is seen', () => {
-  expect(LIST_WINDOW).toEqual({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5 });
+test('a ListScreen draws little of its list at a time: about a screen at first, a few rows a batch, only two screens either side of what is seen, and of those only the rows on the screen in its views', () => {
+  expect(LIST_WINDOW).toEqual({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5, removeClippedSubviews: true });
   listed.length = 0;
   wrap(none, <ListScreen head={<Text>head</Text>} data={['a', 'b']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} />);
-  expect(listed.at(-1)).toMatchObject({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5, strictMode: true });
+  expect(listed.at(-1)).toMatchObject({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5, removeClippedSubviews: true, strictMode: true });
 });
 
 test('a ListScreen hands its list one renderer for as long as it is drawn, which draws a row with the latest `item`: a page drawn again for its head draws no row again', () => {
