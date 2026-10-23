@@ -1,6 +1,7 @@
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { useEffect } from 'react';
 import { ARIAL_COVERAGE } from './arialCoverage';
+import { EMOJI_X_HEIGHT } from './emojiHeight';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
 
 /*
@@ -143,8 +144,6 @@ export const DINGBATS = 'Zapf Dingbats';
  * line's words stood 1.5 points higher), at the emoji's scale.
  */
 const isEmoji = (ch: string) => /\p{Extended_Pictographic}|\u{FE0F}|\u{200D}/u.test(ch);
-/** The small-letter height the pixel text's `font-size-adjust` scales an emoji by (1040/2048: the dice measured on the web, 1.103 × its size). */
-const EMOJI_X_HEIGHT = 1040 / 2048;
 /** A dingbat the system font does not draw: of the dingbats, SF has the check mark (U+2713). */
 const isDingbat = (point: number) => point >= 0x2700 && point <= 0x27bf && point !== 0x2713;
 /** The stand-in's `size-adjust` after Chakra (the web's generated `Chakra Petch Fallback`). */
