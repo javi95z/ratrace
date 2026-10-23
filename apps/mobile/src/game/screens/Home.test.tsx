@@ -696,6 +696,19 @@ describe('the front door of a player with an account', () => {
     }
   });
 
+  it('drops Continue once the wait is over if the player has left the front door meanwhile', async () => {
+    const services = memoryServices();
+    await services.sessions.start('engineer');
+    const cloud = readingAccount();
+    const { unmount } = renderGame(<Home />, { ...services, account: accountOf(MEMBER).account, saves: cloud.saves });
+    fireEvent.click(await screen.findByRole('link', { name: /Continue your life/ }));
+    // Elsewhere (the front door no longer in front): the account read after that takes nobody to Play.
+    unmount();
+    cloud.readNow();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
   it('waits a second and a half at most for the account: past that, it carries on with the life it has', async () => {
     const services = memoryServices();
     await services.sessions.start('engineer');

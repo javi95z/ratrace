@@ -1,8 +1,8 @@
 import { CHALLENGE_ART, ratArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt } from '@ratrace/core/game/present';
-import { useRouter } from 'expo-router';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
@@ -59,10 +59,23 @@ export function Home() {
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
   // A game with others that is not over comes before everything else, in gold.
   const turn = useRoomLive();
-  // Continue acts on the freshest copy of the life: pressed while the account is being read at a start, it waits for it (a second and a half at
-  // most), the button still drawn, its detail the web's word for loading; a round another device has played further is never played here again.
+  // Continue acts on the newest copy of the life the account knows of: pressed while the account signs in or is read at a start, it waits for it,
+  // a second and a half at most (`useUntilFresh`), the button still drawn, its detail the web's word for loading. Past that, the phone's copy is
+  // played; a further one the account brings later replaces it then, as on the web. Once the wait is over, it goes on only if the player is still at
+  // the front door with a life to continue: one who went elsewhere meanwhile is not taken to Play.
   const untilFresh = useUntilFresh();
   const [continuing, setContinuing] = useState(false);
+  const here = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      here.current = true;
+      return () => {
+        here.current = false;
+      };
+    }, []),
+  );
+  const stillInProgress = useRef(inProgress);
+  stillInProgress.current = inProgress;
   const carryOn = () => {
     if (continuing) return;
     const waiting = untilFresh();
@@ -70,7 +83,7 @@ export function Home() {
     setContinuing(true);
     void waiting.then(() => {
       setContinuing(false);
-      router.push('/play');
+      if (here.current && stillInProgress.current) router.push('/play');
     });
   };
 
