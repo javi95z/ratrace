@@ -1,6 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { FORBIDDEN, JS_GZIP_BUDGET, judgeWebExport, sourcesOf } from './webSize';
+import { FORBIDDEN, JS_GZIP_BUDGET, exportEnv, judgeWebExport, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -43,12 +43,19 @@ describe('judgeWebExport', () => {
     '@shopify/react-native-skia',
     'canvaskit-wasm',
     'expo-sqlite',
-    '@formatjs/',
+    '@formatjs/intl-getcanonicallocales',
+    '@formatjs/intl-locale',
+    '@formatjs/intl-pluralrules',
+    '@formatjs/intl-numberformat',
+    '@formatjs/intl-datetimeformat',
+    '@formatjs/intl-relativetimeformat',
+    '@formatjs/intl-listformat',
+    '@formatjs/intl-displaynames',
     'react-native-webview',
     'expo-media-library',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',
   ])('reports a source naming %s', (name) => {
-    const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name.endsWith('/') ? `${name}intl-numberformat/index.js` : `${name}/lib/index.js`}`;
+    const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name}/lib/index.js`;
     const problems = judgeWebExport([small], ['node_modules/react/index.js', source]);
     expect(problems).toHaveLength(1);
     expect(problems[0]).toContain(source);
@@ -71,5 +78,44 @@ describe('sourcesOf', () => {
     expect(sourcesOf({ sources: ['a.js', 'b.js'] })).toEqual(['a.js', 'b.js']);
     expect(sourcesOf({ sections: [{ map: { sources: ['a.js'] } }, { map: { sources: ['b.js', 'c.js'] } }] })).toEqual(['a.js', 'b.js', 'c.js']);
     expect(sourcesOf({})).toEqual([]);
+  });
+});
+
+describe('formatjs', () => {
+  it('is forbidden as the polyfills only: use-intl\'s own dependencies stay', () => {
+    const kept = [
+      '../../node_modules/.pnpm/@formatjs+fast-memoize@2.2.0/node_modules/@formatjs/fast-memoize/lib/index.js',
+      '../../node_modules/.pnpm/@formatjs+icu-messageformat-parser@2.9.0/node_modules/@formatjs/icu-messageformat-parser/lib/parser.js',
+      '../../node_modules/.pnpm/intl-messageformat@10.7.0/node_modules/intl-messageformat/lib/src/core.js',
+    ];
+    expect(judgeWebExport([small], kept)).toEqual([]);
+  });
+
+  it('finds a polyfill in a pnpm path', () => {
+    const polyfill = '../../node_modules/.pnpm/@formatjs+intl-numberformat@9.4.3/node_modules/@formatjs/intl-numberformat/polyfill-force.js';
+    expect(judgeWebExport([small], [polyfill])).toHaveLength(1);
+  });
+});
+
+describe('exportEnv', () => {
+  it('blanks the live project\'s settings for the export, and leaves the rest of the environment', () => {
+    const env = exportEnv({
+      PATH: '/bin',
+      EXPO_PUBLIC_SUPABASE_URL: 'https://live.supabase.co',
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live',
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: '0x4AAA',
+      EXPO_PUBLIC_OTHER: 'kept',
+    });
+    expect(env).toEqual({
+      PATH: '/bin',
+      EXPO_PUBLIC_SUPABASE_URL: '',
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '',
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: '',
+      EXPO_PUBLIC_OTHER: 'kept',
+    });
+  });
+
+  it('sets them empty when they were not set at all', () => {
+    expect(exportEnv({ PATH: '/bin' })).toMatchObject({ EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '', EXPO_PUBLIC_TURNSTILE_SITE_KEY: '' });
   });
 });

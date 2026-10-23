@@ -16,12 +16,27 @@ const here = dirname(fileURLToPath(import.meta.url));
 /** The JavaScript of the export, all its files together and gzipped, may not weigh more than this. */
 export const JS_GZIP_BUDGET = 1_350 * 1024;
 
+/** The formatjs packages that polyfill Intl: the web does without every one. */
+const FORMATJS_POLYFILLS = [
+  'getcanonicallocales',
+  'locale',
+  'pluralrules',
+  'numberformat',
+  'datetimeformat',
+  'relativetimeformat',
+  'listformat',
+  'displaynames',
+].map((name) => `@formatjs/intl-${name}`);
+
 /** What the web does without, by what to call it and how to tell it from a map's source path. */
 export const FORBIDDEN: readonly { label: string; matches: (source: string) => boolean }[] = [
-  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', '@formatjs/', 'react-native-webview', 'expo-media-library'].map((name) => ({
+  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', 'react-native-webview', 'expo-media-library'].map((name) => ({
     label: name,
     matches: (source: string) => source.includes(name),
   })),
+  // formatjs's polyfills only (src/intl.ts on the phone): the web has the browser's Intl. Its other packages (fast-memoize, the ICU message
+  // parser) are use-intl's own dependencies, which the web keeps.
+  ...FORMATJS_POLYFILLS.map((name) => ({ label: name, matches: (source: string) => source.includes(`${name}/`) })),
   // The older rules a life in progress finishes under: the phone carries them; the web fetches them from the site.
   { label: 'the older rules (src/rules/v*.js)', matches: (source) => /src\/rules\/v[^/]*\.js$/.test(source) },
 ];
@@ -42,6 +57,14 @@ export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources
     if (found.length > 0) problems.push(`${label} is in the bundle (${found.length} ${found.length === 1 ? 'source' : 'sources'}, e.g. ${found[0]})`);
   }
   return problems;
+}
+
+/** The settings of the live project the app is built with when they are set; the export is made without them, so it never inlines the live project. */
+const LIVE_SETTINGS = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'EXPO_PUBLIC_TURNSTILE_SITE_KEY'];
+
+/** The environment the export runs in: `env`, with the live project's settings empty (an app with no project is offline). */
+export function exportEnv(env: Record<string, string | undefined>): Record<string, string | undefined> {
+  return { ...env, ...Object.fromEntries(LIVE_SETTINGS.map((name) => [name, ''])) };
 }
 
 /** Every file under `dir`, by its path from `dir`. */
@@ -67,6 +90,7 @@ function main(): void {
   try {
     const run = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--source-maps', '--output-dir', out], {
       cwd: join(here, '..'),
+      env: exportEnv(process.env) as NodeJS.ProcessEnv,
       encoding: 'utf8',
       maxBuffer: 256 * 1024 * 1024,
     });
