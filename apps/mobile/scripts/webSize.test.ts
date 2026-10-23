@@ -13,6 +13,7 @@ function noise(bytes: number): Buffer {
   return out;
 }
 
+const APP = '_expo/static/js/web/';
 const small = { path: '_expo/static/js/web/entry-abc.js', bytes: Buffer.from('console.log(1)') };
 
 describe('judgeWebExport', () => {
@@ -30,13 +31,33 @@ describe('judgeWebExport', () => {
     expect(JS_GZIP_BUDGET).toBe(1_350 * 1024);
     const over = noise(JS_GZIP_BUDGET + 64 * 1024);
     expect(gzipSync(over).length).toBeGreaterThan(JS_GZIP_BUDGET);
-    const problems = judgeWebExport([{ path: 'a.js', bytes: over }], []);
+    const problems = judgeWebExport([{ path: `${APP}a.js`, bytes: over }], []);
     expect(problems).toHaveLength(1);
     expect(problems[0]).toMatch(/gzip/);
     // Two files count together, and only .js counts.
     const half = noise(Math.floor(JS_GZIP_BUDGET * 0.6));
-    expect(judgeWebExport([{ path: 'a.js', bytes: half }, { path: 'b.js', bytes: half }], [])).toHaveLength(1);
-    expect(judgeWebExport([{ path: 'a.js', bytes: half }, { path: 'b.map', bytes: half }, { path: 'c.png', bytes: half }], [])).toEqual([]);
+    expect(judgeWebExport([{ path: `${APP}a.js`, bytes: half }, { path: `${APP}b.js`, bytes: half }], [])).toHaveLength(1);
+    expect(judgeWebExport([{ path: `${APP}a.js`, bytes: half }, { path: `${APP}b.map`, bytes: half }, { path: 'c.png', bytes: half }], [])).toEqual([]);
+  });
+
+  it("does not count the older rules the site serves, but the app's own JavaScript", () => {
+    const big = noise(JS_GZIP_BUDGET + 64 * 1024);
+    expect(judgeWebExport([small, { path: 'rules/v0.40.0-1.41.0.js', bytes: big }], [], ['v0.40.0-1.41.0.js'])).toEqual([]);
+    const problems = judgeWebExport([{ path: `${APP}x.js`, bytes: big }], []);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/gzip/);
+  });
+
+  it('reports older rules the export does not serve, and not when it serves them all', () => {
+    const expected = ['v0.39.0-1.40.0.js', 'v0.40.0-1.41.0.js'];
+    const served = (...names: string[]) => names.map((name) => ({ path: `rules/${name}`, bytes: Buffer.from('export {}') }));
+    expect(judgeWebExport([small, ...served(...expected)], [], expected)).toEqual([]);
+    const partial = judgeWebExport([small, ...served('v0.39.0-1.40.0.js')], [], expected);
+    expect(partial).toHaveLength(1);
+    expect(partial[0]).toContain('v0.40.0-1.41.0.js');
+    // No folder at all, or a file of the same name elsewhere, is the same problem.
+    expect(judgeWebExport([small], [], expected)).toHaveLength(1);
+    expect(judgeWebExport([small, { path: `${APP}v0.39.0-1.40.0.js`, bytes: Buffer.from('') }, ...served('v0.40.0-1.41.0.js')], [], expected)).toHaveLength(1);
   });
 
   it.each([

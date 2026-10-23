@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { bundlesIn } from './rules';
 
 /**
  * The size check of the app's web export (`pnpm --filter @ratrace/mobile web:size`): it exports the web into a temporary folder, with source maps,
@@ -41,13 +42,29 @@ export const FORBIDDEN: readonly { label: string; matches: (source: string) => b
   { label: 'the older rules (src/rules/v*.js)', matches: (source) => /src\/rules\/v[^/]*\.js$/.test(source) },
 ];
 
-/** What is wrong with a web export, in words (nothing when it is fine): `files` are its files, `sources` those its source maps name. */
-export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources: string[]): string[] {
+/** Where the export puts the app's own JavaScript: the only files the budget counts. */
+const APP_JS = '_expo/static/js/';
+
+/** Where the export serves the older rules from (`/rules/v<engine>-<content>.js`): fetched by a life begun under them, never part of the app's load. */
+const RULES_FOLDER = 'rules/';
+
+/**
+ * What is wrong with a web export, in words (nothing when it is fine): `files` are its files, `sources` those its source maps name,
+ * `rules` the names of the older rules' files the export must serve (those of apps/web/public/rules). The budget counts the app's own
+ * JavaScript, not the rules the site serves for older lives. A missing or partial `rules/` folder is a problem: a life begun under a
+ * version whose file is not there would wait forever.
+ */
+export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources: string[], rules: readonly string[] = []): string[] {
   const problems: string[] = [];
   for (const file of files) {
     if (file.path.endsWith('.wasm')) problems.push(`a WebAssembly file is in the export: ${file.path}`);
   }
-  const js = files.filter((file) => file.path.endsWith('.js'));
+  const served = new Set(files.filter((file) => file.path.startsWith(RULES_FOLDER)).map((file) => file.path.slice(RULES_FOLDER.length)));
+  const missing = rules.filter((name) => !served.has(name));
+  if (missing.length > 0) {
+    problems.push(`the export lacks ${missing.length} of the ${rules.length} older rules the site must serve (${RULES_FOLDER}), e.g. ${missing[0]}: a life under them would wait forever`);
+  }
+  const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
   const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
   if (gzipped > JS_GZIP_BUDGET) {
     problems.push(`the JavaScript is ${(gzipped / 1024 / 1024).toFixed(2)} MB gzip, over the ${(JS_GZIP_BUDGET / 1024 / 1024).toFixed(2)} MB the web is given`);
@@ -105,14 +122,15 @@ function main(): void {
     const paths = walk(out);
     const files = paths.filter((path) => !path.endsWith('.map')).map((path) => ({ path, bytes: readFileSync(join(out, path)) }));
     const sources = paths.filter((path) => path.endsWith('.map')).flatMap((path) => sourcesOf(JSON.parse(readFileSync(join(out, path), 'utf8')) as SourceMap));
-    const js = files.filter((file) => file.path.endsWith('.js'));
+    const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
+    const rules = bundlesIn(readdirSync(join(here, '../../web/public/rules'))).map((bundle) => bundle.file);
     const raw = js.reduce((total, file) => total + file.bytes.length, 0);
     const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
     const wasm = files.filter((file) => file.path.endsWith('.wasm')).length;
     console.log(
-      `web export: ${files.length} files, ${js.length} JS files ${(raw / 1024 / 1024).toFixed(2)} MB (${(gzipped / 1024 / 1024).toFixed(2)} MB gzip, budget ${(JS_GZIP_BUDGET / 1024 / 1024).toFixed(2)}), ${wasm} wasm, ${sources.length} sources`,
+      `web export: ${files.length} files, ${js.length} app JS files ${(raw / 1024 / 1024).toFixed(2)} MB (${(gzipped / 1024 / 1024).toFixed(2)} MB gzip, budget ${(JS_GZIP_BUDGET / 1024 / 1024).toFixed(2)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
     );
-    const problems = judgeWebExport(files, sources);
+    const problems = judgeWebExport(files, sources, rules);
     for (const problem of problems) console.error(`problem: ${problem}`);
     if (problems.length > 0) process.exitCode = 1;
     else console.log('the web export is as light as it must be');
