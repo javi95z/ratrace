@@ -546,3 +546,16 @@ test('the small cards of a step that earned badges are the web\'s result of a ca
   expect([...celebrations.matchAll(/role="status"/g)]).toHaveLength(2);
   expect(SCENES.filter((scene) => webRules(scene).includes(CELEBRATIONS_ONLY)).map((scene) => scene.name)).toEqual(['celebrate-earned']);
 });
+
+test('a scene of the app\'s web passes on its record and fails on any growth, as the phone\'s do', () => {
+  for (const [name, record] of Object.entries(ACCEPTED_APP_WEB)) {
+    const scene = SCENES.find((one) => one.name === name)!;
+    const texts: Result['texts'] = Object.entries(record.lines ?? {}).map(([line, bound]) => ({ text: lineName(line), web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: bound }));
+    const at = (shape: number, more = 0) => lineOf(scene, result(name, { shape, texts: texts.map((text) => ({ ...text, apart: text.apart + more })) }), false, APP_WEB).verdict;
+    expect(at(record.shape), name).toBe(record.shape === 0 && texts.length === 0 ? 'clean' : 'accepted');
+    expect(at(record.shape + 1), name).toBe('differs');
+    if (texts.length > 0) expect(at(record.shape, 0.01), name).toBe('differs');
+    // No record of the phone's is the app's web's: each is measured on its own side.
+    expect(record, name).not.toBe(ACCEPTED[name]);
+  }
+});

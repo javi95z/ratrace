@@ -451,7 +451,129 @@ export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
  * (`docs/superpowers/reports/2026-10-23-phase-5a-web-parity.md`): held as the phone's records are (`ACCEPTED`), and apart from them. A residual of
  * the phone's (iOS's emoji, Skia's antialiasing, device pixels) is no record here: both sides are Chrome.
  */
-export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {};
+export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
+  'play-news-r1': {
+    shape: 4,
+    oneSided: 0,
+    reason: 'Four pixels of a row of the city\'s picture in the Hud, a picture laid at a fraction of a point (both sides lay it alike, to 0.01 px), its nearest-pixel sampling a device pixel apart.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'play-news-r6': {
+    shape: 1,
+    oneSided: 0,
+    reason: 'One pixel of the city\'s picture in the Hud, as in play-news-r1.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'play-resolve-r6': {
+    shape: 3,
+    oneSided: 0,
+    reason: 'Three pixels of the edge of a picture at a fraction of a point, sampled a device pixel apart (play-news-r1\'s class).',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'hud-news-r1': {
+    shape: 4,
+    oneSided: 0,
+    reason: 'The four pixels of the city\'s picture of play-news-r1.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'finance-business': {
+    shape: 4,
+    oneSided: 0,
+    reason: 'Four pixels at the edge of a picture at a fraction of a point (play-news-r1\'s class).',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'celebrate-earned': {
+    shape: 230,
+    oneSided: 0,
+    reason: 'The light under the last card of what a step earned ends at a fraction of a point: its last row of pixels (a glow\'s soft edge) falls on the next device pixel, the width of the page.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'rankings-friends': {
+    shape: 17,
+    oneSided: 0,
+    reason: 'The rats of the friends\' panel, each a 128-pixel picture drawn small nearest-neighbour at a fraction of a point: a few edge pixels sampled on other rows (the same boxes to 0.001 px).',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-lobby-friends': {
+    shape: 5,
+    oneSided: 0,
+    reason: 'The rats of the seats, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-lobby-public': {
+    shape: 14,
+    oneSided: 0,
+    reason: 'The rats of the seats, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-loans': {
+    shape: 17,
+    oneSided: 0,
+    reason: 'The rats of the room\'s bar, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-resolved': {
+    shape: 7,
+    oneSided: 0,
+    reason: 'The rats of the room\'s bar, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-end': {
+    shape: 17,
+    oneSided: 0,
+    reason: 'The rats of the room\'s order, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'room-history': {
+    shape: 12,
+    oneSided: 0,
+    reason: 'The rats of the game\'s players in its sheet, as in rankings-friends.',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+  },
+  'play-guide-r1': {
+    shape: 241,
+    oneSided: 0,
+    reason: 'The tops of the letters of the paper\'s last line, under the bar of the next step, peek over the bar\'s edge a device pixel apart (finance-taxes\'s class on the phone); and the four pixels of the city\'s picture of play-news-r1.',
+    report: 'Residuals of the app\'s web: what lies under the bar of the next step',
+  },
+  'room-playing': {
+    shape: 99,
+    oneSided: 0,
+    reason: 'The tops of the letters of a line under the bar of the next step, as in play-guide-r1, and a pixel of the city\'s picture.',
+    report: 'Residuals of the app\'s web: what lies under the bar of the next step',
+  },
+  'play-pageturn': {
+    shape: 365,
+    oneSided: 0,
+    reason: 'The torn page of the calendar, turned and held at one moment on both sides, has its edges antialiased a device pixel apart (phase 2\'s exception), and the city\'s pixels of play-news-r1.',
+    report: 'Residuals of the app\'s web: the Next web\'s own',
+  },
+  'profile-r6': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the career bar bleed a device-pixel sliver of their light into the first dark lamp (phase 1\'s class); the app\'s web draws none.',
+    report: 'Residuals of the app\'s web: the Next web\'s own',
+  },
+  'player-member': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The lamps\' sliver of profile-r6, on the member\'s career bar.',
+    report: 'Residuals of the app\'s web: the Next web\'s own',
+  },
+  'player-friend-code': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The lamps\' sliver of profile-r6.',
+    report: 'Residuals of the app\'s web: the Next web\'s own',
+  },
+  'end-ru': {
+    shape: 0,
+    lines: { '←': 16 / 3 },
+    oneSided: 0,
+    reason: 'The way back, ←, on a Russian page: the Next web\'s stack there names its fonts alone (no Arial), and Chrome draws the arrow from SF at its own adjusted size (22.36 wide); the app sets it from the system\'s fonts through Arial at Jersey\'s scale (25.28), as on every other page, where the two agree.',
+    report: 'Residuals of the app\'s web: an arrow on a Russian page',
+  },
+};
 
 /**
  * How one comparison of the scenes is judged and kept: where its pictures and its results file go, where its moving scenes are noted between steps,
