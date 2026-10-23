@@ -19,7 +19,7 @@ import { Button, Notice, Panel, pressDown, Raised, Segmented, SrOnly, Tag, usePr
 import { Loading } from '../../ui/Loading';
 import { Sheet, Toast, useSheetsShowing } from '../../ui/overlay';
 import { Screen } from '../../ui/Page';
-import { PerfDrawn } from '../../ui/perf';
+import { PERF, PerfDrawn } from '../../ui/perf';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -170,13 +170,16 @@ function Refusal({ plain = false }: { plain?: boolean }) {
 export function Room({ code }: { code?: string } = {}) {
   return (
     <>
-      <RoomMark />
+      {PERF ? <RoomMark /> : null}
       <RoomShown code={code} />
     </>
   );
 }
 
-/** What the room's page shows, told to the timing probe (EXPO_PUBLIC_PERF=1 builds only): its way in, its lobby, its game. */
+/**
+ * What the room's page shows, told to the timing probe: its way in, its lobby, its game. Drawn in a build with EXPO_PUBLIC_PERF=1 only: any other
+ * has no probe to tell, and need not follow the room for it.
+ */
 function RoomMark() {
   const where = useRoom((s) => (s.status === 'booting' ? 'booting' : s.status === 'unavailable' || s.status === 'away' ? s.status : s.room === null ? 'door' : s.room.status === 'open' ? 'lobby' : s.game === null ? 'loading' : 'playing'));
   return <PerfDrawn name={`room: ${where}`} />;
