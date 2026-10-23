@@ -1823,12 +1823,35 @@ network's.) The network here is a millisecond away, so the time to the lines is 
 commit (the session read, supabase-js's request and its JSON, the commit of 50 lines), then up to 55 ms of UI frames making their faces, settled at
 213. On a phone, add the round trip to that. The 213 is client cost to watch in phase 4, not the network's.
 
+### For the user at the end of phase 3
+
+- `forms`: its acceptance, as part B left it.
+- The three rat-editor scenes, accepted without a measured cause: `player-editor-body` (1015 px of shape), `player-editor-wear` (1384) and
+  `player-editor-scene` (670), each bounded by its record and failing on any growth. Part A's other caveat stands: bounds that large could hide a small
+  regression. Accept them as they are, or ask for the cause to be chased.
+- `motion-2`'s residual class, accepted on 2026-10-22, for comparison.
+
+### Left for Task 15's device checks (a real phone)
+
+- The room code: on a full ABCDXY, the caret between C and D, typing Q then R leaves ABCDXY with the caret where it was (part B's fix refuses the
+  letters; where the caret lands after React Native puts the text back is UIKit's).
+- The name sheet's foot 12 pt above the keyboard, on iOS and on Android (the Android half, `keyboardDidShow` and the IME inset over the navigation bar,
+  never run).
+- A sheet taken away while shown keeps its turn 600 ms on iOS (`TAKEN_AWAY_MS`), and a hidden one waits for `onDismiss` up to 1000 ms: measure the
+  dismissal on the phone and tune both.
+- The Clothes tab's first drawing after an install (178 ms on the simulator with the shader cache empty) and the friends' flings, on the phone.
+- Before a build for the live project is installed on the simulator, erase the app built against the fake (its session is in `kvStore.ts`); and the
+  ship step should refuse a store build whose `EXPO_PUBLIC_SUPABASE_URL` is not `https://` or whose key is the fake's (review M6).
+
 ### Records the review asked for
 
 - `player-friend-code`: the toast measured on the shots. Its words' ink at the same x on both, a device pixel higher on the phone; its box 104 pt on the
-  web, 103⅓ on the phone, one device pixel in from each side. "Code copied" is 79.17 pt of Chakra at 14 (the font's advances) and 12 of padding a side:
-  Chrome lays a box that shrinks to its words at whole CSS pixels (104), the phone at device pixels (103⅓). Written into the record.
-- The editor grids' ⅓ pt: probed. The grid set on a whole point under the part's name (`marginTop` 6 → 5.7, as if the web rounded 14.3 + 6) made all
-  three scenes worse (1048, 1549, 693 px of shape; the dice a further ⅓ pt off): the web does not round there, and part A's arithmetic cause is wrong.
-  Reverted, kept accepted with the probe's result in the record.
+  web's shot, 103⅓ on the phone, one device pixel in from each side. "Code copied" is 79.17 pt of Chakra at 14 (the font's advances) and 12 of padding
+  a side. (Corrected after part B's review, M8, by measure:) Chrome does not lay the box at whole CSS pixels: `getBoundingClientRect` gives 103.17
+  (79.171875 + 24), centred at 149.41 pt, between device pixels; the 104 of the shot is its painting of those edges. The phone lays it at device pixels
+  (103⅓). Written into the record.
+- The editor grids' ⅓ pt: probed. The grid lifted by ⅓ pt under the part's name (`marginTop` 6 → 5.7, as if the web rounded 14.3 + 6) made all three
+  scenes worse (1048, 1549, 693 px of shape; the dice a further ⅓ pt off). (Corrected after the review, M8:) inconclusive, its direction unexplained: if
+  the phone's grid were a device pixel low, a lift of one would have cancelled it. Its cause is not found, which phase 2's rule ("accepted only with a
+  measured cause") does not allow: the three records go to the user (below). Reverted; the records say so.
 - Part A's fix 4 named a trigger of the blank rat, not its cause, and part B's mechanism is not it either: the cause is still not established (above, corrected after the review).
