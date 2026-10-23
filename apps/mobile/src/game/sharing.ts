@@ -61,6 +61,11 @@ const phoneShare: PictureShare = {
 export const usePictureShare = (): PictureShare => phoneShare;
 
 /**
+ * Whether there is a share sheet for a link to hand it to (a screen shows Share only then; the web's browser may have none). The phone always has one.
+ */
+export const canShareLink = (): boolean => true;
+
+/**
  * The phone's share sheet, for a link and the words that go with it (an invitation to a game): the web's `navigator.share({ title, text, url })`.
  * iOS's sheet takes the link beside the words; Android's takes words only (React Native's `Share` sends no `url` there), so the link goes at the end
  * of them, and `title` goes as the share's subject (Android's `EXTRA_SUBJECT`, an email's subject). True once the player has shared it, as far as the phone says (Android always says so); a sheet that could not

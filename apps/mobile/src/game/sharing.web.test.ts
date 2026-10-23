@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { canShareFile, shareFile, shareLink, usePictureShare } from './sharing.web';
+import { canShareFile, canShareLink, shareFile, shareLink, usePictureShare } from './sharing.web';
 
 /*
  * The web export's twin of sharing.ts: the browser's own share sheet and downloads. jsdom has neither, so each test gives the navigator what the
@@ -17,11 +17,18 @@ afterEach(() => {
   delete (navigator as { share?: unknown }).share;
   delete (navigator as { canShare?: unknown }).canShare;
   delete (navigator as { clipboard?: unknown }).clipboard;
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 const aborted = () => new DOMException('turned down', 'AbortError');
 
 describe('a link to a game', () => {
+  it('can be shared only where the browser has a share sheet, asked when it is needed', () => {
+    expect(canShareLink()).toBe(false);
+    has({ share: vi.fn() });
+    expect(canShareLink()).toBe(true);
+  });
+
   it('goes to the browser\'s share sheet with its title, its words and the link', async () => {
     const share = vi.fn<(data: ShareData) => Promise<void>>(async () => undefined);
     has({ share });
@@ -85,7 +92,8 @@ describe('a picture', () => {
     await expect(sheet.send(Uint8Array.of(1), 'card.png', 'Nurse', 'Come and play')).resolves.toBe(false);
   });
 
-  it('is saved as a file by a link to its object, clicked and let go of', async () => {
+  it('is saved as a file by a link to its object, clicked, and let go of a moment later so that the download is not lost', async () => {
+    vi.useFakeTimers();
     const made: string[] = [];
     URL.createObjectURL = vi.fn(() => (made.push('blob:saved'), 'blob:saved'));
     URL.revokeObjectURL = vi.fn();
@@ -95,7 +103,11 @@ describe('a picture', () => {
     });
     await expect(usePictureShare().save(Uint8Array.of(1, 2), 'card.png')).resolves.toBe('saved');
     expect(clicked).toEqual([['blob:saved', 'card.png']]);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:saved');
     expect(document.querySelector('a[download]')).toBeNull();
+    // Not at once: Safari and Firefox begin the download after the click.
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(5000);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:saved');
+    vi.useRealTimers();
   });
 });

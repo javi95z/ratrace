@@ -29,7 +29,7 @@ import { GameScope, useClock, useCommunity, useGame, useProfile, useRoom, useRoo
 import { lifeRows } from '../lives';
 import { RoomPaper } from '../roomStory';
 import { useRoomSlice } from '../roomSlice';
-import { shareLink } from '../sharing';
+import { canShareLink, shareLink } from '../sharing';
 import { SITE_URL } from '../site';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
@@ -1291,6 +1291,8 @@ function Lobby({ room }: { room: RoomState }) {
   const enough = here.length >= MIN_MEMBERS;
   const url = linkTo(locale, room.code);
   const members = t('members', { count: here.length, max: MAX_MEMBERS });
+  // The phone always has a share sheet; a browser may not (the web shows Share only where it has one, and the public Invite copies the link without).
+  const canShare = canShareLink();
 
   const share = async () => {
     try {
@@ -1321,7 +1323,7 @@ function Lobby({ room }: { room: RoomState }) {
           <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t('fillWithBots')}</ReadText>
           {/* A round a day: each plays theirs when they can, and a notice says when the next is theirs. */}
           {room.seconds >= HOUR ? <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t('paceDay')}</ReadText> : null}
-          <Button variant="secondary" onPress={() => void share()}>
+          <Button variant="secondary" onPress={() => void (canShare ? share() : copyLink())}>
             {t('invite')}
           </Button>
         </View>
@@ -1329,11 +1331,13 @@ function Lobby({ room }: { room: RoomState }) {
         <View role="region" aria-label={t('code')} style={{ alignItems: 'center', gap: 8, paddingVertical: 8 }}>
           <ReadText size={12} tone="ink-300" style={{ textAlign: 'center', textTransform: 'uppercase', letterSpacing: 12 * 0.05 }}>{t('code')}</ReadText>
           <PixelText size={44} tone="gold-500" lineHeight={44} style={{ textAlign: 'center', letterSpacing: 44 * 0.18 }}>{room.code}</PixelText>
-          {/* The phone always has a share sheet: both ways out are there (the web shows Share only where the browser has one). */}
+          {/* Both ways out where there is a share sheet (the phone always has one); the browser's may be missing: only the link to copy. */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-            <Button variant="secondary" onPress={() => void share()}>
-              {t('share')}
-            </Button>
+            {canShare ? (
+              <Button variant="secondary" onPress={() => void share()}>
+                {t('share')}
+              </Button>
+            ) : null}
             <Button variant="secondary" onPress={() => void copyLink()}>
               {t('copyLink')}
             </Button>

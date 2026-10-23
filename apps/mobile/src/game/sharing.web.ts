@@ -31,6 +31,9 @@ export type { PictureShare };
 /** A PNG's bytes as a file in memory. */
 const fileOf = (png: Uint8Array, fileName: string) => new File([png as BlobPart], fileName, { type: 'image/png' });
 
+/** How long a saved picture's object address lives after the link is clicked. */
+const REVOKE_AFTER_MS = 4000;
+
 const browserShare: PictureShare = {
   available: () => Promise.resolve(typeof navigator !== 'undefined' && typeof navigator.share === 'function'),
   async send(png, fileName, title, invite) {
@@ -46,7 +49,8 @@ const browserShare: PictureShare = {
     document.body.append(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    // Let go of the object a moment later, not at once: Safari and Firefox begin the download after the click returns, and would lose the file.
+    setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS);
     return 'saved';
   },
 };
@@ -54,13 +58,16 @@ const browserShare: PictureShare = {
 /** The browser's share sheet, for a picture. */
 export const usePictureShare = (): PictureShare => browserShare;
 
+/** Whether the browser has a share sheet for a link, asked when it is needed (a screen shows Share only then; Copy link is always there). */
+export const canShareLink = (): boolean => typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
 /**
  * The browser's share sheet, for a link and the words that go with it (an invitation to a game): `navigator.share({ title, text, url })`. Where the browser
  * has none, the link goes to the clipboard instead (the Next web's Copy link), and true says it is there. False where the player turned the sheet down, or the
  * clipboard would not take it; a sheet that could not open throws.
  */
 export async function shareLink(title: string, text: string, url: string): Promise<boolean> {
-  if (typeof navigator.share !== 'function') return copy(url, () => {});
+  if (!canShareLink()) return copy(url, () => {});
   try {
     await navigator.share({ title, text, url });
     return true;
