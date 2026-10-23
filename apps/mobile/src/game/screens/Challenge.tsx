@@ -291,9 +291,8 @@ function RankingLink({ label, onPress }: { label: string; onPress(): void }) {
   const press = usePress({ onPress });
   return (
     <Pressable accessibilityRole="link" onPress={press} style={[reach(13 * 1.45, { above: 12, below: 32 }).style, { alignSelf: 'center' }]}>
-      {/* The web's `underline` with no offset of its own: Chakra's own (its post table, −75 of 1000 at 13), drawn by Chrome 1.5 under the baseline,
-          measured on the web's shot (Task 14's batch pass). */}
-      <LinkText size={13} offset={1.5} tone="teal-300">{label}</LinkText>
+      {/* The web's `underline` with no offset of its own: Chakra's own, where Chrome draws it (`AUTO_OFFSET` in ui/LinkText.tsx). */}
+      <LinkText size={13} offset="auto" tone="teal-300">{label}</LinkText>
     </Pressable>
   );
 }
