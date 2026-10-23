@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RankedInProgress, Unreachable } from '@ratrace/core/session/errors';
+import { RankedInProgress, Refused, Unreachable } from '@ratrace/core/session/errors';
 import { rankedApi } from './ranked';
 import type { RankedCall } from './ranked';
 
@@ -117,10 +117,17 @@ describe('the server of ranked lives, as the game asks for it', () => {
     expect(await server({ status: 200, body: { ...step, world, run: runRow } }).api.round('g-1', 3, [])).toMatchObject({ run });
   });
 
-  it('says the life has moved when the server will not take a step, whatever its reason', async () => {
-    for (const [status, word] of [[409, 'out-of-step'], [409, 'closed'], [404, 'unknown-game'], [422, 'cannot-play'], [400, 'bad-request']] as const) {
+  it('says the life has moved when the server has it somewhere else, or no more', async () => {
+    for (const [status, word] of [[409, 'out-of-step'], [409, 'closed'], [404, 'unknown-game']] as const) {
       expect(await server({ status, body: { error: word } }).api.card('g-1', 3, 0), word).toBe('moved');
       expect(await server({ status, body: { error: word } }).api.round('g-1', 3, []), word).toBe('moved');
+    }
+  });
+
+  it('says a step was refused, not that the life moved, when the server will not play what was asked', async () => {
+    for (const [status, word] of [[422, 'cannot-play'], [400, 'bad-request']] as const) {
+      await expect(server({ status, body: { error: word } }).api.card('g-1', 3, 0), word).rejects.toBeInstanceOf(Refused);
+      await expect(server({ status, body: { error: word } }).api.round('g-1', 3, []), word).rejects.toBeInstanceOf(Refused);
     }
   });
 

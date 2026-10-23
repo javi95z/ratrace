@@ -10,6 +10,7 @@ import { MemoryStore } from '@ratrace/core/session/memory';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { memoryBasket } from '@ratrace/core/game/basket';
 import { createGameStore, PENDING_AFTER_MS } from '@ratrace/core/game/store';
+import { Refused } from '@ratrace/core/session/errors';
 
 /** `guardMs` and `clock` are for the tests of taps that come too soon; without them no tap is ever too soon. */
 function setup(store = new MemoryStore(), guardMs = 0, clock = { at: 0 }) {
@@ -520,6 +521,42 @@ describe('when something goes wrong', () => {
     broken.getState().leaveNews();
     await broken.getState().pick(0);
     expect(broken.getState()).toMatchObject({ fault: true, busy: false, moved: false, stage: 'cards' });
+  });
+
+  it('keeps the life and the basket when the server refuses a round, and says so: not that it moved', async () => {
+    const { sessions, get } = setup();
+    await get().start('nurse');
+    const refusing = createGameStore({
+      content,
+      sessions: {
+        ...sessions,
+        start: () => sessions.start('nurse'),
+        abandon: () => sessions.abandon(),
+        resume: async () => {
+          const found = await sessions.resume();
+          const held = found.session;
+          if (held === null) return found;
+          // The same session, but the server refuses its round.
+          const refuses = new Proxy(held, {
+            get: (target, key) => {
+              if (key === 'playRound') return () => Promise.reject(new Refused('the server answered 422: cannot-play'));
+              const value: unknown = Reflect.get(target, key, target);
+              return typeof value === 'function' ? value.bind(target) : value;
+            },
+          });
+          return { ...found, session: refuses };
+        },
+      },
+    });
+    await refusing.getState().boot();
+    await answerHand(refusing.getState, 0);
+    refusing.getState().toFinance();
+    refusing.getState().addOrder(study);
+    await refusing.getState().play();
+    expect(refusing.getState()).toMatchObject({ rejected: true, moved: false, fault: false, stage: 'finance', status: 'playing' });
+    expect(refusing.getState().orders).toHaveLength(1);
+    refusing.getState().clearRejected();
+    expect(refusing.getState().rejected).toBe(false);
   });
 
   /** A life as a server shows it, with `change` made to every view of it: the life of a room on rules other than the page's. */

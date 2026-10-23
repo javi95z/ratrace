@@ -236,6 +236,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   const clearMoved = useGame((s) => s.clearMoved);
   const unreachable = useGame((s) => s.unreachable);
   const clearUnreachable = useGame((s) => s.clearUnreachable);
+  const rejected = useGame((s) => s.rejected);
+  const clearRejected = useGame((s) => s.clearRejected);
   const fellBack = useGame((s) => s.fellBack);
   const clearFellBack = useGame((s) => s.clearFellBack);
   const play = useT('play');
@@ -298,8 +300,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   // A ranked life is played by the server. When it did not answer, nothing was played, and the player is told to try again;
   // and when it could not be reached at the start, the life began on the device, and the player is told that too.
   // In a room the life moves on with the room, which says itself how many rounds the clock played: no word of another tab.
-  const said = moved && !room ? 'moved' : unreachable ? 'unreachable' : fellBack ? 'fellBack' : null;
-  const heard = said === 'moved' ? clearMoved : said === 'unreachable' ? clearUnreachable : clearFellBack;
+  const said = moved && !room ? 'moved' : unreachable ? 'unreachable' : rejected ? 'rejected' : fellBack ? 'fellBack' : null;
+  const heard = said === 'moved' ? clearMoved : said === 'unreachable' ? clearUnreachable : said === 'rejected' ? clearRejected : clearFellBack;
   const notice = <Toast message={said ? play(said) : null} onDone={heard} ms={6_000} />;
 
   const actions = room?.actions ?? <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;

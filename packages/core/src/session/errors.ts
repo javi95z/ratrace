@@ -17,6 +17,17 @@ export class Unreachable extends Error {
   }
 }
 
+/**
+ * The server that plays a ranked life would not take this step as it was asked: an order it cannot
+ * play. The life is where it was, and the player can change what they asked and try again.
+ */
+export class Refused extends Error {
+  constructor(why = 'the server would not take this step') {
+    super(why);
+    this.name = 'Refused';
+  }
+}
+
 export class StaleSession extends Error {
   constructor() {
     super('the saved life has moved on without this session');

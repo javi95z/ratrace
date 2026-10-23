@@ -27,6 +27,8 @@ export function CareerMoves({ work, left }: { work: WorkQuote; left: number }) {
       {work.moves.map((move) => {
         const told = text.careers[career.id]?.moves?.[move.id];
         if (!told) return null;
+        // A move that already pays for good (a warehouse of one's own) is not made twice: the rules cannot hold two of it.
+        if (view?.player.life.recurring.some((one) => one.tag === `move_${move.id.toLowerCase()}`)) return null;
         const on = chosen === move.id;
         const reason = move.lock === 'move-resting' ? t('moveResting') : null;
         const progress = move.rounds > 1 ? t('moveRounds', { done: move.progress, rounds: move.rounds }) : null;

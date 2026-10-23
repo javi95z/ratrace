@@ -4,7 +4,7 @@ import type { Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, OptionPreview, Order, RejectReason, RoundPreview, WorldState } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
-import { RankedInProgress, StaleSession, Unreachable } from '../session/errors';
+import { RankedInProgress, Refused, StaleSession, Unreachable } from '../session/errors';
 import type { RankedLifeInTheWay } from '../session/errors';
 import type { GameSession, Lost, Sessions, StepResult } from '../session/types';
 import { knownOrders } from './rules';
@@ -78,6 +78,8 @@ export interface RoundState {
   fellBack: boolean;
   /** True when the last step of a ranked life did not get through. It can be taken again. */
   unreachable: boolean;
+  /** True when the server would not play the last step of a ranked life as it was asked: the orders are to be looked at again. */
+  rejected: boolean;
   /**
    * The ranked life the player has in progress on another device, when a new one was asked for and
    * could not begin because of it. `here` says whether this page plays its rules, and so could go
@@ -134,6 +136,7 @@ export interface RoundActions {
   clearMoved(): void;
   clearFellBack(): void;
   clearUnreachable(): void;
+  clearRejected(): void;
   play(): Promise<void>;
   /**
    * The round's time is up, in a room: it is played as it stands. From the finances, with the
@@ -186,6 +189,7 @@ const blank: RoundState = {
   challenge: null,
   fellBack: false,
   unreachable: false,
+  rejected: false,
   elsewhere: null,
 };
 
@@ -281,6 +285,10 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         // A ranked life is played by the server, and the server did not answer. The same step can be asked again:
         // if it was taken after all and only its answer was lost, asking again brings that answer.
         set({ unreachable: true });
+      } else if (error instanceof Refused) {
+        // Nothing was played: the life and the basket stay as they are, for the player to change.
+        console.error('the server refused a step:', error.message);
+        set({ rejected: true });
       } else {
         console.error('the game refused a step:', error);
         set({ fault: true });
@@ -308,6 +316,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
           offered: null,
           stage: 'resolve',
           unreachable: false,
+          rejected: false,
         });
     };
 
@@ -443,7 +452,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], pending: true }), PENDING_AFTER_MS) : null;
         try {
           const result = await session.answerCard(option);
-          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', pending: false, unreachable: false });
+          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', pending: false, unreachable: false, rejected: false });
         } catch (error) {
           // The card was not answered after all: it is back, to be answered again.
           if (get().pending) set({ stage: 'cards', offered: null, pending: false });
@@ -538,6 +547,10 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
 
       clearUnreachable() {
         set({ unreachable: false });
+      },
+
+      clearRejected() {
+        set({ rejected: false });
       },
 
       async play() {

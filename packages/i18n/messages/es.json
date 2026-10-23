@@ -239,6 +239,7 @@
       "resolve": "Dos años después"
     },
     "unreachable": "El servidor no ha respondido. Inténtalo de nuevo.",
+    "rejected": "El servidor no ha aceptado esta ronda: alguna orden no se puede jugar. Revisa tus órdenes e inténtalo de nuevo.",
     "fellBack": "Ahora mismo no se ha podido empezar una vida clasificatoria, así que esta no lo es. Se guarda en este dispositivo.",
     "turnYears": "{age, plural, one {año} other {años}}"
   },
