@@ -2,16 +2,9 @@ import { BlurMask, Group, Rect, rect } from '@shopify/react-native-skia';
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Canvas } from './Canvas';
+import { glowOf } from './lights';
 
-/** A glow as the web writes it: a box-shadow of one layer with no offset and no spread, `0 0 <blur>px <colour>`. */
-const GLOW = /^0 0 (\d+(?:\.\d+)?)px (rgba?\([^()]*\)|#[0-9a-fA-F]{3,8})$/;
-
-/** The blur and colour of a glow (`EXTRA.glow`), or null for any other shadow and for none. */
-export function glowOf(shadow: string): { blur: number; colour: string } | null {
-  const match = GLOW.exec(shadow.trim());
-  if (match === null || Number(match[1]) <= 0) return null;
-  return { blur: Number(match[1]), colour: match[2] };
-}
+export { glowOf };
 
 /**
  * The light a box stands in (the web's glow round a badge's card: its `frame`'s `--glow`, globals.css). The first child of the box it lights, filling
