@@ -177,7 +177,8 @@ export function forgetThePhone(): void {
  * The cloud of this phone, around the phone's store, made once for each start of the app (the game's context holds it, `shared`), whoever signs in
  * or out. With no Supabase project in the build's settings there is none: the store is the phone's
  * own, and the game is exactly what it is without a network (phase 2's game). With `livesAfter`, the account's lives in progress are handed to the
- * mirror only once it resolves (the game's first screen drawn, `held.ts`): the account still signs in, and is read, at once.
+ * mirror only once it resolves (the game's first screen drawn, `held.ts`): the account still signs in at once, and its finished lives and lives in
+ * progress are asked at once; the rest of the mirror's reading follows the held answer.
  */
 export function phoneOnline(device: PlayerStore, livesAfter?: () => Promise<void>): Online {
   // Named in full, because the build writes these values into the app only where it sees them so (Expo's `EXPO_PUBLIC_*`).

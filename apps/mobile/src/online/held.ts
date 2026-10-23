@@ -3,10 +3,10 @@ import type { Cloud } from '@ratrace/online/supabase';
 /*
  * The account's lives in progress, handed to the mirror after the game's first screen. A start that meets an account holding lives the phone must
  * play back (another device's, or finished ones left "playing" by a finish that failed) had the mirror play each back through the engine on the JS
- * thread before the screen was up: the front door drawn at 2.2 s instead of 1.3 (Task 14c). Every ask still goes out at once, during the start, and
- * every answer but that one comes back as it comes: the account is read as early as before. Only the list of lives in progress is handed back once
- * the first screen is drawn; the mirror then plays them back one at a time, the JS thread free between them (`pacedLives`, the mirror's `pace`).
- * The mirror (`@ratrace/online/mirror`) asks the same things in the same order.
+ * thread before the screen was up: the front door drawn at 2.2 s instead of 1.3 (Task 14c). The finished lives and the lives in progress are asked
+ * at once, during the start; the list of lives in progress is handed back only once the first screen is drawn, and the rest of the mirror's
+ * meeting (the progress, a ranked life) follows it. The mirror then plays the lives back one at a time, the JS thread free between them
+ * (`pacedLives`, the mirror's `pace`). The mirror (`@ratrace/online/mirror`) asks the same things in the same order.
  */
 
 /** The cloud, its answer to `playingGames` handed back only once `until` has resolved. The request itself goes at once. */

@@ -1809,11 +1809,12 @@ with the fake's `/control/unsent`: the account forgetting the runs and their gam
 a finish that failed, gives 2244. The cost is the mirror's first reading of the account: it plays every life in progress the account offers back
 through the engine (`adopt`, a whole 40-round log each) in one synchronous loop, to find them over. Fixed in 14c without touching the mirror (the
 web's): what it asks of the account waits for the game's first screen and then for an idle moment of the JS thread (`online/held.ts`), so the front
-door is drawn at 1270. The 1.1 s of JS still came, after it. (14c's fix round, after its review:) the account is read at once again, every ask
-going during the start, and only the list of lives in progress is handed to the mirror after the first screen; the mirror plays them back a life at a
-time, a turn of the JS thread between them (its additive `pace`, given by the phone only), so its longest frame is one life's replay, 326 to 404 ms,
-and the front door is still drawn at 1279. Continue, pressed while the account is read at a start, waits for it (1.5 s at most), so no round is
-played on a copy another device has played further.
+door is drawn at 1270. The 1.1 s of JS still came, after it. (14c's fix round, after its review:) the finished lives and the lives in progress are
+asked at once again, during the start, and only the list of lives in progress is handed to the mirror after the first screen (the rest of its
+reading follows it); the mirror plays them back a life at a time, a turn of the JS thread between them (its additive `pace`, given by the phone
+only), so its longest frame is one life's replay, 326 to 404 ms, and the front door is still drawn at 1279. (Fix round 2:) Continue uses the newest
+copy of its life the account knows of, waiting up to 1.5 s for the account (while it signs in, then until it is read for that life, whose copy is
+played back first); past that, the phone's copy is played, and a further copy the account brings later replaces it then, as on the web.
 
 **Task 14c's other two** (same build, release with the probe, warm = the app's Metal shader cache kept, cold = moved aside before the launch):
 

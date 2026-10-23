@@ -149,9 +149,9 @@ interface Cloud {
   /** True where the phone has a project to sign in to. */
   canSignIn: boolean;
   /**
-   * Resolves once the life on the phone is the freshest the account knows of, for what acts on it (Continue): at once, unless the account of whoever
-   * is signed in is being read at a start (signed in, the network up); then once it has been read and what it brought is opened, or after
-   * `FRESH_WAIT_MS` at most. Never a round played on a copy another device has played further. Null where there is nothing to wait for: act at once.
+   * Resolves once the life on the phone is the newest copy the account knows of, for what acts on it (Continue), waiting up to `FRESH_WAIT_MS` for
+   * the account: while it signs in at a start, then until it has been read for that life and the copy it brought is opened (`freshLife`). Past that
+   * time, the phone's copy is used; a further copy the account brings later replaces it then, as on the web. Null where there is nothing to wait for.
    */
   untilFresh(): Promise<void> | null;
   /**
@@ -176,9 +176,11 @@ export const FRESH_WAIT_MS = 1500;
 type ReadSaves = AccountSaves & { lifeRead?(): boolean; onLifeRead?(listener: () => void): () => void };
 
 /**
- * Waits, at most `FRESH_WAIT_MS` in all: while the account is still signing in at a start (not settled: the session read, and renewed over the
- * network if it has run out), or someone is signed in and the mirror has not yet read the account for the life on the device (its pass not failed:
- * `waiting`, no network); then for the copy it brought to be opened (`opening`, null once it is). Null where none of it is under way.
+ * Waits, at most `FRESH_WAIT_MS` in all, for the newest copy of the life on the phone the account knows of: while the account is still signing in at
+ * a start (not settled: the session read, and renewed over the network if it has run out), or someone is signed in and the mirror has not yet read
+ * the account for the life on the device (its pass not failed: `waiting`, no network); then for that copy to be opened (`opening`, null once it
+ * is). Null where none of it is under way: act at once. Past the time, the life is acted on as the phone has it; a further copy the account brings
+ * later replaces it then, as on the web.
  */
 export function freshLife(saves: ReadSaves, account: Account, opening: () => Promise<unknown> | null, schedule: (run: () => void, ms: number) => unknown = setTimeout): Promise<void> | null {
   const signingIn = () => account.settled?.() === false;
