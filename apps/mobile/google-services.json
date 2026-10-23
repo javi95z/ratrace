@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "717430992548",
+    "project_id": "theratrace-68012",
+    "storage_bucket": "theratrace-68012.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717430992548:android:ec496f00dda8d268ed4031",
+        "android_client_info": {
+          "package_name": "com.hackio.theratrace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfkDKxOxOv1vHeAxsDUaUyjqGAXod2o0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
