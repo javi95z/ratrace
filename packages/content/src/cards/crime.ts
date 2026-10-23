@@ -21,15 +21,15 @@ export const crimeCards: CardDef[] = [
   ]),
 
   // Inside: a cellmate who knows the markets, the noodle economy, and a library with time to read in it.
-  card('crime_jail_cellmate', 'luck', { weight: 10, cooldown: 2, when: { inJail: true } }, [
+  card('crime_jail_cellmate', 'luck', { weight: 10, cooldown: 2, soon: true, when: { inJail: true } }, [
     {},
     { effects: { financeSkill: 1 } },
   ]),
-  card('crime_jail_commissary', 'lifestyle', { weight: 10, cooldown: 2, when: { inJail: true } }, [
+  card('crime_jail_commissary', 'lifestyle', { weight: 10, cooldown: 2, soon: true, when: { inJail: true } }, [
     { effects: { cash: usd(-300) } },
     { outcomes: [{ weight: 70, effects: { cash: usd(1_500) } }, { weight: 30, effects: { jail: { rounds: 2 } } }] },
   ]),
-  card('crime_jail_library', 'education', { weight: 10, cooldown: 2, when: { inJail: true } }, [
+  card('crime_jail_library', 'education', { weight: 10, cooldown: 2, soon: true, when: { inJail: true } }, [
     {},
     { effects: { skills: { languages: 2 } } },
     { effects: { careerSkill: 2 } },
