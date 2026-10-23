@@ -470,7 +470,7 @@ test('a sheet that closes tells its Modal it is hidden, and stays until the Moda
   expect(modals()).toEqual([]);
 });
 
-test('a sheet iOS has presented keeps its turn once hidden until its Modal says it has dismissed, however long past the short wait that takes', async () => {
+test('a sheet asked to show keeps its turn once hidden until its Modal says it has dismissed, even closed before iOS said it was shown, however long that takes', async () => {
   platform.OS = 'ios';
   vi.useFakeTimers();
   try {
@@ -487,8 +487,7 @@ test('a sheet iOS has presented keeps its turn once hidden until its Modal says 
       );
     }
     const { rerender } = render(<Page first second={false} />);
-    // Presented: iOS says so.
-    act(() => (modal.props!.onShow as () => void)());
+    // Closed by the game before iOS has said it is shown (no `onShow`): UIKit presents it, then dismisses it, and says so only then.
     rerender(<Page first={false} second />);
     // The second is not drawn yet: the Modal last drawn is the first's, hidden.
     const shown = modal.props!;
@@ -507,12 +506,11 @@ test('a sheet iOS has presented keeps its turn once hidden until its Modal says 
   }
 });
 
-test('a sheet iOS has presented whose Modal never says it has dismissed is let go at the backstop: no turn is held for ever', async () => {
+test('a sheet asked to show whose Modal never says it has dismissed is let go at the backstop: no turn is held for ever', async () => {
   platform.OS = 'ios';
   vi.useFakeTimers();
   try {
     const { rerender } = render(<Wrapper open />);
-    act(() => (modal.props!.onShow as () => void)());
     rerender(<Wrapper open={false} />);
     const gone = sheetsGone();
     act(() => void vi.advanceTimersByTime(999));
@@ -536,9 +534,9 @@ test('a sheet whose title changes while it closes is let go when it would have b
     const { rerender } = render(titled(true, 'One'));
     rerender(titled(false, 'One'));
     const gone = sheetsGone();
-    act(() => void vi.advanceTimersByTime(100));
+    act(() => void vi.advanceTimersByTime(900));
     rerender(titled(false, 'Two'));
-    act(() => void vi.advanceTimersByTime(50));
+    act(() => void vi.advanceTimersByTime(100));
     expect(await settledAfter(gone)).toBe(true);
   } finally {
     vi.useRealTimers();
@@ -564,18 +562,6 @@ test('where the platform hides a Modal as it is told to and says nothing of it (
   const gone = sheetsGone();
   expect(await settledAfter(gone)).toBe(false);
   rerender(<Wrapper open={false} />);
-  expect(await settledAfter(gone)).toBe(true);
-  expect(modals()).toEqual([]);
-});
-
-test('a Modal on iOS that was never shown says nothing when it is hidden: the sheet is let go after 150 ms, and nobody waits for ever', async () => {
-  platform.OS = 'ios';
-  const { rerender } = render(<Wrapper open />);
-  rerender(<Wrapper open={false} />);
-  const gone = sheetsGone();
-  await wait(149);
-  expect(await settledAfter(gone)).toBe(false);
-  await wait(2);
   expect(await settledAfter(gone)).toBe(true);
   expect(modals()).toEqual([]);
 });

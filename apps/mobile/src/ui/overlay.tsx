@@ -188,10 +188,12 @@ function useKeyboardUp(): boolean {
 }
 
 /**
- * How long a sheet hidden on iOS keeps its turn before it is let go without its Modal's word (`onDismiss`). One never presented (its Modal never said
- * `onShow`) has nothing to dismiss and says nothing: a moment (`NEVER_SHOWN_MS`). One presented is waited for until its Modal says it has dismissed
- * (measured on the simulator at 16 to 25 ms, Task 14), on a slow phone however long that takes: the backstop (`DISMISS_BACKSTOP_MS`) only keeps a
- * turn from being held for ever should the word never come. Let go on a timer while it was still being dismissed, the next sheet would be lost.
+ * How long a sheet hidden on iOS keeps its turn before it is let go without its Modal's word (`onDismiss`). One whose Modal was asked to be visible is
+ * waited for until it says it has dismissed (measured on the simulator at 16 to 25 ms, Task 14), on a slow phone however long that takes: UIKit
+ * dismisses a Modal it is still presenting once the presentation is done, and says so then, so a sheet closed before its `onShow` (by the game: a
+ * notice tapped, a sign-out, a room's turn) is waited for too. The backstop (`DISMISS_BACKSTOP_MS`) only keeps a turn from being held for ever should
+ * the word never come (a Modal whose window was gone). Only a Modal never asked to be visible has nothing to dismiss: a moment (`NEVER_SHOWN_MS`). Let
+ * go on a timer while it was still being presented or dismissed, the next sheet would be lost.
  */
 const NEVER_SHOWN_MS = 150;
 const DISMISS_BACKSTOP_MS = 1000;
@@ -239,14 +241,14 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
     release.current?.();
     left.current();
   }, [me]);
-  // Whether iOS has presented the Modal (its `onShow`): only then is there a dismissal to wait for.
-  const presented = useRef(false);
-  const onShow = useCallback(() => {
-    presented.current = true;
-  }, []);
+  // Whether its Modal has been asked to be visible (a commit with it open): from then on there is a presentation, and a dismissal to wait for.
+  const asked = useRef(false);
+  useLayoutEffect(() => {
+    if (open) asked.current = true;
+  }, [open]);
   // The Modal's own word is `onDismiss` on iOS, which hides it with a moment's work. Where a platform hides a Modal at once and
   // says nothing (Android, the web), it is gone as soon as it is told it is hidden; and a Modal on iOS that was never shown
-  // cannot say it has dismissed, so it is let go after a moment. One that was shown is waited for (`DISMISS_BACKSTOP_MS`).
+  // cannot say it has dismissed, so it is let go after a moment. One that was asked to show is waited for (`DISMISS_BACKSTOP_MS`).
   useEffect(() => {
     if (open) return;
     perfSheet('closing', me, named.current);
@@ -254,12 +256,12 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
       dismissed();
       return;
     }
-    const timer = setTimeout(dismissed, presented.current ? DISMISS_BACKSTOP_MS : NEVER_SHOWN_MS);
+    const timer = setTimeout(dismissed, asked.current ? DISMISS_BACKSTOP_MS : NEVER_SHOWN_MS);
     return () => clearTimeout(timer);
   }, [open, dismissed, me]);
 
   return (
-    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={onShow} onDismiss={open ? undefined : dismissed}>
+    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
       {/*
        * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
        * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.

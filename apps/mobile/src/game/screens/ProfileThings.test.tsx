@@ -39,7 +39,7 @@ const leaving = () => [...document.querySelectorAll('[data-modal][data-visible="
 
 /**
  * The sheet titled so is hidden: its words gone, its Modal leaving. Waited for in microtasks, not by the clock: a hidden Modal on iOS is let go
- * after `NEVER_SHOWN_MS` (150 ms) all the same, and a test that waited by the clock on a busy machine could find it gone already.
+ * after `DISMISS_BACKSTOP_MS` (1000 ms) all the same, and a test that waited by the clock on a busy machine could find it gone already.
  */
 async function hidden(title: string) {
   for (let i = 0; i < 20 && screen.queryByRole('heading', { name: title }) !== null; i++) await act(async () => undefined);
