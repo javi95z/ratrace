@@ -204,7 +204,8 @@ export function Screen({
  * 120), a few more a batch as the page is scrolled (`maxToRenderPerBatch`), and only the rows within two screens above and below what is seen
  * (`windowSize` 5, of React Native's 21): a long list never mounts all its rows, and the badges' tab never draws its 126 pictures at once.
  *
- * And the rows of that window off the screen are taken out of the window's views (`removeClippedSubviews`): each row's pictures are canvases, a
+ * And on iOS the rows of that window off the screen are taken out of the window's views (`removeClippedSubviews`; Android's FlatList does so already
+ * by default, so nothing changes there): each row's pictures are canvases, a
  * layer of the GPU's each, which the screen composes every frame whether seen or not. Measured on the friends' tab (200 friends, 50 requests each
  * way; Task 14c): six flings missed 48 and 50 frames of the UI thread with them in, 4 and 6 with them out, every row still drawn. A larger window
  * (`windowSize` 11) missed 103. No `getItemLayout`: the rows of a page are not of one height (a panel's head, a group's title, a line, a foot).

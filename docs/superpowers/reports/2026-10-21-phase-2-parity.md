@@ -1840,6 +1840,10 @@ commit (the session read, supabase-js's request and its JSON, the commit of 50 l
 - A sheet taken away while shown keeps its turn 600 ms on iOS (`TAKEN_AWAY_MS`), and a hidden one waits for `onDismiss` up to 1000 ms: measure the
   dismissal on the phone and tune both.
 - The Clothes tab's first drawing after an install (178 ms on the simulator with the shader cache empty) and the friends' flings, on the phone.
+- The lists with their rows taken out of the views off screen (`removeClippedSubviews`, iOS only: Android's FlatList did so already): swipe through the
+  Records with VoiceOver, and check it scrolls on past the rows mounted (if it stops, pass `removeClippedSubviews={!screenReader}`); and change a
+  friend's look, or let a sprite be decoded, while that row is off screen, then scroll to it: its picture drawn (a canvas handed a picture while its
+  row is out of the window). (14c's review, M2.)
 - Before a build for the live project is installed on the simulator, erase the app built against the fake (its session is in `kvStore.ts`); and the
   ship step should refuse a store build whose `EXPO_PUBLIC_SUPABASE_URL` is not `https://` or whose key is the fake's (review M6).
 
