@@ -80,12 +80,18 @@ function endTurn(id: number): void {
 /**
  * How long a sheet taken away whole while it is shown keeps its turn, by platform: its screen gone from under it (a room started or left), its Modal is
  * still being dismissed on the phone, and no other may be presented until it has gone. An unmounted Modal can say nothing of its dismissal (its
- * `onDismiss` has gone with it), so the turn is held for as long as iOS takes (`DISMISS_MS`), and a moment on Android; react-native-web's is gone at once.
+ * `onDismiss` has gone with it), so the turn is held for as long as iOS may take (`TAKEN_AWAY_MS`), and a moment on Android; react-native-web's is gone
+ * at once.
  */
 // Android hides a Modal as it is told: not measured (no emulator on the machine of the device checks), a moment is kept all the same.
 const ANDROID_GONE_MS = 100;
+/**
+ * iOS: a sheet taken away while shown. Its dismissal was measured at 16 to 25 ms on the simulator, on an idle Mac (Task 14); a busy or slower phone's
+ * main thread can take far longer, and a sheet presented while this one is still dismissed is lost. 600 until a real phone is measured (Task 15).
+ */
+const TAKEN_AWAY_MS = 600;
 function endTurnOnceGone(id: number): void {
-  const wait = Platform.OS === 'ios' ? DISMISS_MS : Platform.OS === 'android' ? ANDROID_GONE_MS : undefined;
+  const wait = Platform.OS === 'ios' ? TAKEN_AWAY_MS : Platform.OS === 'android' ? ANDROID_GONE_MS : undefined;
   if (wait === undefined || !turns.some((turn) => turn.id === id && turn.shown)) return endTurn(id);
   const letGo = () => {
     clearTimeout(timer);
@@ -182,11 +188,13 @@ function useKeyboardUp(): boolean {
 }
 
 /**
- * How long a Modal that says nothing of its dismissal is waited for on iOS: one never shown (nothing to wait for), or one taken away whole while it
- * was shown (`endTurnOnceGone`). Measured on the simulator (Task 14, the release build's probe): a sheet's Modal says it has dismissed 16 to 25 ms
- * after it is hidden (six sheets, median 22); 150 is six times the longest, for a slower phone, and a wait nobody notices before the next sheet.
+ * How long a sheet hidden on iOS keeps its turn before it is let go without its Modal's word (`onDismiss`). One never presented (its Modal never said
+ * `onShow`) has nothing to dismiss and says nothing: a moment (`NEVER_SHOWN_MS`). One presented is waited for until its Modal says it has dismissed
+ * (measured on the simulator at 16 to 25 ms, Task 14), on a slow phone however long that takes: the backstop (`DISMISS_BACKSTOP_MS`) only keeps a
+ * turn from being held for ever should the word never come. Let go on a timer while it was still being dismissed, the next sheet would be lost.
  */
-const DISMISS_MS = 150;
+const NEVER_SHOWN_MS = 150;
+const DISMISS_BACKSTOP_MS = 1000;
 
 function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone(): void; onShown(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const inset = useSafeAreaInsets();
@@ -228,9 +236,14 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
     release.current?.();
     left.current();
   }, [title]);
+  // Whether iOS has presented the Modal (its `onShow`): only then is there a dismissal to wait for.
+  const presented = useRef(false);
+  const onShow = useCallback(() => {
+    presented.current = true;
+  }, []);
   // The Modal's own word is `onDismiss` on iOS, which hides it with a moment's work. Where a platform hides a Modal at once and
   // says nothing (Android, the web), it is gone as soon as it is told it is hidden; and a Modal on iOS that was never shown
-  // cannot say it has dismissed, so it is let go after a while.
+  // cannot say it has dismissed, so it is let go after a moment. One that was shown is waited for (`DISMISS_BACKSTOP_MS`).
   useEffect(() => {
     if (open) return;
     perfSheet('closing', title);
@@ -238,12 +251,12 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
       dismissed();
       return;
     }
-    const timer = setTimeout(dismissed, DISMISS_MS);
+    const timer = setTimeout(dismissed, presented.current ? DISMISS_BACKSTOP_MS : NEVER_SHOWN_MS);
     return () => clearTimeout(timer);
   }, [open, dismissed, title]);
 
   return (
-    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
+    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={onShow} onDismiss={open ? undefined : dismissed}>
       {/*
        * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
        * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.

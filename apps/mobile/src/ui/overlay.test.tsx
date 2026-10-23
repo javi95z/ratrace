@@ -143,9 +143,9 @@ test('a sheet the page takes away while it is shown keeps its turn until its Mod
       </Sheet>
     );
   }
-  // iOS: 150 ms, six times the longest dismissal measured on the simulator (16 to 25 ms, Task 14's device checks); Android: not measured (no
-  // emulator), a moment.
-  for (const [os, ms] of [['ios', 150], ['android', 100]] as const) {
+  // iOS: 600 ms, until a real phone is measured (the simulator's 16 to 25 ms were on an idle Mac, Task 14); Android: not measured (no emulator), a
+  // moment.
+  for (const [os, ms] of [['ios', 600], ['android', 100]] as const) {
     platform.OS = os;
     const { rerender, unmount } = render(<Page first />);
     expect(screen.getByText('first')).toBeTruthy();
@@ -468,6 +468,60 @@ test('a sheet that closes tells its Modal it is hidden, and stays until the Moda
   expect(modals()).toEqual(['false']);
   act(() => (modal.props!.onDismiss as () => void)());
   expect(modals()).toEqual([]);
+});
+
+test('a sheet iOS has presented keeps its turn once hidden until its Modal says it has dismissed, however long past the short wait that takes', async () => {
+  platform.OS = 'ios';
+  vi.useFakeTimers();
+  try {
+    function Page({ first, second }: { first: boolean; second: boolean }) {
+      return (
+        <>
+          <Sheet open={first} onClose={() => {}} title="First" closeLabel="Close">
+            <p>first</p>
+          </Sheet>
+          <Sheet open={second} onClose={() => {}} title="Second" closeLabel="Close">
+            <p>second</p>
+          </Sheet>
+        </>
+      );
+    }
+    const { rerender } = render(<Page first second={false} />);
+    // Presented: iOS says so.
+    act(() => (modal.props!.onShow as () => void)());
+    rerender(<Page first={false} second />);
+    // The second is not drawn yet: the Modal last drawn is the first's, hidden.
+    const shown = modal.props!;
+    expect(shown.visible).toBe(false);
+    // Hidden, and still being dismissed on a busy phone: the second waits, past the moment a sheet never shown is given, to just short of the
+    // backstop.
+    act(() => void vi.advanceTimersByTime(150));
+    expect(screen.queryByText('second')).toBeNull();
+    act(() => void vi.advanceTimersByTime(849));
+    expect(screen.queryByText('second')).toBeNull();
+    // Its word: gone, and the second is presented.
+    act(() => (shown.onDismiss as () => void)());
+    expect(screen.getByText('second')).toBeTruthy();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('a sheet iOS has presented whose Modal never says it has dismissed is let go at the backstop: no turn is held for ever', async () => {
+  platform.OS = 'ios';
+  vi.useFakeTimers();
+  try {
+    const { rerender } = render(<Wrapper open />);
+    act(() => (modal.props!.onShow as () => void)());
+    rerender(<Wrapper open={false} />);
+    const gone = sheetsGone();
+    act(() => void vi.advanceTimersByTime(999));
+    expect(await settledAfter(gone)).toBe(false);
+    act(() => void vi.advanceTimersByTime(1));
+    expect(await settledAfter(gone)).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('sheetsGone waits for a sheet that is open, and for its Modal to dismiss once it has closed', async () => {
