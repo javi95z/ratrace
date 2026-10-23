@@ -5,7 +5,7 @@ import { compareShots, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
 import { againstOf, APP_WEB, chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
-import { fromWeb, NEXT_FRAME, openPage, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
+import { fromWeb, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
 
 /**
  * The scenes beside the web's, shot for shot: each named game state (packages/core/src/testing/scenes.ts), drawn by the
@@ -96,6 +96,8 @@ async function main() {
             await page.screenshot({ path: png });
             continue;
           }
+          // As the web's shot is given (openPage): no focus ring on a sheet opened with no tap.
+          await page.addStyleTag({ content: QUIET_FOCUS });
           // Ready once every picture is read; the last of them may be painted a frame later.
           await page.evaluate(NEXT_FRAME);
           await page.evaluate(() => document.fonts.ready);

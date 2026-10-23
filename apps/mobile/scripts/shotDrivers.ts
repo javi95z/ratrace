@@ -432,6 +432,12 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
 }
 
 /**
+ * The keyboard's focus ring, which a sheet opened with no tap before it takes (`:focus-visible`: the Next web's sheet, and the app's web's, whose
+ * modal is focused as it opens) and a player's tap never shows: left out of every shot of either web.
+ */
+export const QUIET_FOCUS = ':focus-visible { outline: none !important; }';
+
+/**
  * Opens a page and waits for it to be still: its fonts and pictures in, every rise over (0.28 s), and the dev overlay's
  * badge gone. A sheet opened with no tap before it takes the keyboard's focus ring (`:focus-visible`), which a player's tap
  * never shows and the phone has no use for. `ready` is what the page shows once it is drawn, where it is drawn later; `css`
@@ -442,7 +448,7 @@ export async function openPage(page: Page, url: string, ready?: () => boolean, c
   if (ready) await page.waitForFunction(ready);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(() => [...document.images].every((img) => img.complete));
-  await page.addStyleTag({ content: `nextjs-portal { display: none !important; } :focus-visible { outline: none !important; } ${css}` });
+  await page.addStyleTag({ content: `nextjs-portal { display: none !important; } ${QUIET_FOCUS} ${css}` });
   await sleep(800);
 }
 

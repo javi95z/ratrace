@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { appWebAnswering, blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
+import { appWebAnswering, blocked, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -444,4 +444,10 @@ test('a scene of the app\'s web is shot on the day every scene is drawn on, once
   expect(still).toBeGreaterThan(frame);
   expect(step).toContain('ready: () => told.ready(scene.name)');
   expect(step).toContain('join(appWebOut, filesOf(scene.name).appweb)');
+  // The focus ring a sheet opened with no tap takes is left out of both webs' shots, by the one rule.
+  const quiet = step.indexOf('await page.addStyleTag({ content: QUIET_FOCUS });');
+  expect(quiet).toBeGreaterThan(word);
+  expect(quiet).toBeLessThan(still);
+  expect(QUIET_FOCUS).toBe(':focus-visible { outline: none !important; }');
+  expect(read('./shotDrivers.ts')).toContain('nextjs-portal { display: none !important; } ${QUIET_FOCUS} ${css}');
 });
