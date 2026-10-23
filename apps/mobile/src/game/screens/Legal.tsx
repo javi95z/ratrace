@@ -6,10 +6,10 @@ import { useT } from '../words';
 import { BackLink } from './BackLink';
 
 /**
- * Privacy and the legal notice: plain words, reached only from the foot of the front page (the web's legal/page.tsx). The words are the
- * phone's own (`phone.legal`): the web's tell of an account, a database and cookies, and this app has none of them. The sections are those of the
- * web's that are true of an app that keeps everything on the phone and sends nothing, and one that says it may change; who answers for it
- * (the owner and the contact, if the build names them) is the web's `legal.owner` and `legal.contact`.
+ * Privacy and the legal notice: plain words, reached only from the foot of the front page (the web's legal/page.tsx). The sections are the
+ * web's, in its order, in the phone's own words (`phone.legal`): the phone's notification address instead of the browser's, Expo and Firebase
+ * carrying the notices instead of the site and its visits, and the app's storage instead of the browser's. Who answers for it (the owner and
+ * the contact, if the build names them) is the web's `legal.owner` and `legal.contact`; the contact is shown here and nowhere else.
  */
 export function Legal() {
   const t = useT('phone.legal');
@@ -17,9 +17,10 @@ export function Legal() {
   const sections = [
     [t('noticeTitle'), t('noticeBody')],
     [t('dataTitle'), t('dataBody')],
-    [t('deviceTitle'), t('deviceBody')],
+    [t('whyTitle'), t('whyBody')],
     [t('whoTitle'), t('whoBody')],
-    [t('laterTitle'), t('laterBody')],
+    [t('deviceTitle'), t('deviceBody')],
+    [t('rightsTitle'), t('rightsBody')],
   ] as const;
   // Who answers for the game, if the build says: the owner and how to reach them, in one line.
   const owner = [LEGAL_NAME ? web('owner', { name: LEGAL_NAME }) : null, LEGAL_EMAIL ? web('contact', { email: LEGAL_EMAIL }) : null].filter(Boolean).join(' ');

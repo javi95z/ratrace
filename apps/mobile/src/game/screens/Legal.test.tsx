@@ -23,8 +23,8 @@ afterEach(() => {
 });
 
 const en = messagesFor('en').phone.legal as Record<string, string>;
-/** The sections of the phone's notice: those of the web's that are true of an app that keeps everything on the phone, and one that says it may change. */
-const SECTIONS = ['notice', 'data', 'device', 'who', 'later'] as const;
+/** The sections of the phone's notice: the web's, in its order, each in the words that are true of the app. */
+const SECTIONS = ['notice', 'data', 'why', 'who', 'device', 'rights'] as const;
 
 describe('the legal notice', () => {
   it('says the privacy and legal notice in plain words: a title, the sections that are true of this app each under its own heading, in order, and the day it was updated', () => {
@@ -36,14 +36,15 @@ describe('the legal notice', () => {
     expect(screen.getByText(en.updated)).toBeTruthy();
   });
 
-  it('says what is true of this app: everything is kept on the phone, nothing is sent, there is no account', () => {
+  it('says what is true of this app: an account, the phone\'s notification address, who carries the notices, the app\'s storage; nothing of the web\'s own', () => {
     renderGame(<Legal />, memoryServices());
     const text = document.body.textContent ?? '';
-    expect(text).toContain('sends nothing from your phone');
-    expect(text).toContain('saved on this phone only');
-    expect(text).toContain('talks to no server');
-    // Nothing of the web's notice that is not true of it: no account with Google, no Supabase, no browser, no cookies kept.
-    for (const web of [/Google/, /Supabase/, /Vercel/, /Turnstile/, /browser/, /friend code/, /nickname/]) expect(text, String(web)).not.toMatch(web);
+    expect(text).toContain('anonymous guest account');
+    expect(text).toContain("this phone's notification address");
+    expect(text).toContain('Expo and Google\'s Firebase Cloud Messaging');
+    expect(text).toContain("the app's storage");
+    // Nothing of the web's that the app does not do: no site, no browser, no bot check, and no notice that it keeps everything on the phone.
+    for (const web of [/Vercel/, /Turnstile/, /browser/, /sends nothing/, /talks to no server/]) expect(text, String(web)).not.toMatch(web);
   });
 
   it('names the owner and the contact under the legal notice when the build names them, and nothing when it does not', () => {
