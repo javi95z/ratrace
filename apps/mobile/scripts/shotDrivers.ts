@@ -391,6 +391,18 @@ export function changedWithin(a: Uint8Array, b: Uint8Array, width: number, boxes
   return true;
 }
 
+/** The box round every pixel that differs between two shots of a screen (RGBA, `width` pixels wide, at `scale`), in points: where it moved. */
+export function changedBox(a: Uint8Array, b: Uint8Array, width: number, scale: number): Box | null {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -1, -1];
+  for (let i = 0; i < a.length; i += 4) {
+    if (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2] && a[i + 3] === b[i + 3]) continue;
+    const x = (i / 4) % width;
+    const y = Math.floor(i / 4 / width);
+    [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
+  }
+  return x1 < 0 ? null : { x: x0 / scale, y: y0 / scale, w: (x1 - x0 + 1) / scale, h: (y1 - y0 + 1) / scale };
+}
+
 /** In the page: the boxes the app's loops turn in (`Loop`'s strip, `data-loop-strip`, moves under a box of one frame), in points. */
 export const LOOP_BOXES = (): Box[] =>
   [...document.querySelectorAll('[data-loop-strip]')].map((strip) => {
@@ -503,18 +515,25 @@ export const STILL_ALIKE = 3;
 export const STILL_SHOTS = 6;
 
 /**
+ * How many shots after the first the app's web is given to stand still: twice the phone's. Chrome now and then rasters a picture drawn pixel for
+ * pixel at a scale that is not whole (the week's challenge's banner, 288 art pixels in 378 points) on other device pixels for one shot, with nothing
+ * of the page changed (no mutation, no animation): one shot in three of a page standing still, which six tries did not always outlast.
+ */
+export const APP_WEB_STILL_SHOTS = 2 * STILL_SHOTS;
+
+/**
  * Shoots a screen until `STILL_ALIKE` shots in a row are the same, and keeps the last: a picture that came late is in the shot, as it would be had the
  * screen been given longer. Nothing is judged more loosely for it: the shot kept is the screen as it stands still.
  */
 export async function stillShot(
   shoot: () => Buffer | Promise<Buffer>,
-  { wait = sleep, ready = () => true }: { wait?: (ms: number) => Promise<unknown>; ready?: () => boolean } = {},
+  { wait = sleep, ready = () => true, shots = STILL_SHOTS }: { wait?: (ms: number) => Promise<unknown>; ready?: () => boolean; shots?: number } = {},
 ): Promise<{ png: Buffer; still: boolean }> {
   // A shot taken while the scene says it is not ready counts for nothing: the count of shots alike starts again after it.
   // (A browser's shot is answered later, the simulator's at once: both are waited for.)
   let last = await shoot();
   let alike = ready() ? 1 : 0;
-  for (let i = 0; i < STILL_SHOTS; i++) {
+  for (let i = 0; i < shots; i++) {
     await wait(STILL_MS);
     const next = await shoot();
     alike = !ready() ? 0 : next.equals(last) && alike > 0 ? alike + 1 : 1;

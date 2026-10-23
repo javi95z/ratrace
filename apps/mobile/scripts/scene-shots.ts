@@ -6,7 +6,7 @@ import { compareShots, SCREEN, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
 import { againstOf, APP_WEB, chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
-import { changedWithin, fromWeb, LOOP_BOXES, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, STILL_MS, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
+import { APP_WEB_STILL_SHOTS, changedBox, changedWithin, fromWeb, LOOP_BOXES, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, STILL_MS, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
 
 /** What is used of sharp here: a picture's raw pixels. */
 type SharpRaw = (input: Buffer) => { ensureAlpha(): { raw(): { toBuffer(): Promise<Buffer> } } };
@@ -110,19 +110,24 @@ async function main() {
               await page.screenshot({ path: png });
               return readFileSync(png);
             },
-            { ready: () => told.ready(scene.name) },
+            { ready: () => told.ready(scene.name), shots: APP_WEB_STILL_SHOTS },
           );
           // A screen that never stood still may be still but for its loops (a workplace's screens turning): two shots apart, nothing but them changed.
           let looping = false;
+          let moved = '';
           if (!still) {
             const boxes = await page.evaluate(LOOP_BOXES);
             const first = readFileSync(png);
             await sleep(STILL_MS);
             await page.screenshot({ path: png });
             const pixels = async (shot: Buffer) => new Uint8Array(await (fromWeb('sharp') as SharpRaw)(shot).ensureAlpha().raw().toBuffer());
-            looping = boxes.length > 0 && changedWithin(await pixels(first), await pixels(readFileSync(png)), SCREEN.width * SCREEN.scale, boxes, SCREEN.scale);
+            const [before, after] = [await pixels(first), await pixels(readFileSync(png))];
+            looping = boxes.length > 0 && changedWithin(before, after, SCREEN.width * SCREEN.scale, boxes, SCREEN.scale);
+            // Where it moved, for whoever reads the run.
+            const box = changedBox(before, after, SCREEN.width * SCREEN.scale, SCREEN.scale);
+            moved = box === null ? ', not between the last two shots' : `, at ${box.x},${box.y} ${box.w}×${box.h} pt`;
           }
-          console.log(`appweb ${scene.name}${still ? '' : looping ? ' (still but for its loops turning: one moment of them is kept)' : ' (still moving: the last shot is kept)'}`);
+          console.log(`appweb ${scene.name}${still ? '' : looping ? ' (still but for its loops turning: one moment of them is kept)' : ` (still moving${moved}: the last shot is kept)`}`);
           if (!still && !looping) moving.push(scene.name);
         }
       });

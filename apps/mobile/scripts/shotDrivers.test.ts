@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { appWebAnswering, blocked, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
+import { APP_WEB_STILL_SHOTS, appWebAnswering, blocked, changedBox, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -473,4 +473,26 @@ test('a screen whose only motion is its loops turning (a workplace\'s screens, a
   const step = read('./scene-shots.ts');
   expect(step).toContain('changedWithin(');
   expect(step).toContain('LOOP_BOXES');
+});
+
+test('where a screen that never stood still moved, in points, for the run to say', () => {
+  const a = new Uint8Array(4 * 3 * 4).fill(10);
+  const b = new Uint8Array(4 * 3 * 4).fill(10);
+  expect(changedBox(a, b, 4, 1)).toBeNull();
+  b[(1 * 4 + 1) * 4] = 200;
+  b[(2 * 4 + 3) * 4 + 1] = 200;
+  expect(changedBox(a, b, 4, 1)).toEqual({ x: 1, y: 1, w: 3, h: 2 });
+  expect(read('./scene-shots.ts')).toContain('changedBox(');
+});
+
+test('the app\'s web is given twice the tries to stand still, past a picture Chrome rasters on other pixels for one shot now and then', async () => {
+  expect(APP_WEB_STILL_SHOTS).toBe(2 * STILL_SHOTS);
+  // A shot in three unlike the others: still within twice the tries, not within the phone's.
+  const jitter = (i: number) => Buffer.from(i % 3 === 2 ? 'other pixels' : 'page');
+  let taken = 0;
+  expect((await stillShot(() => jitter(taken++), { wait: async () => undefined })).still).toBe(false);
+  taken = 0;
+  const flaky = [0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0].map((n) => Buffer.from(n === 2 ? 'other pixels' : 'page'));
+  expect((await stillShot(() => flaky[taken++], { wait: async () => undefined, shots: APP_WEB_STILL_SHOTS })).still).toBe(true);
+  expect(read('./scene-shots.ts')).toContain('shots: APP_WEB_STILL_SHOTS');
 });
