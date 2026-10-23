@@ -18,6 +18,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { onHardwareBack } from '../../ui/hardwareBack';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
+import { useOwnT } from '../ownWords';
 import { CardStage, Outcome } from './Cards';
 import { CrisisBar } from './Crisis';
 import { Basket, Finance, FinanceShell, FinanceTabs, FinanceToasts } from './Finance';
@@ -316,7 +317,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   const cards = useT('cards');
   const play = useT('play');
   const end = useT('end');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const router = useRouter();
   const { content, text } = useWords();
   const status = useGame((s) => s.status);

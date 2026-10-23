@@ -25,6 +25,7 @@ import { Sprite } from '../../ui/Sprite';
 import { Language, PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useAccount, useAccountSaving, useCommunity, useGame, useGuide, usePush, useSaving, useSettings, useWords } from '../context';
+import { useOwnT } from '../ownWords';
 import { useT } from '../words';
 
 /** The languages the game speaks, each under its own name. */
@@ -167,7 +168,7 @@ export function Switches() {
  */
 function WeeklyNotice() {
   const t = useT('settings');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const rankings = useT('rankings');
   const { locale } = useSettings();
   const community = useCommunity();
@@ -504,7 +505,7 @@ export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
 export function Standing({ shown }: { shown: GameView }) {
   const t = useT('settings');
   const common = useT('common');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const { content, text, names, fmt } = useWords();
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const ranked = useGame((s) => s.ranked);

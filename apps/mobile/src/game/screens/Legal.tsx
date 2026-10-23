@@ -2,17 +2,18 @@ import { View } from 'react-native';
 import { Screen } from '../../ui/Page';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { LEGAL_EMAIL, LEGAL_NAME } from '../site';
+import { LEGAL_SECTION } from '../ownWords';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 
 /**
  * Privacy and the legal notice: plain words, reached only from the foot of the front page (the web's legal/page.tsx). The sections are the
- * web's, in its order, in the phone's own words (`phone.legal`): the phone's notification address instead of the browser's, Expo and Firebase
+ * web's, in its order, in the phone's own words on the phone (`phone.legal`; on the web the Next web's own: `LEGAL_SECTION`, game/ownWords.ts): the phone's notification address instead of the browser's, Expo and Firebase
  * carrying the notices instead of the site and its visits, and the app's storage instead of the browser's. Who answers for it (the owner and
  * the contact, if the build names them) is the web's `legal.owner` and `legal.contact`; the contact is shown here and nowhere else.
  */
 export function Legal() {
-  const t = useT('phone.legal');
+  const t = useT(LEGAL_SECTION);
   const web = useT('legal');
   const sections = [
     [t('noticeTitle'), t('noticeBody')],

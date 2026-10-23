@@ -17,6 +17,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { useAccount, useAccountOffer, useCommunity, useGame, useRuns, useSaving, useSignedIn, useUntilFresh, useWords } from '../context';
 import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
+import { useOwnT } from '../ownWords';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
@@ -31,7 +32,7 @@ export function Home() {
   const meta = useT('meta');
   const settings = useT('settings');
   const legal = useT('legal');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const common = useT('common');
   const { content, text, names } = useWords();
   // Only what the door draws: the round and the city of the life, not the whole view that changes with every step of it.

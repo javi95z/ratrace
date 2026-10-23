@@ -16,6 +16,7 @@ import { bannerSize, shrunkTo, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useInRoom, useSaving, useSettings, useT, useWords } from '../context';
+import { useOwnT } from '../ownWords';
 import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
 import { HealthCoverNote } from './HealthCover';
@@ -590,7 +591,7 @@ export function ProfileSheet({ open, onClose }: { open: boolean; onClose(): void
  */
 export function Leave({ onLeave }: { onLeave?: () => void }) {
   const t = useT('profile');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const saving = useSaving();
   const router = useRouter();
   const leaving = useRef(false);
