@@ -8,9 +8,9 @@ import type { RatPiece } from './rat';
  * the same place, so cutting and fading them before they are scaled or after is the same thing, a pixel at a time. Only the rounding differs (the
  * CPU's here, the GPU's on the canvas): `player-editor-wear` shot again, 19,985 pixels a level apart (a few up to 5 of 255), its score unchanged.
  *
- * Why: the grid drew each choice through layers of its own (one for the cut, one for the fading), forty-odd in one frame on the UI thread, with GPU
- * programs no other canvas of the app uses (compiled the first time they are drawn: a frame of 200 ms on the simulator with the app's shader cache
- * empty, 986 ms measured in Task 14). Put together here, on the JS thread, on a surface of the CPU's, the grid is plain pictures only.
+ * Why: the grid drew each choice through layers of its own (one for the cut, one for the fading), some forty offscreen layers in one frame on the UI
+ * thread, the faint ones through a colour-matrix program no other canvas uses (the cut is every rat's, the editor's big one too), compiled the first
+ * time it is drawn: a frame of 200 ms on the simulator with the app's shader cache empty, 986 ms measured in Task 14. Put together here, on the JS thread, on a surface of the CPU's, the grid is plain pictures only.
  */
 
 /** What is put together: the pieces of one rat, or one backdrop alone, each with its picture (the grid draws nothing until every one is in). */
