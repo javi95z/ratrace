@@ -283,3 +283,36 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
 - **Captcha.** If the hosted project asks for one on guest sign-in, Turnstile is shown in a WebView and its token is handed to `@ratrace/online`.
 - **Tests.** They use the web's in-memory ranked and room servers (`apps/web/src/testing/*Server.ts`, already reused by the tools), with no live project. The phase's end check, a life begun on one client and finished on the other, runs against the live project only with the user's go-ahead, as a guest, and cleans its own rows.
 - **The legal notice.** The phone's notice says that nothing is sent. Phase 3 makes that false, so the notice must change before any build reaches a player. The words are the user's to settle (deferred by them); the code shows the web's online notice until they do.
+
+## Phase 5 design (2026-10-23)
+
+**Goal.** The app becomes the web: the same Expo app, built for the browser, replaces the Next web at the same address, with nothing lost for a
+player who already plays there: their saves, their account, their links, their installed web app and their notices. The web must be no worse
+than today's: first visit, speed, search, sharing.
+
+**Decided with the user**
+- The app is made into the web (the spike's way A), not the Next web kept beside it (`docs/superpowers/reports/2026-10-23-phase-5-spike.md`).
+- Phase 5 comes before phase 4. The Play Console account (the user's company) runs its own waits meanwhile.
+
+**How it is built (the builder's calls; the user may overrule)**
+- **One app, platform files.** What differs on the web lives in `.web.ts(x)` twins of the phone's files, with the same exports, picked by Metro
+  for the web build; screens do not ask which platform they are on. Every contract in
+  `docs/superpowers/reports/2026-10-23-phase-5-web-inventory.md` is kept byte for byte: IndexedDB `ratrace` v1, the localStorage keys, the
+  account's session under supabase-js's own key, `/rules/*.js`, the URLs, `/sw.js` and its caches, `push_subscriptions`.
+- **A light web.** The web build carries none of the phone's weight: no Skia (its 14 drawing pieces drawn with the browser's images, CSS, SVG
+  and canvas, as the Next web draws them), no formatjs polyfills (the browser's `Intl`), no bundled older rules (fetched from `/rules`), no
+  SQLite. Budget, checked by a script on every web export: no `.wasm` file, JavaScript ≤ 1.35 MB gzip in all after plan 5a, and after plan 5b's
+  splitting ≤ 0.8 MB for the first page.
+- **Three plans.**
+  1. **5a, the app runs as a light web**: the web twins above, the web's cloud wiring (Google by redirect, session and refresh as on the web,
+     the page's events and errors from the browser, Turnstile, sharing, clipboard), a whole life played in a browser on saves written by the
+     Next web, scenes compared with the Next web in the same browser.
+  2. **5b, the web's platform**: the language in the URL and `/` → `/{l}`, HTML for each page (static output) with its title, description,
+     canonical, hreflang and share image, sitemap and robots, the service worker with the Next web's caches and notices (VAPID), the install
+     offer, Vercel Analytics, the desk layout and keyboard shortcuts, code split by page, a Vercel preview deployment beside the live web.
+  3. **5c, the swap**: the Vercel project builds the Expo web, with the user's go-ahead, after a side-by-side check on the preview; the Next
+     web's code is retired from `dev` after a quiet week.
+- **Where it is done.** On `expo`, as phases 1–3. The web keeps working from `dev` untouched until 5c; anything 5a/5b need from the server or
+  `packages/*` is additive.
+- **Checked against the Next web in one browser.** The scene shots gain a target for the app's web export, shot beside the Next web's
+  `/kit/scene` pages with Playwright, at phone and desk widths.
