@@ -181,6 +181,9 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   /** Pairs of versions the server said it does not hold. No life on them is sent until the page is opened anew. */
   private readonly unheld = new Set<string>();
 
+  /** Who wants to know when the account has been read (`onAccountRead`). */
+  private readonly reads = new Set<() => void>();
+
   private running: Promise<void> | null = null;
   /** What has been asked for and not begun: nothing, sending what the device has, or reading the account first. */
   private wanted: 'nothing' | 'send' | 'meet' = 'nothing';
@@ -261,6 +264,20 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     this.changes.add(listener);
     return () => {
       this.changes.delete(listener);
+    };
+  };
+
+  /**
+   * Whether the account of whoever is signed in has been read since they signed in: its lives in progress taken or offered, its finished lives in.
+   * False again when someone else signs in.
+   */
+  readonly accountRead = (): boolean => this.known !== null;
+
+  /** Calls `listener` each time the account has just been read, once the device holds what it took from it. Returns how to stop. */
+  readonly onAccountRead = (listener: () => void): (() => void) => {
+    this.reads.add(listener);
+    return () => {
+      this.reads.delete(listener);
     };
   };
 
@@ -358,6 +375,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       await this.giveUpThere(cloud);
       const met = meet || this.known === null;
       const known = met ? (this.known = await this.meet(cloud)) : (this.known as Known);
+      if (met) for (const read of this.reads) read();
       const outcome = await this.send(cloud, known, met);
       if (outcome === 'failed') throw new Error('the account did not take it');
       if (outcome === 'meet') {

@@ -149,6 +149,12 @@ interface Cloud {
   /** True where the phone has a project to sign in to. */
   canSignIn: boolean;
   /**
+   * Resolves once the life on the phone is the freshest the account knows of, for what acts on it (Continue): at once, unless the account of whoever
+   * is signed in is being read at a start (signed in, the network up); then once it has been read and what it brought is opened, or after
+   * `FRESH_WAIT_MS` at most. Never a round played on a copy another device has played further. Null where there is nothing to wait for: act at once.
+   */
+  untilFresh(): Promise<void> | null;
+  /**
    * Starts the game again, as a page is loaded again: everything the screens hold is drawn anew from what the device holds, from the settings
    * given (what the device holds of them, so nothing the player set flashes back to its default while the device is read), on the front door.
    */
@@ -162,6 +168,38 @@ const ProfileContext = createContext<Profile | null>(null);
 /** Finished lives, the latest first. Null until the device has answered. */
 const RunsContext = createContext<{ runs: FinishedRun[] | null } | null>(null);
 const CloudContext = createContext<Cloud | null>(null);
+
+/** The longest what acts on the life in progress waits for the account to be read at a start (`untilFresh`). */
+export const FRESH_WAIT_MS = 1500;
+
+/** What the phone's mirror tells besides the web's: whether the account has been read since whoever is signed in signed in (`@ratrace/online/mirror`). */
+type ReadSaves = AccountSaves & { accountRead?(): boolean; onAccountRead?(listener: () => void): () => void };
+
+/**
+ * Waits, at most `FRESH_WAIT_MS`, while the account is being read: someone is signed in, the mirror has met no account of theirs yet, and its pass is
+ * neither off (no cloud) nor failed (no network: `waiting`). Then waits for the life the account brought to be opened (`opening`, null once it is).
+ * Null where neither is under way.
+ */
+export function freshLife(saves: ReadSaves, account: Account, opening: () => Promise<unknown> | null, schedule: (run: () => void, ms: number) => unknown = setTimeout): Promise<void> | null {
+  const reading = () => saves.accountRead !== undefined && !saves.accountRead() && account.state().kind !== 'offline' && saves.status() !== 'off' && saves.status() !== 'waiting';
+  if (!reading() && opening() === null) return null;
+  return (async () => {
+    if (reading()) await new Promise<void>((resolve) => {
+      let over = false;
+      const stops: Array<() => void> = [];
+      const done = () => {
+        if (over) return;
+        over = true;
+        for (const stop of stops) stop();
+        resolve();
+      };
+      if (saves.onAccountRead) stops.push(saves.onAccountRead(done));
+      stops.push(saves.subscribe(() => !reading() && done()));
+      schedule(done, FRESH_WAIT_MS);
+    });
+    await opening()?.catch(() => undefined);
+  })();
+}
 
 /** What the phone's lives need from the outside world: ids, seeds, the clock. */
 export function phoneDeps(): SessionDeps {
@@ -432,6 +470,8 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
   const [profile, setProfile] = useState<Profile>(() => (startedWith ? { ...newProfile(), settings: startedWith } : newProfile()));
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
+  // The opening of the life the account last brought (`onDeviceChanged`), while it is under way: what waits for the freshest life waits for it too.
+  const reopened = useRef<Promise<unknown> | null>(null);
 
   // Held when read again only if it changed: the device is read after every step and nearly always says what it said.
   const holdProfile = useCallback((read: Profile) => setProfile((held) => (sameProfile(held, read) ? held : read)), []);
@@ -486,7 +526,14 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     // What the account brings from another device: a life is opened as the device now has it, the rest is read again. The same life under a
     // new id is opened too, with nothing to tell the player: nothing of it changed.
     const stopSaves = made.saves.onDeviceChanged((what) => {
-      if (what === 'game') void game.getState().reopen();
+      if (what === 'game') {
+        const opening = game.getState().reopen();
+        reopened.current = opening;
+        const over = () => {
+          if (reopened.current === opening) reopened.current = null;
+        };
+        void opening.then(over, over);
+      }
       else if (what === 'renamed') void game.getState().boot();
       else refresh(true);
     });
@@ -572,9 +619,10 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     }),
     [made, game, words, locale, reload, setLocale, changeProfile],
   );
+  const untilFresh = useCallback(() => freshLife(made.saves, made.account, () => reopened.current), [made]);
   const cloud = useMemo<Cloud>(
-    () => ({ rooms: made.rooms, account: made.account, saves: made.saves, community: made.community, track: made.track, push: made.push, store: made.store, canSignIn: made.canSignIn, restart }),
-    [made, restart],
+    () => ({ rooms: made.rooms, account: made.account, saves: made.saves, community: made.community, track: made.track, push: made.push, store: made.store, canSignIn: made.canSignIn, untilFresh, restart }),
+    [made, untilFresh, restart],
   );
   const { reducedMotion, sound } = profile.settings;
   const settings = useMemo(() => ({ reducedMotion, sound }), [reducedMotion, sound]);
@@ -875,6 +923,11 @@ export const usePush = (): Push => useCloud().push;
 export type { Push, PushOn } from '../online/push';
 
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
+/** What waits for the freshest copy of the life in progress before acting on it (Continue): see `Cloud.untilFresh`. */
+export function useUntilFresh(): () => Promise<void> | null {
+  return useCloud().untilFresh;
+}
+
 export function useSaving(): boolean {
   const { saving } = useGameContext();
   return !useSyncExternalStore(saving.subscribe, saving.degraded, () => false);

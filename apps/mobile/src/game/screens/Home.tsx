@@ -14,7 +14,7 @@ import { RatAvatar } from '../../ui/RatAvatar';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
-import { useAccount, useAccountOffer, useCommunity, useGame, useRuns, useSaving, useSignedIn, useWords } from '../context';
+import { useAccount, useAccountOffer, useCommunity, useGame, useRuns, useSaving, useSignedIn, useUntilFresh, useWords } from '../context';
 import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
@@ -59,6 +59,20 @@ export function Home() {
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
   // A game with others that is not over comes before everything else, in gold.
   const turn = useRoomLive();
+  // Continue acts on the freshest copy of the life: pressed while the account is being read at a start, it waits for it (a second and a half at
+  // most), the button still drawn, its detail the web's word for loading; a round another device has played further is never played here again.
+  const untilFresh = useUntilFresh();
+  const [continuing, setContinuing] = useState(false);
+  const carryOn = () => {
+    if (continuing) return;
+    const waiting = untilFresh();
+    if (waiting === null) return router.push('/play');
+    setContinuing(true);
+    void waiting.then(() => {
+      setContinuing(false);
+      router.push('/play');
+    });
+  };
 
   return (
     <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
@@ -94,7 +108,7 @@ export function Home() {
                 tone={turn ? {} : GOLD}
                 bg={turn ? 'night-600' : 'gold-500'}
                 style={{ minHeight: 56, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
-                onPress={() => router.push('/play')}
+                onPress={carryOn}
               >
                 {challenge !== null ? (
                   // A life of the weekly challenge says so before anything else: the attempt that counts, or a practice.
@@ -109,7 +123,7 @@ export function Home() {
                 <PixelText size={19} tone={turn ? 'cream' : 'ink-900'} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>{t('continue')}</PixelText>
                 {/* The detail is Chakra Petch inside that pixel text: it keeps its font-size-adjust (so it is drawn larger than 13) and its 1.1 line. */}
                 <ReadText size={adjustedRead(13)} tone={turn ? 'ink-200' : 'ink-700'} lineHeight={13 * 1.1} style={{ textAlign: 'center', letterSpacing: BUTTON_SPACING }}>
-                  {t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, round), city: names.cities[cityId] })}
+                  {continuing ? common('loading') : t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, round), city: names.cities[cityId] })}
                 </ReadText>
               </Raised>
             ) : null}

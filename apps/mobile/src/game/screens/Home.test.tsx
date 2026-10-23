@@ -582,6 +582,94 @@ describe('the front door of a player with an account', () => {
   }
   const GUEST: AccountState = { kind: 'guest', userId: 'u-guest', notice: null };
   const MEMBER: AccountState = { kind: 'member', userId: 'u-member', email: null };
+
+  /**
+   * The account's copy as the phone's mirror tells of it: not read yet (the start's reading under way), until the test reads it: the device then
+   * holds what the account brought (`deviceChanged`), and those who wait are told it has been read.
+   */
+  function readingAccount() {
+    let read = false;
+    const changes = new Set<(what: 'game') => void>();
+    const reads = new Set<() => void>();
+    const saves = {
+      status: () => 'sending' as const,
+      offer: () => null,
+      subscribe: () => () => undefined,
+      onDeviceChanged: (listener: (what: 'game') => void) => (changes.add(listener), () => void changes.delete(listener)),
+      takeOffer: async () => false,
+      declineOffer: async () => undefined,
+      accountRead: () => read,
+      onAccountRead: (listener: () => void) => (reads.add(listener), () => void reads.delete(listener)),
+    };
+    const readNow = () =>
+      act(() => {
+        changes.forEach((listener) => listener('game'));
+        read = true;
+        reads.forEach((listener) => listener());
+      });
+    return { saves: saves as unknown as AccountSaves, readNow };
+  }
+
+  /** A life on this phone a round behind the account's copy of it, played further on another device. */
+  async function behind(services: ReturnType<typeof memoryServices>) {
+    const session = await services.sessions.start('engineer');
+    const older = await services.store.loadGame();
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [] });
+    const newer = await services.store.loadGame();
+    await services.store.saveGame(older as never);
+    return { newer, newerRound: session.view().round };
+  }
+
+  it('never continues a life at a round another device has played past: pressed while the account is read, it waits, then opens the further copy', async () => {
+    const services = memoryServices();
+    const { newer, newerRound } = await behind(services);
+    const cloud = readingAccount();
+    let roundNow: number | null = null;
+    function Round() {
+      roundNow = useGame((s) => s.view?.round ?? null);
+      return null;
+    }
+    const opened: Array<number | null> = [];
+    router.push.mockImplementation(() => void opened.push(roundNow));
+    try {
+      renderGame(
+        <>
+          <Home />
+          <Round />
+        </>,
+        { ...services, account: accountOf(MEMBER).account, saves: cloud.saves },
+      );
+      const carry = await screen.findByRole('link', { name: /Continue your life/ });
+      const before = carry.textContent;
+      expect(roundNow).toBe(newerRound - 1);
+      fireEvent.click(carry);
+      // Waiting for the account: the button still there, its detail the web's word for loading, nothing opened.
+      expect(router.push).not.toHaveBeenCalled();
+      expect(carry.textContent).toContain('Loading…');
+      // The account read: it brought the further copy, which the device now holds and the game opens; the line says where it is now, and Play opens it.
+      await services.store.saveGame(newer as never);
+      cloud.readNow();
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+      expect(opened).toEqual([newerRound]);
+      expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).not.toBe(before);
+    } finally {
+      router.push.mockReset();
+    }
+  });
+
+  it('waits a second and a half at most for the account: past that, it carries on with the life it has', async () => {
+    const services = memoryServices();
+    await services.sessions.start('engineer');
+    const cloud = readingAccount();
+    renderGame(<Home />, { ...services, account: accountOf(MEMBER).account, saves: cloud.saves });
+    const carry = await screen.findByRole('link', { name: /Continue your life/ });
+    const pressed = Date.now();
+    fireEvent.click(carry);
+    expect(router.push).not.toHaveBeenCalled();
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'), { timeout: 3000 });
+    expect(Date.now() - pressed).toBeGreaterThanOrEqual(1400);
+  });
   /** The other players, answering only what the front door asks: the player's own profile, their friends, today's attempt. */
   const othersOf = (answers: Partial<Community> = {}): Community =>
     ({ me: async () => null, friends: async () => null, challengeEntry: async () => null, ...answers }) as unknown as Community;

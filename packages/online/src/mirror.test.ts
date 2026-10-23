@@ -1241,3 +1241,26 @@ describe('the lives in progress the account offers, played back at a pace (a pho
     expect(mirror.offer()?.gameId).toBe(theirs.gameId);
   });
 });
+
+describe('whether the account has been read', { timeout: 60_000 }, () => {
+  it('is not, until the mirror has met it; then it is, and who listens is told, once a meeting; someone else signing in makes it not again', async () => {
+    const { cloud, hold } = fakeCloud();
+    const d = device(cloud);
+    const told = vi.fn();
+    d.mirror.onAccountRead(told);
+    expect(d.mirror.accountRead()).toBe(false);
+    const release = hold('games');
+    const meeting = d.mirror.sync();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(d.mirror.accountRead()).toBe(false);
+    release();
+    await meeting;
+    expect(d.mirror.accountRead()).toBe(true);
+    expect(told).toHaveBeenCalledTimes(1);
+    const changing = d.mirror.accountChanged();
+    expect(d.mirror.accountRead()).toBe(false);
+    await changing;
+    expect(d.mirror.accountRead()).toBe(true);
+    expect(told).toHaveBeenCalledTimes(2);
+  });
+});
