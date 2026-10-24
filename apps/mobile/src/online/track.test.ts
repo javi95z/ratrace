@@ -290,7 +290,8 @@ describe('the phone\'s sender, over the phone\'s cloud', () => {
 
   it('is what the game counts with: the game\'s context hands it the account, once for each start of the app', () => {
     const context = readFileSync(new URL('../game/context.tsx', import.meta.url), 'utf8');
-    expect(context).toContain('track: phoneTrack(online.account, kvText) }');
+    // On the web it also goes to Vercel, as the Next web's (pwa/visits.web.tsx); on the phone that is the very same sender.
+    expect(context).toContain('track: alsoToVercel(phoneTrack(online.account, kvText)) }');
     expect(context.match(/\bphoneTrack\(/g)).toHaveLength(1);
   });
 

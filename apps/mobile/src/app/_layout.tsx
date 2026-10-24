@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
 import { InstallProvider, ViewportSync } from '../pwa/install';
 import { useServiceWorker } from '../pwa/register';
+import { Visits } from '../pwa/visits';
 import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
@@ -32,6 +33,8 @@ export default function RootLayout() {
     <GestureRoot style={{ flex: 1 }} onTouchStart={perfTouchStarted} onTouchEnd={perfTouched}>
       {/* The timing probe's frames (a build made with EXPO_PUBLIC_PERF=1 only: nothing in any other, ui/perf.ts). */}
       <PerfFrames />
+      {/* The web's count of visits, with no query in the address (pwa/visits.web.tsx); nothing on the phone. */}
+      <Visits />
       {/* The safe areas, measured where the router does not (the web: ui/SafeArea.web.tsx); nothing more on the phone. */}
       <SafeArea>
         {/* The game waits here for its language's words where they are fetched (the web: game/languageWords.web.ts); the page the build drew stays

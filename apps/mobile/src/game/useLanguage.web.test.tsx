@@ -7,9 +7,10 @@ import RecordsRoute from '../app/[locale]/records';
 import { kvLanguage } from '../kvStore';
 import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { pathname, routeMoved } from '../testing/fakes';
+import { speaking } from '../testing/memoryServices';
 import { device, memoryServices, params, renderGame, router } from '../testing/render';
 import { Language } from '../ui/text';
-import { useSettings } from './context';
+import { GameProvider, useSettings } from './context';
 import { LanguagePick } from './screens/Settings';
 
 /*
@@ -72,6 +73,31 @@ test('a page at /es/play draws in Spanish, whatever the cookie and the browser s
   expect(screen.getByRole('heading', { name: 'Historial' })).toBeTruthy();
   // The page opened in a language is the language the site remembers, as the Next web's middleware writes it for each page.
   expect(cookie()).toBe('es');
+});
+
+test('each page opened in a language writes the cookie again, with the Next web\'s attributes, so a returning player keeps the language', () => {
+  const services = { ...memoryServices(), language: kvLanguage };
+  const page = (locale: 'en' | 'es') => <GameProvider services={speaking(services, locale)}><Speaks /></GameProvider>;
+  const set = vi.spyOn(document, 'cookie', 'set');
+  params.locale = 'en';
+  pathname.now = '/en/play';
+  const view = renderGame(<Speaks />, services);
+  expect(set).toHaveBeenLastCalledWith('NEXT_LOCALE=en; path=/; max-age=31536000; samesite=lax');
+  // The same language, another page, the cookie gone meanwhile (a browser that keeps a script's cookies a week at most): written again.
+  document.cookie = 'NEXT_LOCALE=; path=/; max-age=0';
+  set.mockClear();
+  pathname.now = '/en/rankings';
+  view.rerender(page('en'));
+  expect(set).toHaveBeenCalledWith('NEXT_LOCALE=en; path=/; max-age=31536000; samesite=lax');
+  expect(cookie()).toBe('en');
+  // Another language: that page's is the one kept.
+  set.mockClear();
+  params.locale = 'es';
+  pathname.now = '/es/rankings';
+  view.rerender(page('es'));
+  expect(set).toHaveBeenCalledWith('NEXT_LOCALE=es; path=/; max-age=31536000; samesite=lax');
+  expect(cookie()).toBe('es');
+  set.mockRestore();
 });
 
 test('outside the pages of a language, the language is the cookie\'s, else the browser\'s, else English', () => {

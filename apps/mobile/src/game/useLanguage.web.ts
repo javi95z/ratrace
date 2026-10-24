@@ -7,7 +7,7 @@ import { hrefOf, pageAt, useLocaleParam } from './pages';
 
 /**
  * The web export's twin of `useLanguage.ts` (Metro picks it for the web): a page's language is its address's (`/es/play` speaks Spanish), as the Next
- * web's `[locale]`; the cookie (`keep`, NEXT_LOCALE) is written again for each page opened in one, as the Next web's middleware writes it, and only
+ * web's `[locale]`; the cookie (`keep`, NEXT_LOCALE) is written again for each page opened in one (also as the router moves between pages), as the Next web's middleware writes it for each page, and only
  * chooses where an address with no language leads (the bare `/`, a development route): the cookie's, else the browser's, else English.
  *
  * Choosing a language opens the same page in it (the Next web's `Link locale={code}`), the cookie written for the next visit, once its words are in (each
@@ -26,9 +26,11 @@ export function useLanguage(keep: LanguageKeep): GameLanguage {
   // The address as it is now, for a change asked for later.
   const now = useRef({ path, locale });
   now.current = { path, locale };
+  // Written again for each page opened, whichever way (a full load, or the router's move to another page): a cookie a script writes lives a week at
+  // most in some browsers, and a visit within that week is a year more.
   useEffect(() => {
     if (isLocale(param)) keep.write(param);
-  }, [keep, param]);
+  }, [keep, param, path]);
   // The language last asked for (chosen, or the account's): a language whose words come in after another was asked for is not opened.
   const asked = useRef<Locale | null>(null);
   const choose = useCallback(

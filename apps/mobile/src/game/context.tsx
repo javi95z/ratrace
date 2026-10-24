@@ -36,6 +36,7 @@ import { phoneConnection, phonePage } from '../online/page';
 import { phonePush } from '../online/push';
 import type { Push } from '../online/push';
 import { phoneTrack } from '../online/track';
+import { alsoToVercel } from '../pwa/visits';
 import { closeAllSheets, closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
 import { whenShown } from '../ui/drawnFirst';
 import { perfStore } from '../ui/perf';
@@ -266,8 +267,9 @@ export function phoneServices(): Services {
     },
   };
   const wired = servicesOver({ ...online, store: perfStore(online.store, 'saved') }, phoneDeps());
-  // What is counted goes to the game's own project, in a release build only (`online/track.ts`), and the install with it, on the first launch.
-  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, firstDrawn: firstScreen.open, track: phoneTrack(online.account, kvText) };
+  // What is counted goes to the game's own project, in a release build only (`online/track.ts`), and the install with it, on the first launch; on the
+  // web also to Vercel, as the Next web counts (`pwa/visits.web.tsx`).
+  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, firstDrawn: firstScreen.open, track: alsoToVercel(phoneTrack(online.account, kvText)) };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */
