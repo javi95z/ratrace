@@ -171,11 +171,18 @@ export function KeyboardHint({ children }: { children: string }) {
   );
 }
 
-/** What a box is given to hear the keys pressed in it: a key `handler` takes is kept from the page (and from the shortcuts). */
-export function onKeys(handler: Shortcut): { onKeyDown: (event: KeyEvent) => void } {
+/**
+ * What a box is given to hear the keys pressed in it: a key `handler` takes is kept from the page (and from the shortcuts). React's events bubble
+ * out of a portal through the components that drew it, so a sheet opened from inside the box (an amount from a row of the finances) would hand
+ * its keys to the box: a key from inside a sheet the box is not in is not the box's, and is left alone. (The page's shortcuts, heard before the
+ * control in focus, never take a key from inside a sheet: `KeyboardListener`.)
+ */
+export function onKeys(handler: Shortcut): { onKeyDown: (event: KeyEvent & { currentTarget?: unknown }) => void } {
   return {
     onKeyDown: (event) => {
       if (isEditableTarget(event.target)) return;
+      const sheetOf = (node: unknown) => (node instanceof Element ? node.closest('[aria-modal="true"]') : null);
+      if (sheetOf(event.target) !== sheetOf(event.currentTarget)) return;
       if (handler(event)) {
         event.preventDefault();
         event.stopPropagation();

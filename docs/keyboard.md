@@ -55,3 +55,27 @@ dialog focus, inert background content, roving Tab stops, disabled choices, life
 and amount acceleration. The representative play-screen test advances from news and
 answers a card with the keyboard alone. Any new composite control should add its key contract to
 this document and a focused unit test before it ships.
+
+## The app's web (apps/mobile)
+
+The Expo app's web export keeps this contract in `apps/mobile/src/ui/keyboard.web.tsx` (the phone's
+twin, `keyboard.tsx`, does nothing). Two things differ from the Next web's listener, because the
+controls are react-native-web's:
+
+- **The page's shortcuts are heard in the capture phase, before the control in focus.** A
+  react-native-web pressable keeps Enter from the page once it has the focus (it stops the event at
+  React's root), so a bubbling listener would never hear Ctrl + Enter over a focused button. A
+  shortcut therefore takes precedence over a focused control's own handler for the same key: a
+  screen must not register a page shortcut for a key one of its composite controls uses while both
+  are on screen (today the cards' arrows and digits, the finances' `[` and `]`, and Ctrl + Enter are
+  never on screen with such a control).
+- **No page shortcut takes a key from inside a sheet.** A sheet's keys are its own (Escape, its
+  controls, an amount's Ctrl + Enter); the Next web gets this from the order of its listeners.
+
+A composite control hears its own keys where it stands (`onKeys`). React bubbles events out of a
+portal through the components that drew it, so a sheet opened from inside a control would hand its
+keys to that control: `onKeys` leaves alone a key whose target is inside a sheet the control is not
+in. Sheets are dialogs as the Next web's are (`apps/mobile/src/ui/sheetDialog.web.ts`): the panel is
+named by the title and takes the focus (or its Close, or an amount's slider), the backdrop is no Tab
+stop, the page behind is inert while any sheet is open, a focused row taken out hands the focus to
+the row in its place, and the focus goes back to the opener when the sheet closes.

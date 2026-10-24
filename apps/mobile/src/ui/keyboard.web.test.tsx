@@ -3,8 +3,9 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Segmented } from './kit';
-import { acceleratedRangeKey, isEditableTarget, KeyboardListener, useKeyboardHelp, useKeyboardScope } from './keyboard.web';
-import { Tabs } from './overlay';
+import { View } from 'react-native';
+import { acceleratedRangeKey, isEditableTarget, KeyboardListener, onKeys, useKeyboardHelp, useKeyboardScope } from './keyboard.web';
+import { Sheet, Tabs } from './overlay';
 import { Slider } from './Slider';
 
 /*
@@ -147,5 +148,24 @@ describe('the kit\'s composite controls', () => {
     expect(acceleratedRangeKey({ key: 'ArrowRight', shiftKey: true }, 100, 1000, 10)).toBe(200);
     expect(acceleratedRangeKey({ key: 'PageDown', shiftKey: false }, 100, 1000, 10)).toBe(0);
     expect(acceleratedRangeKey({ key: 'ArrowRight', shiftKey: false }, 100, 1000, 10)).toBeNull();
+  });
+});
+
+describe('a control\'s own keys', () => {
+  it('are not handed a key from a sheet it opened, which React bubbles to it out of the sheet\'s portal', async () => {
+    const heard = vi.fn(() => true);
+    render(
+      <View {...onKeys(heard)}>
+        <button type="button">row</button>
+        <Sheet open onClose={() => {}} title="Inside" closeLabel="Close">
+          <button type="button">in the sheet</button>
+        </Sheet>
+      </View>,
+    );
+    const inside = await screen.findByText('in the sheet');
+    press({ key: 'ArrowDown' }, inside);
+    expect(heard).not.toHaveBeenCalled();
+    press({ key: 'ArrowDown' }, screen.getByText('row'));
+    expect(heard).toHaveBeenCalledTimes(1);
   });
 });
