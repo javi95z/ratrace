@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { LOCALES, MESSAGES } from '@ratrace/i18n';
@@ -288,6 +288,49 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
   return problems;
 }
 
+/**
+ * The files of the site beside its pages, which the build writes after the export (`scripts/webBuild.ts`): the icons, the favicon, the share image,
+ * the sitemap, robots and the manifest (`sitePieces.ts`), the worker and its offline page (`serviceWorker.ts`), and the page of nothing the host
+ * answers an address it has nothing at with (`404.html`, the router's, `settlePages`).
+ */
+export const SITE_FILES: readonly string[] = [
+  'favicon.ico',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
+  'icons/apple-touch-icon.png',
+  'og.png',
+  'sitemap.xml',
+  'robots.txt',
+  'manifest.webmanifest',
+  'sw.js',
+  'offline.html',
+  '404.html',
+];
+
+/** The HTML the site serves beside its pages: the bare address (answered by the middleware before it), the offline page and the page of nothing. */
+const OTHER_HTML = ['index.html', 'offline.html', '404.html'];
+
+/**
+ * What is wrong with the site as it is deployed (nothing when it is fine), beyond its export (`judgeWebExport`, `judgeHeads`): each of `SITE_FILES`
+ * is in it; it serves no HTML but its pages (`pages`, `pageFiles`) and `OTHER_HTML` (a template of the router's carries the English head and is in
+ * no sitemap); and no source map, nor a script that names one (the maps are the size check's, made with the export and taken out of it).
+ */
+export function judgeSiteFiles(files: readonly ExportFile[], pages: readonly string[]): string[] {
+  const problems: string[] = [];
+  const paths = new Set(files.map((file) => file.path));
+  const absent = SITE_FILES.filter((path) => !paths.has(path));
+  if (absent.length > 0) problems.push(`the site lacks ${absent.join(', ')}`);
+  const html = new Set([...pages, ...OTHER_HTML]);
+  const strays = files.filter((file) => file.path.endsWith('.html') && !html.has(file.path)).map((file) => file.path);
+  if (strays.length > 0) problems.push(`the site serves ${strays.length} HTML files that are no page of it: ${strays.join(', ')}`);
+  const maps = files.filter((file) => file.path.endsWith('.map'));
+  if (maps.length > 0) problems.push(`the site serves ${maps.length} source map${maps.length === 1 ? '' : 's'}, e.g. ${maps[0].path}`);
+  const naming = files.filter((file) => file.path.endsWith('.js') && file.bytes.includes('//# sourceMappingURL='));
+  if (naming.length > 0) problems.push(`the site has ${naming.length} script${naming.length === 1 ? '' : 's'} that name${naming.length === 1 ? 's' : ''} its source map, e.g. ${naming[0].path}`);
+  return problems;
+}
+
 /** The settings of the live project the app is built with when they are set; the export is made without them, so it never inlines the live project. */
 const LIVE_SETTINGS = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'EXPO_PUBLIC_TURNSTILE_SITE_KEY'];
 
@@ -296,15 +339,15 @@ export function exportEnv(env: Record<string, string | undefined>): Record<strin
   return { ...env, ...Object.fromEntries(LIVE_SETTINGS.map((name) => [name, ''])) };
 }
 
-/** Every file under `dir`, by its path from `dir`. */
-function walk(dir: string, base = dir): string[] {
+/** Every file under `dir`, by its path from `dir`, `/`-separated. */
+export function walk(dir: string, base = dir): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
-    return statSync(path).isDirectory() ? walk(path, base) : [relative(base, path)];
+    return statSync(path).isDirectory() ? walk(path, base) : [relative(base, path).split(sep).join('/')];
   });
 }
 
-interface SourceMap {
+export interface SourceMap {
   sources?: string[];
   sections?: { map: SourceMap }[];
 }
@@ -315,7 +358,7 @@ export function sourcesOf(map: SourceMap): string[] {
 }
 
 /** The pages of the game, as its routes are (`src/app/[locale]/*.tsx`, the front door its `index`): the pages the export must have in every language. */
-function routedPages(): string[] {
+export function routedPages(): string[] {
   return readdirSync(join(here, '../src/app/[locale]'))
     .filter((name) => /^[a-z]+\.tsx$/.test(name))
     .map((name) => name.replace(/\.tsx$/, ''))
@@ -323,43 +366,69 @@ function routedPages(): string[] {
     .sort();
 }
 
+/**
+ * Exports the app's web into `out` (`expo export --platform web`) in the environment `env`, with source maps (the checks read what is in each
+ * script from them). Null when it is made, else what went wrong, in words: the line that says what Metro could not do (near the top, the import
+ * chain that led there after it) and the end of what it said.
+ */
+export function exportWeb(out: string, env: Record<string, string | undefined>): string | null {
+  const run = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--source-maps', '--output-dir', out], {
+    cwd: join(here, '..'),
+    env: env as NodeJS.ProcessEnv,
+    encoding: 'utf8',
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  if (run.status === 0) return null;
+  const lines = `${run.stdout}\n${run.stderr}`.trim().split('\n');
+  const cause = lines.filter((line) => /Unable to resolve|Error:/.test(line)).slice(0, 3);
+  return `the web export failed (exit ${run.status ?? run.signal}):\n${cause.join('\n')}\n...\n${lines.slice(-12).join('\n')}`;
+}
+
+/**
+ * The files of the export at `out` (its maps apart) with the sources each one's map names, and every source named: from the maps beside them, or
+ * from `known` (by the script's path) for an export whose maps were taken out of it (`scripts/webBuild.ts`).
+ */
+export function readExport(out: string, known?: ReadonlyMap<string, readonly string[]>): { files: ExportFile[]; sources: string[] } {
+  const paths = walk(out);
+  const mapped = new Map<string, readonly string[]>(known ?? paths.filter((path) => path.endsWith('.map')).map((path) => [path.slice(0, -'.map'.length), sourcesOf(JSON.parse(readFileSync(join(out, path), 'utf8')) as SourceMap)]));
+  const files = paths.filter((path) => known !== undefined || !path.endsWith('.map')).map((path) => ({ path, bytes: readFileSync(join(out, path)), sources: mapped.get(path) }));
+  return { files, sources: [...mapped.values()].flat() };
+}
+
+/**
+ * Judges a web export (`judgeWebExport` and `judgeHeads` for the site at `site`), saying its weights as it goes: what is wrong, in words (nothing when
+ * it is fine).
+ */
+export function judgeExport(files: readonly ExportFile[], sources: string[], site: URL = SITE_URL): string[] {
+  const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
+  const rules = bundlesIn(readdirSync(join(here, '../../web/public/rules'))).map((bundle) => bundle.file);
+  const raw = js.reduce((total, file) => total + file.bytes.length, 0);
+  const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
+  const wasm = files.filter((file) => file.path.endsWith('.wasm')).length;
+  console.log(
+    `web export: ${files.length} files, ${js.length} app JS files ${mib(raw)} (${mib(gzipped)} gzip, budget ${mib(JS_GZIP_BUDGET)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
+  );
+  const pages = pageFiles(routedPages(), LOCALES);
+  const words = firstWordsOf(files);
+  const first = firstPageOf(files, words);
+  const named = firstPageOf(files)?.scripts.length ?? 0;
+  console.log(
+    `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts (${named} named by its HTML, ${first.scripts.length - named} of its words), ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
+  );
+  return [...judgeWebExport([...files], sources, rules, pages), ...judgeHeads(files, LOCALES, routedPages(), site)];
+}
+
 function main(): void {
   const out = mkdtempSync(join(tmpdir(), 'ratrace-web-'));
   try {
-    const run = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--source-maps', '--output-dir', out], {
-      cwd: join(here, '..'),
-      env: exportEnv(process.env) as NodeJS.ProcessEnv,
-      encoding: 'utf8',
-      maxBuffer: 256 * 1024 * 1024,
-    });
-    if (run.status !== 0) {
-      const lines = `${run.stdout}\n${run.stderr}`.trim().split('\n');
-      // The line that says what Metro could not do is near the top, and the import chain that led there follows it: show both.
-      const cause = lines.filter((line) => /Unable to resolve|Error:/.test(line)).slice(0, 3);
-      console.error(`the web export failed (exit ${run.status ?? run.signal}):\n${cause.join('\n')}\n...\n${lines.slice(-12).join('\n')}`);
+    const failed = exportWeb(out, exportEnv(process.env));
+    if (failed !== null) {
+      console.error(failed);
       process.exitCode = 1;
       return;
     }
-    const paths = walk(out);
-    const mapped = new Map(paths.filter((path) => path.endsWith('.map')).map((path) => [path, sourcesOf(JSON.parse(readFileSync(join(out, path), 'utf8')) as SourceMap)]));
-    const files = paths.filter((path) => !path.endsWith('.map')).map((path) => ({ path, bytes: readFileSync(join(out, path)), sources: mapped.get(`${path}.map`) }));
-    const sources = [...mapped.values()].flat();
-    const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
-    const rules = bundlesIn(readdirSync(join(here, '../../web/public/rules'))).map((bundle) => bundle.file);
-    const raw = js.reduce((total, file) => total + file.bytes.length, 0);
-    const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
-    const wasm = files.filter((file) => file.path.endsWith('.wasm')).length;
-    console.log(
-      `web export: ${files.length} files, ${js.length} app JS files ${mib(raw)} (${mib(gzipped)} gzip, budget ${mib(JS_GZIP_BUDGET)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
-    );
-    const pages = pageFiles(routedPages(), LOCALES);
-    const words = firstWordsOf(files);
-    const first = firstPageOf(files, words);
-    const named = firstPageOf(files)?.scripts.length ?? 0;
-    console.log(
-      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts (${named} named by its HTML, ${first.scripts.length - named} of its words), ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
-    );
-    const problems = [...judgeWebExport(files, sources, rules, pages), ...judgeHeads(files, LOCALES, routedPages(), SITE_URL)];
+    const { files, sources } = readExport(out);
+    const problems = judgeExport(files, sources);
     for (const problem of problems) console.error(`problem: ${problem}`);
     if (problems.length > 0) process.exitCode = 1;
     else console.log('the web export is as light as it must be');

@@ -1,10 +1,11 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { mkdirSync, readdirSync, renameSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { LOCALES } from '@ratrace/i18n/locales';
 import sharp from 'sharp';
 import { PAGES } from '../src/game/pageList';
 import { SITE_URL } from '../src/game/site';
+import { pageFiles } from './webSize';
 
 /**
  * What the site says to search engines and to the devices that install it, written into the web export after `expo export` (the build runs this
@@ -137,8 +138,54 @@ export async function writeSitePieces(out: string, site: URL = SITE_URL): Promis
   return [...(await writeIcons(out)), ...(await writeShareImage(out)), 'sitemap.xml', 'robots.txt', 'manifest.webmanifest'];
 }
 
+/** Every file under `dir`, by its path from `dir`, `/`-separated. */
+function filesBelow(dir: string, base = dir): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    return statSync(path).isDirectory() ? filesBelow(path, base) : [relative(base, path).split(sep).join('/')];
+  });
+}
+
+/** Removes every folder under `dir` left empty, `dir` kept. */
+function dropEmptyFolders(dir: string): void {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (!statSync(path).isDirectory()) continue;
+    dropEmptyFolders(path);
+    if (readdirSync(path).length === 0) rmdirSync(path);
+  }
+}
+
+/** The router's page of nothing in the export, which the site serves as its `404.html` (Vercel's page for an address it has nothing at). */
+const NOT_FOUND = '+not-found.html';
+
+/**
+ * Leaves in the export at `out` only the HTML the site serves: every page of the game in every language (`en/index.html`, `es/play.html`), the bare
+ * address (`index.html`, which the site's middleware answers before it, and draws the language's front door where it does not) and the offline page;
+ * the router's page of nothing becomes the site's `404.html`. The rest is dropped: the router's templates (`[locale].html`, `[locale]/*.html`,
+ * `_sitemap.html`), which carry the English head and no page's words, and the routes that are development's or the phone's (`/scene`, `/kit`, `/dev`,
+ * `/perf`, `/auth`), which a player never opens on the web (opened, they are the page of nothing: the browser's router draws them all the same). What
+ * it dropped, by path from `out`.
+ */
+export function settlePages(out: string): { dropped: string[] } {
+  const kept = new Set([...pageFiles(PAGES, LOCALES), 'index.html', 'offline.html']);
+  const dropped: string[] = [];
+  for (const file of filesBelow(out).filter((path) => path.endsWith('.html'))) {
+    if (kept.has(file)) continue;
+    if (file === NOT_FOUND) renameSync(join(out, file), join(out, '404.html'));
+    else {
+      rmSync(join(out, file));
+      dropped.push(file);
+    }
+  }
+  dropEmptyFolders(out);
+  return { dropped };
+}
+
 async function main() {
   const out = resolve(process.argv[2] ?? join(here, '../dist'));
+  const { dropped } = settlePages(out);
+  console.log(`site pages: ${dropped.length} templates dropped (${dropped.join(', ')}), the page of nothing as 404.html`);
   const files = await writeSitePieces(out);
   console.log(`site pieces: ${files.length} files in ${out} for ${SITE_URL.href}`);
 }

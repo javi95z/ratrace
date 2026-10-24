@@ -1,7 +1,7 @@
 import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -350,5 +350,31 @@ describe('the head of each page', () => {
 
   it('leaves a page the export lacks to the check of the pages', () => {
     expect(judgeHeads([], LOCALES, pages, SITE)).toEqual([]);
+  });
+});
+
+describe('the site as it is deployed', () => {
+  const file = (path: string) => ({ path, bytes: Buffer.from(path) });
+  const pages = pageFiles(['', 'play'], ['en', 'es']);
+  const site = [...SITE_FILES, ...pages, 'index.html', '_expo/static/js/web/entry-abc.js'].map(file);
+
+  it('has every piece of the site\'s beside its pages: the icons, the share image, the sitemap, robots, the manifest, the worker, the offline page and the page of nothing', () => {
+    expect([...SITE_FILES].sort()).toEqual(
+      ['404.html', 'favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'offline.html', 'og.png', 'robots.txt', 'sitemap.xml', 'sw.js'].sort(),
+    );
+    expect(judgeSiteFiles(site, pages)).toEqual([]);
+    const without = judgeSiteFiles(site.filter((one) => one.path !== 'og.png' && one.path !== 'icons/icon-192.png'), pages);
+    expect(without).toEqual(['the site lacks icons/icon-192.png, og.png']);
+  });
+
+  it('serves no HTML but its pages, the bare address, the offline page and the page of nothing: a template left in is reported', () => {
+    const problems = judgeSiteFiles([...site, file('[locale].html'), file('[locale]/play.html'), file('_sitemap.html')], pages);
+    expect(problems).toEqual(['the site serves 3 HTML files that are no page of it: [locale].html, [locale]/play.html, _sitemap.html']);
+  });
+
+  it('carries no source map, nor a script that names one: they are the check\'s, not the players\'', () => {
+    const named = { path: '_expo/static/js/web/entry-abc.js', bytes: Buffer.from('console.log(1)\n//# sourceMappingURL=/_expo/static/js/web/entry-abc.js.map\n') };
+    const problems = judgeSiteFiles([...site.filter((one) => one.path !== named.path), named, file('_expo/static/js/web/entry-abc.js.map')], pages);
+    expect(problems).toEqual(['the site serves 1 source map, e.g. _expo/static/js/web/entry-abc.js.map', 'the site has 1 script that names its source map, e.g. _expo/static/js/web/entry-abc.js']);
   });
 });

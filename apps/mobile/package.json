@@ -72,6 +72,7 @@
     "ios": "pnpm sprites && pnpm rules && expo start --ios",
     "web": "pnpm sprites && pnpm rules && expo start --web",
     "web:size": "tsx scripts/webSize.ts",
+    "web:build": "tsx scripts/webBuild.ts dist",
     "site:pieces": "tsx scripts/sitePieces.ts",
     "site:worker": "tsx scripts/serviceWorker.ts",
     "typecheck": "tsc --noEmit"

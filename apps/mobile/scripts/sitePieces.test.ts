@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,7 +10,8 @@ import manifest from '../../web/src/app/manifest';
 import { PAGES as WEB_PAGES, SITE_URL as WEB_SITE } from '../../web/src/i18n/metadata';
 import { PAGES } from '../src/game/pageList';
 import { SITE_URL } from '../src/game/site';
-import { ICONS, manifestJson, robotsTxt, sitemapXml, writeSitePieces } from './sitePieces';
+import { ICONS, manifestJson, robotsTxt, settlePages, sitemapXml, writeSitePieces } from './sitePieces';
+import { SITE_FILES } from './webSize';
 
 /*
  * What the site says to search engines and to the devices that install it, held to the Next web's: the sitemap, the robots file and the manifest are
@@ -69,6 +70,8 @@ describe('the files written into the export', () => {
     expect(written.sort()).toEqual(
       ['favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'og.png', 'robots.txt', 'sitemap.xml'].sort(),
     );
+    // And the build's check finds each of them in the site (webSize.ts, `judgeSiteFiles`).
+    for (const file of written) expect(SITE_FILES, file).toContain(file);
     expect(readFileSync(join(made, 'sitemap.xml'), 'utf8')).toBe(sitemapXml(WEB_SITE));
     expect(readFileSync(join(made, 'robots.txt'), 'utf8')).toBe(robotsTxt(WEB_SITE));
     expect(readFileSync(join(made, 'manifest.webmanifest'), 'utf8')).toBe(manifestJson());
@@ -94,5 +97,29 @@ describe('the files written into the export', () => {
       ['icon-maskable-512.png', 512],
       ['apple-touch-icon.png', 180],
     ]);
+  });
+});
+
+describe('the pages the site serves', () => {
+  it('are the game\'s, in every language, the bare address and the offline page: the router\'s templates and development\'s routes are dropped, its page of nothing the site\'s 404', () => {
+    const out = mkdtempSync(join(tmpdir(), 'site-pages-'));
+    try {
+      const pages = ['en/index.html', 'en/play.html', 'es/index.html', 'ru/room.html', 'index.html', 'offline.html'];
+      const templates = ['[locale].html', '[locale]/play.html', '[locale]/room.html', '_sitemap.html', 'kit.html', 'scene.html', 'dev.html', 'perf.html', 'auth.html', 'en/nowhere.html'];
+      for (const file of [...pages, ...templates, '+not-found.html', '_expo/static/js/web/entry-abc.js']) {
+        mkdirSync(join(out, file, '..'), { recursive: true });
+        writeFileSync(join(out, file), file === '+not-found.html' ? 'the page of nothing' : file);
+      }
+      const settled = settlePages(out);
+      expect(settled.dropped.sort()).toEqual([...templates].sort());
+      for (const file of [...pages, '_expo/static/js/web/entry-abc.js']) expect(readFileSync(join(out, file), 'utf8'), file).toBe(file);
+      for (const file of [...templates, '+not-found.html']) expect(existsSync(join(out, file)), file).toBe(false);
+      // An address of no page is answered with the router's page of nothing (drawn by the app in the browser), with a 404 (the host's `404.html`).
+      expect(readFileSync(join(out, '404.html'), 'utf8')).toBe('the page of nothing');
+      // And no folder of templates is left behind.
+      expect(readdirSync(out).sort()).toEqual(['404.html', '_expo', 'en', 'es', 'index.html', 'offline.html', 'ru']);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
   });
 });

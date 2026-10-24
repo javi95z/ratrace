@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "pnpm web:build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/:locale(en|es|ru)", "destination": "/:locale/index.html" },
+    { "source": "/:locale(en|es|ru)/:page(new|challenge|room|rankings|collection|records|play|player|legal)", "destination": "/:locale/:page.html" }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/_expo/static/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}

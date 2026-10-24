@@ -73,12 +73,14 @@ test('the offline check alone lets the site\'s worker run, under the same rules,
   expect(asked.sockets).toHaveLength(1);
   expect(WORKER_REQUESTS_ROUTED).toBe('PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS');
   expect(read('./shotDrivers.ts')).toContain('process.env[WORKER_REQUESTS_ROUTED] = \'1\';');
-  // The one script that allows it makes its export with no project, writes the worker into it as the build does, and serves it on this machine.
+  // The one script that allows it builds the site with no project (the build writes the worker into it), or serves one built with none, on this
+  // machine.
   const offline = read('./web-offline.ts');
   expect([...read('./shotDrivers.ts').matchAll(/'allow'\)/g), ...read('./sceneShots.ts').matchAll(/'allow'\)/g)]).toHaveLength(0);
   expect(offline).toContain("(url) => kept.add(new URL(url).host), 'allow');");
   expect(offline).toContain('exportEnv(process.env)');
-  expect(offline).toContain('writeServiceWorker(dir)');
+  expect(offline).toContain('buildSite(dir, exportEnv(process.env))');
+  expect(offline).toContain('projectsInSite(given)');
   expect(offline).toContain('refuseServerInUse(up, APP_WEB_PORT)');
 });
 

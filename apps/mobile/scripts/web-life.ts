@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -8,7 +7,8 @@ import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { bundlesIn } from './rules';
 import { APP_WEB, APP_WEB_PORT } from './sceneShots';
-import { appWebOf, onThisMachine, projectNamed, serveExport } from './webLife';
+import { buildSite } from './webBuild';
+import { appWebOf, onThisMachine, projectNamed, projectsInSite, serveExport, siteOf } from './webLife';
 import { exportEnv, FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstPageOf, judgeFirstVisit, mib } from './webSize';
 import type { Page } from './shotDrivers';
 import { PORT, raw, refuseServerInUse, root, withWebPage } from './shotDrivers';
@@ -19,12 +19,14 @@ import { PORT, raw, refuseServerInUse, root, withWebPage } from './shotDrivers';
  * (started and stopped here, with no project in its environment), the app's web the Metro already serving it on 8091 (`npx expo start --web
  * --port 8091` in apps/mobile, with no EXPO_PUBLIC_SUPABASE_*), and the browser is kept from every host but this machine.
  *
- *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts [--export]
+ *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts [--export [--site=<folder>]]
  *
- * With `--export` the app's web is not Metro's development server but the export the site will serve: made here (`expo export --platform web`, with
- * no project in its environment, as the size check makes it), into a folder of its own, and served on 8091 as a static host serves it (each page
- * its own HTML, the older rules at `/rules`: `serveExport`). It is the release build: no `__DEV__`, `NODE_ENV=production`, minified, the export's
- * own asset paths. Its pictures and steps are kept apart (`life-export-<n>-...`, `web-life-export-steps.txt`).
+ * With `--export` the app's web is not Metro's development server but the site Vercel will serve: built here as Vercel builds it (`buildSite`, with
+ * no project in its environment, as the size check makes it), into a folder of its own, or the one given (`--site=apps/mobile/dist`, as
+ * `pnpm web:build` left it, refused if it names a project), and served on 8091 as Vercel serves it (`serveExport`: the Routing Middleware, each
+ * page its own HTML by vercel.json's rewrites, its headers, the older rules at `/rules`). It is the release build: no `__DEV__`,
+ * `NODE_ENV=production`, minified, the export's own asset paths. Its pictures and steps are kept apart (`life-export-<n>-...`,
+ * `web-life-export-steps.txt`).
  *
  * 1. On the Next web, a life begun (the nurse) and played to round 3.
  * 2. What the Next web keeps of it read from its origin: the `ratrace` IndexedDB's three stores, and the localStorage keys of the inventory.
@@ -309,25 +311,29 @@ const WRITE_KEPT = async (kept: Kept): Promise<number> => {
 };
 
 /**
- * The export the site will serve, made into a folder of its own with no project in its environment (`exportEnv`, the size check's), and served on
- * the app's web's port. Its folder, and the server to stop.
+ * The site, as Vercel builds it (`buildSite`, the build's own steps and checks), made into a folder of its own with no project in its environment
+ * (`exportEnv`, the size check's), or the one given (`--site=<folder>`, a site built offline: refused if it names a project), and served on the app's
+ * web's port as Vercel serves it (`serveExport`: its middleware, rewrites and headers). Its folder, the server to stop, and whether the folder is
+ * this run's (to remove).
  */
-async function servedExport(): Promise<{ dir: string; server: Server }> {
+async function servedExport(): Promise<{ dir: string; server: Server; made: boolean }> {
   const up = await fetch(`http://localhost:${APP_WEB_PORT}/`).then(() => true, () => false);
   refuseServerInUse(up, APP_WEB_PORT);
-  const dir = mkdtempSync(join(tmpdir(), 'ratrace-web-life-'));
-  console.log(`exporting the app's web into ${dir} (no EXPO_PUBLIC_SUPABASE_*)`);
-  const made = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', dir], {
-    cwd: join(root, 'apps/mobile'),
-    env: exportEnv(process.env) as NodeJS.ProcessEnv,
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-  });
-  if (made.status !== 0) {
-    rmSync(dir, { recursive: true, force: true });
-    throw new Error(`the web export failed (exit ${made.status ?? made.signal}):\n${`${made.stdout}\n${made.stderr}`.trim().split('\n').slice(-20).join('\n')}`);
+  const given = siteOf(process.argv.slice(2));
+  if (given !== null) {
+    const projects = projectsInSite(given);
+    if (projects.length > 0) throw new Error(`the site in ${given} would sign in to ${projects.join(', ')}: build it with no EXPO_PUBLIC_SUPABASE_*`);
+    console.log(`serving the site built in ${given} (no project in it)`);
+    return { dir: given, server: await serveExport(given, APP_WEB_PORT), made: false };
   }
-  return { dir, server: await serveExport(dir, APP_WEB_PORT) };
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-web-life-'));
+  console.log(`building the site into ${dir} (no EXPO_PUBLIC_SUPABASE_*)`);
+  const { problems } = await buildSite(dir, exportEnv(process.env));
+  if (problems.length > 0) {
+    rmSync(dir, { recursive: true, force: true });
+    throw new Error(`the site's build failed:\n${problems.join('\n')}`);
+  }
+  return { dir, server: await serveExport(dir, APP_WEB_PORT), made: true };
 }
 
 async function main() {
@@ -338,7 +344,7 @@ async function main() {
   } finally {
     if (exported) {
       await new Promise((done) => exported.server.close(done));
-      rmSync(exported.dir, { recursive: true, force: true });
+      if (exported.made) rmSync(exported.dir, { recursive: true, force: true });
     }
   }
 }
@@ -407,6 +413,7 @@ async function playLife(exportDir: string | null) {
     // 4. The app's web: Continue reaches the same round, and the life is played to its end.
     // The bare address, which leads to the front door of the cookie's language (the Next web's, on this same host): `/en`.
     await page.goto(`http://localhost:${APP_WEB_PORT}/`, { waitUntil: 'load' });
+    if (target === 'export' && new URL(page.url()).pathname !== '/en') throw new Error(`the site led / to ${page.url()}, not /en (the cookie's language)`);
     if (target === 'dev') {
       // Offline: the page's environment, as Expo's development server gives it, names no project (it was started with no EXPO_PUBLIC_SUPABASE_*).
       const env = await page.evaluate(() => {
@@ -419,7 +426,7 @@ async function playLife(exportDir: string | null) {
       steps.push("   the app's web is offline: its page's environment names no EXPO_PUBLIC_SUPABASE_*");
     } else {
       // The export has no environment at run time: what it was built with is written into it, and it was built here with none.
-      steps.push("   the app's web is the export, made by this run with no EXPO_PUBLIC_SUPABASE_* (exportEnv), served statically on 8091");
+      steps.push("   the app's web is the site as Vercel builds it, with no EXPO_PUBLIC_SUPABASE_* (exportEnv), served on 8091 as Vercel serves it (its middleware led / to /en)");
     }
     console.log(steps.at(-1));
     const goOn = page.getByRole('link', { name: new RegExp(`^${WORDS.continue}`) });

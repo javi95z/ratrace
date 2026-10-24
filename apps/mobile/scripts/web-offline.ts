@@ -1,23 +1,22 @@
-import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MESSAGES } from '@ratrace/i18n';
 import { APP_WEB, APP_WEB_PORT } from './sceneShots';
-import { writeServiceWorker } from './serviceWorker';
 import type { Browser, Page } from './shotDrivers';
 import { guardedContext, launchChrome, raw, refuseServerInUse, root } from './shotDrivers';
-import { writeSitePieces } from './sitePieces';
-import { serveExport } from './webLife';
+import { buildSite } from './webBuild';
+import { projectsInSite, serveExport, siteOf } from './webLife';
 import { exportEnv } from './webSize';
 
 /**
- * The app's web offline after one visit (phase 5b, Task 4): the export the site will serve, made here with no project in its environment, its
- * site's pieces and its worker written into it as the build writes them, served on 8091 as the host serves it (`serveExport`: the worker with
- * its headers), and opened in Chrome with the site's worker let run (`guardedContext(..., 'allow')`; every host but this machine still kept off).
+ * The app's web offline after one visit (phase 5b, Task 4): the site Vercel will serve, built here as Vercel builds it with no project in its
+ * environment (`buildSite`: the export, its pages, its site's pieces and its worker), or the one given (`--site=apps/mobile/dist`), served on 8091
+ * as Vercel serves it (`serveExport`: the middleware, the rewrites, the worker with its headers), and opened in Chrome with the site's worker let
+ * run (`guardedContext(..., 'allow')`; every host but this machine still kept off).
  *
- *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-offline.ts
+ *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-offline.ts [--site=<folder>]
  *
  * 1. Online, one visit to /es: the worker installs (every page in every language and every file precached) and takes the page.
  * 2. Online, /es/records opened: a navigation through the worker, which keeps Spanish as the language last played.
@@ -81,32 +80,40 @@ function fromWorker(answer: Answer | null, address: string): string {
   return `${answer.status()}, from the worker`;
 }
 
-/** The export, made into a folder of its own with no project in its environment, with the site's pieces and the worker written into it. */
-async function madeExport(): Promise<string> {
-  const dir = mkdtempSync(join(tmpdir(), 'ratrace-web-offline-'));
-  console.log(`exporting the app's web into ${dir} (no EXPO_PUBLIC_SUPABASE_*)`);
-  const made = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', dir], {
-    cwd: join(root, 'apps/mobile'),
-    env: exportEnv(process.env) as NodeJS.ProcessEnv,
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-  });
-  if (made.status !== 0) {
-    rmSync(dir, { recursive: true, force: true });
-    throw new Error(`the web export failed (exit ${made.status ?? made.signal}):\n${`${made.stdout}\n${made.stderr}`.trim().split('\n').slice(-20).join('\n')}`);
+/**
+ * The site, built as Vercel builds it (`buildSite`: the export, its pages, its site's pieces and its worker) into a folder of its own with no project
+ * in its environment, or the one given (`--site=<folder>`, built offline: refused if it names a project). Its folder, and whether it is this run's.
+ */
+async function builtSite(): Promise<{ dir: string; made: boolean }> {
+  const given = siteOf(process.argv.slice(2));
+  const known = (dir: string) => {
+    const worker = readFileSync(join(dir, 'sw.js'), 'utf8');
+    steps.push(`the site's worker: ${(/const PRECACHE = (\[[^\]]*\])/.exec(worker)?.[1].split(',').length ?? '?')} files precached, cache ratrace-${/const CACHE = CACHE_PREFIX \+ "([^"]+)"/.exec(worker)?.[1] ?? '?'}`);
+    console.log(steps.at(-1));
+  };
+  if (given !== null) {
+    const projects = projectsInSite(given);
+    if (projects.length > 0) throw new Error(`the site in ${given} would sign in to ${projects.join(', ')}: build it with no EXPO_PUBLIC_SUPABASE_*`);
+    console.log(`serving the site built in ${given} (no project in it)`);
+    known(given);
+    return { dir: given, made: false };
   }
-  await writeSitePieces(dir);
-  const { assets, version } = writeServiceWorker(dir);
-  steps.push(`the export, its site's pieces and its worker: ${assets.length} files precached, cache ratrace-${version}`);
-  console.log(steps.at(-1));
-  return dir;
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-web-offline-'));
+  console.log(`building the site into ${dir} (no EXPO_PUBLIC_SUPABASE_*)`);
+  const { problems } = await buildSite(dir, exportEnv(process.env));
+  if (problems.length > 0) {
+    rmSync(dir, { recursive: true, force: true });
+    throw new Error(`the site's build failed:\n${problems.join('\n')}`);
+  }
+  known(dir);
+  return { dir, made: true };
 }
 
 async function main() {
   const up = await fetch(at('/')).then(() => true, () => false);
   refuseServerInUse(up, APP_WEB_PORT);
   mkdirSync(out, { recursive: true });
-  const dir = await madeExport();
+  const { dir, made } = await builtSite();
   let server: Server | null = null;
   let browser: Browser | null = null;
   const kept = new Set<string>();
@@ -118,9 +125,11 @@ async function main() {
     const page = (await context.newPage()) as unknown as OfflinePage;
     page.on('pageerror', (error) => problems.push(`${new URL(page.url()).pathname}: ${error.message}`));
     // Offline, every file a page asks for must come from the cache (a chunk missing, its language's words among them, and the page is not the
-    // game's): only the invitation's address, left to the network on purpose, may fail.
+    // game's): only the invitation's address, left to the network on purpose, may fail, and Vercel's own Web Analytics, which counts visits
+    // online only (its script is Vercel's, not the site's: the Next web's worker keeps it no more than this one).
     page.on('requestfailed', (request) => {
-      if (!request.isNavigationRequest()) problems.push(`failed: ${new URL(request.url()).pathname}`);
+      const path = new URL(request.url()).pathname;
+      if (!request.isNavigationRequest() && !path.startsWith('/_vercel/insights/')) problems.push(`failed: ${path}`);
     });
 
     // 1. One visit, online: the worker installs (its install waits for the precache) and takes the page.
@@ -145,7 +154,10 @@ async function main() {
     await page.context().setOffline(true);
     const bare = await page.goto(at('/'), { waitUntil: 'load' });
     await drawn(page, 'es', SPANISH);
-    await step(page, `3. offline, /: ${fromWorker(bare, '/')}, the cached /es drawn and taken over (lang es, "${SPANISH}" on it)`, 'offline-bare');
+    // The front door's HTML takes its own address before the app takes it over (src/app/+html.tsx), or the router would draw the bare address's.
+    const address = new URL(page.url()).pathname;
+    if (address !== '/es') throw new Error(`offline, / was drawn at ${address}, not at the address of the page it is (/es)`);
+    await step(page, `3. offline, /: ${fromWorker(bare, '/')}, the cached /es drawn and taken over at its own address, /es (lang es, "${SPANISH}" on it)`, 'offline-bare');
 
     const rankings = await page.goto(at('/es/rankings'), { waitUntil: 'load' });
     await drawn(page, 'es', MESSAGES.es.rankings.title);
@@ -170,7 +182,7 @@ async function main() {
   } finally {
     await browser?.close();
     if (server !== null) await new Promise((done) => server?.close(done));
-    rmSync(dir, { recursive: true, force: true });
+    if (made) rmSync(dir, { recursive: true, force: true });
   }
   steps.push(kept.size === 0 ? 'the browser asked nothing of any other host' : `the browser was kept from: ${[...kept].join(', ')}`);
   console.log(steps.at(-1));

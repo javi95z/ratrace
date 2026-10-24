@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { expect, test } from 'vitest';
-import { appWebOf, fileFor, onThisMachine, projectNamed, serveExport } from './webLife';
+import { appWebOf, fileFor, onThisMachine, projectNamed, projectsInSite, serveExport, siteOf } from './webLife';
 
 test('the whole life runs offline: a page given a project is found, and only this machine is asked', () => {
   expect(projectNamed({ EXPO_PUBLIC_PROJECT_ROOT: '/apps/mobile' })).toBeNull();
@@ -20,61 +20,34 @@ test('the whole life runs offline: a page given a project is found, and only thi
   expect(script).toContain("const fromAppWeb = asked.filter((line) => line.startsWith(`${APP_WEB_PORT}:`));");
 });
 
-test('the export is served as the site will serve it: every route the app\'s page, its files as they are, the older rules as scripts', async () => {
+test('the site is served as Vercel serves it (vercel.json): its files as they are, each page its own HTML, any other address its page of nothing', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
   try {
-    mkdirSync(join(dir, '_expo/static/js/web'), { recursive: true });
-    mkdirSync(join(dir, 'rules'));
-    writeFileSync(join(dir, 'index.html'), '<!doctype html><title>app</title>');
-    writeFileSync(join(dir, '_expo/static/js/web/entry-abc.js'), 'console.log(1)');
-    writeFileSync(join(dir, 'rules/v0.40.0-1.44.0.js'), 'export default 1');
-    // What is asked, and what answers: the file, or the app's page for a route of the app's (any path that names no file).
-    expect(fileFor(dir, '/')).toEqual({ path: join(dir, 'index.html'), type: 'text/html; charset=utf-8' });
-    expect(fileFor(dir, '/play')).toEqual({ path: join(dir, 'index.html'), type: 'text/html; charset=utf-8' });
-    expect(fileFor(dir, '/en/room')).toEqual({ path: join(dir, 'index.html'), type: 'text/html; charset=utf-8' });
-    expect(fileFor(dir, '/_expo/static/js/web/entry-abc.js')).toEqual({ path: join(dir, '_expo/static/js/web/entry-abc.js'), type: 'text/javascript; charset=utf-8' });
-    expect(fileFor(dir, '/rules/v0.40.0-1.44.0.js')?.type).toBe('text/javascript; charset=utf-8');
-    // A file that is not there is not the page: an older rules file missing must fail as it does on the site, not be answered with HTML.
-    expect(fileFor(dir, '/rules/v9.9.9-9.9.9.js')).toBeNull();
-    // Never a file outside the export.
-    expect(fileFor(dir, '/../../etc/passwd')).not.toEqual(expect.objectContaining({ path: '/etc/passwd' }));
-    expect(fileFor(dir, '/%2e%2e/%2e%2e/etc/hosts')).toBeNull();
-
-    const server = await serveExport(dir, 0);
-    try {
-      const port = (server.address() as AddressInfo).port;
-      const page = await fetch(`http://127.0.0.1:${port}/records?x=1`);
-      expect([page.status, page.headers.get('content-type'), await page.text()]).toEqual([200, 'text/html; charset=utf-8', '<!doctype html><title>app</title>']);
-      const rules = await fetch(`http://127.0.0.1:${port}/rules/v0.40.0-1.44.0.js`);
-      expect([rules.status, rules.headers.get('content-type')]).toEqual([200, 'text/javascript; charset=utf-8']);
-      expect((await fetch(`http://127.0.0.1:${port}/rules/v9.9.9-9.9.9.js`)).status).toBe(404);
-    } finally {
-      await new Promise((done) => server.close(done));
-    }
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-test('a static export is served page by page, as a static host with clean addresses serves it: each page its own HTML, any other address the page of nothing', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
-  try {
-    mkdirSync(join(dir, 'en'));
+    for (const folder of ['_expo/static/js/web', 'rules', 'en', 'assets/__node_modules/.pnpm/face@1/files']) mkdirSync(join(dir, folder), { recursive: true });
     writeFileSync(join(dir, 'index.html'), 'bare');
     writeFileSync(join(dir, 'en/index.html'), 'front door');
     writeFileSync(join(dir, 'en/play.html'), 'play');
-    writeFileSync(join(dir, '+not-found.html'), 'nothing here');
+    writeFileSync(join(dir, 'offline.html'), 'offline');
+    writeFileSync(join(dir, '404.html'), 'nothing here');
+    writeFileSync(join(dir, '_expo/static/js/web/entry-abc.js'), 'console.log(1)');
+    writeFileSync(join(dir, 'rules/v0.40.0-1.44.0.js'), 'export default 1');
+    writeFileSync(join(dir, 'assets/__node_modules/.pnpm/face@1/files/face.abc.ttf'), 'face');
     const html = 'text/html; charset=utf-8';
-    expect(fileFor(dir, '/')).toEqual({ path: join(dir, 'index.html'), type: html });
+    // A file of the export is itself, wherever it is (a typeface under a folder whose name begins with a dot among them).
+    expect(fileFor(dir, '/_expo/static/js/web/entry-abc.js')).toEqual({ path: join(dir, '_expo/static/js/web/entry-abc.js'), type: 'text/javascript; charset=utf-8' });
+    expect(fileFor(dir, '/rules/v0.40.0-1.44.0.js')?.type).toBe('text/javascript; charset=utf-8');
+    expect(fileFor(dir, '/assets/__node_modules/.pnpm/face@1/files/face.abc.ttf')).toEqual({ path: join(dir, 'assets/__node_modules/.pnpm/face@1/files/face.abc.ttf'), type: 'font/ttf' });
+    // The offline page is its own address, as the worker keeps it: never led elsewhere (a clean address would lead /offline.html to /offline).
+    expect(fileFor(dir, '/offline.html')).toEqual({ path: join(dir, 'offline.html'), type: html });
+    // A page by its address (vercel.json's rewrites): /en its front door, /en/play its own HTML.
     expect(fileFor(dir, '/en')).toEqual({ path: join(dir, 'en/index.html'), type: html });
     expect(fileFor(dir, '/en/')).toEqual({ path: join(dir, 'en/index.html'), type: html });
     expect(fileFor(dir, '/en/play')).toEqual({ path: join(dir, 'en/play.html'), type: html });
-    // An address of no page: the router's page of nothing, as the site answers it, not the bare address's page (which would lead to the front door).
-    expect(fileFor(dir, '/de/play')).toEqual({ path: join(dir, '+not-found.html'), type: html, status: 404 });
-    expect(fileFor(dir, '/en/nowhere')).toEqual({ path: join(dir, '+not-found.html'), type: html, status: 404 });
-    // Still never a file outside the export, and a file that is not there is still not a page.
+    // Any other address: the site's page of nothing, with a 404, a missing older rules file among them (it fails as it does on the site).
+    for (const nowhere of ['/de/play', '/en/nowhere', '/play', '/rules/v9.9.9-9.9.9.js', '/en/play.js']) expect(fileFor(dir, nowhere), nowhere).toEqual({ path: join(dir, '404.html'), type: html, status: 404 });
+    // Never a file outside the export.
+    expect(fileFor(dir, '/../../etc/passwd')).not.toEqual(expect.objectContaining({ path: '/etc/passwd' }));
     expect(fileFor(dir, '/%2e%2e/%2e%2e/etc/hosts')).toBeNull();
-    expect(fileFor(dir, '/en/play.js')).toBeNull();
 
     const server = await serveExport(dir, 0);
     try {
@@ -83,6 +56,44 @@ test('a static export is served page by page, as a static host with clean addres
       expect([play.status, await play.text()]).toEqual([200, 'play']);
       const nowhere = await fetch(`http://127.0.0.1:${port}/de/play`);
       expect([nowhere.status, nowhere.headers.get('content-type'), await nowhere.text()]).toEqual([404, html, 'nothing here']);
+      const rules = await fetch(`http://127.0.0.1:${port}/rules/v0.40.0-1.44.0.js`);
+      expect([rules.status, rules.headers.get('content-type')]).toEqual([200, 'text/javascript; charset=utf-8']);
+      expect((await fetch(`http://127.0.0.1:${port}/rules/v9.9.9-9.9.9.js`)).status).toBe(404);
+      const offline = await fetch(`http://127.0.0.1:${port}/offline.html`, { redirect: 'manual' });
+      expect([offline.status, await offline.text()]).toEqual([200, 'offline']);
+      // Vercel's own Web Analytics, which the production page loads: there on Vercel, a stand-in that counts nothing here.
+      const analytics = await fetch(`http://127.0.0.1:${port}/_vercel/insights/script.js`);
+      expect([analytics.status, analytics.headers.get('content-type')]).toEqual([200, 'text/javascript; charset=utf-8']);
+    } finally {
+      await new Promise((done) => server.close(done));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the site applies its Routing Middleware first, as Vercel does: the bare address to a language, the language of a page opened kept', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
+  try {
+    mkdirSync(join(dir, 'es'));
+    writeFileSync(join(dir, 'index.html'), 'bare');
+    writeFileSync(join(dir, 'es/play.html'), 'play');
+    writeFileSync(join(dir, 'sw.js'), '');
+    const server = await serveExport(dir, 0);
+    try {
+      const at = (path: string) => `http://127.0.0.1:${(server.address() as AddressInfo).port}${path}`;
+      const bare = await fetch(at('/?code=ABC123'), { redirect: 'manual', headers: { cookie: 'NEXT_LOCALE=es', 'accept-language': 'ru' } });
+      expect([bare.status, bare.headers.get('location')]).toEqual([307, at('/es?code=ABC123')]);
+      const first = await fetch(at('/'), { redirect: 'manual', headers: { 'accept-language': 'ru-RU,ru;q=0.9' } });
+      expect(first.headers.get('location')).toBe(at('/ru'));
+      // A page opened: its own HTML, and its language written into the cookie for a year.
+      const page = await fetch(at('/es/play'), { headers: { 'sec-fetch-dest': 'document' } });
+      expect([page.status, await page.text()]).toEqual([200, 'play']);
+      expect(page.headers.get('set-cookie')).toMatch(/^NEXT_LOCALE=es; Path=\/; Expires=[^;]+; Max-Age=31536000; SameSite=lax$/);
+      expect(page.headers.get('x-middleware-next')).toBeNull();
+      // What the page fetches, and the export's files, are not the middleware's.
+      expect((await fetch(at('/es/play'), { headers: { 'sec-fetch-dest': 'empty' } })).headers.get('set-cookie')).toBeNull();
+      expect((await fetch(at('/sw.js'), { headers: { 'sec-fetch-dest': 'document' } })).headers.get('set-cookie')).toBeNull();
     } finally {
       await new Promise((done) => server.close(done));
     }
@@ -95,8 +106,10 @@ test('the whole life can run on the export, and runs on the development server u
   expect(appWebOf([])).toBe('dev');
   expect(appWebOf(['--export'])).toBe('export');
   const script = readFileSync(new URL('./web-life.ts', import.meta.url), 'utf8');
-  // The export is made here, with no project in its environment (the size check's own), and served on the app's web's port.
-  expect(script).toContain('exportEnv(process.env)');
+  // The site is built here as Vercel builds it, with no project in its environment (the size check's own), or the one given is served, offline,
+  // and served on the app's web's port.
+  expect(script).toContain('buildSite(dir, exportEnv(process.env))');
+  expect(script).toContain('projectsInSite(given)');
   expect(script).toContain('serveExport(');
   // And a new visitor's first page on it is weighed with what its first draw fetches after the HTML, and held to the first page's gate.
   expect(script).toContain('problems.push(...judgeFirstVisit(files, scripts));');
@@ -145,12 +158,14 @@ test('the export is sent compressed, as the site\'s host sends it, to a browser 
   }
 });
 
-test('the worker is sent as the Next web sends it, never kept by the browser, and the rest as the site\'s host sends its files', async () => {
+test('the worker is sent as the Next web sends it (vercel.json\'s headers), never kept by the browser, and the rest as the site\'s host sends its files', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
   try {
     mkdirSync(join(dir, 'en'));
     writeFileSync(join(dir, 'sw.js'), "self.addEventListener('fetch', () => undefined);");
     writeFileSync(join(dir, 'en/index.html'), '<!doctype html><title>en</title>');
+    mkdirSync(join(dir, '_expo/static/js/web'), { recursive: true });
+    writeFileSync(join(dir, '_expo/static/js/web/entry-abc.js'), 'console.log(1)');
     const server = await serveExport(dir, 0);
     try {
       const port = (server.address() as AddressInfo).port;
@@ -162,9 +177,27 @@ test('the worker is sent as the Next web sends it, never kept by the browser, an
       // A page is the host's ordinary answer (Vercel's for a static file): the worker may keep it.
       const page = await fetch(`http://127.0.0.1:${port}/en`);
       expect([page.headers.get('cache-control'), page.headers.get('service-worker-allowed')]).toEqual(['public, max-age=0, must-revalidate', null]);
+      // The app's chunks, named by what they hold, are kept for good, as the Next web's `_next/static`.
+      const chunk = await fetch(`http://127.0.0.1:${port}/_expo/static/js/web/entry-abc.js`);
+      expect(chunk.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
     } finally {
       await new Promise((done) => server.close(done));
     }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a run is told the site it serves, already built, and refuses one that would sign in anywhere', () => {
+  expect(siteOf(['--export'])).toBeNull();
+  expect(siteOf(['--export', '--site=/tmp/dist'])).toBe('/tmp/dist');
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-site-'));
+  try {
+    mkdirSync(join(dir, '_expo/static/js/web'), { recursive: true });
+    writeFileSync(join(dir, '_expo/static/js/web/entry-abc.js'), 'const url = "";');
+    expect(projectsInSite(dir)).toEqual([]);
+    writeFileSync(join(dir, '_expo/static/js/web/entry-def.js'), 'const url = "https://abcdefghij.supabase.co", fake = "http://127.0.0.1:54399";');
+    expect(projectsInSite(dir)).toEqual(['http://127.0.0.1:54399', 'https://abcdefghij.supabase.co']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
