@@ -59,6 +59,21 @@ const PAGE_STYLES = `
       }
 `;
 
+/**
+ * What a page does first, before the app's scripts: opened at the bare address, a page of the game's takes its own (its canonical address's path,
+ * the query and the hash kept). The site leads `/` to a language's front door before it is served (`middleware.ts`), but the worker answers `/`
+ * offline with the front door of the language last played (the Next web's worker, word for word): drawn at `/`, the router would take over the bare
+ * address's page from that front door's HTML, a mismatch React reports as an error and draws again. The bare address's own page names no canonical
+ * address, and stays.
+ */
+const OWN_ADDRESS = `(function () {
+  if (location.pathname !== '/') return;
+  var own = document.querySelector('link[rel="canonical"]');
+  if (!own) return;
+  var path = new URL(own.href).pathname;
+  if (path !== '/') history.replaceState(history.state, '', path + location.search + location.hash);
+})();`;
+
 /** The document a page is drawn in: `params` are its route's (`locale` the first part of its address), `children` the app's root. */
 export default function Document({ children, params }: { children: ReactNode; params?: Record<string, string | string[] | undefined>; pathname?: string }) {
   const asked = params?.locale;
@@ -77,6 +92,7 @@ export default function Document({ children, params }: { children: ReactNode; pa
         {headNodes}
       </head>
       <body {...bodyAttributes}>
+        <script dangerouslySetInnerHTML={{ __html: OWN_ADDRESS }} />
         {children}
         {bodyNodes}
       </body>

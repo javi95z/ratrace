@@ -47,7 +47,7 @@ test('the browser\'s bar is the colour the Next web gives it', () => {
 
 test('the page holds the app where expo-router draws it, full height, the body not scrolled (react-native-web\'s root, as Expo\'s own template)', () => {
   expect(page).toContain('<meta charSet="utf-8"/>');
-  expect(page).toContain('<body><div id="root"></div></body>');
+  expect(page).toMatch(/<body><script>[^<]*<\/script><div id="root"><\/div><\/body>/);
   expect(page).toMatch(/html,\s*body \{\s*height: 100%;/);
   expect(page).toMatch(/body \{\s*overflow: hidden;/);
   expect(page).toMatch(/#root \{\s*display: flex;\s*height: 100%;\s*flex: 1;/);
@@ -88,4 +88,24 @@ test('a keyboard\'s focus is the Next web\'s gold ring (globals.css `:focus-visi
   expect(globals).toContain(':focus-visible {\n  outline: 3px solid var(--color-gold-200);\n  outline-offset: 3px;');
   expect(globals).toContain('--color-gold-200: #ffe9a8;');
   expect(page).toMatch(/:focus-visible \{\s*outline: 3px solid #ffe9a8;\s*outline-offset: 3px;/);
+});
+
+test('a page opened at the bare address (the worker answers `/` offline with the last language\'s front door) takes its own address before the app takes it over', () => {
+  // The script the document runs first in its body, before the app's scripts: the router then draws the page the HTML is, not the bare address's.
+  const script = /<body><script>([\s\S]*?)<\/script><div id="root">/.exec(page)?.[1];
+  expect(script).toBeDefined();
+  const run = (pathname: string, canonical: string | null, search = '', hash = '') => {
+    const moved: string[] = [];
+    const location = { pathname, search, hash };
+    const document = { querySelector: (selector: string) => (selector === 'link[rel="canonical"]' && canonical !== null ? { href: canonical } : null) };
+    const history = { state: { kept: true }, replaceState: (state: unknown, _: string, to: string) => moved.push(`${JSON.stringify(state)} ${to}`) };
+    new Function('location', 'document', 'history', script ?? '')(location, document, history);
+    return moved;
+  };
+  expect(run('/', 'https://ratrace-plum.vercel.app/es')).toEqual(['{"kept":true} /es']);
+  expect(run('/', 'https://ratrace-plum.vercel.app/ru', '?x=1', '#friends')).toEqual(['{"kept":true} /ru?x=1#friends']);
+  // A page at its own address, and the bare address's own page (it names no canonical address), stay where they are.
+  expect(run('/es', 'https://ratrace-plum.vercel.app/es')).toEqual([]);
+  expect(run('/es/play', 'https://ratrace-plum.vercel.app/es/play')).toEqual([]);
+  expect(run('/', null)).toEqual([]);
 });
