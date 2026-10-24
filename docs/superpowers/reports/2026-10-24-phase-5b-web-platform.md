@@ -32,12 +32,15 @@ reviews are in `.superpowers/sdd/2026-10-24-expo-phase-5b-web-platform/`.
   - `/sw.js` gets the Next web's headers (`Cache-Control: no-cache, no-store, must-revalidate`, `Service-Worker-Allowed: /`). `/_expo/static/*`
     (files named by what they hold) is immutable, as the Next web's `_next/static`.
   - An address with no page gets the site's `404.html` (the router's page of nothing), with a 404.
+  - An address ending in a slash is led (308) to the same address without it (`trailingSlash: false`), Vercel's first route, as the Next web.
 - **`apps/mobile/middleware.ts`** is Vercel's Routing Middleware (the file convention for a project that is not Next's).
-  - `/` is redirected (307) to `/{l}` by `NEXT_LOCALE`, then `Accept-Language`, then `en`. The query is kept.
+  - An address with no language (`/`, `/play`, `/room?code=…`) is redirected (307) to the same page under `/{l}`, by `NEXT_LOCALE`, then
+    `Accept-Language`, then `en`. The query is kept. `/EN/play` goes to `/en/play`. The redirect writes the cookie again where it named another
+    language, or where there was none and the browser would lead elsewhere (next-intl's `syncCookie`).
   - A page opened in a language writes `NEXT_LOCALE=<l>; Path=/; Expires=…; Max-Age=31536000; SameSite=lax`. Nothing a page fetches writes it.
   - Its matcher is the Next web's, with `_expo` for `_next`.
   - Its test runs the Next web's own proxy (`apps/web/src/proxy.ts`, next-intl under it) beside it on the same requests: 162 requests to the bare
-    address and 12 to pages give the same answers.
+    address, 480 to addresses with no language or one in other letters, and 12 to pages give the same status, location and cookie.
   - It uses `next()` from `@vercel/functions/middleware` (3.9.11). It names nothing of the workspace: its languages are held to `@ratrace/i18n` by
     the test.
 - **`scripts/webBuild.ts`** (`pnpm web:build`) is the build Vercel runs. The checks on this machine run the same build. Its steps, in order:
@@ -117,7 +120,5 @@ source shows.
 - **The user's part:** the Vercel project, its environment, its branch, the preview and the swap. The spec's "Phases" lists them under 5b done.
 - **`web-life.ts --export` cannot run in Vercel's build.** It needs Chrome and the Next web's `next dev`, and it is the only check that sees the
   first draw's lazy chunks. It is run on this machine before a deployment (CLAUDE.md).
-- **An EAS build with no live project is stopped by `app.config.ts`. A Vercel build with none is not.** It would build an offline site. The
-  preview's environment is the user's to set.
 - **The minors the reviews parked** are in the ledger: one visit under the old worker, 4 MB of TrueType weights precached, a dismissed notice
   prompt reading as "on" with no keys, and others.

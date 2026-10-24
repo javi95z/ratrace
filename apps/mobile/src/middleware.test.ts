@@ -49,7 +49,41 @@ describe('the bare address', () => {
         for (const browser of browsers) {
           const headers = { ...(cookie ? { cookie } : {}), ...(browser ? { 'accept-language': browser } : {}) };
           const [mine, web] = [await ours(path, headers), theirs(path, headers)];
-          expect([mine.status, mine.headers.get('location')], `${path} cookie ${cookie} accept-language ${browser}`).toEqual([web.status, web.headers.get('location')]);
+          // The language last played written again where it is not the one led to (next-intl's `syncCookie`): a cookie of another language, or none
+          // where the browser would lead elsewhere.
+          expect(
+            [mine.status, mine.headers.get('location'), attributes(mine.headers.get('set-cookie'))],
+            `${path} cookie ${cookie} accept-language ${browser}`,
+          ).toEqual([web.status, web.headers.get('location'), attributes(web.headers.get('set-cookie'))]);
+        }
+      }
+    }
+  });
+});
+
+describe('an address with no language, or with one in other letters', () => {
+  it('leads to the same page in the language the bare address leads to, its query kept: /play to /en/play, /EN to /en', async () => {
+    expect((await ours('/play')).headers.get('location')).toBe(`${SITE}/en/play`);
+    const invited = await ours('/room?code=ABC123', { cookie: 'NEXT_LOCALE=es' });
+    expect([invited.status, invited.headers.get('location')]).toEqual([307, `${SITE}/es/room?code=ABC123`]);
+    expect((await ours('/EN')).headers.get('location')).toBe(`${SITE}/en`);
+    expect((await ours('/Es/rankings?tab=challenge', { cookie: 'NEXT_LOCALE=ru' })).headers.get('location')).toBe(`${SITE}/es/rankings?tab=challenge`);
+  });
+
+  it('is answered as the Next web answers it, the cookie written again as next-intl writes it, for a page opened and for what a page fetches', async () => {
+    const cookies = [undefined, 'NEXT_LOCALE=es', 'NEXT_LOCALE=de', 'NEXT_LOCALE=en'];
+    const browsers = [undefined, 'ru-RU', 'es-MX,es;q=0.9', 'de-DE'];
+    for (const path of ['/play', '/room?code=ABC123', '/rankings/', '/EN', '/EN/play', '/Es/room?code=X1', '/rU', '/de/play', '/esp', '/new/']) {
+      for (const cookie of cookies) {
+        for (const browser of browsers) {
+          for (const dest of ['document', 'empty', undefined]) {
+            const headers = { ...(cookie ? { cookie } : {}), ...(browser ? { 'accept-language': browser } : {}), 'sec-fetch-dest': dest };
+            const [mine, web] = [await ours(path, headers), theirs(path, headers)];
+            expect(
+              [mine.status, mine.headers.get('location'), attributes(mine.headers.get('set-cookie'))],
+              `${path} cookie ${cookie} accept-language ${browser} dest ${dest}`,
+            ).toEqual([web.status, web.headers.get('location'), attributes(web.headers.get('set-cookie'))]);
+          }
         }
       }
     }
@@ -75,12 +109,16 @@ describe('a page opened in a language', () => {
     }
   });
 
-  it('leaves the cookie alone for what the page fetches (a script, a prefetch), and for an address with no language', async () => {
-    for (const dest of ['empty', 'script', 'image']) expect((await ours('/ru/play', { 'sec-fetch-dest': dest, cookie: 'NEXT_LOCALE=es' })).headers.get('set-cookie')).toBeNull();
-    expect((await ours('/de/play')).headers.get('set-cookie')).toBeNull();
-    expect((await ours('/esp')).headers.get('set-cookie')).toBeNull();
-    // Each is let through to the site's files, unchanged.
-    expect((await ours('/de/play')).headers.get('x-middleware-next')).toBe('1');
+  it('leaves the cookie alone for what the page fetches (a script, a prefetch), and lets it through unchanged', async () => {
+    for (const dest of ['empty', 'script', 'image']) {
+      const fetched = await ours('/ru/play', { 'sec-fetch-dest': dest, cookie: 'NEXT_LOCALE=es' });
+      expect([fetched.headers.get('set-cookie'), fetched.headers.get('x-middleware-next')], dest).toEqual([null, '1']);
+    }
+  });
+
+  it('leads an address whose first part is no language to that address under one, as the Next web (its page of nothing then)', async () => {
+    expect((await ours('/de/play')).headers.get('location')).toBe(`${SITE}/en/de/play`);
+    expect((await ours('/esp', { cookie: 'NEXT_LOCALE=es' })).headers.get('location')).toBe(`${SITE}/es/esp`);
   });
 
   it('is the same cookie the page writes itself (game/useLanguage.web.ts): its name and its year', () => {

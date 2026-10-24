@@ -46,10 +46,10 @@ describe('the Vercel configuration', () => {
     }
   });
 
-  it('leads no address elsewhere: no clean URLs, which would send /offline.html, the worker\'s offline page, to /offline', () => {
+  it('leads no file elsewhere: no clean URLs, which would send /offline.html, the worker\'s offline page, to /offline; only an address\'s end slash goes (308), as the Next web\'s', () => {
     expect(vercel.cleanUrls).toBeUndefined();
     expect(vercel.redirects).toBeUndefined();
-    expect(vercel.trailingSlash).toBeUndefined();
+    expect(vercel.trailingSlash).toBe(false);
   });
 
   it('sends the worker with the Next web\'s headers (apps/web/next.config.ts), and the app\'s chunks, named by what they hold, kept for good', async () => {

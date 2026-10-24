@@ -29,9 +29,10 @@ import { roomServer } from '../../web/src/testing/roomServer.ts';
  *   (`/control/unsent`).
  */
 
-export const FAKE_CLOUD_PORT = 54399;
-/** The publishable key the app is built with: anything, it is only read. */
-export const FAKE_KEY = 'sb_publishable_fake_local_only';
+import { FAKE_CLOUD_PORT, FAKE_KEY } from './fakeProject';
+
+// Named apart (`fakeProject.ts`), for what names the fake project without loading it.
+export { FAKE_CLOUD_PORT, FAKE_KEY };
 
 interface User {
   id: string;

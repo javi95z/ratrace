@@ -74,3 +74,22 @@ describe('a store build (EAS preview or production) carries the live project, ne
     expect(withServerCheck(base, {})).toBe(base);
   });
 });
+
+describe('a Vercel build of the web (preview or production) carries the live project too', () => {
+  const live = { EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live' };
+
+  test('a preview or production deployment with the live project passes; a development one, or a build here (no VERCEL_ENV), is not held', () => {
+    expect(serverProblem({ ...live, VERCEL_ENV: 'preview' })).toBeNull();
+    expect(serverProblem({ ...live, VERCEL_ENV: 'production' })).toBeNull();
+    expect(serverProblem({ VERCEL_ENV: 'development' })).toBeNull();
+    expect(serverProblem({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only' })).toBeNull();
+  });
+
+  test('refuses one with no project, the fake one of this machine, or a fake key: an offline or a fake site would be deployed', () => {
+    expect(serverProblem({ VERCEL_ENV: 'preview' })).toMatch(/Vercel's preview build has no EXPO_PUBLIC_SUPABASE_URL/);
+    expect(serverProblem({ VERCEL_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: live.EXPO_PUBLIC_SUPABASE_URL })).toMatch(/EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);
+    expect(serverProblem({ VERCEL_ENV: 'preview', EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only' })).not.toBeNull();
+    expect(serverProblem({ ...live, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_x', VERCEL_ENV: 'production' })).toMatch(/fake/);
+    expect(() => withServerCheck(config.expo as unknown as ExpoConfig, { VERCEL_ENV: 'production' })).toThrow(/EXPO_PUBLIC_SUPABASE_URL/);
+  });
+});

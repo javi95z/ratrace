@@ -72,6 +72,31 @@ test('the site is served as Vercel serves it (vercel.json): its files as they ar
   }
 });
 
+test('an address ending in a slash is led to the same address without it (308), as Vercel does with trailingSlash false and the Next web does', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
+  try {
+    mkdirSync(join(dir, 'en'));
+    writeFileSync(join(dir, 'en/play.html'), 'play');
+    writeFileSync(join(dir, '404.html'), 'nothing here');
+    // Matched as Vercel matches a rewrite, strictly: the slash is not taken off by the file's lookup.
+    expect(fileFor(dir, '/en/play/')).toEqual({ path: join(dir, '404.html'), type: 'text/html; charset=utf-8', status: 404 });
+    const server = await serveExport(dir, 0);
+    try {
+      const at = (path: string) => `http://127.0.0.1:${(server.address() as AddressInfo).port}${path}`;
+      for (const [from, to] of [['/en/play/', '/en/play'], ['/es/room/?code=ABC123', '/es/room?code=ABC123'], ['/play/', '/play']]) {
+        const answer = await fetch(at(from), { redirect: 'manual' });
+        expect([answer.status, answer.headers.get('location')], from).toEqual([308, to]);
+      }
+      const followed = await fetch(at('/en/play/'));
+      expect([followed.status, await followed.text()]).toEqual([200, 'play']);
+    } finally {
+      await new Promise((done) => server.close(done));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('the site applies its Routing Middleware first, as Vercel does: the bare address to a language, the language of a page opened kept', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
   try {
@@ -208,5 +233,9 @@ test('the site built for the fake project names it, and no live setting: the add
   expect(env).toMatchObject({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only', EXPO_PUBLIC_TURNSTILE_SITE_KEY: '', PATH: '/bin' });
   const script = readFileSync(new URL('./web-signin.ts', import.meta.url), 'utf8');
   expect(script).toContain('buildSite(dir, fakeEnv(process.env))');
+  // Named, not loaded: the offline checks that import this module never load the fake project (its servers, the edge functions' code).
+  const checks = readFileSync(new URL('./webLife.ts', import.meta.url), 'utf8');
+  expect(checks).toContain("from './fakeProject'");
+  expect(checks).not.toContain("from './fakeCloud'");
   expect(script).toContain('refuseServerInUse(');
 });

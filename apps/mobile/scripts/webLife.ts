@@ -3,7 +3,7 @@ import { createServer, type Server } from 'node:http';
 import { extname, join, relative, resolve } from 'node:path';
 import { createGzip } from 'node:zlib';
 import middleware, { config as middlewareConfig } from '../middleware';
-import { FAKE_CLOUD_PORT, FAKE_KEY } from './fakeCloud';
+import { FAKE_CLOUD_PORT, FAKE_KEY } from './fakeProject';
 import { exportEnv } from './webSize';
 
 /*
@@ -85,6 +85,8 @@ const TYPES: Readonly<Record<string, string>> = {
 
 /** What is read of the site's Vercel configuration (apps/mobile/vercel.json): where a page's address leads, and the headers of some files. */
 interface HostConfig {
+  /** False: an address ending in a slash is led to the same address without it (308), before anything else. */
+  trailingSlash?: boolean;
   rewrites: readonly { source: string; destination: string }[];
   headers: readonly { source: string; headers: readonly { key: string; value: string }[] }[];
 }
@@ -128,8 +130,9 @@ export function rewriteOf(pathname: string, config: HostConfig = HOST_CONFIG): s
 /**
  * The file of the export at `dir` that answers `pathname`, as Vercel answers it with the site's configuration: the file itself where there is one
  * (wherever it is: a typeface in a folder whose name begins with a dot is one), a folder's `index.html`, else the file the site's rewrites lead the
- * address to (`/en` is `en/index.html`, `/en/play` is `en/play.html`), else the site's page of nothing (`404.html`, with a 404), which a missing older
- * rules file is answered with too, so that it fails as it does on the site. No address leads elsewhere: `/offline.html` is the worker's offline page
+ * address to (`/en` is `en/index.html`, `/en/play` is `en/play.html`, matched as Vercel matches them, strictly: `/en/play/` is led to `/en/play`
+ * before, `serveExport`), else the site's page of nothing (`404.html`, with a 404), which a missing older rules file is answered with too, so that it
+ * fails as it does on the site. No address leads elsewhere: `/offline.html` is the worker's offline page
  * by that very address. Never a file outside `dir`.
  */
 export function fileFor(dir: string, pathname: string, config: HostConfig = HOST_CONFIG): { path: string; type: string; status?: number } | null {
@@ -149,7 +152,7 @@ export function fileFor(dir: string, pathname: string, config: HostConfig = HOST
   const isFile = (file: string | null): file is string => file !== null && existsSync(file) && statSync(file).isFile();
   if (isFile(path)) return typed(path);
   if (isFile(join(path, 'index.html'))) return typed(join(path, 'index.html'));
-  const rewritten = rewriteOf(decoded.replace(/(.)\/$/, '$1'), config);
+  const rewritten = rewriteOf(decoded, config);
   const destination = rewritten === null ? null : inside(rewritten);
   if (isFile(destination)) return typed(destination);
   const nothing = join(dir, '404.html');
@@ -179,8 +182,8 @@ const VERCEL_OWN = '/_vercel/insights/';
 const HOST_CACHING = 'public, max-age=0, must-revalidate';
 
 /**
- * Serves the export at `dir` on `port` of this machine as the site will be served (its Vercel configuration and its Routing Middleware): the
- * middleware first, for the addresses it is asked about (`middleware.ts`: its redirect answered as it is, the headers it lets a request through with
+ * Serves the export at `dir` on `port` of this machine as the site will be served (its Vercel configuration and its Routing Middleware): an end
+ * slash first (`trailingSlash: false`, a 308), then the middleware, for the addresses it is asked about (`middleware.ts`: its redirect answered as it is, the headers it lets a request through with
  * added to the file's); then the file (`fileFor`), compressed where the host compresses (`COMPRESSED`) for a browser that takes gzip, with the
  * headers vercel.json gives it (`headersOf`: the worker's, the app's chunks') and otherwise the host's caching (`HOST_CACHING`), so the service worker
  * may keep it. The server, once it listens. Port 0 is any free port.
@@ -189,6 +192,13 @@ export function serveExport(dir: string, port: number): Promise<Server> {
   const server = createServer((request, response) => {
     void (async () => {
       const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+      // Vercel's `trailingSlash: false`, its first route: the address without its end slash, the query kept.
+      const slashed = HOST_CONFIG.trailingSlash === false ? /^\/(.*)\/$/.exec(url.pathname) : null;
+      if (slashed) {
+        response.writeHead(308, { location: `/${slashed[1]}${url.search}` });
+        response.end();
+        return;
+      }
       const added: Record<string, string> = {};
       if (MIDDLEWARE_ASKED.test(url.pathname)) {
         const headers = new Headers();

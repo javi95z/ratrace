@@ -3,6 +3,7 @@
   "framework": null,
   "buildCommand": "pnpm web:build",
   "outputDirectory": "dist",
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/:locale(en|es|ru)", "destination": "/:locale/index.html" },
     { "source": "/:locale(en|es|ru)/:page(new|challenge|room|rankings|collection|records|play|player|legal)", "destination": "/:locale/:page.html" }

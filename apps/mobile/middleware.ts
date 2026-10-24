@@ -3,9 +3,10 @@ import { next } from '@vercel/functions/middleware';
 /*
  * The site's Routing Middleware: what Vercel runs before it serves a file of the web export (the file convention of a project that is not Next's,
  * `middleware.ts` beside the app's `package.json`). It does what the Next web's proxy does (apps/web/src/proxy.ts, next-intl's middleware under it):
- * the bare address leads to a language's front door, the one last played (the cookie `NEXT_LOCALE`), else the browser's, else English; and every
- * page opened in a language writes it into the cookie again from the server, with a year to run (Safari keeps a cookie written by script seven days
- * at most). Every other address is let through to the export's files as it came.
+ * an address with no language (the bare address, `/play`, an old link) leads to the same page in the language last played (the cookie
+ * `NEXT_LOCALE`), else the browser's, else English, and one whose language is in other letters (`/EN`) to the language as the game writes it; and
+ * every page opened in a language writes it into the cookie again from the server, with a year to run (Safari keeps a cookie written by script
+ * seven days at most). Every other address is let through to the export's files as it came.
  *
  * It is built alone, apart from the app and the workspace, so it names nothing of either: the languages are written here, and held to
  * `@ratrace/i18n` by its test (src/middleware.test.ts), which also runs the Next web's proxy beside it on the same requests. The site served on this
@@ -30,20 +31,25 @@ export function localeOfPath(pathname: string): Language | null {
   return isLanguage(first) ? first : null;
 }
 
-/** The language a `Cookie` header keeps as the one last played, or null. */
-export function cookieLocale(cookie: string | null): Language | null {
+/** The value of `NEXT_LOCALE` in a `Cookie` header, whatever it is, or undefined when it has none. */
+function cookieValue(cookie: string | null): string | undefined {
   for (const part of (cookie ?? '').split(';')) {
     const at = part.indexOf('=');
     if (at < 0 || part.slice(0, at).trim() !== LOCALE_COOKIE) continue;
-    let value = part.slice(at + 1).trim();
+    const value = part.slice(at + 1).trim();
     try {
-      value = decodeURIComponent(value);
+      return decodeURIComponent(value);
     } catch {
-      // Not a value a page wrote: none.
+      return value;
     }
-    return isLanguage(value) ? value : null;
   }
-  return null;
+  return undefined;
+}
+
+/** The language a `Cookie` header keeps as the one last played, or null. */
+export function cookieLocale(cookie: string | null): Language | null {
+  const value = cookieValue(cookie);
+  return value !== undefined && isLanguage(value) ? value : null;
 }
 
 /**
@@ -67,8 +73,34 @@ export function browserLocale(accept: string | null): Language | null {
   return null;
 }
 
-/** The language the bare address leads to: the one last played, else the browser's, else English. */
+/** The language an address with none leads to: the one last played, else the browser's, else English. */
 export const localeFor = (headers: Headers): Language => cookieLocale(headers.get('cookie')) ?? browserLocale(headers.get('accept-language')) ?? DEFAULT;
+
+/**
+ * An address's language as its first part names it, in any letters (`/EN/play` is English, not written as the game writes it), with what follows
+ * it; null when it names none (`/play`, `/esp`, `/de/play`).
+ */
+export function prefixOf(pathname: string): { locale: Language; exact: boolean; rest: string } | null {
+  for (const locale of LANGUAGES) {
+    const prefix = `/${locale}`;
+    const named = (path: string) => path === prefix || path.startsWith(`${prefix}/`);
+    if (named(pathname)) return { locale, exact: true, rest: pathname.slice(prefix.length) };
+    if (named(pathname.toLowerCase())) return { locale, exact: false, rest: pathname.slice(prefix.length) };
+  }
+  return null;
+}
+
+/** A path with no slash at its end, but the root. */
+const withoutEndSlash = (path: string): string => (path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path);
+
+/** The address's path decoded and made safe to lead to, as next-intl makes it (no backslash, no control character, no double slash), or null. */
+function safePath(pathname: string): string | null {
+  try {
+    return decodeURI(pathname).replace(/\\/g, '%5C').replace(/[\t\n\r]/g, '').replace(/\/+/g, '/');
+  } catch {
+    return null;
+  }
+}
 
 /** The `Set-Cookie` that keeps `locale` as the language last played, written as Next writes the Next web's (its Expires a year from `now`). */
 export function localeCookie(locale: Language, now: Date = new Date()): string {
@@ -86,17 +118,57 @@ const isPageOpened = (headers: Headers): boolean => {
 };
 
 /**
- * What the site answers before its files: the bare address a redirect (307, as next-intl's) to the front door of `localeFor`, its query kept; a page
- * of a language let through with that language written into the cookie when the player opened it; anything else let through as it came.
+ * Whether a redirect to `locale` writes the cookie again, as next-intl's `syncCookie` does: for a page opened, when the cookie names another
+ * language (or something that is none), or when there is no cookie and the browser's language is not the one led to.
+ */
+function cookieOutdated(headers: Headers, locale: Language): boolean {
+  if (!isPageOpened(headers)) return false;
+  const kept = cookieValue(headers.get('cookie'));
+  if (kept !== undefined) return kept !== locale;
+  return browserAnswer(headers.get('accept-language')) !== locale;
+}
+
+/**
+ * The language next-intl takes the browser to ask for, as `syncCookie` compares it: none for a browser that says nothing, or names a language no
+ * browser could (`*`, which its matcher cannot read); else the first of the game's it asks for, else English.
+ */
+function browserAnswer(accept: string | null): Language | undefined {
+  const tags = (accept ?? '')
+    .split(',')
+    .map((part) => part.trim().split(';'))
+    .filter(([tag, ...rest]) => tag !== '' && !rest.some((one) => /^\s*q=0(\.0*)?\s*$/.test(one)))
+    .map(([tag]) => tag.trim());
+  if (tags.length === 0) return undefined;
+  try {
+    Intl.getCanonicalLocales(tags);
+  } catch {
+    return undefined;
+  }
+  return browserLocale(accept) ?? DEFAULT;
+}
+
+/**
+ * What the site answers before its files, as the Next web's proxy (next-intl's middleware, `localePrefix: 'always'`):
+ * - an address with no language (`/`, `/play`, `/room?code=…`) a redirect (307) to the same page in the language of `localeFor`, its query kept;
+ *   one whose language is in other letters (`/EN/play`) a redirect to the language as the game writes it;
+ * - either with the language led to written into the cookie where it was another (`cookieOutdated`);
+ * - a page of a language let through, with its language written into the cookie when the player opened it (a year more, every time);
+ * - anything else let through as it came.
  */
 export default function middleware(request: Request): Response {
   const url = new URL(request.url);
-  if (url.pathname === '/') {
-    url.pathname = `/${localeFor(request.headers)}`;
-    return Response.redirect(url, 307);
+  const path = safePath(url.pathname);
+  if (path === null) return next();
+  const prefix = prefixOf(path);
+  if (prefix === null || !prefix.exact) {
+    const locale = prefix?.locale ?? localeFor(request.headers);
+    const after = withoutEndSlash(prefix === null ? path : prefix.rest);
+    const to = new URL(`/${locale}${after === '/' ? '' : after}${url.search}`, url);
+    const answer = new Response(null, { status: 307, headers: { location: to.href } });
+    if (cookieOutdated(request.headers, locale)) answer.headers.set('set-cookie', localeCookie(locale));
+    return answer;
   }
-  const locale = localeOfPath(url.pathname);
-  if (locale !== null && isPageOpened(request.headers)) return next({ headers: { 'set-cookie': localeCookie(locale) } });
+  if (isPageOpened(request.headers)) return next({ headers: { 'set-cookie': localeCookie(prefix.locale) } });
   return next();
 }
 
