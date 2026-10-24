@@ -258,3 +258,36 @@ export const kvLastAccount = {
     }
   },
 };
+
+const INSTALL_OFFER = 'ratrace.installOffer';
+
+/**
+ * What the browser keeps of the offer to install the game (`pwa/install.web.tsx`), under the Next web's key: in localStorage how many visits the player
+ * has made and whether they said no, and in sessionStorage that this visit is counted. A browser that keeps nothing makes no offer.
+ */
+export const kvInstallOffer = {
+  /** Counts this visit unless it is counted already (one however often Home is shown in it), and says what is kept: null where the browser keeps nothing. */
+  visit: (): { visits: number; dismissed: boolean } | null => {
+    try {
+      const kept = JSON.parse(localStorage.getItem(INSTALL_OFFER) ?? '{}') as { visits?: number; dismissed?: boolean };
+      let visits = kept.visits ?? 0;
+      if (sessionStorage.getItem(INSTALL_OFFER) === null) {
+        visits += 1;
+        sessionStorage.setItem(INSTALL_OFFER, '1');
+        localStorage.setItem(INSTALL_OFFER, JSON.stringify({ ...kept, visits }));
+      }
+      return { visits, dismissed: kept.dismissed === true };
+    } catch {
+      return null;
+    }
+  },
+  /** The player's no, for good. */
+  dismiss: (): void => {
+    try {
+      const kept = JSON.parse(localStorage.getItem(INSTALL_OFFER) ?? '{}') as object;
+      localStorage.setItem(INSTALL_OFFER, JSON.stringify({ ...kept, dismissed: true }));
+    } catch {
+      // Not kept: it is offered again next time, which is no harm.
+    }
+  },
+};

@@ -2,6 +2,7 @@ import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
+import { InstallProvider, ViewportSync } from '../pwa/install';
 import { useServiceWorker } from '../pwa/register';
 import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
@@ -38,11 +39,15 @@ export default function RootLayout() {
         <Suspense fallback={null}>
           <GameProvider>
             <StatusBar style="light" />
-            <Page>
-              <ThemeProvider value={GROUND_THEME}>
-                <Stack screenOptions={SCREENS} />
-              </ThemeProvider>
-            </Page>
+            {/* The web's offer to install the game (pwa/install.web.tsx), inside the game to count the install; nothing on the phone. */}
+            <InstallProvider>
+              <ViewportSync />
+              <Page>
+                <ThemeProvider value={GROUND_THEME}>
+                  <Stack screenOptions={SCREENS} />
+                </ThemeProvider>
+              </Page>
+            </InstallProvider>
           </GameProvider>
         </Suspense>
       </SafeArea>

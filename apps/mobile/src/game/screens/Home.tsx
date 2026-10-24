@@ -22,6 +22,7 @@ import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './RoomCard';
 import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
+import { InstallApp, useInstallOffer } from '../../pwa/install';
 import { useGo } from '../pages';
 import { useWarmPages } from '../warmPages';
 
@@ -55,6 +56,8 @@ export function Home() {
   // Whoever has played before knows the game: the rat and its line make way for what they came for.
   const runs = useRuns();
   const returning = inProgress || (runs !== null && runs.length > 0);
+  // From the second visit on, until the player says no (the web export only: the phone is installed already).
+  const install = useInstallOffer();
   // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
   const week = useThisWeek();
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
@@ -199,6 +202,13 @@ export function Home() {
           {phone('notSaved')}
         </Notice>
       )}
+
+      {/* At the foot, from the second visit on, until the player says no: an offer, not something the page is for. */}
+      {install.shown ? (
+        <View style={{ width: '100%' }}>
+          <InstallApp onDismiss={install.dismiss} />
+        </View>
+      ) : null}
 
       {/* The small print, out of the way: only here, at the very foot. */}
       <SmallPrint label={legal('link')} onPress={() => go.push('legal')} above={returning ? 16 : 20} />
