@@ -1,5 +1,5 @@
 import { messagesFor } from '@ratrace/i18n';
-import type { Account, Community } from '@ratrace/online/types';
+import type { Account, Community, PushTarget } from '@ratrace/online/types';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import type * as NotificationsModule from 'expo-notifications';
@@ -39,8 +39,8 @@ export interface PushNote {
   write(noted: PushNoted): void;
 }
 
-/** The phone, as the server knows it. */
-type Target = { expo: string };
+/** The phone, as the server knows it (its token; on the web, `push.web.ts`, the browser's address). */
+type Target = PushTarget;
 
 export interface Push {
   /** True where the phone can be told at all. False, there is no switch to show, and the library is never loaded. */

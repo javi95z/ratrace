@@ -6,7 +6,8 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import { LOCALES } from '@ratrace/i18n/locales';
 import { describe, expect, it } from 'vitest';
 import { PAGES } from '../src/game/pageList';
-import { cacheVersion, precacheOf, serviceWorker, WORKER_PARTS, writeServiceWorker } from './serviceWorker';
+import { serviceWorker as nextWebWorker } from '../../web/scripts/pwa';
+import { cacheVersion, NOTICES, precacheOf, serviceWorker, WORKER_PARTS, writeServiceWorker } from './serviceWorker';
 
 const ORIGIN = 'http://localhost:8091';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -22,11 +23,27 @@ interface Asked {
 
 type Listener = (event: Record<string, unknown>) => void;
 
+/** A window of the site open in the browser, as the worker sees it (`WindowClient`): where it is, whether it is in front, and what it was told to do. */
+interface OpenWindow {
+  url: string;
+  visibilityState: 'visible' | 'hidden';
+  focused: number;
+  navigated: string[];
+}
+
+/** A notice in the tray (`Notification`): its tag, and whether the worker took it down. */
+interface Shown {
+  title: string;
+  options: { body?: string; tag?: string; icon?: string; badge?: string; data?: { url?: string } };
+  closed: boolean;
+}
+
 /**
  * The generated worker, run as a browser runs it, over a browser's pieces made in memory: its caches (`CacheStorage`), the network (`network`:
- * the answer to an address, or a throw when offline), its clients and its registration. What it does is read off them.
+ * the answer to an address, or a throw when offline), its clients (`windows`, the site's open windows; `opened`, the addresses it opened a window
+ * for) and its registration (`tray`, the notices shown). What it does is read off them.
  */
-function workerOn(code: string, network: (url: URL) => Response | Promise<Response>, options: { language?: string } = {}) {
+function workerOn(code: string, network: (url: URL) => Response | Promise<Response>, options: { language?: string; windows?: Array<Partial<OpenWindow>> } = {}) {
   const listeners = new Map<string, Listener>();
   const store = new Map<string, Map<string, Response>>();
   const keyOf = (request: string | Asked) => new URL(typeof request === 'string' ? request : request.url, ORIGIN).href;
@@ -75,12 +92,29 @@ function workerOn(code: string, network: (url: URL) => Response | Promise<Respon
     }
   }
   const told = { claimed: 0, preload: 0 };
+  const windows: OpenWindow[] = (options.windows ?? []).map((one) => ({ url: `${ORIGIN}/en`, visibilityState: 'hidden', focused: 0, navigated: [], ...one }));
+  const opened: string[] = [];
+  const tray: Shown[] = [];
   const self = {
     addEventListener: (type: string, listener: Listener) => listeners.set(type, listener),
     location: new URL(ORIGIN),
     navigator: { language: options.language ?? 'en-US' },
-    clients: { claim: async () => void (told.claimed += 1) },
-    registration: { navigationPreload: { enable: async () => void (told.preload += 1) } },
+    clients: {
+      claim: async () => void (told.claimed += 1),
+      matchAll: async () =>
+        windows.map((one) => ({
+          url: one.url,
+          visibilityState: one.visibilityState,
+          focus: async () => void (one.focused += 1),
+          navigate: async (to: string) => void one.navigated.push(to),
+        })),
+      openWindow: async (to: string) => void opened.push(to),
+    },
+    registration: {
+      navigationPreload: { enable: async () => void (told.preload += 1) },
+      showNotification: async (title: string, shown: Shown['options']) => void tray.push({ title, options: shown, closed: false }),
+      getNotifications: async ({ tag }: { tag?: string } = {}) => tray.filter((one) => !one.closed && (tag === undefined || one.options.tag === tag)).map((one) => ({ close: () => void (one.closed = true) })),
+    },
   };
   new Function('self', 'caches', 'fetch', 'Request', code)(self, caches, fetchOf, WorkerRequest);
 
@@ -96,7 +130,13 @@ function workerOn(code: string, network: (url: URL) => Response | Promise<Respon
   /** A request the page makes: a navigation, or a file of the site (by default), and the worker's answer (none: the browser's own network). */
   const request = (path: string, mode = 'no-cors', method = 'GET') =>
     dispatch('fetch', { request: { url: new URL(path, ORIGIN).href, method, mode }, preloadResponse: Promise.resolve(undefined) });
-  return { listeners, store, asked, told, dispatch, request, cached: (name: string, path: string) => store.get(name)?.has(new URL(path, ORIGIN).href) ?? false };
+  /** A notice arriving as the push service delivers it (`data`: its JSON, or anything else), and the player's tap on a notice carrying `data`. */
+  const push = (data?: unknown) => dispatch('push', { data: data === undefined ? null : { json: () => (typeof data === 'string' ? JSON.parse(data) : data) } });
+  const click = (data: unknown) => {
+    const notification = { data, closed: false, close: () => void (notification.closed = true) };
+    return dispatch('notificationclick', { notification }).then(() => notification);
+  };
+  return { listeners, store, asked, told, windows, opened, tray, push, click, dispatch, request, cached: (name: string, path: string) => store.get(name)?.has(new URL(path, ORIGIN).href) ?? false };
 }
 
 /** The site's answer to every address while online: its path, as text. */
@@ -248,11 +288,79 @@ describe("the app's web's worker, the Next web's own", () => {
     expect(serviceWorker(VERSION, [])).not.toContain('skipWaiting');
   });
 
-  it('is made of parts, so the notices are one more of them (Task 5), and is a script a browser reads', () => {
-    const notices = "self.addEventListener('push', () => undefined);";
-    const worker = workerOn(serviceWorker(VERSION, [], [...WORKER_PARTS, notices]), online);
-    expect([...worker.listeners.keys()].sort()).toEqual(['activate', 'fetch', 'install', 'push']);
+  it('is made of parts, the notices one of them, and is a script a browser reads', () => {
+    expect(WORKER_PARTS).toContain(NOTICES);
+    const worker = workerOn(serviceWorker(VERSION, []), online);
+    expect([...worker.listeners.keys()].sort()).toEqual(['activate', 'fetch', 'install', 'notificationclick', 'push']);
     expect(() => new Function(serviceWorker(VERSION, ['/en']))).not.toThrow();
+    // A worker made of other parts has only theirs.
+    expect([...workerOn(serviceWorker(VERSION, [], [NOTICES]), online).listeners.keys()].sort()).toEqual(['notificationclick', 'push']);
+  });
+
+  describe('the notices', () => {
+    const notice = { title: 'A new week', body: 'The challenge is open', url: '/es/challenge', tag: 'weekly' };
+
+    it("shows a notice as the server sends it when no window of the game is in front, with the game's icon and badge, and the page it leads to", async () => {
+      const worker = workerOn(serviceWorker(VERSION, []), online, { windows: [{ visibilityState: 'hidden' }] });
+      await worker.push(notice);
+      expect(worker.tray).toEqual([
+        { title: 'A new week', closed: false, options: { body: 'The challenge is open', tag: 'weekly', icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: '/es/challenge' } } },
+      ]);
+      // With no window open at all, the same; and a notice with no page leads to the front door.
+      const away = workerOn(serviceWorker(VERSION, []), online);
+      await away.push({ title: 'Hello' });
+      expect(away.tray[0].options.data).toEqual({ url: '/' });
+    });
+
+    it('says nothing with the game in front of the player, and nothing of a notice with no title or one it cannot read', async () => {
+      const front = workerOn(serviceWorker(VERSION, []), online, { windows: [{ visibilityState: 'hidden' }, { visibilityState: 'visible' }] });
+      await front.push(notice);
+      expect(front.tray).toEqual([]);
+      const worker = workerOn(serviceWorker(VERSION, []), online);
+      await worker.push({ body: 'no title' });
+      await worker.push();
+      await worker.dispatch('push', {
+        data: {
+          json: () => {
+            throw new SyntaxError('not json');
+          },
+        },
+      });
+      expect(worker.tray).toEqual([]);
+    });
+
+    it('takes an older notice of the same tag out of the tray before the new one comes, and leaves the others', async () => {
+      const worker = workerOn(serviceWorker(VERSION, []), online);
+      await worker.push(notice);
+      await worker.push({ title: 'A friend', tag: 'friend' });
+      await worker.push({ ...notice, title: 'Last day' });
+      expect(worker.tray.map((one) => [one.title, one.closed])).toEqual([
+        ['A new week', true],
+        ['A friend', false],
+        ['Last day', false],
+      ]);
+    });
+
+    it('on a tap closes the notice and focuses a window of the game that is open, taking it to the page', async () => {
+      const worker = workerOn(serviceWorker(VERSION, []), online, { windows: [{ url: 'https://elsewhere.example/en' }, { url: `${ORIGIN}/en/records` }] });
+      const tapped = await worker.click({ url: '/es/challenge' });
+      expect(tapped.closed).toBe(true);
+      expect(worker.windows.map((one) => [one.focused, one.navigated])).toEqual([[0, []], [1, [`${ORIGIN}/es/challenge`]]]);
+      expect(worker.opened).toEqual([]);
+    });
+
+    it('on a tap with no window of the game open opens one at the page (the front door for a notice with none)', async () => {
+      const worker = workerOn(serviceWorker(VERSION, []), online, { windows: [{ url: 'https://elsewhere.example/en' }] });
+      await worker.click({ url: '/en/room?code=ABC123' });
+      await worker.click(null);
+      expect(worker.opened).toEqual([`${ORIGIN}/en/room?code=ABC123`, `${ORIGIN}/`]);
+      expect(worker.windows[0].focused).toBe(0);
+    });
+
+    it("is the Next web's, word for word", () => {
+      expect(nextWebWorker('v', [])).toContain(NOTICES.trim());
+      expect(NOTICES.trim().startsWith("// The weekly notice")).toBe(true);
+    });
   });
 
   it('writes the worker and the offline page into an export, and refuses an export that lacks a page', () => {

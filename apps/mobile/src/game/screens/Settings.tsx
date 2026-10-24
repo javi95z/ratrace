@@ -5,7 +5,7 @@ import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { LOCALES } from '@ratrace/i18n/locales';
 import type { Locale } from '@ratrace/i18n/locales';
-import type { CloudSaving } from '@ratrace/online/types';
+import type { CloudSaving, PushTarget } from '@ratrace/online/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -220,7 +220,7 @@ function MarketNotice() {
   const community = useCommunity();
   const push = usePush();
   const [on, setOn] = useState<boolean | null>(null);
-  const [target, setTarget] = useState<{ expo: string } | null>(null);
+  const [target, setTarget] = useState<PushTarget | null>(null);
   useEffect(() => {
     let live = true;
     void push.target().then(async (held) => {

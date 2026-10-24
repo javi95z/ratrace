@@ -155,10 +155,58 @@ self.addEventListener('fetch', (event) => {
 `;
 
 /**
- * The worker's parts after its head, in order, each a script of its own over the head's names. The notices (`push`, `notificationclick`) are one
- * more part, added to this list.
+ * The notices: the Next web's own handlers, word for word (the tests hold them to its worker). The push service delivers what the server sends
+ * (`supabase/functions/_shared/notice.ts`: `{title, body, url, tag}`, the url a page of the site such as `/es/room?code=`) to every browser that
+ * turned the notices on in the Next web: its subscription is the registration's, and stays when this worker takes the place of that one.
  */
-export const WORKER_PARTS: readonly string[] = [KEEPING, INSTALL, ACTIVATE, FETCH];
+export const NOTICES = String.raw`
+// The weekly notice: shown as the server sends it, and a tap opens the page it leads to, in a
+// window of the game that is already open if there is one.
+self.addEventListener('push', (event) => {
+  let notice = {};
+  try {
+    notice = event.data ? event.data.json() : {};
+  } catch {
+    notice = {};
+  }
+  if (!notice.title) return;
+  event.waitUntil((async () => {
+    // A notice is for someone who is away: with the game open in front of them, it says nothing the screen does not.
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (open.some((client) => client.visibilityState === 'visible')) return;
+    // One of each kind is enough: an older one still in the tray goes before the new one comes.
+    if (notice.tag) for (const old of await self.registration.getNotifications({ tag: notice.tag })) old.close();
+    await self.registration.showNotification(notice.title, {
+      body: notice.body,
+      tag: notice.tag,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: notice.url || '/' },
+    });
+  })());
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil((async () => {
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of open) {
+      if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+        await client.focus();
+        if ('navigate' in client) await client.navigate(url);
+        return;
+      }
+    }
+    await self.clients.openWindow(url);
+  })());
+});
+`;
+
+/**
+ * The worker's parts after its head, in order, each a script of its own over the head's names.
+ */
+export const WORKER_PARTS: readonly string[] = [KEEPING, INSTALL, NOTICES, ACTIVATE, FETCH];
 
 /** The worker's script for the cache `ratrace-<version>`, precaching `assets` (addresses of the site), made of `parts`. */
 export function serviceWorker(version: string, assets: readonly string[], parts: readonly string[] = WORKER_PARTS): string {
