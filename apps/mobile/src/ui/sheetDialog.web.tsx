@@ -44,7 +44,7 @@ function rootOf(box: HTMLElement): HTMLElement | null {
   return at;
 }
 
-/** Nothing on the web: the panel is the dialog. */
+/** Nothing on the web: the dialog is the Modal's own box (`sheetModalProps`), not a box of the sheet's. */
 export function sheetRootProps(): Record<string, unknown> {
   return {};
 }

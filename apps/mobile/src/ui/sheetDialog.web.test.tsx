@@ -61,6 +61,16 @@ describe('a sheet on the web', () => {
     expect(document.activeElement).not.toBe(backdrop);
   });
 
+  it('closes when its dimmed page is clicked, as the Next web\'s backdrop does, and not when its panel is', async () => {
+    render(<Opener rows={['a']} />);
+    fireEvent.click(screen.getByText('open'));
+    await waitFor(() => expect(document.activeElement).toBe(panelOf('Details')));
+    fireEvent.click(panelOf('Details'));
+    expect(screen.getByRole('dialog', { name: 'Details' })).toBeTruthy();
+    fireEvent.click(screen.getByTestId('sheet-backdrop'));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Details' })).toBeNull());
+  });
+
   it('keeps Tab round the panel\'s controls, and the Modal\'s own trap never lands on the backdrop: Enter then closes nothing', async () => {
     render(<Opener rows={['a', 'b']} />);
     fireEvent.click(screen.getByText('open'));
