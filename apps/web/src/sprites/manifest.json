@@ -664,6 +664,11 @@
     "w": 288,
     "h": 120
   },
+  "card.ai_agent": {
+    "src": "cards/card.ai_agent.png",
+    "w": 288,
+    "h": 120
+  },
   "card.airport": {
     "src": "cards/card.airport.png",
     "w": 288,
@@ -706,6 +711,11 @@
   },
   "card.bar_tips": {
     "src": "cards/card.bar_tips.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.barn_car": {
+    "src": "cards/card.barn_car.png",
     "w": 288,
     "h": 120
   },
@@ -864,6 +874,11 @@
     "w": 288,
     "h": 120
   },
+  "card.child_streamer": {
+    "src": "cards/card.child_streamer.png",
+    "w": 288,
+    "h": 120
+  },
   "card.city_arrival": {
     "src": "cards/card.city_arrival.png",
     "w": 288,
@@ -984,8 +999,18 @@
     "w": 288,
     "h": 120
   },
+  "card.company_ipo": {
+    "src": "cards/card.company_ipo.png",
+    "w": 288,
+    "h": 120
+  },
   "card.contract_signing": {
     "src": "cards/card.contract_signing.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.copy_trading": {
+    "src": "cards/card.copy_trading.png",
     "w": 288,
     "h": 120
   },
@@ -1164,6 +1189,11 @@
     "w": 288,
     "h": 120
   },
+  "card.gig_apps": {
+    "src": "cards/card.gig_apps.png",
+    "w": 288,
+    "h": 120
+  },
   "card.graduation": {
     "src": "cards/card.graduation.png",
     "w": 288,
@@ -1171,6 +1201,11 @@
   },
   "card.gym": {
     "src": "cards/card.gym.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.hacked": {
+    "src": "cards/card.hacked.png",
     "w": 288,
     "h": 120
   },
@@ -1234,6 +1269,11 @@
     "w": 288,
     "h": 120
   },
+  "card.linkedin_post": {
+    "src": "cards/card.linkedin_post.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lodger_friend": {
     "src": "cards/card.lodger_friend.png",
     "w": 288,
@@ -1276,6 +1316,16 @@
   },
   "card.mentor_session": {
     "src": "cards/card.mentor_session.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.metro_works": {
+    "src": "cards/card.metro_works.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.mlm": {
+    "src": "cards/card.mlm.png",
     "w": 288,
     "h": 120
   },
@@ -1454,6 +1504,11 @@
     "w": 288,
     "h": 120
   },
+  "card.podcast": {
+    "src": "cards/card.podcast.png",
+    "w": 288,
+    "h": 120
+  },
   "card.prenup": {
     "src": "cards/card.prenup.png",
     "w": 288,
@@ -1509,6 +1564,11 @@
     "w": 288,
     "h": 120
   },
+  "card.remote_outskirts": {
+    "src": "cards/card.remote_outskirts.png",
+    "w": 288,
+    "h": 120
+  },
   "card.rent_letter": {
     "src": "cards/card.rent_letter.png",
     "w": 288,
@@ -1559,6 +1619,11 @@
     "w": 288,
     "h": 120
   },
+  "card.school_reunion": {
+    "src": "cards/card.school_reunion.png",
+    "w": 288,
+    "h": 120
+  },
   "card.server_room": {
     "src": "cards/card.server_room.png",
     "w": 288,
@@ -1599,8 +1664,18 @@
     "w": 288,
     "h": 120
   },
+  "card.signal_group": {
+    "src": "cards/card.signal_group.png",
+    "w": 288,
+    "h": 120
+  },
   "card.small_house": {
     "src": "cards/card.small_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.solar": {
+    "src": "cards/card.solar.png",
     "w": 288,
     "h": 120
   },
@@ -1624,8 +1699,23 @@
     "w": 288,
     "h": 120
   },
+  "card.squatters": {
+    "src": "cards/card.squatters.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.stag_party": {
+    "src": "cards/card.stag_party.png",
+    "w": 288,
+    "h": 120
+  },
   "card.street_market": {
     "src": "cards/card.street_market.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.strike": {
+    "src": "cards/card.strike.png",
     "w": 288,
     "h": 120
   },
@@ -1691,6 +1781,11 @@
   },
   "card.unpaid_rent": {
     "src": "cards/card.unpaid_rent.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.village_house": {
+    "src": "cards/card.village_house.png",
     "w": 288,
     "h": 120
   },

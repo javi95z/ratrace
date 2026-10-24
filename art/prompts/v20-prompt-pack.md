@@ -21,3 +21,39 @@ Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. No
 | # | File | What | Size |
 |---|---|---|---|
 | 1 | `cards/cards-40.png` | Retreat, trendy neighbourhood, boss leaving, tax letter | 288×120 |
+
+## Eleven more cards
+
+Save as `art/raw/cards/cards-41.png` — `card.barn_car`, `card.mlm`, `card.squatters`, `card.solar`, `card.village_house`, `card.company_ipo`
+
+```text
+Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets. No text anywhere: any sign or paper is a blank shape. Left to right, top to bottom:
+1. A classic in the barn: a dusty red seventies sports car half under a tarp in an old wooden barn, light coming through the planks, the player pulling the tarp back in surprise.
+2. The shakes business: the player at a kitchen table with a stack of shake tubs and a starter kit box, a phone showing a cheerful message as a blank bubble, a friend smiling too widely on a video call.
+3. Squatters: a city flat door with a new shiny lock, the player outside with keys that do not fit, a curtain twitching in the window above.
+4. Solar panels: a family house roof covered in solar panels in bright sun, a technician on a ladder giving a thumbs up, the player below holding a coffee.
+5. The house in the village: an old stone house in a small village with a leaking tiled roof and a big fig tree in the yard, the player at the gate holding an old key.
+6. The company goes public: a trading floor screen wall showing a green rising line, colleagues cheering, a bell on a stand, the player holding a phone looking at a number as a blank shape.
+```
+
+Save as `art/raw/cards/cards-42.png` — `card.metro_works`, `card.strike`, `card.school_reunion`, `card.child_streamer`
+
+```text
+Landscape image, 12:5 panels, 2 columns by 2 rows, 4 wide panels. Same style. No text. Left to right, top to bottom:
+1. Works outside the business: a small shop front behind a deep trench, fences and diggers, a lonely shopkeeper in the doorway, dust in the air.
+2. A strike at work: a group of workers with blank placards outside an office building, a boss watching from a window above, the player hesitating at the door.
+3. The school reunion: a restaurant table with former classmates, one showing off car keys, another a watch, the player laughing honestly at the end of the table.
+4. The child who streams: a teenager's bedroom with a gaming chair, ring light, microphone and two screens, the parent standing in the doorway holding a receipt.
+```
+
+Save as `art/raw/cards/cards-43.png` — `card.stag_party`
+
+```text
+One wide panel, 12:5. Same style. No text. The stag party: a group of friends in matching silly T-shirts under the neon lights of a Las Vegas street at night, the player holding a clipboard and a bundle of tickets, looking slightly worried.
+```
+
+| # | File | What | Size |
+|---|---|---|---|
+| 2 | `cards/cards-41.png` | Barn car, shakes, squatters, solar, village house, IPO | 288×120 |
+| 3 | `cards/cards-42.png` | Metro works, strike, reunion, streamer | 288×120 |
+| 4 | `cards/cards-43.png` | Stag party | 288×120 |

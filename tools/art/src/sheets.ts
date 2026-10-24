@@ -396,8 +396,12 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-37', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-38', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.celeb_bellfort', 'card.celeb_ortiga'] },
-  // v20: four cards to see fewer of the same (stand-ins made from older scenes, to be drawn: art/prompts/v20-prompt-pack.md).
+  // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 41 to 44 are stand-ins cut from older scenes until drawn.
   { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
+  { file: 'cards/cards-41', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['barn_car', 'mlm', 'squatters', 'solar', 'village_house', 'company_ipo'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-42', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['metro_works', 'strike', 'school_reunion', 'child_streamer'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-43', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 288, height: 120, ids: ['card.stag_party'] },
+  { file: 'cards/cards-44', group: 'cards', kind: 'scenes', cols: 2, rows: 4, width: 288, height: 120, ids: ['linkedin_post', 'podcast', 'ai_agent', 'gig_apps', 'copy_trading', 'hacked', 'signal_group', 'remote_outskirts'].map((id) => `card.${id}`) },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

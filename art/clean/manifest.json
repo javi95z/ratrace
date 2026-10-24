@@ -4276,6 +4276,101 @@
       "width": 288,
       "height": 120
     },
+    "card.barn_car": {
+      "file": "cards/card.barn_car.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.mlm": {
+      "file": "cards/card.mlm.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.squatters": {
+      "file": "cards/card.squatters.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.solar": {
+      "file": "cards/card.solar.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.village_house": {
+      "file": "cards/card.village_house.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.company_ipo": {
+      "file": "cards/card.company_ipo.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.metro_works": {
+      "file": "cards/card.metro_works.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.strike": {
+      "file": "cards/card.strike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.school_reunion": {
+      "file": "cards/card.school_reunion.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.child_streamer": {
+      "file": "cards/card.child_streamer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.stag_party": {
+      "file": "cards/card.stag_party.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.linkedin_post": {
+      "file": "cards/card.linkedin_post.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.podcast": {
+      "file": "cards/card.podcast.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.ai_agent": {
+      "file": "cards/card.ai_agent.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.gig_apps": {
+      "file": "cards/card.gig_apps.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.copy_trading": {
+      "file": "cards/card.copy_trading.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hacked": {
+      "file": "cards/card.hacked.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.signal_group": {
+      "file": "cards/card.signal_group.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.remote_outskirts": {
+      "file": "cards/card.remote_outskirts.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

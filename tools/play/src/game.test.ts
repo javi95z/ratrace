@@ -151,8 +151,12 @@ describe('the terminal game', () => {
   });
 
   it('plays in Spanish, with Spanish orders', async () => {
-    const { io, out } = scripted(['', '', '', 'ahorrar 500', 'estudiar', 'impuestos', 'listo']);
-    const state = await runGame(io, { locale: 'es', lifeId: 'civil_servant', seed: 'es-1' });
+    const servant = lives.find((life) => life.id === 'civil_servant');
+    if (!servant) throw new Error('no civil servant');
+    // One empty answer for each card of the first hand, whatever its size.
+    const hand = createGame({ content, start: servant.start }, 'es-2').hand;
+    const { io, out } = scripted([...hand.map(() => ''), 'ahorrar 500', 'estudiar', 'impuestos', 'listo']);
+    const state = await runGame(io, { locale: 'es', lifeId: 'civil_servant', seed: 'es-2' });
     expect(state?.finished).toBe(true);
     const shown = text(out);
     expect(shown).toContain('Edad 22 · Ronda 1 de 20 · Madrid');

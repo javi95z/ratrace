@@ -926,4 +926,97 @@ export const cards: Record<string, CardText> = {
     'Hold your ground',
     'Take his franchise',
   ]),
+  luck_barn_car: c('A classic in the barn', 'In grandpa\'s barn, under a tarp, there is a sports car from the seventies. Dusty, and whole.', [
+    'Sell it as it is',
+    ['Restore it and sell it', 'A collector pays what it is worth, and then some.', 'The engine was worse than it looked. You get little.'],
+    'Restore it and keep it',
+  ]),
+  life_mlm: c('"Ever thought of being your own boss?"', 'A school friend writes for the first time in ten years. She sells shakes and is looking for "partners".', [
+    'Say no',
+    ['Buy the starter kit', 'You sell more than you thought. Mostly to your family.', 'You sell one to your mum. The rest goes in the storeroom.'],
+    ['Buy the kit and recruit others', 'Your network grows and the commissions come. Your friends avoid you.', 'Nobody joins. And nobody picks up your calls any more.'],
+  ]),
+  house_squatters: c('Squatters in your flat', 'The flat you let was empty between tenants. Not any more: the lock has been changed.', [
+    'Go to court',
+    'Pay them to leave',
+    ['Call in a removal firm', 'One visit, and they are gone that afternoon.', 'It is on the news. So are you.'],
+  ]),
+  house_solar: c('Solar panels', 'An installer has been round the estate: with your roof, he says, power would cost almost nothing.', [
+    'Keep the usual bill',
+    'Put them in',
+    'Put them in with a battery',
+  ]),
+  fam_village_house: c('The house in the village', 'The family house in the village is left to you. The roof leaks and the fig tree gives figs.', [
+    'Sell it as it is',
+    'Do it up for the summers',
+    'Do it up and let it to visitors',
+  ]),
+  career_company_ipo: c('Your company goes public', 'The company lists and your employee shares are finally worth something. You can sell on the first day, or wait.', [
+    'Sell it all on day one',
+    ['Hold for six months', 'The shares soar. Some people stop working.', 'They stay where they were.', 'They fall below the listing price.'],
+    ['Sell half', 'The half you kept does well.', 'The half you kept comes to nothing.'],
+  ]),
+  biz_metro_works: c('Works outside your business', 'The council digs a trench outside your door for a metro line. Two years, they say.', [
+    'Put up with it',
+    ['Claim from the council', 'You get compensation. Late, but it comes.', 'They give you an appointment in a year.'],
+    'Start delivering',
+  ]),
+  career_strike: c('A strike at work', 'A strike is called over pay. The boss asks, without asking, who is coming in.', [
+    ['Go to work', 'The boss remembers who came in.', 'Nobody remembers anything. Except your colleagues.'],
+    ['Join the strike', 'It works: everyone gets a raise.', 'Nothing comes of it. You lose the day.'],
+    ['Be the one who negotiates', 'You come out with a deal, and a name.', 'The company remembers you. Not kindly.'],
+  ]),
+  life_school_reunion: c('The school reunion', 'Twenty years on, dinner with the class. Everyone knows who will say they are doing great.', [
+    'Do not go',
+    'Go and look the part',
+    ['Go and tell it as it is', 'Someone from the class is looking for someone like you.', 'You laugh a lot. Nothing more, and nothing less.'],
+  ]),
+  fam_child_streamer: c('Your child wants to stream', 'Your child wants to drop everything and stream. They need a computer, a camera, a mic and lights.', [
+    'Studies first',
+    ['Buy the kit', 'A stream goes viral. Sponsors are calling.', 'Twelve viewers. Three are family.'],
+    ['Buy the kit and run the channel', 'With contracts and a schedule, you smash it.', 'Twelve viewers, and a very involved manager.'],
+  ]),
+  life_stag_party: c('The stag party is yours to organise', 'Your best friend is getting married and the party falls to you. The group is already talking about Las Vegas.', [
+    'Get out of it',
+    'Something simple, here',
+    'Go big, in Las Vegas',
+  ]),
+  career_linkedin_post: c('The LinkedIn post', 'You have written a post on "what I learnt when everything went wrong". It only needs publishing.', [
+    'Delete it',
+    ['Publish it', 'It is shared thousands of times. Two companies get in touch.', 'A few likes and some new contacts.', 'Your colleagues read it aloud in the office.'],
+  ]),
+  life_podcast: c('A podcast invites you', 'A personal finance podcast wants to interview you. They know you understand money.', [
+    'Say no',
+    ['Just go', 'A good talk. Listeners write to you.', 'Ten seconds of you saying something silly goes viral.'],
+    ['Prepare properly', 'You had your numbers ready, and it shows.', 'Even so, someone clips the wrong sentence.'],
+  ]),
+  career_ai_agent: c('An AI for your job', 'The company is trying an AI agent that does much of your work. You are the one who must teach it.', [
+    ['Carry on as before', 'The trial fails to convince. Nothing changes.', 'It works. You are moved to something that pays less.'],
+    'Learn to run it',
+    ['Put yourself into what the machine cannot do', 'Dealing with people is still yours.', 'The machine learns to negotiate too.'],
+  ]),
+  life_gig_apps: c('Weekends with an app', 'The delivery and ride apps are looking for people at weekends.', [
+    'Rest at weekends',
+    'Deliver by bike',
+    ['Drive your own car', 'Two years of rides without a scratch.', 'A silly bump at a roundabout. The insurance does not cover work.'],
+  ]),
+  inv_copy_trading: c('Copy a trader', 'A trader on social media shows 400% in a year. An app copies their trades into your account automatically.', [
+    'Leave it',
+    ['Try a little', 'It goes well. For now.', 'You get half back.', 'The trader deletes the account. And your money with it.'],
+    ['Go in properly', 'You triple what you put in.', 'You get half back.', 'The trader deletes the account. And your money with it.'],
+  ]),
+  luck_hacked: c('You have been hacked', 'Your email is taken over and they want a ransom for your photos and documents.', [
+    'Change every password and start again',
+    ['Pay the ransom', 'You get your access back.', 'You pay, and they still post some photos.'],
+    ['Report it', 'The police shut the thieves\' account in time.', 'Before anything happens, your photos are already out.'],
+  ]),
+  fam_signal_group: c('Your in-law\'s group', 'Your partner\'s father adds you to a WhatsApp group that invests on the "signals" of an anonymous guru.', [
+    'Mute the group',
+    'Leave the group',
+    ['Follow the signals', 'One signal comes good. Your in-law reminds you at every meal.', 'Almost all of it is lost. Nobody in the group mentions it again.'],
+  ]),
+  house_remote_outskirts: c('A house an hour out, with fibre', 'You work from home and pay rent in the city. An hour away there are houses with gardens and fibre for less than half.', [
+    'Stay in the city',
+    'Buy a house out of town',
+  ]),
 };
