@@ -50,7 +50,7 @@ vi.mock('react-native-worklets', () => ({ scheduleOnRN: (fn: (...args: unknown[]
 const { rea } = await import('./testing/reanimated');
 
 const { Screen } = await import('./Page');
-const { StickyScreen, useScrolledPast, useScrolledPastLead } = await import('./Sticky');
+const { StickyScreen, useScrolledPast } = await import('./Sticky');
 
 const frame = { x: 0, y: 0, width: 390, height: 844 };
 const none = { top: 0, bottom: 0, left: 0, right: 0 };
@@ -175,63 +175,6 @@ test('the Hud\'s "away" strip: the page has scrolled past the lead once the offs
   expect(getByText('here')).toBeTruthy();
   scroll(97);
   expect(getByText('away')).toBeTruthy();
-});
-
-test('the header can ask whether the page has scrolled past the lead, wherever the lead ends (the Hud\'s "away" strip, said by a header that cannot measure the lead)', () => {
-  let drawn = 0;
-  function Away() {
-    drawn += 1;
-    return <Text>{useScrolledPastLead() ? 'away' : 'here'}</Text>;
-  }
-  const { getByText } = wrap(
-    <StickyScreen lead={<Text>the portrait</Text>} header={<Away />}>
-      <Text>page</Text>
-    </StickyScreen>,
-  );
-  // the lead stands 12 down the column and is 120 tall: it is gone once the page has scrolled past 132
-  lay(12, 120);
-  expect(getByText('here')).toBeTruthy();
-  const first = drawn;
-  scroll(60);
-  scroll(132);
-  expect(getByText('here')).toBeTruthy();
-  // a scroll that leaves the answer as it was does not draw the header again
-  expect(drawn).toBe(first);
-  scroll(133);
-  expect(getByText('away')).toBeTruthy();
-  // a lead that grows (a tag that says the player is in prison) is followed: the page has not scrolled past it any more
-  lay(12, 140);
-  expect(getByText('here')).toBeTruthy();
-  scroll(0);
-  expect(getByText('here')).toBeTruthy();
-});
-
-test('the offset React holds is brought up to date whenever the points change, not only when the page crosses one: a lead that grows while the page is far down', () => {
-  function Away() {
-    return <Text>{useScrolledPastLead() ? 'away' : 'here'}</Text>;
-  }
-  const { getByText } = wrap(
-    <StickyScreen lead={<Text>the portrait</Text>} header={<Away />}>
-      <Text>page</Text>
-    </StickyScreen>,
-  );
-  lay(12, 120);
-  // Past the lead (React is told 133), then on down to 600 with no point crossed: React is told nothing more.
-  scroll(133);
-  scroll(600);
-  expect(getByText('away')).toBeTruthy();
-  // The lead grows to end at 300: still far above 600, the page is still past it. With React's offset left at 133, it would say "here".
-  lay(12, 288);
-  expect(getByText('away')).toBeTruthy();
-});
-
-test('with no lead, nothing scrolls away: the header is never told it has', () => {
-  function Away() {
-    return <Text>{useScrolledPastLead() ? 'away' : 'here'}</Text>;
-  }
-  const { getByText } = wrap(<StickyScreen header={<Away />}><Text>page</Text></StickyScreen>);
-  scroll(300);
-  expect(getByText('here')).toBeTruthy();
 });
 
 /**
@@ -433,7 +376,8 @@ test('a scroll is followed on the UI thread: React draws nothing of the screen a
   let asked = 0;
   function Away() {
     asked += 1;
-    return <Text>{useScrolledPastLead() ? 'away' : 'here'}</Text>;
+    // The lead's foot (it is laid 16 down, 100 tall): the one point asked about.
+    return <Text>{useScrolledPast(116) ? 'away' : 'here'}</Text>;
   }
   const { getByText } = wrap(
     <Profiler id="sticky" onRender={() => void (commits += 1)}>

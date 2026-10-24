@@ -246,7 +246,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'finance-market': { life: 'engineer', round: 6, stage: 'finance' },
   // The same, the sheet that buys a share open (Apple): once or every round, what it is, and its price since the start of the life.
   'finance-buy-stock': { life: 'engineer', round: 6, stage: 'finance' },
-  // The same, at the property tab: nothing owned yet, the homes of London and what is only for letting there.
+  // The same, at the property tab: nothing owned yet, the homes of Tokyo, where she still lives, and what is only for letting there.
   'finance-property': { life: 'engineer', round: 6, stage: 'finance' },
   // The engineer's first round, at the debt tab: the loan the life begins with, its way to be repaid, and a personal loan on offer.
   'finance-debt': { life: 'engineer', round: 1, stage: 'finance' },
@@ -274,7 +274,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-cards-city': { life: 'engineer', round: 4, stage: 'cards', seed: 'screen-seed-13' },
   // The work panel of the profile, for the engineer of play-finance-r6: her job and the next rung, the round's focus, her skills.
   'work-panel': { life: 'engineer', round: 6, stage: 'finance' },
-  // The finances of play-finance-r6's sixth round, at the shop: what is in reach of the engineer's cash in London, shelf by shelf.
+  // The finances of play-finance-r6's sixth round, at the shop: what is in reach of the engineer's cash in Tokyo, shelf by shelf.
   'finance-shop': { life: 'engineer', round: 6, stage: 'finance' },
   // The same, the sheet of a watch open (the Omega Speedmaster): its status, what it would resell for, and every way to buy it: new, on instalments,
   // second hand and without an invoice.

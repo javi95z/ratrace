@@ -7,7 +7,7 @@ import { COLORS, GUTTER } from './theme';
 
 /**
  * How far the page has scrolled, as React is told it: a mirror of the offset the UI thread follows, written only when the answer to a question
- * asked of it changes (a point the page has gone past or come back over: `useScrolledPast`, `useScrolledPastLead`), never for a scroll that leaves
+ * asked of it changes (a point the page has gone past or come back over: `useScrolledPast`), never for a scroll that leaves
  * every answer as it was. With it, where the `lead` ends (the bottom of the lead in the column, in points; null while there is no lead, or it has
  * not been laid out), and the points asked about, which the UI thread watches (`marks`).
  */
@@ -63,31 +63,13 @@ function scrollOffset(onMarks: (marks: number[]) => void = () => {}): ScrollOffs
 const Offset = createContext<ScrollOffset>(scrollOffset());
 
 /**
- * Whether the page of the `StickyScreen` this stands in has scrolled past `px` points. This is what the web's
- * `IntersectionObserver` is for the Hud's "away" strip: it draws again when the answer changes, never for a scroll that
- * leaves it as it was (React is not even told of such a scroll).
+ * Whether the page of the `StickyScreen` this stands in has scrolled past `px` points (what a web page asks an `IntersectionObserver`): it
+ * draws again when the answer changes, never for a scroll that leaves it as it was (React is not even told of such a scroll).
  */
 export function useScrolledPast(px: number): boolean {
   const offset = useContext(Offset);
   useEffect(() => offset.watch(px), [offset, px]);
   return useSyncExternalStore(offset.subscribe, () => offset.get() > px, () => false);
-}
-
-/**
- * Whether the page of the `StickyScreen` this stands in has scrolled past its `lead`: the lead's last point has gone off the top of the page.
- * For a header that cannot measure the lead above it (the Hud's figures, whose "away" strip says whose life it is once the portrait has
- * gone): the screen knows where its lead ends, and follows it when it grows or shrinks. Never, with no lead.
- */
-export function useScrolledPastLead(): boolean {
-  const offset = useContext(Offset);
-  return useSyncExternalStore(
-    offset.subscribe,
-    () => {
-      const bottom = offset.lead();
-      return bottom !== null && offset.get() > bottom;
-    },
-    () => false,
-  );
 }
 
 /** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
@@ -112,8 +94,8 @@ function Closing({ scrollY, stuckAt, room, children }: { scrollY: SharedValue<nu
 /**
  * A `Screen` whose `header` stays at the top, under the top inset, while the column scrolls (the web's `sticky top-safe`):
  * the scroll's sticky child is the header's block (`stickyHeaderIndices`). What is above it in the column is the `lead`,
- * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPastLead()` says when it
- * has (and `useScrolledPast(px)` when the page has gone past any other point). `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
+ * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPast(px)` says when the page
+ * has gone past a point. `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
  * React Native's sticky rows do not stack, the next one pushes the last off, so both rows are one sticky child.
  * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
  * shows in it, and it closes as they stick, as two sticky rows meet. `between` is what the web's page has between the two rows besides
