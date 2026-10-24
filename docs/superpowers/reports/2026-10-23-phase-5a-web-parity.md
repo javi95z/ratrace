@@ -220,16 +220,20 @@ Next web's records are copied into the app's web's origin before its first load.
 2. Next web: played to round 3, a press at a time (each card's first open choice, no orders), its news (`life-2-next-round3.png`).
    - Read from the 3021 origin with `page.evaluate`: IndexedDB `ratrace` v1, `currentGame` 1 record, `profile` 1, `runs` 0; of the inventory's
      localStorage keys (`ratrace.basket`, `ratrace:given-up`, `ratrace:refused`, `ratrace.lastAccount`) none was set (no orders, no account).
-   - The life in progress: `15e98c5b-4af3-4ffa-851c-e7a2f3258488`, round 3.
+   - The life in progress: `0d1cae88-c8ef-4388-821b-767efca225fd`, round 3.
    - Written into the 8091 origin on a page of that origin that is not the app (`/seed`, answered by the script, never served), with the Next
      web's own schema (`apps/web/src/session/indexeddb.ts`): 2 records, 0 localStorage keys.
-3. App's web (8091): the front door offers to continue the life (`life-3-app-home.png`).
+3. App's web (8091), offline: its page's environment, as Expo's development server fills `process.env`, names no `EXPO_PUBLIC_SUPABASE_*`
+   (`projectNamed` in `scripts/webLife.ts`; a page with no such environment stops the run). The front door offers to continue the life
+   (`life-3-app-home.png`).
 4. Continue reaches round 3, its news (`life-4-app-round3.png`).
 5. Played to the end (moments' buttons and any sheet closed as a player closes them), the end screen (`life-5-app-end.png`).
 6. The records list the life, the nurse's (`life-6-app-records.png`); the 8091 origin keeps that finished life (`runs`: 1 record, its `runId` the
    saved game's id and its seed the same) and the same life, ended, as the one whose end the front door shows, as the Next web keeps it.
 
-The pages said nothing (no page error, no console error) but the analytics request the shots' browser keeps from va.vercel-scripts.com. Two earlier
+Every request either page made beyond this machine was noted: none from the app's web, and none from either page to a Supabase project (the run
+stops on either); the Next web asked only va.vercel-scripts.com, its analytics, which the browser is kept from. The pages said nothing else (no page
+error, no console error but that request's). Two earlier
 runs found what the script then learned: a sheet over the game (closed now as a player closes it), and the records' items holding items of their
 own (the life is checked by its words and in the store). One found a fault of the app's web, fixed: Play listened to Android's Back through
 `BackHandler`, which react-native-web answers with a console error, shown in development as a toast over the bar of the next step.

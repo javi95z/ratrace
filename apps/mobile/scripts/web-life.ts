@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { MESSAGES } from '@ratrace/i18n';
 import { APP_WEB, APP_WEB_PORT } from './sceneShots';
+import { onThisMachine, projectNamed } from './webLife';
 import type { Page } from './shotDrivers';
 import { PORT, raw, root, withWebPage } from './shotDrivers';
 
@@ -43,6 +44,7 @@ interface LifePage extends Page {
   url(): string;
   on(event: 'pageerror', listener: (error: Error) => void): void;
   on(event: 'console', listener: (message: { type(): string; text(): string }) => void): void;
+  on(event: 'request', listener: (request: { url(): string }) => void): void;
   evaluate<T, A>(fn: (arg: A) => T, arg: A): Promise<Awaited<T>>;
   evaluate<T>(fn: () => T): Promise<Awaited<T>>;
 }
@@ -238,6 +240,12 @@ async function main() {
     const page = shaped as LifePage;
     // Everything either page complains of: a clean game says nothing (the Next web's e2e `watch`).
     page.on('pageerror', (error) => problems.push(`${new URL(page.url()).port}: ${error.message}`));
+    // Every address either page asks for beyond this machine (the browser is kept from them all): the app's web must ask none, and neither page a
+    // Supabase project.
+    const asked: string[] = [];
+    page.on('request', (request) => {
+      if (!onThisMachine(request.url())) asked.push(`${new URL(page.url()).port}: ${new URL(request.url()).host}`);
+    });
     page.on('console', (message) => {
       // (A request the shots' browser keeps off this machine fails, and says so: the Next web's analytics, va.vercel-scripts.com. Named at the end.)
       if (message.type() === 'error' && message.text() !== 'Failed to load resource: net::ERR_FAILED') problems.push(`${new URL(page.url()).port}: console: ${message.text()}`);
@@ -274,6 +282,16 @@ async function main() {
 
     // 4. The app's web: Continue reaches the same round, and the life is played to its end.
     await page.goto(`http://localhost:${APP_WEB_PORT}/`, { waitUntil: 'load' });
+    // Offline: the page's environment, as Expo's development server gives it, names no project (it was started with no EXPO_PUBLIC_SUPABASE_*).
+    const env = await page.evaluate(() => {
+      const known = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+      return { EXPO_PUBLIC_SUPABASE_URL: known.EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: known.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY, root: known.EXPO_PUBLIC_PROJECT_ROOT };
+    });
+    if (env.root === undefined) throw new Error("the app's web page has no environment of Expo's development server: it cannot be told offline");
+    const named = projectNamed(env);
+    if (named !== null) throw new Error(`the app's web was started with a project (${named}): start it with no EXPO_PUBLIC_SUPABASE_*`);
+    steps.push("   the app's web is offline: its page's environment names no EXPO_PUBLIC_SUPABASE_*");
+    console.log(steps.at(-1));
     const goOn = page.getByRole('link', { name: new RegExp(`^${WORDS.continue}`) });
     await goOn.waitFor({ state: 'visible', timeout: 120_000 });
     await step(page, 'app web (8091): the front door offers to continue the life', 'app-home');
@@ -303,6 +321,13 @@ async function main() {
     const ended = (after.stores.currentGame ?? []).map((record) => record.value as { gameId: string; state: { finished: boolean } });
     if (ended.length !== 1 || ended[0].gameId !== saved.gameId || !ended[0].state.finished) throw new Error(`the app's web keeps another life in progress: ${JSON.stringify(ended.map((game) => game.gameId))}`);
     steps.push(`   the 8091 origin keeps the finished life ${saved.gameId} among its records (1 of 1), and the same life, ended, as the one whose end the front door shows`);
+    console.log(steps.at(-1));
+    // Nothing left this machine from the app's web, and no page asked a Supabase project for anything.
+    const fromAppWeb = asked.filter((line) => line.startsWith(`${APP_WEB_PORT}:`));
+    if (fromAppWeb.length > 0) throw new Error(`the app's web asked beyond this machine: ${[...new Set(fromAppWeb)].join(', ')}`);
+    const projects = asked.filter((line) => /supabase/.test(line));
+    if (projects.length > 0) throw new Error(`a page asked a Supabase project: ${[...new Set(projects)].join(', ')}`);
+    steps.push(`   asked beyond this machine: from the app's web nothing; from the Next web ${[...new Set(asked)].map((line) => line.slice(line.indexOf(' ') + 1)).join(', ') || 'nothing'} (kept from it)`);
     console.log(steps.at(-1));
   });
   writeFileSync(join(raw, 'web-life-steps.txt'), `${steps.join('\n')}\n`);
