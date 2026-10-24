@@ -3,6 +3,7 @@ import { readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { LOCALES } from '@ratrace/i18n/locales';
+import { serverProblem } from '../app.config';
 import { SITE_URL } from '../src/game/site';
 import { writeServiceWorker } from './serviceWorker';
 import { settlePages, writeSitePieces } from './sitePieces';
@@ -14,6 +15,8 @@ import { exportWeb, judgeExport, judgeSiteFiles, pageFiles, readExport, routedPa
  * this machine run to make the site they serve (`web-life.ts --export`, `web-offline.ts`, `web-signin.ts`), so that what is checked is what is
  * deployed. In order:
  *
+ * 0. A Vercel deployment held to the live project and the live web's settings, and a build on Vercel that does not say which it is refused
+ *    (`serverProblem`, `app.config.ts`): nothing is made.
  * 1. The sprites and the older rules copied in (`pnpm sprites`, `pnpm rules`: the export's `public/sprites` and `public/rules`).
  * 2. The export (`expo export --platform web`) into `out`, with source maps, in the build's environment, `EXPO_PUBLIC_VERCEL_GIT_COMMIT_SHA` taken
  *    from Vercel's `VERCEL_GIT_COMMIT_SHA` where it is not set (`buildEnv`).
@@ -82,6 +85,10 @@ export async function buildSite(out: string, env: Record<string, string | undefi
     seconds[step] = Math.round(performance.now() - start) / 1000;
     return done;
   };
+  // A deployment that is not what the live web needs, or a build on Vercel that cannot tell which it is, is refused before anything is made: the
+  // export's config (`app.config.ts`) would refuse it too, but this build does not rest on the export reading it.
+  const refused = serverProblem(env);
+  if (refused !== null) return { problems: [refused], seconds };
   const given = buildEnv(env);
   await timed('sprites and rules', () => {
     packageScript('sprites', given);

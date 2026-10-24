@@ -75,21 +75,51 @@ describe('a store build (EAS preview or production) carries the live project, ne
   });
 });
 
-describe('a Vercel build of the web (preview or production) carries the live project too', () => {
+describe('a Vercel build of the web (preview or production) carries the live project too, and everything else the live web needs', () => {
   const live = { EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live' };
+  /** The rest of the live web's settings, as the Next web's NEXT_PUBLIC_*: the notices' key, who answers for the game, and where it lives. */
+  const site = {
+    EXPO_PUBLIC_VAPID_PUBLIC_KEY: 'BPublicVapidKeyOfTheLiveWeb',
+    EXPO_PUBLIC_LEGAL_NAME: 'Someone',
+    EXPO_PUBLIC_LEGAL_EMAIL: 'someone@example.com',
+    EXPO_PUBLIC_SITE_URL: 'https://ratrace.example',
+  };
+  const web = { ...live, ...site };
 
-  test('a preview or production deployment with the live project passes; a development one, or a build here (no VERCEL_ENV), is not held', () => {
-    expect(serverProblem({ ...live, VERCEL_ENV: 'preview' })).toBeNull();
-    expect(serverProblem({ ...live, VERCEL_ENV: 'production' })).toBeNull();
-    expect(serverProblem({ VERCEL_ENV: 'development' })).toBeNull();
+  test('a preview or production deployment with the live project and the live web\'s settings passes; a development one, or a build here (no VERCEL), is not held', () => {
+    expect(serverProblem({ ...web, VERCEL: '1', VERCEL_ENV: 'preview' })).toBeNull();
+    expect(serverProblem({ ...web, VERCEL: '1', VERCEL_ENV: 'production' })).toBeNull();
+    expect(serverProblem({ VERCEL: '1', VERCEL_ENV: 'development' })).toBeNull();
     expect(serverProblem({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only' })).toBeNull();
   });
 
   test('refuses one with no project, the fake one of this machine, or a fake key: an offline or a fake site would be deployed', () => {
-    expect(serverProblem({ VERCEL_ENV: 'preview' })).toMatch(/Vercel's preview build has no EXPO_PUBLIC_SUPABASE_URL/);
-    expect(serverProblem({ VERCEL_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: live.EXPO_PUBLIC_SUPABASE_URL })).toMatch(/EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);
-    expect(serverProblem({ VERCEL_ENV: 'preview', EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only' })).not.toBeNull();
-    expect(serverProblem({ ...live, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_x', VERCEL_ENV: 'production' })).toMatch(/fake/);
+    expect(serverProblem({ ...site, VERCEL_ENV: 'preview' })).toMatch(/Vercel's preview build has no EXPO_PUBLIC_SUPABASE_URL/);
+    expect(serverProblem({ ...site, VERCEL_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: live.EXPO_PUBLIC_SUPABASE_URL })).toMatch(/EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);
+    expect(serverProblem({ ...site, VERCEL_ENV: 'preview', EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only' })).not.toBeNull();
+    expect(serverProblem({ ...web, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_x', VERCEL_ENV: 'production' })).toMatch(/fake/);
     expect(() => withServerCheck(config.expo as unknown as ExpoConfig, { VERCEL_ENV: 'production' })).toThrow(/EXPO_PUBLIC_SUPABASE_URL/);
+  });
+
+  test.each(['preview', 'production'])('refuses a %s one without the notices\' key, who answers for the game, or the site\'s https address', (env) => {
+    // With no VAPID key the notices' switch is gone for every player who turned notices on, and they cannot turn them off; with no operator the
+    // legal page names nobody; with no address of its own the site is drawn for another one (its canonical, its sitemap, its links).
+    for (const name of ['EXPO_PUBLIC_VAPID_PUBLIC_KEY', 'EXPO_PUBLIC_LEGAL_NAME', 'EXPO_PUBLIC_LEGAL_EMAIL', 'EXPO_PUBLIC_SITE_URL'] as const) {
+      expect(serverProblem({ ...web, VERCEL: '1', VERCEL_ENV: env, [name]: undefined }), name).toMatch(new RegExp(`Vercel's ${env} build has no ${name}`));
+      expect(serverProblem({ ...web, VERCEL: '1', VERCEL_ENV: env, [name]: '   ' }), `${name} blank`).toMatch(new RegExp(name));
+    }
+    for (const url of ['http://ratrace.example', 'not a url', 'https://localhost:8091', 'https://127.0.0.1']) {
+      expect(serverProblem({ ...web, VERCEL_ENV: env, EXPO_PUBLIC_SITE_URL: url }), url).toMatch(/EXPO_PUBLIC_SITE_URL/);
+    }
+  });
+
+  test('refuses a build on Vercel that cannot tell which: VERCEL with no VERCEL_ENV (the system variables not exposed) is never let through unchecked', () => {
+    expect(serverProblem({ VERCEL: '1' })).toMatch(/VERCEL_ENV/);
+    expect(serverProblem({ ...web, VERCEL: '1' })).toMatch(/VERCEL_ENV/);
+    expect(() => withServerCheck(config.expo as unknown as ExpoConfig, { VERCEL: '1' })).toThrow(/VERCEL_ENV/);
+  });
+
+  test('holds the phone\'s store builds to the project only: the web\'s settings are the web\'s', () => {
+    expect(serverProblem({ ...live, EAS_BUILD_PROFILE: 'production' })).toBeNull();
   });
 });

@@ -5,7 +5,7 @@ import { LOCALES } from '@ratrace/i18n/locales';
 import { describe, expect, it } from 'vitest';
 import webNext from '../../web/next.config';
 import { PAGES } from '../src/game/pageList';
-import { buildEnv, takeMaps } from './webBuild';
+import { buildEnv, buildSite, takeMaps } from './webBuild';
 import { fileFor, HOST_CONFIG, headersOf, rewriteOf, sourcePattern } from './webLife';
 import { pageFiles } from './webSize';
 
@@ -79,6 +79,26 @@ describe('the build', () => {
     expect(buildEnv({ VERCEL_GIT_COMMIT_SHA: 'abc123', EXPO_PUBLIC_VERCEL_GIT_COMMIT_SHA: 'def456' }, {}).EXPO_PUBLIC_VERCEL_GIT_COMMIT_SHA).toBe('def456');
     expect(buildEnv({}, {}).EXPO_PUBLIC_VERCEL_GIT_COMMIT_SHA).toBe('');
     expect(buildEnv({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399' }, {}).EXPO_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54399');
+  });
+
+  it('refuses to build on Vercel when it cannot tell a deployment from a build here (VERCEL with no VERCEL_ENV), before anything is made', async () => {
+    const out = mkdtempSync(join(tmpdir(), 'ratrace-unheld-'));
+    try {
+      const { problems, seconds } = await buildSite(join(out, 'dist'), { VERCEL: '1' });
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toMatch(/VERCEL_ENV/);
+      // Nothing was run: no sprites, no rules, no export.
+      expect(seconds).toEqual({});
+      expect(existsSync(join(out, 'dist'))).toBe(false);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses a deployment without the live web\'s settings before it is made, as the export\'s config would', async () => {
+    const { problems, seconds } = await buildSite(join(tmpdir(), 'ratrace-never-made'), { VERCEL: '1', VERCEL_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live' });
+    expect(problems.join()).toMatch(/EXPO_PUBLIC_VAPID_PUBLIC_KEY/);
+    expect(seconds).toEqual({});
   });
 
   it('refuses to make the site for one address and check it for another', () => {
