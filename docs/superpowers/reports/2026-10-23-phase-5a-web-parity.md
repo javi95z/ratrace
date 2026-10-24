@@ -316,3 +316,29 @@ the app's web too: its views are flex boxes, not the browser's inline block.
   1): `room-lobby-public` 21 + 12, `room-loans` 51 + 4 (its rats 17 then 21), `room-playing` 51 + 12 (its rats and city 9 then 21).
 - Three scenes were "never still" in the first run (`play-cards-legendary`, `play-guide-r1`, `collection-badges`) with the machine busy shooting;
   shot again alone they were still: `play-guide-r1` within its record, the other two clean.
+
+## Phase 5b Task 8: the desk
+
+The app's web at a desk's size beside the Next web's, in the same Chrome: `scene-shots.ts web appweb compare --against=appweb --viewport=desk`
+(`DESK`: 1280 by 800 at density 1, a mouse and no safe areas; `DESK_SCENES`; pictures `<name>-desk-web.png` in phase-2-parity/ and
+`<name>-desk-appweb(-diff).png` here; results `phase-5a-web-parity-desk.json`, records `ACCEPTED_APP_WEB_DESK`). At 1280 the Next web lays a
+life in its three columns (372, 504 and 340 wide, `deskColumns`), puts a sheet in the middle of the screen and the end of a life in two columns;
+the rankings stand in its `max-w-2xl` column. The app's web does each from the same breakpoints (`ui/desk.web.ts`).
+
+| Scene | Verdict | Not text | What it is |
+|---|---|---|---|
+| `play-news-r1` | accepted | 3 | the way-out bar's lamps in the profile column (play-news-r6's class) |
+| `play-cards-r1` | accepted | 120 | the guide's rat caught at another frame of its loop (117), the lamps (3) |
+| `play-finance-r6` | accepted | 344 | the guide's rat (109); the ground's weave a row apart in the gap between the paper and the gauges (235) |
+| `finance-buy-stock` | clean | 0 | a sheet over the round, in the middle of the screen |
+| `end-escaped` | accepted | 164 | the ground's weave in the gap between the map and the rivals; one line in one shot only: the Next web's middle dot under the title, a span of its own (a part of one line in the app) |
+| `rankings-all` | accepted | 367 | the ground's weave in the gap between two rows, at the foot of the screen |
+
+Every line of text stands within a point of the Next web's. At density 1 a device pixel is a point: the ground's weave of single pixels (dots.png,
+a 6-point tile) is painted by the Next web's body from the document's top and by the app's page from its own, and in the gaps between two panels,
+where nothing else is, it lands a row apart: within a pixel everywhere else (ochre in the pictures), counted as shape only there. The guide's rat is
+a loop of frames: each shot keeps a moment of it.
+
+Not shot: Play at 1416 and wider, where the round's column passes 640 and its art is drawn twice as large (`ArtScale` 2; the Next web's
+`@min-[640px]:[--art:2]`): the card and the city's banner follow it (CityBanner now reads `ArtScale`), looked at by eye at 1600 by 900 (a card 576 wide, the
+round's opener 132 high), not compared with the Next web's.

@@ -1,0 +1,8 @@
+[
+  {"scene":"play-news-r1","locale":"en","verdict":"accepted","rawPercent":5.39,"beyondPercent":0.033,"loose":81,"shape":3,"shapeBlended":3,"textLines":77,"unmeasured":6,"oneSided":0,"worstPt":1},
+  {"scene":"play-cards-r1","locale":"en","verdict":"accepted","rawPercent":3.69,"beyondPercent":0.067,"loose":198,"shape":120,"shapeBlended":87,"textLines":96,"unmeasured":6,"oneSided":0,"worstPt":1},
+  {"scene":"play-finance-r6","locale":"en","verdict":"accepted","rawPercent":2.62,"beyondPercent":0.092,"loose":393,"shape":344,"shapeBlended":199,"textLines":114,"unmeasured":12,"oneSided":0,"worstPt":1},
+  {"scene":"finance-buy-stock","locale":"en","verdict":"clean","rawPercent":0.05,"beyondPercent":0.003,"loose":16,"shape":0,"shapeBlended":0,"textLines":149,"unmeasured":129,"oneSided":0,"worstPt":1},
+  {"scene":"end-escaped","locale":"en","verdict":"accepted","rawPercent":3.62,"beyondPercent":0.017,"loose":166,"shape":164,"shapeBlended":164,"textLines":53,"unmeasured":6,"oneSided":1,"worstPt":0},
+  {"scene":"rankings-all","locale":"en","verdict":"accepted","rawPercent":6.72,"beyondPercent":0.038,"loose":367,"shape":367,"shapeBlended":367,"textLines":65,"unmeasured":8,"oneSided":0,"worstPt":0}
+]

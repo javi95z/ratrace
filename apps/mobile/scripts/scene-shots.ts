@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
-import { compareShots, SCREEN, wrongPage } from './kitCompare';
+import { compareShots, DESK, SCREEN, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
-import { againstOf, APP_WEB, chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, unjudgedLine, webRules } from './sceneShots';
+import { againstOf, APP_WEB, chooseScenes, DESK_SCENES, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, movingAfter, PHONE, sceneAppRoute, sceneAppWebUrl, sceneWebUrl, SCENES_FOLDER, sideOf, textFileOf, unjudgedLine, viewportOf, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
 import { APP_WEB_STILL_SHOTS, changedBox, changedWithin, fromWeb, LOOP_BOXES, NEXT_FRAME, openPage, QUIET_FOCUS, PORT, raw, READY_MS, READY_PORT, readyServer, root, routeTold, shootApp, STILL_MS, stillShot, TEXT_BOXES, withAppWebPage, withWebPage } from './shotDrivers';
 
@@ -20,6 +20,11 @@ type SharpRaw = (input: Buffer) => { ensureAlpha(): { raw(): { toBuffer(): Promi
  *
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] [app] [compare] [--only=name,name]
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] appweb compare --against=appweb [--only=name,name]
+ *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] appweb compare --against=appweb --viewport=desk [--only=name,name]
+ *
+ * The third is phase 5b's: both webs at a desk's size (`DESK`, Chrome on a laptop at 1280 by 800, where the Next web lays a life in three columns),
+ * the scenes of `DESK_SCENES` unless others are named, into the same folder as the app's web's (`<name>-desk-web.png`, `<name>-desk-appweb.png`,
+ * `<name>-desk-appweb-diff.png`) with its own results (`phase-5a-web-parity-desk.json`, `APP_WEB_DESK`).
  *
  * With no step named, the first three. The second line is phase 5a's: the app's own web (`appweb`, served by `npx expo start --web --port 8091`
  * in apps/mobile, started apart and in development, its `/scene` route being `__DEV__` only) shot in the same Chrome as the web's, shaped like the
@@ -46,11 +51,16 @@ const appWebOut = join(root, 'docs/superpowers/reports', APP_WEB.folder);
 async function main() {
   const args = process.argv.slice(2);
   const only = args.find((a) => a.startsWith('--only='))?.slice('--only='.length).split(',');
-  const scenes = chooseScenes(only);
+  // At a desk's size, the desk's scenes unless others are named; the phone's app is never shot there.
+  const viewport = viewportOf(args);
+  const desk = viewport === 'desk';
+  const screen = desk ? DESK : SCREEN;
+  const scenes = chooseScenes(only ?? (desk ? DESK_SCENES : undefined));
   const steps = args.filter((a) => !a.startsWith('--'));
   const all = steps.length === 0;
+  if (desk && (all || steps.includes('app'))) throw new Error("the phone has no desk: name the steps (web appweb compare --against=appweb)");
   // Asked before anything is shot: a word that is neither stops the run at once.
-  const side = sideOf(againstOf(args));
+  const side = sideOf(againstOf(args), viewport);
   mkdirSync(raw, { recursive: true });
   mkdirSync(out, { recursive: true });
   mkdirSync(appWebOut, { recursive: true });
@@ -64,12 +74,12 @@ async function main() {
         await openPage(page, sceneWebUrl(scene, PORT), () => document.querySelector('[data-scene]') !== null, webRules(scene));
         const day = await page.evaluate(() => Date.now());
         if (day !== SCENE_NOW) throw new Error(`${scene.name}: the browser's clock is ${new Date(day).toISOString()}, not ${new Date(SCENE_NOW).toISOString()}`);
-        await page.screenshot({ path: join(out, filesOf(scene.name).web) });
+        await page.screenshot({ path: join(out, filesOf(scene.name, viewport).web) });
         // Where each line of text stands, so the comparison can tell a glyph's edge from a box's.
-        writeFileSync(join(raw, `${scene.name}-text.json`), JSON.stringify(await page.evaluate(TEXT_BOXES)));
-        console.log(`web ${scene.name}`);
+        writeFileSync(join(raw, textFileOf(scene.name, viewport)), JSON.stringify(await page.evaluate(TEXT_BOXES)));
+        console.log(`web ${scene.name}${desk ? ' (desk)' : ''}`);
       }
-    });
+    }, screen);
   }
 
   // Which scenes' app shots never stood still, as the last app step (or app's web step) left them: the comparison fails those.
@@ -90,7 +100,7 @@ async function main() {
     try {
       await withAppWebPage(async (page) => {
         for (const scene of scenes) {
-          const png = join(appWebOut, filesOf(scene.name).appweb);
+          const png = join(appWebOut, filesOf(scene.name, viewport).appweb);
           // The day, before the page is loaded, as the web's.
           await page.clock.setFixedTime(SCENE_NOW);
           await page.goto(routeTold(sceneAppWebUrl(scene), told.port), { waitUntil: 'load' });
@@ -122,31 +132,33 @@ async function main() {
             await page.screenshot({ path: png });
             const pixels = async (shot: Buffer) => new Uint8Array(await (fromWeb('sharp') as SharpRaw)(shot).ensureAlpha().raw().toBuffer());
             const [before, after] = [await pixels(first), await pixels(readFileSync(png))];
-            looping = boxes.length > 0 && changedWithin(before, after, SCREEN.width * SCREEN.scale, boxes, SCREEN.scale);
+            looping = boxes.length > 0 && changedWithin(before, after, screen.width * screen.scale, boxes, screen.scale);
             // Where it moved, for whoever reads the run.
-            const box = changedBox(before, after, SCREEN.width * SCREEN.scale, SCREEN.scale);
+            const box = changedBox(before, after, screen.width * screen.scale, screen.scale);
             moved = box === null ? ', not between the last two shots' : `, at ${box.x},${box.y} ${box.w}×${box.h} pt`;
           }
           console.log(`appweb ${scene.name}${still ? '' : looping ? ' (still but for its loops turning: one moment of them is kept)' : ` (still moving${moved}: the last shot is kept)`}`);
           if (!still && !looping) moving.push(scene.name);
         }
-      });
+      }, screen);
     } finally {
       await told.close();
     }
-    writeFileSync(join(raw, APP_WEB.moving), JSON.stringify(movingAfter(movingKept(APP_WEB.moving), scenes.map((scene) => scene.name), moving)));
+    // The app's web's own record of what never stood still, at its size (asked of whichever side the comparison is against).
+    const kept = desk ? side.moving : APP_WEB.moving;
+    writeFileSync(join(raw, kept), JSON.stringify(movingAfter(movingKept(kept), scenes.map((scene) => scene.name), moving)));
   }
 
   if (all || steps.includes('compare')) {
     const sharp: unknown = fromWeb('sharp');
     const movingNow = movingKept(side.moving);
     // The other shot, its picture of what is unlike and its results: the phone's, or the app's web's (`--against=appweb`).
-    const appWeb = side === APP_WEB;
+    const appWeb = side !== PHONE;
     const sideOut = appWeb ? appWebOut : out;
     const lines: Line[] = [];
     for (const scene of scenes) {
-      const files = filesOf(scene.name);
-      const [a, b, text] = [join(out, files.web), join(sideOut, appWeb ? files.appweb : files.app), join(raw, `${scene.name}-text.json`)];
+      const files = filesOf(scene.name, viewport);
+      const [a, b, text] = [join(out, files.web), join(sideOut, appWeb ? files.appweb : files.app), join(raw, textFileOf(scene.name, viewport))];
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${scene.name}`);
       if (!isJudged(scene)) {
         // Not shot yet by a batch pass (`PENDING_SHOTS`): nothing to compare, and nothing that could be read as a result.
@@ -154,7 +166,7 @@ async function main() {
         continue;
       }
       if (!existsSync(text)) throw new Error(`missing shots for ${scene.name}`);
-      const result = await compareShots(sharp, scene.name, readFileSync(a), readFileSync(b), JSON.parse(readFileSync(text, 'utf8')) as TextBox[], sideOut, appWeb ? files.appwebDiff : files.diff);
+      const result = await compareShots(sharp, scene.name, readFileSync(a), readFileSync(b), JSON.parse(readFileSync(text, 'utf8')) as TextBox[], sideOut, appWeb ? files.appwebDiff : files.diff, screen);
       // Half the screen unlike is not a difference to list: the app showed something else.
       const wrong = wrongPage(result, 'scene', b);
       if (wrong !== null) throw new Error(wrong);

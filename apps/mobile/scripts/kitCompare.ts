@@ -34,8 +34,20 @@ export const unjudgedSection = (section: Section): string =>
 export const reportFolder = (section: Section): 'phase-1-parity' | 'phase-2-parity' | 'phase-3-parity' =>
   PHASE_3_SECTIONS.includes(section) ? 'phase-3-parity' : PHASE_2_SECTIONS.includes(section) ? 'phase-2-parity' : 'phase-1-parity';
 
+/** A screen the shots are taken on: its size in points, its density, and the safe areas left out of the comparison (top and bottom). */
+export interface ShotScreen {
+  readonly width: number;
+  readonly height: number;
+  readonly scale: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
 /** The screen of the comparison: an iPhone 16 Pro, in points, its density, and the safe areas left out (the status bar, the home indicator). */
-export const SCREEN = { width: 402, height: 874, scale: 3, top: 62, bottom: 34 } as const;
+export const SCREEN: ShotScreen = { width: 402, height: 874, scale: 3, top: 62, bottom: 34 };
+
+/** A desk's (phase 5b): Chrome on a laptop, 1280 by 800 at density 1, nothing of it left out. */
+export const DESK: ShotScreen = { width: 1280, height: 800, scale: 1, top: 0, bottom: 0 };
 
 /**
  * What counts as the same pixel. A *shade* is 24 levels of 255 on the channel that differs most (night-800 and night-700,
@@ -455,7 +467,7 @@ export function verdictOf(result: Result): 'wrong page' | 'clean' | 'differs' {
  * Compares a section's two shots and writes its picture: the web, the app and the difference side by side, cropped to what
  * they show. The picture is `<section>.png` in `out`, or `file` where the caller names it (a scene's is `<name>-diff.png`).
  */
-export async function compareShots(sharp: unknown, section: string, webPng: Buffer, appPng: Buffer, boxes: readonly TextBox[], out: string, file = `${section}.png`): Promise<Result> {
+export async function compareShots(sharp: unknown, section: string, webPng: Buffer, appPng: Buffer, boxes: readonly TextBox[], out: string, file = `${section}.png`, screen: ShotScreen = SCREEN): Promise<Result> {
   const s = sharp as Sharp;
   const decode = async (png: Buffer): Promise<Image> => {
     const { data, info } = await s(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -463,10 +475,10 @@ export async function compareShots(sharp: unknown, section: string, webPng: Buff
   };
   const a = await decode(webPng);
   const b = await decode(appPng);
-  const from = SCREEN.top * SCREEN.scale;
-  const to = (SCREEN.height - SCREEN.bottom) * SCREEN.scale;
+  const from = screen.top * screen.scale;
+  const to = (screen.height - screen.bottom) * screen.scale;
   const d = differences(a, b, from, to);
-  const { checks, mask } = inkOf(a, b, boxes, SCREEN.scale, from, to);
+  const { checks, mask } = inkOf(a, b, boxes, screen.scale, from, to);
   let shape = 0;
   for (let i = 0; i < d.map.length; i++) {
     if (d.map[i] !== 3) continue;
@@ -474,7 +486,7 @@ export async function compareShots(sharp: unknown, section: string, webPng: Buff
     else shape++;
   }
   const blends = blendedEdges(a, b, d.map);
-  const [top, bottom] = contentRows(a, b, from, to, 8 * SCREEN.scale);
+  const [top, bottom] = contentRows(a, b, from, to, 8 * screen.scale);
   const height = bottom - top;
   const w = a.width;
   const gap = 12;
@@ -509,7 +521,7 @@ export async function compareShots(sharp: unknown, section: string, webPng: Buff
     shape,
     shapeBlended: blends.explained,
     texts: checks,
-    places: places(d, w, SCREEN.scale),
-    crop: [top / SCREEN.scale, bottom / SCREEN.scale],
+    places: places(d, w, screen.scale),
+    crop: [top / screen.scale, bottom / screen.scale],
   };
 }

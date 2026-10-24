@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { APP_WEB_STILL_SHOTS, appWebAnswering, blocked, changedBox, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing, WORKER_REQUESTS_ROUTED } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
+import { DESK } from './kitCompare';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
@@ -443,7 +444,7 @@ test('the app\'s web is shot from the server already serving it on 8091, which t
   const source = read('./shotDrivers.ts');
   // The same browser as the web's, shaped like the same phone, kept from every host but this machine.
   expect(source).toContain('export async function withAppWebPage(');
-  expect([...source.matchAll(/await phonePage\(browser, /g)]).toHaveLength(2);
+  expect([...source.matchAll(/await phonePage\(browser, kept, screen\)/g)]).toHaveLength(2);
 });
 
 test('a scene of the app\'s web is shot on the day every scene is drawn on, once it says it is ready and a frame after, and once it is still', () => {
@@ -460,7 +461,7 @@ test('a scene of the app\'s web is shot on the day every scene is drawn on, once
   expect(frame).toBeGreaterThan(word);
   expect(still).toBeGreaterThan(frame);
   expect(step).toContain('ready: () => told.ready(scene.name)');
-  expect(step).toContain('join(appWebOut, filesOf(scene.name).appweb)');
+  expect(step).toContain('join(appWebOut, filesOf(scene.name, viewport).appweb)');
   // The focus ring a sheet opened with no tap takes is left out of both webs' shots, by the one rule.
   const quiet = step.indexOf('await page.addStyleTag({ content: QUIET_FOCUS });');
   expect(quiet).toBeGreaterThan(word);
@@ -512,4 +513,15 @@ test('the app\'s web is given twice the tries to stand still, past a picture Chr
   const flaky = [0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0].map((n) => Buffer.from(n === 2 ? 'other pixels' : 'page'));
   expect((await stillShot(() => flaky[taken++], { wait: async () => undefined, shots: APP_WEB_STILL_SHOTS })).still).toBe(true);
   expect(read('./scene-shots.ts')).toContain('shots: APP_WEB_STILL_SHOTS');
+});
+
+test('a desk is Chrome on a laptop, 1280 by 800 at density 1: no phone\'s touch or safe areas, and the comparison crops nothing off it', () => {
+  expect(DESK).toEqual({ width: 1280, height: 800, scale: 1, top: 0, bottom: 0 });
+  const source = read('./shotDrivers.ts');
+  expect(source).toContain('isMobile: phone, hasTouch: phone');
+  expect(source).toContain('export async function withAppWebPage(shoot: (page: Page) => Promise<void>, screen: ShotScreen = SCREEN)');
+  const step = read('./scene-shots.ts');
+  expect(step).toContain('withAppWebPage(async (page) => {');
+  expect(step).toContain('}, screen);');
+  expect(step).toContain('appWeb ? files.appwebDiff : files.diff, screen)');
 });

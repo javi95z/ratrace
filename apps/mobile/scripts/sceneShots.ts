@@ -82,13 +82,31 @@ export const sceneAppWebUrl = (scene: Scene, port = APP_WEB_PORT): string => `ht
  * What a scene writes: the web's shot, the app's shot, and the picture of what is unlike in them; and, beside the app's web (phase 5a), the
  * app's web shot and the picture of what is unlike in it and the web's.
  */
-export const filesOf = (name: string): { web: string; app: string; diff: string; appweb: string; appwebDiff: string } => ({
-  web: `${name}-web.png`,
-  app: `${name}-app.png`,
-  diff: `${name}-diff.png`,
-  appweb: `${name}-appweb.png`,
-  appwebDiff: `${name}-appweb-diff.png`,
-});
+export const filesOf = (name: string, viewport: Viewport = 'phone'): { web: string; app: string; diff: string; appweb: string; appwebDiff: string } => {
+  // A desk's shots beside the phone's, named apart (phase 5b): `<name>-desk-web.png`.
+  const at = viewport === 'desk' ? `${name}-desk` : name;
+  return { web: `${at}-web.png`, app: `${at}-app.png`, diff: `${at}-diff.png`, appweb: `${at}-appweb.png`, appwebDiff: `${at}-appweb-diff.png` };
+};
+
+/** Where a scene's lines of text stand on the web's shot, beside the raw shots: a desk's apart. */
+export const textFileOf = (name: string, viewport: Viewport = 'phone'): string => `${name}${viewport === 'desk' ? '-desk' : ''}-text.json`;
+
+/** The size the scenes are shot at: the phone's (the shots' own), or a desk's (`--viewport=desk`, phase 5b: the web's three columns). */
+export type Viewport = 'phone' | 'desk';
+
+/** The size asked for (`--viewport=phone|desk`): the phone's unless a desk is named; anything else stops the run. */
+export function viewportOf(args: readonly string[]): Viewport {
+  const said = args.find((arg) => arg.startsWith('--viewport='))?.slice('--viewport='.length);
+  if (said === undefined || said === 'phone') return 'phone';
+  if (said === 'desk') return 'desk';
+  throw new Error(`--viewport is phone or desk, not ${said}`);
+}
+
+/**
+ * The scenes a desk is shot in when none is named: the round's three stages in its three columns (the news, a card, the finances), a sheet over
+ * the round (in the middle of the screen), the end of a life in two columns, and a page of the web's wider column (the rankings).
+ */
+export const DESK_SCENES: readonly string[] = ['play-news-r1', 'play-cards-r1', 'play-finance-r6', 'finance-buy-stock', 'end-escaped', 'rankings-all'];
 
 /** What the web's shots are compared with: the app on the phone (`app`, phase 2's), or the app's own web (`appweb`, phase 5a's). */
 export type Against = 'app' | 'appweb';
@@ -730,8 +748,59 @@ export const APP_WEB: Side = {
   pageBaseline: {},
 };
 
-/** The side a comparison is against. */
-export const sideOf = (against: Against): Side => (against === 'appweb' ? APP_WEB : PHONE);
+/**
+ * What the app's web differs from the Next web by at a desk's size (phase 5b, `--viewport=desk`), scene by scene, explained in the parity report's
+ * desk section (`docs/superpowers/reports/2026-10-23-phase-5a-web-parity.md`). At density 1 a device pixel is a point: the ground's weave of
+ * single pixels (dots.png, a 6-point tile) lands a row apart where the Next web's body paints it from the document's top and the app's page from its
+ * own, which shows only in the gaps between two panels, where nothing else is.
+ */
+export const ACCEPTED_APP_WEB_DESK: Readonly<Record<string, Accepted>> = {
+  'play-news-r1': {
+    shape: 3,
+    oneSided: 0,
+    reason: 'Three pixels of the way-out bar\'s lamps in the profile column (the class of play-news-r6\'s phone record).',
+    report: 'Phase 5b Task 8: the desk',
+  },
+  'play-cards-r1': {
+    shape: 120,
+    oneSided: 0,
+    reason: 'The guide\'s rat, a loop of frames, caught at another frame than the Next web\'s (117), and the way-out bar\'s lamps (3).',
+    report: 'Phase 5b Task 8: the desk',
+  },
+  'play-finance-r6': {
+    shape: 344,
+    oneSided: 0,
+    reason: 'The guide\'s rat at another frame of its loop (109), and the ground\'s weave a row apart in the gap between the paper and the gauges in the news column (235).',
+    report: 'Phase 5b Task 8: the desk',
+  },
+  'end-escaped': {
+    shape: 164,
+    oneSided: 1,
+    reason: 'The ground\'s weave a row apart in the gap between the map and the rivals; the one line in one shot only is the middle dot of the Next web\'s line under the title, a span of its own there, a part of one line in the app.',
+    report: 'Phase 5b Task 8: the desk',
+  },
+  'rankings-all': {
+    shape: 367,
+    oneSided: 0,
+    reason: 'The ground\'s weave a row apart in the gap between two rows of the ranking, at the foot of the screen.',
+    report: 'Phase 5b Task 8: the desk',
+  },
+};
+
+/**
+ * The web beside the app's own web at a desk's size (phase 5b): the same folder as the phone's size, its own results and records
+ * (`ACCEPTED_APP_WEB_DESK`).
+ */
+export const APP_WEB_DESK: Side = { ...APP_WEB, file: 'phase-5a-web-parity-desk.json', moving: 'scenes-moving-appweb-desk.json', accepted: ACCEPTED_APP_WEB_DESK };
+
+/** The side a comparison is against, at the size it is shot at. The phone has no desk: a desk's shots are the app's web's. */
+export function sideOf(against: Against, viewport: Viewport = 'phone'): Side {
+  if (viewport === 'desk') {
+    if (against !== 'appweb') throw new Error("the phone has no desk: --viewport=desk is shot against the app's web (--against=appweb)");
+    return APP_WEB_DESK;
+  }
+  return against === 'appweb' ? APP_WEB : PHONE;
+}
 
 /** Whether a scene is compared: every screen is the real one on the app, so every scene is, once a batch pass has shot it. */
 export const isJudged = (scene: Scene): boolean => !PENDING_SHOTS.has(scene.name);

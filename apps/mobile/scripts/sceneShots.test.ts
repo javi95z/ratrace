@@ -5,7 +5,7 @@ import { MESSAGES } from '@ratrace/i18n';
 import { TEXT_WITHIN_PT } from './kitCompare';
 import type { Result } from './kitCompare';
 import type { Accepted } from './sceneShots';
-import { ACCEPTED, ACCEPTED_APP_WEB, againstOf, APP_WEB, APP_WEB_PORT, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, hasPhoneWords, HUD_ONLY, lineName, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, unjudgedLine, sceneAppWebUrl, SCENES_FILE } from './sceneShots';
+import { ACCEPTED, ACCEPTED_APP_WEB, ACCEPTED_APP_WEB_DESK, againstOf, APP_WEB, APP_WEB_DESK, DESK_SCENES, sideOf, textFileOf, viewportOf, APP_WEB_PORT, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, hasPhoneWords, HUD_ONLY, lineName, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, unjudgedLine, sceneAppWebUrl, SCENES_FILE } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -574,4 +574,30 @@ test('a scene of the app\'s web passes on its record and fails on any growth, as
     // No record of the phone's is the app's web's: each is measured on its own side.
     expect(record, name).not.toBe(ACCEPTED[name]);
   }
+});
+
+test('the app\'s web is shot at a desk\'s size too, beside the Next web\'s at the same size: its own pictures, its own results and records', () => {
+  expect(viewportOf(['appweb'])).toBe('phone');
+  expect(viewportOf(['appweb', '--viewport=desk'])).toBe('desk');
+  expect(() => viewportOf(['--viewport=tablet'])).toThrow('--viewport is phone or desk, not tablet');
+  expect(filesOf('play-news-r1', 'desk')).toEqual({
+    web: 'play-news-r1-desk-web.png',
+    app: 'play-news-r1-desk-app.png',
+    diff: 'play-news-r1-desk-diff.png',
+    appweb: 'play-news-r1-desk-appweb.png',
+    appwebDiff: 'play-news-r1-desk-appweb-diff.png',
+  });
+  expect(textFileOf('play-news-r1')).toBe('play-news-r1-text.json');
+  expect(textFileOf('play-news-r1', 'desk')).toBe('play-news-r1-desk-text.json');
+  expect(sideOf('appweb', 'desk')).toBe(APP_WEB_DESK);
+  expect(sideOf('appweb')).toBe(APP_WEB);
+  expect(() => sideOf('app', 'desk')).toThrow('the phone has no desk: --viewport=desk is shot against the app\'s web (--against=appweb)');
+  expect(APP_WEB_DESK.folder).toBe(APP_WEB.folder);
+  expect(APP_WEB_DESK.file).toBe('phase-5a-web-parity-desk.json');
+  expect(APP_WEB_DESK.moving).not.toBe(APP_WEB.moving);
+  expect(APP_WEB_DESK.accepted).toBe(ACCEPTED_APP_WEB_DESK);
+  for (const name of Object.keys(ACCEPTED_APP_WEB_DESK)) expect(ACCEPTED_APP_WEB_DESK[name].report).toBe('Phase 5b Task 8: the desk');
+  // The scenes the desk is shot in when none is named: the round's three stages, the end, the rankings and a sheet over the round.
+  expect(DESK_SCENES).toEqual(['play-news-r1', 'play-cards-r1', 'play-finance-r6', 'finance-buy-stock', 'end-escaped', 'rankings-all']);
+  for (const name of DESK_SCENES) expect(SCENES.some((scene) => scene.name === name)).toBe(true);
 });

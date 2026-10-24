@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { SCREEN } from './kitCompare';
+import { SCREEN, type ShotScreen } from './kitCompare';
 import { APP_WEB_PORT } from './sceneShots';
 
 /**
@@ -333,17 +333,21 @@ export async function launchChrome(): Promise<Browser> {
 
 /**
  * A page of Chrome shaped like the iPhone (its size, its scale, its touch, its safe areas, so `env(safe-area-inset-*)` is what it is on the
- * iPhone), in a context kept from every host but this machine (`guardedContext`): each host it was kept from is added to `kept`.
+ * iPhone), in a context kept from every host but this machine (`guardedContext`): each host it was kept from is added to `kept`. Given another
+ * screen (`DESK`), Chrome on a laptop: that size and density, a mouse, no safe areas.
  */
-async function phonePage(browser: Browser, kept: Set<string>): Promise<Page> {
+async function phonePage(browser: Browser, kept: Set<string>, screen: ShotScreen = SCREEN): Promise<Page> {
+  const phone = screen === SCREEN;
   const context = await guardedContext(
     browser,
-    { viewport: { width: SCREEN.width, height: SCREEN.height }, deviceScaleFactor: SCREEN.scale, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' },
+    { viewport: { width: screen.width, height: screen.height }, deviceScaleFactor: screen.scale, isMobile: phone, hasTouch: phone, reducedMotion: 'no-preference' },
     (url) => kept.add(new URL(url).host),
   );
   const page = await context.newPage();
-  const cdp = await context.newCDPSession(page);
-  await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: SCREEN.top, bottom: SCREEN.bottom, left: 0, right: 0 } });
+  if (phone) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: screen.top, bottom: screen.bottom, left: 0, right: 0 } });
+  }
   return page;
 }
 
@@ -359,16 +363,16 @@ export function appWebAnswering(up: boolean, port: number): void {
 }
 
 /**
- * Runs `shoot` with a page of Chrome shaped like the iPhone's (`phonePage`, the web's own), in front of the app's web served on `APP_WEB_PORT`.
- * The browser is kept from every host but this machine, whatever the page asks for.
+ * Runs `shoot` with a page of Chrome shaped like the iPhone's (`phonePage`, the web's own), or like `screen` (a desk), in front of the app's web
+ * served on `APP_WEB_PORT`. The browser is kept from every host but this machine, whatever the page asks for.
  */
-export async function withAppWebPage(shoot: (page: Page) => Promise<void>): Promise<void> {
+export async function withAppWebPage(shoot: (page: Page) => Promise<void>, screen: ShotScreen = SCREEN): Promise<void> {
   const up = await fetch(`http://localhost:${APP_WEB_PORT}/`).then(() => true, () => false);
   appWebAnswering(up, APP_WEB_PORT);
   const browser = await launchChrome();
   const kept = new Set<string>();
   try {
-    await shoot(await phonePage(browser, kept));
+    await shoot(await phonePage(browser, kept, screen));
   } finally {
     await browser.close();
     tellKept(kept);
@@ -421,11 +425,11 @@ export const LOOP_BOXES = (): Box[] =>
 export const NEXT_FRAME = () => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
 
 /**
- * Runs `shoot` with a page of Chrome shaped like the iPhone's, in front of the web's own dev server, started here (on a
+ * Runs `shoot` with a page of Chrome shaped like the iPhone's (or like `screen`, a desk), in front of the web's own dev server, started here (on a
  * port that is not answering) and stopped after. `probe` is a page of the web that answers once the server is up. The
  * browser is kept from every host but this machine (`guardedContext`), whatever the page asks for.
  */
-export async function withWebPage(probe: string, shoot: (page: Page) => Promise<void>): Promise<void> {
+export async function withWebPage(probe: string, shoot: (page: Page) => Promise<void>, screen: ShotScreen = SCREEN): Promise<void> {
   // Anything that answers on the port, whatever the page and whatever the status, is in the way.
   const up = await fetch(`http://localhost:${PORT}/`).then(() => true, () => false);
   refuseServerInUse(up, PORT);
@@ -464,7 +468,7 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
     const browser = await launchChrome();
     const kept = new Set<string>();
     try {
-      const page = await phonePage(browser, kept);
+      const page = await phonePage(browser, kept, screen);
       await whileServing(server, logFile, () => shoot(page));
     } finally {
       await browser.close();
