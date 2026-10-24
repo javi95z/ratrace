@@ -100,6 +100,33 @@ test('each page opened in a language writes the cookie again, with the Next web\
   set.mockRestore();
 });
 
+test('a language chosen, then a page opened before its words arrive: the cookie is the language of the page the player ends on', async () => {
+  const services = { ...memoryServices(), language: kvLanguage };
+  const page = (locale: 'en' | 'es' | 'ru') => (
+    <GameProvider services={speaking(services, locale)}>
+      <LanguagePick />
+    </GameProvider>
+  );
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  words.held = 'ru';
+  const view = renderGame(<LanguagePick />, services);
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  expect(cookie()).toBe('ru');
+  // Before Russian's words are in, the player opens a Spanish page (a link, Back): that is the page they are on, and the language kept.
+  params.locale = 'es';
+  pathname.now = '/es/records';
+  view.rerender(page('es'));
+  expect(cookie()).toBe('es');
+  // The words come in: the choice opens its page, and the page the player ends on is the one that keeps its language.
+  await act(async () => words.release());
+  expect(router.push).toHaveBeenCalledWith('/ru/records');
+  params.locale = 'ru';
+  pathname.now = '/ru/records';
+  view.rerender(page('ru'));
+  expect(cookie()).toBe('ru');
+});
+
 test('outside the pages of a language, the language is the cookie\'s, else the browser\'s, else English', () => {
   device.languages = ['ru', 'en'];
   renderGame(<Speaks />, { ...memoryServices(), language: kvLanguage });

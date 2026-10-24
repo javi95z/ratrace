@@ -18,6 +18,7 @@ vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 vi.mock('./ui/gameFonts', () => ({ useGameFonts: () => true }));
 vi.mock('./game/context', () => ({ GameProvider: box('game') }));
 vi.mock('./ui/Page', () => ({ Page: box('page') }));
+vi.mock('./pwa/visits', () => ({ Visits: () => <div data-piece="visits" /> }));
 
 const { default: RootLayout } = await import('./app/_layout');
 
@@ -27,4 +28,9 @@ test('the whole app is inside one gesture root that fills the screen, so a drag 
   expect(root.dataset.piece).toBe('gestures');
   expect(JSON.parse(root.dataset.style!)).toMatchObject({ flex: 1 });
   expect(root.querySelector('[data-piece="stack"]')).not.toBeNull();
+});
+
+test('the visits are counted from the shell, once, over every page (the web counts them; the phone\'s draws nothing)', () => {
+  const { container } = render(<RootLayout />);
+  expect(container.querySelectorAll('[data-piece="visits"]')).toHaveLength(1);
 });

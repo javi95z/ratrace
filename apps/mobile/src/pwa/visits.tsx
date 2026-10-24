@@ -6,8 +6,8 @@ import type { Track } from '../game/events';
  * not a site: it counts no visits, and its events go only to the game's own project (`online/track.ts`).
  */
 
-/** Counts no visits on the phone (the web's takes whether the build is a production one, for a test to say). */
-export const Visits: (props: { production?: boolean }) => null = () => null;
+/** Counts no visits on the phone. */
+export const Visits: () => null = () => null;
 
-/** The sender it is given, as it is: the phone's events go only to the game's own project (the web's takes whether the build is a production one). */
-export const alsoToVercel: (track: Track, production?: boolean) => Track = (track) => track;
+/** The sender it is given, as it is: the phone's events go only to the game's own project. */
+export const alsoToVercel: (track: Track) => Track = (track) => track;
