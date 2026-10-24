@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
-import { Button, Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
+import { Button, Notice, Raised, reach, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { adjustedRead } from '../../ui/fonts';
 import { Loading } from '../../ui/Loading';
@@ -20,7 +20,7 @@ import { useT } from '../words';
 import { useOwnT } from '../ownWords';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './RoomCard';
-import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
+import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { useGo } from '../pages';
 import { useWarmPages } from '../warmPages';
@@ -32,7 +32,6 @@ const BUTTON_SPACING = 15 * 0.03;
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
-  const settings = useT('settings');
   const legal = useT('legal');
   const phone = useOwnT();
   const common = useT('common');
@@ -43,7 +42,6 @@ export function Home() {
   const lifeId = useGame((s) => s.lifeId);
   const round = useGame((s) => s.view?.round ?? null);
   const cityId = useGame((s) => s.view?.player.cityId ?? null);
-  const finished = useGame((s) => s.view?.finished === true);
   const atEnd = useGame((s) => s.stage === 'end');
   const moved = useGame((s) => s.moved);
   const ranked = useGame((s) => s.ranked);
@@ -57,8 +55,6 @@ export function Home() {
   // Whoever has played before knows the game: the rat and its line make way for what they came for.
   const runs = useRuns();
   const returning = inProgress || (runs !== null && runs.length > 0);
-  // A life that is over stays on the device until another begins, so its score can still be looked at.
-  const over = open && finished;
   // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
   const week = useThisWeek();
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
@@ -158,11 +154,6 @@ export function Home() {
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             <FriendRequests />
-            {over ? (
-              <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.push('play')}>
-                <PixelText size={15} tone="cream" style={{ textAlign: 'center' }}>{t('lastLife')}</PixelText>
-              </Raised>
-            ) : null}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <Raised
                 role="link"
@@ -198,11 +189,9 @@ export function Home() {
         )}
       </View>
 
-      {/* At the foot, as it always was: the settings, also behind the gear above. */}
+      {/* At the foot, as it always was, with no frame round it: the account, the player's profile and the settings, these also behind the gear above. */}
       <View style={{ width: '100%', marginTop: 'auto' }}>
-        <Panel label={settings('title')}>
-          <HomeSettingsPanel profile={<ProfileLink />} />
-        </Panel>
+        <HomeAccount profile={<ProfileLink />} />
       </View>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (

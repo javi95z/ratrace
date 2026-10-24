@@ -112,20 +112,23 @@ describe('the play screen', () => {
     expect(screen.queryByRole('button', { name: 'Play the round' })).toBeNull();
   });
 
-  it('keeps, where the HUD is compact, the place of a crisis\'s strip under the figures even with no crisis: the stage stands 8 + 12 under them, as on the web (its `mt-2` slot is there all the same)', async () => {
+  it('keeps, where the HUD is compact, the place of a crisis\'s strip under the way out even with no crisis: the stage stands 8 + 12 under it, as on the web (its `mt-2` slot is there all the same)', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
     renderGame(<Play />, services);
     await screen.findByRole('heading', { name: 'News' });
-    // The news: no strip, and no place for one (the web draws neither).
-    expect(stage().previousElementSibling?.textContent).toBe('Nurse, age 22');
+    // The news: no strip, and no place for one (the web draws neither): the stage stands under the way out, which stands under the figures.
+    const wayOut = stage().previousElementSibling as HTMLElement;
+    expect(wayOut.textContent).toMatch(/^Rat race escape/);
+    expect(wayOut.style.marginTop).toBe('-8px');
+    expect(wayOut.previousElementSibling?.textContent).toBe('Nurse, age 22');
     fireEvent.click(button('See what life brings'));
     await stageIs(/^Card 1 of/);
     // The cards of a round with no crisis: an empty place, which the page's gap of 8 stands on either side of, as the web's empty `mt-2` does.
     const slot = stage().previousElementSibling as HTMLElement;
     expect(slot.textContent).toBe('');
     expect(slot.children).toHaveLength(0);
-    expect(slot.previousElementSibling?.textContent).toBe('Nurse, age 22');
+    expect(slot.previousElementSibling?.textContent).toMatch(/^Rat race escape/);
   });
 
   it('plays a round from the news to the ledger, and opens the next one', async () => {

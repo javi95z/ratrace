@@ -18,7 +18,6 @@ import { Sheet } from '../../ui/overlay';
 import { Glint } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
-import { useScrolledPastLead } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useSettings, useT, useWords } from '../context';
@@ -86,7 +85,8 @@ function Backdrop({ tier, size }: { tier: number; size: number }) {
 }
 
 type Figure = 'cash' | 'flow' | 'status' | 'ratRace';
-const FIGURES: readonly Figure[] = ['cash', 'flow', 'status', 'ratRace'];
+/** The figures of the part that sticks, each a sheet: the way out of the rat race is a part of its own (`HudWayOut`). */
+const STUCK: readonly Figure[] = ['cash', 'flow', 'status'];
 
 /**
  * What a scene shows open over the Hud at the start (a client draws a scene by a screen's own initial state, never by a tap): the
@@ -498,83 +498,42 @@ function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyl
   );
 }
 
-/** The two texts of the strip that sticks once the portrait is away: a pixel 13 and a reading 13, on one baseline. */
-const AWAY = sharedBaseline(['pixel', 13, 13 * 1.1], ['read', 13, 13 * 1.45]);
 /** The way out's label (13) and its figures (14), on one baseline. */
 const WAY_OUT = sharedBaseline(['pixel', 13, 13 * 1.1], ['pixel', 14, 14 * 1.1]);
 
 /**
- * The part of the Hud that sticks to the top: whose life it is once the portrait has scrolled away, the figures, and the way out of the rat
- * race. A tap on a figure opens a sheet of what it means and what it is made of.
+ * The part of the Hud that sticks to the top: the three figures, and nothing else (who, which round and the way out scroll away with the page).
+ * A tap on a figure opens a sheet of what it means and what it is made of.
  */
 function HudFigures({ open }: { open?: HudOpen }) {
   const t = useT('hud');
   const common = useT('common');
   const { content, fmt } = useWords();
-  const { locale } = useSettings();
-  const lifeId = useGame((s) => s.lifeId) ?? '';
-  const preview = useGame((s) => s.preview);
   const shown = useShown();
-  const opened = FIGURES.find((figure) => figure === open);
+  const opened = STUCK.find((figure) => figure === open);
   const [figure, setFigure] = useState<Figure>(opened ?? 'cash');
   const [showing, setShowing] = useState(opened !== undefined);
-  // Once the row with the portrait has scrolled away, the strip that sticks says whose life and which round it is.
-  const away = useScrolledPastLead();
   const p = shown.player;
-  const years = content.yearsPerRound;
-  const { yearly, escape } = useMemo(() => {
+  const yearly = useMemo(() => {
     const flow = cashflow(content, shown);
-    return {
-      yearly: flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual - taxAnnual(content, shown),
-      escape: preview ? preview.escape : escapeProgress(content, shown),
-    };
-  }, [content, shown, preview]);
-  const escaped = p.escapedAtRound !== null;
-  const age = ageAt(content, shown.round);
-  const character = characterName(lifeId, locale);
-  const round = t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds });
+    return flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual - taxAnnual(content, shown);
+  }, [content, shown]);
   const show = (which: Figure) => {
     setFigure(which);
     setShowing(true);
   };
-  const [pixelTop, readTop] = AWAY(locale);
-  const [labelTop, figuresTop] = WAY_OUT(locale);
-  const wayOut = usePress({ onPress: () => show('ratRace') });
   // The web marks its cash `[data-hud-cash]`: here it is put on the list of the page coins fly over (Play's), by name.
   const cashTarget = useCoinTarget('cash');
 
   return (
     <>
-      <View style={{ gap: 8, paddingTop: 4, paddingBottom: 8 }}>
-        {away ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <View style={{ flexShrink: 1, minWidth: 0, marginTop: pixelTop }}>
-              {character ? (
-                <PixelText size={13} tone="gold-500" numberOfLines={1} after={[{ text: common('age', { age }), tone: 'ink-200' }]}>
-                  {`${character} · `}
-                </PixelText>
-              ) : (
-                <PixelText size={13} tone="ink-200" numberOfLines={1}>{common('age', { age })}</PixelText>
-              )}
-            </View>
-            <ReadText size={13} tone="ink-200" style={{ flexShrink: 0, marginTop: readTop }}>{round}</ReadText>
-          </View>
-        ) : null}
+      <View style={{ paddingTop: 4, paddingBottom: 8 }}>
         <StatRow>
           {/* Where money that comes in lands: coins fly here from a card that paid. */}
           <Stat ref={cashTarget} icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => show('cash')} />
           <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} onOpen={() => show('flow')} />
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => show('status')} />
         </StatRow>
-        <Pressable accessibilityRole="button" accessibilityHint={t('ratRaceHint')} onPress={wayOut} style={{ minHeight: TOUCH, justifyContent: 'center' }}>
-          <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <PixelText size={13} style={{ marginTop: labelTop }}>{escaped ? t('escaped', { age: escapeAge(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</PixelText>
-            <PixelText size={14} tone="ink-200" style={{ marginTop: figuresTop }}>
-              {`${fmt.compact(Math.floor(escape.passiveAfterTax / years))} / ${fmt.compact(Math.floor(escape.outgoings / years))}`}
-            </PixelText>
-          </View>
-          <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
-        </Pressable>
       </View>
       <Sheet open={showing} onClose={() => setShowing(false)} title={t(figure)} closeLabel={common('close')}>
         <Details figure={figure} shown={shown} />
@@ -584,15 +543,54 @@ function HudFigures({ open }: { open?: HudOpen }) {
 }
 
 /**
+ * The way out of the rat race, just under the figures, scrolling away with the page (the web's button under its sticky block): how far passive
+ * income is from the year's outgoings, and a tap opens what it means.
+ */
+function HudWayOut({ open }: { open?: HudOpen }) {
+  const t = useT('hud');
+  const common = useT('common');
+  const { content, fmt } = useWords();
+  const { locale } = useSettings();
+  const preview = useGame((s) => s.preview);
+  const shown = useShown();
+  const [showing, setShowing] = useState(open === 'ratRace');
+  const p = shown.player;
+  const years = content.yearsPerRound;
+  const escape = useMemo(() => (preview ? preview.escape : escapeProgress(content, shown)), [content, shown, preview]);
+  const escaped = p.escapedAtRound !== null;
+  const [labelTop, figuresTop] = WAY_OUT(locale);
+  const wayOut = usePress({ onPress: () => setShowing(true) });
+
+  return (
+    <>
+      <Pressable accessibilityRole="button" accessibilityHint={t('ratRaceHint')} onPress={wayOut} style={{ minHeight: TOUCH, justifyContent: 'center' }}>
+        <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <PixelText size={13} style={{ marginTop: labelTop }}>{escaped ? t('escaped', { age: escapeAge(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</PixelText>
+          <PixelText size={14} tone="ink-200" style={{ marginTop: figuresTop }}>
+            {`${fmt.compact(Math.floor(escape.passiveAfterTax / years))} / ${fmt.compact(Math.floor(escape.outgoings / years))}`}
+          </PixelText>
+        </View>
+        <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
+      </Pressable>
+      <Sheet open={showing} onClose={() => setShowing(false)} title={t('ratRace')} closeLabel={common('close')}>
+        <Details figure="ratRace" shown={shown} />
+      </Sheet>
+    </>
+  );
+}
+
+/**
  * Always in sight: who and where you are, cash, yearly cashflow, status, and how far passive income is from covering your life. `compact`
  * leaves the skyline out and shrinks the portrait, to give the cards and the finance tabs room.
  *
- * On the phone it is the two parts of a `StickyScreen`, as the web's page makes of it with `position: sticky`: `part="lead"` scrolls away
- * (the skyline, the portrait, who and where, the paper and the settings), `part="header"` sticks (whose life it is once the portrait has
- * gone, the figures, the way out). Each draws only what it shows, and holds its own sheets. The strip of a crisis that hangs under it on
- * the web (`CrisisBar compact`) is the screen's to place, under the header, where the page scrolls. `open` is what a scene shows open at the
- * start; each part opens what is its own.
+ * On the phone it is three parts of a `StickyScreen`, as the web's page makes of it with `position: sticky`: `part="lead"` scrolls away
+ * (the skyline, the portrait, who and where, the paper and the settings), `part="header"` sticks (the three figures alone), and
+ * `part="wayOut"` is the bar of the way out, which the screen places just under the header, where the page scrolls (in the finances, the first
+ * of what stands between the figures and their tabs). Each draws only what it shows, and holds its own sheets. The strip of a crisis that hangs
+ * under it on the web (`CrisisBar compact`) is the screen's to place too, under the way out. `open` is what a scene shows open at the start;
+ * each part opens what is its own.
  */
-export function Hud({ part, compact = false, skyline = !compact, onProfile, open }: { part: 'lead' | 'header'; compact?: boolean; skyline?: boolean; onProfile?: () => void; open?: HudOpen }) {
-  return part === 'lead' ? <HudLead compact={compact} skyline={skyline} onProfile={onProfile} open={open} /> : <HudFigures open={open} />;
+export function Hud({ part, compact = false, skyline = !compact, onProfile, open }: { part: 'lead' | 'header' | 'wayOut'; compact?: boolean; skyline?: boolean; onProfile?: () => void; open?: HudOpen }) {
+  if (part === 'lead') return <HudLead compact={compact} skyline={skyline} onProfile={onProfile} open={open} />;
+  return part === 'header' ? <HudFigures open={open} /> : <HudWayOut open={open} />;
 }

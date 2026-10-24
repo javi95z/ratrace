@@ -481,16 +481,15 @@ export function HomePreferences() {
 }
 
 /**
- * The same at the foot of the front door, as it always was: the account in sight, with the way into Google, the player's profile where there is one,
- * and the settings a button below.
+ * The foot of the front door, with no frame round it (the web's `HomeAccount`): the account, with the way into Google for a guest; the player's
+ * profile where there is one; and the settings, a button below it.
  */
-export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
+export function HomeAccount({ profile = null }: { profile?: ReactNode }) {
   const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
     <View style={{ gap: 8 }}>
       <AccountBlock compact />
-      {/* The player's profile, next to the account it belongs to. */}
       {profile}
       <Button variant="secondary" wide onPress={() => setOpen(true)}>
         <Sprite id="icon.settings" />

@@ -368,14 +368,26 @@ class LaidOut {
 }
 
 // Last: the layout it brings stays with the page's library for the rest of the file.
-describe('the strip that sticks', () => {
-  it('says whose life and which round it is in the strip that sticks, once the portrait has scrolled away', async () => {
+describe('what sticks to the top of a round', () => {
+  /** The block of the page that sticks to its top, where this element is in it (React Native Web draws a sticky row `position: sticky`). */
+  const stuckIn = (el: HTMLElement) => {
+    for (let up: HTMLElement | null = el; up; up = up.parentElement) if (getComputedStyle(up).position === 'sticky') return up;
+    return null;
+  };
+
+  it('is the three figures alone: once the portrait has scrolled away nothing says whose life or which round it is, and the way out scrolls with the page', async () => {
     // The page is laid out as it is drawn (jsdom lays out nothing: every box is at 0, the lead too).
     vi.stubGlobal('ResizeObserver', LaidOut);
     await open();
-    expect(screen.queryByText('Round 1 of 20')).toBeNull();
     scrollPast();
-    expect(await screen.findByText('Round 1 of 20')).toBeTruthy();
-    expect(screen.getAllByText(/Age 22/)).toHaveLength(2);
+    await settled();
+    // Whose life and which round are told only by the portrait's row, which has scrolled away: no strip says them again.
+    expect(screen.queryByText('Round 1 of 20')).toBeNull();
+    expect(screen.getAllByText(/Age 22/)).toHaveLength(1);
+    // The figures stick; the way out of the rat race, just under them, does not.
+    for (const figure of [/Cash/, /Flow/, /Status/]) expect(stuckIn(screen.getByRole('button', { name: figure })), String(figure)).not.toBeNull();
+    const wayOut = screen.getByRole('button', { name: /Rat race escape/ });
+    expect(stuckIn(wayOut)).toBeNull();
+    expect(stuckIn(screen.getByRole('button', { name: /Cash/ }))!.compareDocumentPosition(wayOut) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

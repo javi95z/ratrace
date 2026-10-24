@@ -7,8 +7,8 @@ import type { HudOpen } from '../game/screens/Hud';
 import { StickyScreen } from '../ui/Sticky';
 
 /*
- * The Hud as Play will mount it (Task 9 ports Play itself): the part that scrolls away as the `StickyScreen`'s lead, the part that sticks as
- * its header, and under them, where the page scrolls, the strip of a crisis in the stages the Hud is compact in. Nothing of the stage itself:
+ * The Hud as Play mounts it outside the finances: the part that scrolls away as the `StickyScreen`'s lead, the figures that stick as its header,
+ * and under them, where the page scrolls, the way out of the rat race and the strip of a crisis in the stages the Hud is compact in. Nothing of the stage itself:
  * a scene of the Hud (`hud-*`) compares the Hud alone, and the web's shot hides its page's stage (`WEB_ONLY` in scripts/sceneShots.ts).
  * The column has no room of its own on top, as the web's page has none (its Hud opens with the skyline's `mt-3`), and leaves the web's
  * `mt-2` between the portrait's row, the figures and the strip. `children` is what a scene shows of a stage under them (the page's 8 apart).
@@ -32,6 +32,10 @@ export function HudScene({ open, onProfile = nothing, children }: { open?: HudSc
       lead={<Hud part="lead" compact={compact} onProfile={onProfile} open={hud} />}
       header={<Hud part="header" compact={compact} open={hud} />}
     >
+      {/* The way out, right under the figures (their block's own 8 below them), scrolling with the page. */}
+      <View style={{ marginTop: -8 }}>
+        <Hud part="wayOut" open={hud} />
+      </View>
       {compact ? <HudCrisis open={open === 'crisis'} /> : null}
       {children}
     </StickyScreen>

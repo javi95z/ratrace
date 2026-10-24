@@ -725,11 +725,11 @@ describe('a round in a room', () => {
       await server.ask(HOST, { action: 'state', roomId: room.id });
     }
     const asB = inRooms(server, B);
-    // Over, the front door does not call it a game to go back to: it is there for its result.
+    // Over, the front door neither calls it a game to go back to nor shows its result: that is in the records.
     renderGame(<Home />, asB.services);
-    const result = await screen.findByRole('link', { name: /See how your game ended/ }, { timeout: 10_000 });
-    expect(result.textContent).toMatch(/You came #\d of 2/);
-    expect(screen.queryByRole('link', { name: /Back to your game/ })).toBeNull();
+    const door = await screen.findByRole('link', { name: /Multiplayer/ }, { timeout: 10_000 });
+    expect(door.textContent).not.toMatch(/You came #/);
+    expect(screen.queryByRole('link', { name: /Back to your game|See how your game ended/ })).toBeNull();
     cleanup();
     renderGame(<Room />, asB.services);
     press(await screen.findByRole('button', { name: 'Rematch' }, { timeout: 10_000 }));

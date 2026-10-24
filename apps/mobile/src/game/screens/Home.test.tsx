@@ -88,7 +88,7 @@ describe('the front door', () => {
     await screen.findByRole('link', { name: /Новая/ });
     // (A title in Russian is cut into one piece for each typeface it needs, so a name is read from the whole text.)
     const said = (role: string) => screen.getAllByRole(role).map((el) => el.textContent);
-    expect(said('link')).toEqual(expect.arrayContaining(['Новая жизнь', 'Коллекция', 'Рекорды']));
+    expect(said('link')).toEqual(expect.arrayContaining(['Новая жизнь', 'Коллекция', 'История']));
     expect(said('button')).toEqual(expect.arrayContaining(['Настройки']));
     // Nothing of another language is left on it, but the game's own name and the names of the languages.
     expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
@@ -98,7 +98,7 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices());
     fireEvent.click(await screen.findByRole('link', { name: 'Collection' }));
     expect(router.push).toHaveBeenLastCalledWith('/en/collection');
-    fireEvent.click(screen.getByRole('link', { name: 'Records' }));
+    fireEvent.click(screen.getByRole('link', { name: 'History' }));
     expect(router.push).toHaveBeenLastCalledWith('/en/records');
     expect(document.querySelector('[data-sprite="icon.star"]')).not.toBeNull();
     expect(document.querySelector('[data-sprite="icon.trophy"]')).not.toBeNull();
@@ -106,12 +106,12 @@ describe('the front door', () => {
 
   it('shows no way to the rankings, and nothing of friends, rooms, the account or installing: nobody is signed in to ask', async () => {
     renderGame(<Home />, memoryServices());
-    await screen.findByRole('link', { name: 'Records' });
+    await screen.findByRole('link', { name: 'History' });
     for (const online of [/Rankings/, /friend request/, /Multiplayer/, /Pick up the life from your other device/, /Your profile/, /Keep the game/]) {
       expect(screen.queryByText(online), String(online)).toBeNull();
     }
     // What is left to go to is what the phone has: a new life, the week, the collection, the records and the small print.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'Records', 'Privacy and legal notice']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Privacy and legal notice']);
   });
 
   it('offers the life in progress first, with who and where', async () => {
@@ -165,7 +165,7 @@ describe('the front door', () => {
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).not.toContain('Challenge practice');
   });
 
-  it('offers a look at the life that just ended, and nothing to continue', async () => {
+  it('offers nothing of the life that just ended: its look back is in the records', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (!session.view().finished) {
@@ -173,11 +173,11 @@ describe('the front door', () => {
       await session.playRound({ orders: [] });
     }
     renderGame(<Home />, services);
-    const last = await screen.findByRole('link', { name: 'See how your last life ended' });
-    fireEvent.click(last);
-    expect(router.push).toHaveBeenCalledWith('/en/play');
+    expect(await screen.findByRole('link', { name: 'New life' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-    expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /last life/ })).toBeNull();
+    // Nothing else to go to but what the door always has.
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Privacy and legal notice']);
   });
 
   it('says so plainly when the phone is not saving, instead of promising that it is', async () => {
@@ -542,6 +542,8 @@ describe('the account at the foot of the front door', () => {
     await screen.findByRole('link', { name: 'New life' });
     const foot = screen.getByRole('region', { name: 'Account' });
     expect(within(foot).getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
+    // At the foot with no frame round it, as the web's: no box of the settings holds the account.
+    expect(foot.closest('[aria-label="Settings"]')).toBeNull();
     // No way out of the account on the front door itself: that is in the settings.
     expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
     fireEvent.click(settingsButtons()[0]);
@@ -733,7 +735,7 @@ describe('the front door of a player with an account', () => {
     expect(router.push).toHaveBeenLastCalledWith('/en/rankings');
     expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
     // Across the row under the collection and the records, as the web's `col-span-2`.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'Records', 'Rankings', 'Privacy and legal notice']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings', 'Privacy and legal notice']);
   });
 
   it('keeps the way to the rankings with no connection: they are the account\'s, and say so themselves', async () => {
@@ -761,7 +763,7 @@ describe('the front door of a player with an account', () => {
   it('asks nobody of friends, and shows no request, where nobody is signed in', async () => {
     const asked: string[] = [];
     renderGame(<Home />, { ...memoryServices(), community: () => othersOf({ friends: async () => (asked.push('friends'), null) }) });
-    await screen.findByRole('link', { name: 'Records' });
+    await screen.findByRole('link', { name: 'History' });
     await settled();
     expect(asked).toEqual([]);
   });
@@ -773,9 +775,11 @@ describe('the front door of a player with an account', () => {
     const profile = await screen.findByRole('link', { name: 'Your profile' });
     fireEvent.click(profile);
     expect(router.push).toHaveBeenLastCalledWith('/en/player');
-    // In the settings panel at the foot, after the account.
+    // At the foot, after the account, and the settings after it: one under the other, with no frame round them.
     const foot = screen.getByRole('region', { name: 'Account' });
     expect(foot.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(profile.compareDocumentPosition(settingsButtons().at(-1)!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(foot.closest('[aria-label="Settings"]')).toBeNull();
     // The rat on it is the member's own, as their profile on the server keeps it.
     await waitFor(() => expect(asked).toContain('me'));
     cleanup();

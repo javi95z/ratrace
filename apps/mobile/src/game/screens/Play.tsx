@@ -274,15 +274,16 @@ function CrisisStrip() {
 }
 
 /**
- * What stands between the Hud's figures and the finances' tabs, as the web's page has it: the strip of a crisis 8 under the figures (its place kept
- * with none, the web's empty `mt-2`), and the tip of the guide when one is due, 12 under that (the stage's `pt-3`). It scrolls up under the figures
+ * What stands between the Hud's figures and the finances' tabs, as the web's page has it: the way out of the rat race right under the figures, the
+ * strip of a crisis 8 under that (its place kept with none, the web's empty `mt-2`), and the tip of the guide when one is due, 12 under that (the stage's `pt-3`). It scrolls up under the figures
  * as the page does, and the tabs follow it until they meet them (`StickyScreen`'s `between`). The tabs stand 12 under it (`subGap`: with a tip,
  * the tip's own `mb-3`; with none, the stage's `pt-3`), so the tip is given its 12 above it in place of the one below it, and with no tip the
  * two cancel out to nothing.
  */
-function FinanceLeadIn({ bar }: { bar?: ReactNode }) {
+function FinanceLeadIn({ wayOut, bar }: { wayOut: ReactNode; bar?: ReactNode }) {
   return (
     <>
+      {wayOut}
       <View style={{ height: 8 }} />
       <CrisisStrip />
       {/* In a room, its bar: 8 under the strip, as the web's stands under its Hud (`pt-2`). */}
@@ -391,13 +392,15 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   const compact = stage !== 'news' && stage !== 'resolve';
   const lead = useMemo(() => <Hud part="lead" compact={compact} onProfile={openProfile} />, [compact, openProfile]);
   const header = useMemo(() => <Hud part="header" compact={compact} />, [compact]);
+  // The way out of the rat race, just under the figures, scrolls away with the page: only the figures stick.
+  const wayOut = useMemo(() => <Hud part="wayOut" />, []);
   // The stage is made once a stage, as the Hud's parts are: what Play itself draws again (the basket opened, the calendar turning) does not draw it again.
   const stageView = useMemo(() => <StageView stage={stage} />, [stage]);
   // In the finances, their tabs stick under the figures, and what stands between the two (the strip of a crisis, the guide's tip) scrolls up under them.
   const finances = stage === 'finance';
   const financeTabs = useMemo(() => <FinanceTabs />, []);
   const bar = room?.bar;
-  const financeLeadIn = useMemo(() => <FinanceLeadIn bar={bar} />, [bar]);
+  const financeLeadIn = useMemo(() => <FinanceLeadIn wayOut={wayOut} bar={bar} />, [wayOut, bar]);
   // Made once for as long as it is open or shut: a step of the round draws Play again, and not the profile, which draws what it shows itself.
   const profileSheet = useMemo(() => <ProfileSheet open={profileOpen} onClose={closeProfile} />, [profileOpen, closeProfile]);
   // The moments that stop the game (a crisis opening, the rat race left, a bankruptcy): a sheet of their own, over everything, made once, as the
@@ -452,6 +455,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
             <SrOnly>{heading}</SrOnly>
           </View>
           <PerfDrawn name={`stage: ${stage}`} />
+          {/* Right under the figures (their block's own 8 below them, the web's `pb-2`), not the page's gap further: in the finances it stands over their tabs (`FinanceLeadIn`). */}
+          {finances ? null : <View style={{ marginTop: -8 }}>{wayOut}</View>}
           {compact && !finances ? <CrisisStrip /> : null}
           {/* In a room, its bar, 8 under the Hud (the web's `pt-2`); in the finances it stands over their tabs (`FinanceLeadIn`). */}
           {bar && !finances ? bar : null}

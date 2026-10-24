@@ -68,7 +68,7 @@ async function aWholeLife() {
 }
 
 describe('the end of a life, as it is left', () => {
-  it('lets the life go once its end screen is left: it is among the finished lives, and the front door no longer offers to see how it ended', async () => {
+  it('lets the life go once its end screen is left: it is among the finished lives, and the front door offers nothing of it, before or after', async () => {
     const { services } = await aWholeLife();
     let leave: (() => void) | null = null;
     // The end screen, and the front door under it in the stack, as the phone has them: the end screen is left, the front door stays.
@@ -84,11 +84,12 @@ describe('the end of a life, as it is left', () => {
     }
     renderGame(<Stack />, services);
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
-    // While the end is on screen, the life that is over can be looked at again from the front door.
-    expect(screen.getByRole('link', { name: 'See how your last life ended' })).toBeTruthy();
+    // While the end is on screen, the front door under it offers no look back at the life that is over: that is in the records.
+    expect(screen.queryByText(/last life|lastLife/)).toBeNull();
+    expect(await services.store.loadGame()).not.toBeNull();
     await settled(() => leave!());
-    await waitFor(() => expect(screen.queryByRole('link', { name: 'See how your last life ended' })).toBeNull());
-    expect(await services.store.loadGame()).toBeNull();
+    await waitFor(async () => expect(await services.store.loadGame()).toBeNull());
+    expect(screen.queryByText(/last life|lastLife/)).toBeNull();
     expect(await services.store.listRuns()).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
   });
