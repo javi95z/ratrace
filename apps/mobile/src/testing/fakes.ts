@@ -78,6 +78,7 @@ export const expoRouter = {
   Unmatched: () => createElement('div', { 'data-unmatched': '' }),
   // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn, and again when it is shown again.
   useFocusEffect,
+  useIsFocused: () => true,
 };
 
 /** Who listens to Android's Back (`BackHandler.addEventListener('hardwareBackPress', …)`), in the order they began to: the phone asks the latest first. */

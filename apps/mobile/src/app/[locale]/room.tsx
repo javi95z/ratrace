@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { Room } from '../../game/screens/Room';
+import { PageHead } from '../../game/pageHead';
 import { InLanguage } from '../../game/screens/InLanguage';
 
 /** Each page once in each language of the game, for the web export. */
@@ -14,6 +15,7 @@ export default function RoomRoute() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   return (
     <InLanguage>
+      <PageHead page="room" />
       <Room code={typeof code === 'string' ? code : undefined} />
     </InLanguage>
   );

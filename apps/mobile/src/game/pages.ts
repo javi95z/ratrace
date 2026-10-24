@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE, isLocale, LOCALES } from '@ratrace/i18n/locales';
 import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';
+import { PAGES, type Page } from './pageList';
 
 /*
  * The pages of the game and their addresses, as the Next web's: the language first, then the page (`/es/room?code=K7Q2XM`, `/en/rankings#friends`,
@@ -10,11 +11,7 @@ import { Language } from '../ui/text';
  * bookmark and come back to; on the phone it is only the router's, and its language is the one the app opened its pages in.
  */
 
-/** A page of the game: the front door (`''`) and every page after it, as the Next web's `app/[locale]/*`. */
-export type Page = '' | 'new' | 'challenge' | 'room' | 'rankings' | 'collection' | 'records' | 'play' | 'player' | 'legal';
-
-/** Every page, the front door first. */
-export const PAGES: readonly Page[] = ['', 'new', 'challenge', 'room', 'rankings', 'collection', 'records', 'play', 'player', 'legal'];
+export { PAGES, type Page } from './pageList';
 
 /** What may follow a page in its address: a query (`?code=`), a hash (`#friends`), and the language, English unless one is named. */
 export interface PageOptions {

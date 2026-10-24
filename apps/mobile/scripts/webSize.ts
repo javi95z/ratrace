@@ -5,6 +5,8 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { LOCALES, MESSAGES } from '@ratrace/i18n';
+import { DEFAULT_LOCALE } from '@ratrace/i18n/locales';
+import { SITE_URL } from '../src/game/site';
 import { bundlesIn } from './rules';
 
 /**
@@ -145,6 +147,58 @@ export function judgeFirstVisit(files: readonly ExportFile[], requested: readonl
  */
 export function pageFiles(pages: readonly string[], locales: readonly string[]): string[] {
   return locales.flatMap((locale) => pages.map((page) => (page === '' ? `${locale}/index.html` : `${locale}/${page}.html`)));
+}
+
+/**
+ * What is wrong with the head of each page's HTML (nothing when it is fine): the Next web's metadata for the page in the language of its address
+ * (apps/web/src/i18n/metadata.ts, held to by `src/game/pageMeta.test.ts`) as the search engines and the networks a link is shared on read it. A page the
+ * export lacks is not judged here (`pageFiles` finds it missing).
+ */
+export function judgeHeads(files: readonly ExportFile[], locales: readonly (typeof LOCALES)[number][], pages: readonly string[], site: URL): string[] {
+  const problems: string[] = [];
+  const byPath = new Map(files.map((file) => [file.path, file]));
+  const at = (locale: string, page: string) => new URL(`/${locale}${page === '' ? '' : `/${page}`}`, site).href;
+  for (const locale of locales) {
+    const words = MESSAGES[locale].meta as { title: string; description: string; titles: Record<string, string> };
+    for (const page of pages) {
+      const path = pageFiles([page], [locale])[0];
+      const html = byPath.get(path)?.bytes.toString('utf8');
+      if (html === undefined) continue;
+      const head = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
+      // The tags as the browser reads them: a name, its attributes by lower-case name, and (for a title) its text.
+      const tags = [...head.matchAll(/<(title|meta|link)\b([^>]*)>(?:([^<]*)<\/title>)?/g)].map(([, name, rest, text]) => ({
+        name,
+        text: text === undefined ? undefined : textOfHtml(text),
+        attributes: new Map([...rest.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([, key, value]) => [key.toLowerCase(), textOfHtml(value)])),
+      }));
+      const wrong = (what: string) => problems.push(`${path}: ${what}`);
+      const meta = (key: 'name' | 'property', value: string) => tags.filter((tag) => tag.name === 'meta' && tag.attributes.get(key) === value).map((tag) => tag.attributes.get('content'));
+      const links = (rel: string) => tags.filter((tag) => tag.name === 'link' && tag.attributes.get('rel') === rel);
+      const titles = tags.filter((tag) => tag.name === 'title').map((tag) => tag.text);
+      const title = page === '' ? words.title : `${words.titles[page]} · ${words.title}`;
+      if (titles.length !== 1 || titles[0] !== title) wrong(`the title is ${titles.length === 0 ? 'missing' : titles.map((one) => `"${one}"`).join(' and ')}, not one "${title}"`);
+      if (meta('name', 'description').join() !== words.description) wrong(`the description is not the language's own`);
+      const canonical = links('canonical').map((tag) => tag.attributes.get('href'));
+      if (canonical.join() !== at(locale, page)) wrong(`the canonical address is ${canonical.join(' and ') || 'missing'}, not ${at(locale, page)}`);
+      const twins = new Map(links('alternate').map((tag) => [tag.attributes.get('hreflang'), tag.attributes.get('href')]));
+      for (const language of [...locales, 'x-default']) {
+        const expected = at(language === 'x-default' ? DEFAULT_LOCALE : language, page);
+        if (twins.get(language) !== expected) wrong(`its twin for ${language} is ${twins.get(language) ?? 'missing'}, not ${expected}`);
+      }
+      for (const [key, value, expected] of [
+        ['property', 'og:title', title],
+        ['property', 'og:url', at(locale, page)],
+        ['property', 'og:image', new URL('/og.png', site).href],
+        ['name', 'twitter:card', 'summary_large_image'],
+      ] as const) {
+        if (meta(key, value).join() !== expected) wrong(`${value} is ${meta(key, value).join(' and ') || 'missing'}, not ${expected}`);
+      }
+      // A life on screen is one player's own: it is not to be found in a search, and no other page is kept from one.
+      const robots = meta('name', 'robots').join();
+      if (robots !== (page === 'play' ? 'noindex, follow' : '')) wrong(page === 'play' ? 'it may be found in a search (no noindex, follow)' : `it is kept from a search (${robots})`);
+    }
+  }
+  return problems;
 }
 
 /** The formatjs packages that polyfill Intl: the web does without every one. */
@@ -305,7 +359,7 @@ function main(): void {
     console.log(
       `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts (${named} named by its HTML, ${first.scripts.length - named} of its words), ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
     );
-    const problems = judgeWebExport(files, sources, rules, pages);
+    const problems = [...judgeWebExport(files, sources, rules, pages), ...judgeHeads(files, LOCALES, routedPages(), SITE_URL)];
     for (const problem of problems) console.error(`problem: ${problem}`);
     if (problems.length > 0) process.exitCode = 1;
     else console.log('the web export is as light as it must be');

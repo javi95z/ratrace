@@ -1,7 +1,7 @@
 import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -277,5 +277,78 @@ describe('exportEnv', () => {
 
   it('sets them empty when they were not set at all', () => {
     expect(exportEnv({ PATH: '/bin' })).toMatchObject({ EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '', EXPO_PUBLIC_TURNSTILE_SITE_KEY: '' });
+  });
+});
+
+describe('the head of each page', () => {
+  const SITE = new URL('https://rats.example');
+  const LOCALES = ['en', 'es', 'ru'] as const;
+  const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;').replace(/</g, '&lt;');
+  /** The head the export writes for a page, as React writes the tags (an apostrophe an entity). */
+  function head(locale: (typeof LOCALES)[number], page: string, change: (tags: string[]) => string[] = (tags) => tags): string {
+    const words = MESSAGES[locale].meta as { title: string; description: string; titles: Record<string, string> };
+    const title = page === '' ? words.title : `${words.titles[page]} · ${words.title}`;
+    const at = (language: string) => new URL(`/${language}${page === '' ? '' : `/${page}`}`, SITE).href;
+    const tags = [
+      `<title>${escape(title)}</title>`,
+      `<meta name="description" content="${escape(words.description)}"/>`,
+      ...(page === 'play' ? ['<meta name="robots" content="noindex, follow"/>'] : []),
+      `<link rel="canonical" href="${at(locale)}"/>`,
+      ...[...LOCALES, 'x-default'].map((language) => `<link rel="alternate" href="${at(language === 'x-default' ? 'en' : language)}" hrefLang="${language}"/>`),
+      `<meta property="og:title" content="${escape(title)}"/>`,
+      `<meta property="og:url" content="${at(locale)}"/>`,
+      `<meta property="og:image" content="${new URL('/og.png', SITE).href}"/>`,
+      '<meta name="twitter:card" content="summary_large_image"/>',
+    ];
+    return `<!DOCTYPE html><html lang="${locale}"><head><meta charSet="utf-8"/>${change(tags).join('')}</head><body></body></html>`;
+  }
+  const pages = ['', 'new', 'rankings', 'play'];
+  const files = (change?: (locale: string, page: string, tags: string[]) => string[]) =>
+    LOCALES.flatMap((locale) => pages.map((page) => ({ path: pageFiles([page], [locale])[0], bytes: Buffer.from(head(locale, page, (tags) => (change ? change(locale, page, tags) : tags))) })));
+
+  it('finds nothing wrong with a page that says in its language what the Next web says of it', () => {
+    expect(judgeHeads(files(), LOCALES, pages, SITE)).toEqual([]);
+  });
+
+  it('reports a page without its title, with another language\'s, or twice', () => {
+    const none = judgeHeads(files((locale, page, tags) => (locale === 'es' && page === 'rankings' ? tags.filter((tag) => !tag.startsWith('<title>')) : tags)), LOCALES, pages, SITE);
+    expect(none).toEqual([expect.stringContaining('es/rankings.html')]);
+    expect(none[0]).toContain('title');
+    const other = judgeHeads(files((locale, page, tags) => (locale === 'ru' && page === 'new' ? tags.map((tag) => (tag.startsWith('<title>') ? '<title>Choose a life · The Rat Race</title>' : tag)) : tags)), LOCALES, pages, SITE);
+    expect(other).toEqual([expect.stringContaining('ru/new.html')]);
+    const twice = judgeHeads(files((locale, page, tags) => (locale === 'en' && page === '' ? [...tags, '<title>Again</title>'] : tags)), LOCALES, pages, SITE);
+    expect(twice).toEqual([expect.stringContaining('en/index.html')]);
+  });
+
+  it('reports a canonical address that is another page\'s, or the default site\'s when the site is another', () => {
+    const wrong = judgeHeads(files((locale, page, tags) => (locale === 'es' && page === 'rankings' ? tags.map((tag) => tag.replace('/es/rankings"/>', '/en/rankings"/>')) : tags)), LOCALES, pages, SITE);
+    expect(wrong.length).toBeGreaterThan(0);
+    expect(wrong.every((problem) => problem.includes('es/rankings.html'))).toBe(true);
+    expect(judgeHeads(files(), LOCALES, pages, new URL('https://elsewhere.example')).length).toBeGreaterThan(0);
+  });
+
+  it('reports a page that does not name its twins in the three languages and x-default', () => {
+    const lacking = judgeHeads(files((locale, page, tags) => (locale === 'en' && page === 'new' ? tags.filter((tag) => !tag.includes('hrefLang="ru"')) : tags)), LOCALES, pages, SITE);
+    expect(lacking).toEqual([expect.stringContaining('en/new.html')]);
+    expect(lacking[0]).toContain('ru');
+  });
+
+  it('reports /play when a search may find it, and any other page when it may not', () => {
+    const open = judgeHeads(files((locale, page, tags) => (page === 'play' ? tags.filter((tag) => !tag.includes('robots')) : tags)), LOCALES, pages, SITE);
+    expect(open).toHaveLength(3);
+    expect(open[0]).toContain('noindex');
+    const closed = judgeHeads(files((locale, page, tags) => (page === 'new' && locale === 'en' ? [...tags, '<meta name="robots" content="noindex, follow"/>'] : tags)), LOCALES, pages, SITE);
+    expect(closed).toEqual([expect.stringContaining('en/new.html')]);
+  });
+
+  it('reports a page without its card: Open Graph\'s title, address and picture, and Twitter\'s', () => {
+    for (const lost of ['og:title', 'og:url', 'og:image', 'twitter:card', 'name="description"']) {
+      const missing = judgeHeads(files((locale, page, tags) => (locale === 'en' && page === '' ? tags.filter((tag) => !tag.includes(lost)) : tags)), LOCALES, pages, SITE);
+      expect(missing, lost).toEqual([expect.stringContaining('en/index.html')]);
+    }
+  });
+
+  it('leaves a page the export lacks to the check of the pages', () => {
+    expect(judgeHeads([], LOCALES, pages, SITE)).toEqual([]);
   });
 });

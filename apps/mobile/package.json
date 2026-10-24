@@ -70,6 +70,7 @@
     "ios": "pnpm sprites && pnpm rules && expo start --ios",
     "web": "pnpm sprites && pnpm rules && expo start --web",
     "web:size": "tsx scripts/webSize.ts",
+    "site:pieces": "tsx scripts/sitePieces.ts",
     "typecheck": "tsc --noEmit"
   },
   "private": true

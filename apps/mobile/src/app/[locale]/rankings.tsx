@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { Rankings, type Kind } from '../../game/screens/Rankings';
+import { PageHead } from '../../game/pageHead';
 import { InLanguage } from '../../game/screens/InLanguage';
 
 /** Each page once in each language of the game, for the web export. */
@@ -16,6 +17,7 @@ export default function RankingsRoute() {
   const { tab, '#': hash } = useLocalSearchParams<{ tab?: string; '#'?: string }>();
   return (
     <InLanguage>
+      <PageHead page="rankings" />
       <Rankings tab={TABS.find((one) => one === tab) ?? (hash === 'friends' ? 'friends' : undefined)} />
     </InLanguage>
   );

@@ -4,7 +4,14 @@
     "strict": true,
     "types": ["node"],
     // src/game/cues.test.ts runs the web's game/sound.ts, which names the web's sound board by the web's own alias.
-    "paths": { "@/ui/sound": ["../web/src/ui/sound"] },
+    // src/game/pageMeta.test.ts and scripts/sitePieces.test.ts hold the head, the sitemap and the manifest to the web's own (`pageMetadata`, `sitemap`,
+    // `robots`, `manifest`), which name the files they stand on by the web's alias.
+    "paths": {
+      "@/ui/sound": ["../web/src/ui/sound"],
+      "@/i18n/metadata": ["../web/src/i18n/metadata"],
+      "@/i18n/routing": ["../web/src/i18n/routing"],
+      "@/lib/site": ["../web/src/lib/site"]
+    },
     // src/game/cloud.test.tsx runs the web's in-memory servers (apps/web/src/testing), which are the edge functions' own code, imported as Deno
     // imports it: by the file's whole name.
     "allowImportingTsExtensions": true
