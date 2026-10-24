@@ -19,6 +19,11 @@ export function useContentText(locale: Locale): { text: ContentText; names: Name
   return useMemo(() => textFor(locale), [locale]);
 }
 
+/** The interface's words in a language, where they can be read at once: always, on the phone. */
+export function loadedMessages(locale: Locale): Messages | undefined {
+  return messagesFor(locale);
+}
+
 /** Whether a language's words can be read at once: always, on the phone. */
 export function languageReady(locale: Locale): boolean {
   void locale;

@@ -13,6 +13,12 @@ import { Page } from '../ui/Page';
 import { SafeArea } from '../ui/SafeArea';
 import { PerfFrames, perfTouched, perfTouchStarted } from '../ui/perf';
 
+/**
+ * On the web, a page of the game that cannot be drawn shows the Next web's error page in its place (`game/PageFault.web.tsx`): another try, a new
+ * life, home, in the page's language, a language whose words could not be had among such faults. On the phone, nothing: it does what it did.
+ */
+export { ErrorBoundary } from '../game/PageFault';
+
 // The splash stays until the game's typefaces are in, so nothing is drawn in the system font first; if they fail to
 // load, it lifts all the same (useGameFonts tells why), and the game goes on in the system font.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);

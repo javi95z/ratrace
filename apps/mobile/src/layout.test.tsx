@@ -20,8 +20,12 @@ vi.mock('./game/context', () => ({ GameProvider: box('game') }));
 vi.mock('./ui/Page', () => ({ Page: box('page') }));
 vi.mock('./pwa/visits', () => ({ Visits: () => <div data-piece="visits" /> }));
 vi.mock('./game/KeyboardHelp', () => ({ KeyboardControls: () => <div data-piece="keyboard" /> }));
+// The page of a fault, as its twin gives it (the web's: game/PageFault.web.tsx).
+const fault = vi.hoisted(() => ({ page: () => null }));
+vi.mock('./game/PageFault', () => ({ ErrorBoundary: fault.page }));
 
-const { default: RootLayout } = await import('./app/_layout');
+const layout = await import('./app/_layout');
+const { default: RootLayout } = layout;
 
 test('the whole app is inside one gesture root that fills the screen, so a drag can be read anywhere (a card\'s swipe)', () => {
   const { container } = render(<RootLayout />);
@@ -41,4 +45,12 @@ test('the keyboard is heard once, inside the game, whose words its reference spe
   const keyboard = container.querySelectorAll('[data-piece="keyboard"]');
   expect(keyboard).toHaveLength(1);
   expect(keyboard[0].closest('[data-piece="game"]')).not.toBeNull();
+});
+
+test('the router is given the page of a fault for the whole app, as its twin has it: the web\'s error page, on the phone none', async () => {
+  // expo-router draws a layout's `ErrorBoundary` in its place when anything under it throws, the game's providers and its words' chunk among it.
+  expect(layout.ErrorBoundary).toBe(fault.page);
+  // The phone's twin gives none: the router draws the routes as they are, and the phone does what it did.
+  const phone = await vi.importActual<typeof import('./game/PageFault')>('./game/PageFault');
+  expect(phone.ErrorBoundary).toBeUndefined();
 });

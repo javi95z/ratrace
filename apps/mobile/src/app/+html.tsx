@@ -1,6 +1,8 @@
 import { DEFAULT_LOCALE, isLocale } from '@ratrace/i18n/locales';
 import { useServerDocumentContext } from 'expo-router/html';
 import type { ReactNode } from 'react';
+import { FAULT_WORDS } from '../game/faultWords';
+import { faultWordsJson } from '../game/faultWordsHtml';
 import { LATER_FACES, laterFaces } from '../ui/gameFonts';
 
 /*
@@ -93,6 +95,8 @@ export default function Document({ children, params }: { children: ReactNode; pa
       </head>
       <body {...bodyAttributes}>
         <script dangerouslySetInnerHTML={{ __html: OWN_ADDRESS }} />
+        {/* The words of the page of a fault, in the page's language: what it says if the language's own cannot be had (game/PageFault.web.tsx). */}
+        <script id={FAULT_WORDS} type="application/json" dangerouslySetInnerHTML={{ __html: faultWordsJson(lang) }} />
         {children}
         {bodyNodes}
       </body>

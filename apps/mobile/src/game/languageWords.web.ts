@@ -60,6 +60,11 @@ if (process.env.EXPO_SERVER) {
   add('ru', require('./languages/ru') as Language);
 }
 
+/** The interface's words in a language, where they are in; nothing until then (nothing waits for them: the page of a fault, `PageFault.web.tsx`). */
+export function loadedMessages(locale: Locale): Messages | undefined {
+  return messages.get(locale);
+}
+
 /** Whether a language's words can be read at once (they are in). */
 export function languageReady(locale: Locale): boolean {
   return messages.has(locale);
