@@ -258,9 +258,12 @@ provider was already in the bundle.)
 
 ## For phase 5b
 
-- **Words.** The app's web says the Next web's words where the phone has its own and the Next web has a counterpart (`game/ownWords.web.ts`); a
-  word of the phone's with none stays the phone's on the web: a picture saved to the photos or not, a room of another version ("update the app"),
-  the notices refused in the phone's settings, a life's row's hint. 5b settles them with the platform's pieces they belong to.
+- **Words.** The app's web says the Next web's words where the phone has its own and the Next web has a counterpart (`game/ownWords.web.ts`).
+  A room of another version has one (corrected by the final fix wave: this report said it had none): a started game on other rules says
+  `room.otherRules` and a code turned away for another version `room.refused.other-version` ("reload the page"), and notices blocked say
+  `settings.weeklyNoticeBlocked` (for this site, in the browser's settings), all through `useOwnT`. A word of the phone's with none stays the
+  phone's on the web: a life's row's hint (`opensLife`, a neutral accessibility hint, which the Next web's rows do not have), and the share card's
+  `shareFailed`, which the web never reaches (`ShareCard.web.tsx` says `share.failed`).
 - **`onLayout` in whole pixels.** react-native-web reads a layout from `offsetTop`/`offsetWidth`; only the rat's choices read theirs to the
   fraction (`ui/layoutTop.web.ts`). No other scene showed it; a layout read to place something drawn (the coins' flight, a row's reveal) may be a
   pixel off on the web.

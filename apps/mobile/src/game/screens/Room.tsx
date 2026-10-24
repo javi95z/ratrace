@@ -27,10 +27,11 @@ import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA } from '../../ui/theme';
 import { GameScope, useClock, useCommunity, useGame, useProfile, useRoom, useRooms, useSettings, useTrack, useWords } from '../context';
 import { lifeRows } from '../lives';
+import { useOwnT } from '../ownWords';
+import { roomLink } from '../roomLink';
 import { RoomPaper } from '../roomStory';
 import { useRoomSlice } from '../roomSlice';
 import { canShareLink, shareLink } from '../sharing';
-import { roomLink } from '../roomLink';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { LifeBrief, LifeSummary } from './LifeSummary';
@@ -142,10 +143,13 @@ function Said({ role, children }: { role?: 'status'; children: string }) {
   );
 }
 
-/** The server's words for a refusal, as the phone tells them: a version this app is not on is the app's to update, not a page's to reload. */
+/**
+ * The server's words for a refusal, as the phone tells them: a version this app is not on is the app's to update, not a page's to reload (on the web,
+ * the Next web's words: reload the page, `ownWords.web.ts`).
+ */
 function useRefusalText() {
   const t = useT('room');
-  const phone = useT('phone');
+  const phone = useOwnT();
   return (refusal: string) => (refusal === 'other-version' ? phone('roomOtherVersion') : t(`refused.${REFUSALS.has(refusal) ? refusal : 'refused'}`));
 }
 
@@ -187,7 +191,7 @@ function RoomMark() {
 
 function RoomShown({ code }: { code?: string }) {
   const t = useT('room');
-  const phone = useT('phone');
+  const phone = useOwnT();
   const common = useT('common');
   const status = useRoom((s) => s.status);
   const room = useRoom((s) => s.room);
@@ -223,7 +227,7 @@ function RoomShown({ code }: { code?: string }) {
   if (status === 'none' || room === null) return <Door code={code} />;
   if (room.status === 'open') return <Lobby room={room} />;
   if (otherRules) {
-    // The web's words say to reload the page: on the phone, a game on rules the app lacks waits for an update of it.
+    // The web's words say to reload the page: on the phone, a game on rules the app lacks waits for an update of it (on the web, the Next web's words).
     return (
       <RoomPage title={t('title')}>
         <Said role="status">{phone('roomOtherRules')}</Said>

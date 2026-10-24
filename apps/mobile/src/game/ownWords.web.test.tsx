@@ -23,11 +23,24 @@ function Said({ keys }: { keys: readonly string[] }) {
 test('on the web the app says what the Next web says of a browser, where the phone says its own words (`phone.*`): reload the page, this browser, another tab', () => {
   const page = render(
     <WordsProvider locale="en">
-      <Said keys={['lostNewer', 'lostWaiting', 'movedGone', 'notSaved', 'moved']} />
+      <Said keys={['lostNewer', 'lostWaiting', 'movedGone', 'notSaved', 'moved', 'roomOtherRules', 'roomOtherVersion', 'noticesBlocked']} />
     </WordsProvider>,
   );
-  expect([...page.container.querySelectorAll('p')].map((p) => p.textContent)).toEqual([en.home.lostNewer, en.home.lostWaiting, en.home.movedGone, en.common.notSaved, en.play.moved]);
-  for (const words of [en.phone.lostNewer, en.phone.notSaved, en.phone.moved]) expect(page.container.textContent).not.toContain(words);
+  expect([...page.container.querySelectorAll('p')].map((p) => p.textContent)).toEqual([
+    en.home.lostNewer,
+    en.home.lostWaiting,
+    en.home.movedGone,
+    en.common.notSaved,
+    en.play.moved,
+    // A game with others on another version: reload the page, as the Next web's room says.
+    en.room.otherRules,
+    en.room.refused['other-version'],
+    // Notices blocked for this site, in the browser's settings.
+    en.settings.weeklyNoticeBlocked,
+  ]);
+  for (const words of [en.phone.lostNewer, en.phone.notSaved, en.phone.moved, en.phone.roomOtherRules, en.phone.roomOtherVersion, en.phone.noticesBlocked]) {
+    expect(page.container.textContent).not.toContain(words);
+  }
 });
 
 test('a word of the phone\'s with no counterpart on the Next web is the phone\'s still (5b\'s to settle)', () => {

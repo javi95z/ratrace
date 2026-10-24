@@ -3,8 +3,9 @@ import { useTranslations } from 'use-intl';
 
 /**
  * The web's twin of `ownWords.ts`. In a browser the Next web's words are the true ones (a newer version: reload the page; this browser is not
- * saving; another tab), so each of the phone's own words is said as the Next web says it, where the Next web says it. A word of the phone's that
- * the Next web has no counterpart of (the picture saved to the photos, a room of another version of the app) is the phone's still.
+ * saving; another tab; a game with others on another version: reload the page; notices blocked for this site), so each of the phone's own words is
+ * said as the Next web says it, where the Next web says it. A word of the phone's that the Next web has no counterpart of (the picture saved to the
+ * photos, a hint that a row opens its life) is the phone's still.
  */
 const WEB: Readonly<Record<string, string>> = {
   lostNewer: 'home.lostNewer',
@@ -12,6 +13,9 @@ const WEB: Readonly<Record<string, string>> = {
   movedGone: 'home.movedGone',
   notSaved: 'common.notSaved',
   moved: 'play.moved',
+  roomOtherRules: 'room.otherRules',
+  roomOtherVersion: 'room.refused.other-version',
+  noticesBlocked: 'settings.weeklyNoticeBlocked',
 };
 
 export function useOwnT(): Translate {

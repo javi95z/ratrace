@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 // @vitest-environment-options { "url": "https://ratrace-git-preview.vercel.app/en/room" }
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { CONTENT_VERSION } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { roomServer } from '../../../../web/src/testing/roomServer';
 import { clipboard } from '../../testing/fakes';
@@ -18,10 +20,12 @@ vi.setConfig({ testTimeout: 120_000 });
 
 const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
-function inRooms() {
-  const server = roomServer();
+const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const VERSIONS = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+
+function inRooms(server = roomServer(), user = HOST) {
   const counted: unknown[] = [];
-  const services: Services = { ...memoryServices(), rooms: () => server.link(HOST), schedule: () => () => {}, track: (event) => void counted.push(event) };
+  const services: Services = { ...memoryServices(), rooms: () => server.link(user), schedule: () => () => {}, track: (event) => void counted.push(event) };
   return { server, services, counted };
 }
 
@@ -108,5 +112,34 @@ describe('a public game', () => {
     expect(share.mock.calls[0][0].url).toMatch(/^https:\/\/ratrace-git-preview\.vercel\.app\/en\/room\?code=[A-Z0-9]{6}$/);
     expect(board.text).toBeNull();
     expect(screen.queryByText('Link copied.')).toBeNull();
+  });
+});
+
+describe('a game with others on another version, on the web', () => {
+  it('turns its code away in the Next web\'s words: reload the page, never update the app', async () => {
+    const server = roomServer();
+    const opened = await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS });
+    const room = opened.body.room as { id: string; code: string };
+    // The game is on newer rules than this page: it was opened on a version the page is not on yet.
+    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
+    const { services } = inRooms(server, B);
+    renderGame(<Room />, services);
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Game code' }), { target: { value: room.code } });
+    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('That game plays another version. Reload the page and try again.');
+  });
+
+  it('says a started game on other rules is to be played after a reload, as the Next web says, and offers to leave it', async () => {
+    const server = roomServer();
+    const opened = await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS });
+    const room = opened.body.room as { id: string; code: string };
+    await server.ask(B, { action: 'join', code: room.code, ...VERSIONS });
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    expect(await screen.findByText('This game plays another version. Reload the page to play it.')).toBeTruthy();
+    expect(screen.queryByText(/Update the app/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Leave the game' })).toBeTruthy();
   });
 });
