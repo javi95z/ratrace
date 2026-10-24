@@ -1,9 +1,9 @@
 import { cityArt, cityIcon } from '@ratrace/content';
 import type { CityLight } from '@ratrace/content';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
-import { Sprite } from '../../ui/Sprite';
+import { ArtScale, Sprite } from '../../ui/Sprite';
 import { spriteBox, spriteOf, type Size } from '../../ui/sprites';
 import { PixelText } from '../../ui/text';
 import { COLORS, EXTRA } from '../../ui/theme';
@@ -51,8 +51,8 @@ export function CityBanner({ cityId, light = 'night' }: { cityId: string; light?
   const { names } = useWords();
   const id = cityArt(cityId, light);
   const sprite = spriteOf(id);
-  // One art pixel a point: the phone's stage (the web's `--art` is 2 only on a desk's wide column).
-  const art = spriteBox(id, 1, 1, FALLBACK);
+  // One art pixel a point on a phone's stage; two on a desk's wide column (the web's `--art`, `ArtScale`), the banner as tall as its art.
+  const art = spriteBox(id, 'art', useContext(ArtScale), FALLBACK);
   const [width, setWidth] = useState<number | null>(null);
   const name = names.cities[cityId];
   const sky = width === null || !sprite ? null : skyCover(width, art.h, art);

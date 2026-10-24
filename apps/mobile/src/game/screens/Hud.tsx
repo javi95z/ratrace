@@ -409,7 +409,7 @@ function Square({ icon, label, onPress }: { icon: string; label: string; onPress
  * The part of the Hud that scrolls away: the city, the portrait, who and where, and the paper and settings buttons. Its sheets (the
  * prison, the settings, the paper) are its own.
  */
-function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyline: boolean; onProfile?: () => void; open?: HudOpen }) {
+function HudLead({ compact, skyline, flush, onProfile, open }: { compact: boolean; skyline: boolean; flush: boolean; onProfile?: () => void; open?: HudOpen }) {
   const t = useT('hud');
   const common = useT('common');
   const { content, text, names } = useWords();
@@ -447,7 +447,7 @@ function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyl
           <CityBanner cityId={life.cityId} light={life.light} />
         </View>
       ) : null}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: skyline ? 8 : 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: flush ? 0 : skyline ? 8 : 12 }}>
         {onProfile ? (
           // The web's portrait button does not sink when pressed (no `active:translate-y`): it opens the profile, it is not a raised button.
           <Pressable accessibilityRole="button" accessibilityLabel={t('openProfile')} onPress={profile} style={{ flexShrink: 0 }}>
@@ -505,7 +505,7 @@ const WAY_OUT = sharedBaseline(['pixel', 13, 13 * 1.1], ['pixel', 14, 14 * 1.1])
  * The part of the Hud that sticks to the top: the three figures, and nothing else (who, which round and the way out scroll away with the page).
  * A tap on a figure opens a sheet of what it means and what it is made of.
  */
-function HudFigures({ open }: { open?: HudOpen }) {
+function HudFigures({ flush, open }: { flush: boolean; open?: HudOpen }) {
   const t = useT('hud');
   const common = useT('common');
   const { content, fmt } = useWords();
@@ -527,7 +527,7 @@ function HudFigures({ open }: { open?: HudOpen }) {
 
   return (
     <>
-      <View style={{ paddingTop: 4, paddingBottom: 8 }}>
+      <View style={flush ? undefined : { paddingTop: 4, paddingBottom: 8 }}>
         <StatRow>
           {/* Where money that comes in lands: coins fly here from a card that paid. */}
           <Stat ref={cashTarget} icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => show('cash')} />
@@ -588,9 +588,10 @@ function HudWayOut({ open }: { open?: HudOpen }) {
  * `part="wayOut"` is the bar of the way out, which the screen places just under the header, where the page scrolls (in the finances, the first
  * of what stands between the figures and their tabs). Each draws only what it shows, and holds its own sheets. The strip of a crisis that hangs
  * under it on the web (`CrisisBar compact`) is the screen's to place too, under the way out. `open` is what a scene shows open at the start;
- * each part opens what is its own.
+ * each part opens what is its own. `flush` is the web's, for a column with margins of its own (the desk's profile, `PlayDesk.web.tsx`): no room
+ * above the portrait's row or round the figures, which stand in that column's own gaps, nothing of them sticking.
  */
-export function Hud({ part, compact = false, skyline = !compact, onProfile, open }: { part: 'lead' | 'header' | 'wayOut'; compact?: boolean; skyline?: boolean; onProfile?: () => void; open?: HudOpen }) {
-  if (part === 'lead') return <HudLead compact={compact} skyline={skyline} onProfile={onProfile} open={open} />;
-  return part === 'header' ? <HudFigures open={open} /> : <HudWayOut open={open} />;
+export function Hud({ part, compact = false, skyline = !compact, flush = false, onProfile, open }: { part: 'lead' | 'header' | 'wayOut'; compact?: boolean; skyline?: boolean; flush?: boolean; onProfile?: () => void; open?: HudOpen }) {
+  if (part === 'lead') return <HudLead compact={compact} skyline={skyline} flush={flush} onProfile={onProfile} open={open} />;
+  return part === 'header' ? <HudFigures flush={flush} open={open} /> : <HudWayOut open={open} />;
 }

@@ -16,6 +16,7 @@ import { BottomBar, type ScreenScroller } from '../../ui/Page';
 import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
+import { useIsDesk } from '../../ui/desk';
 import { onHardwareBack } from '../../ui/hardwareBack';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { useOwnT } from '../ownWords';
@@ -26,17 +27,19 @@ import { CoinFlights, CoinTargets } from './FlyingCoins';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { Moments } from './Moments';
-import { NewsPanel } from './News';
+import { NewsPanel, RoundOpener } from './News';
 import { PageTurn } from './PageTurn';
 import { End } from './End';
+import { PlayDesk, StuckTop } from './PlayDesk';
 import { ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
 import { useGo } from '../pages';
 
 /*
- * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
- * shortcut and skip links), and a ranked life's notices, which a life on the phone never has. Every stage is drawn by its own screen, with the
- * stage machine, the bar of the next thing to do and the guide round them; in a room, with what the room puts round them (`RoomSlots`).
+ * A life being played, as the web's Play.tsx lays it on a phone, and on a browser's wide screen in its three columns (`PlayDesk.web.tsx`, from the
+ * web's desk width: `useIsDesk`, never on the phone). What the phone leaves out: the keyboard (its shortcut and skip links), and a ranked life's
+ * notices, which a life on the phone never has. Every stage is drawn by its own screen, with the stage machine, the bar of the next thing to do and
+ * the guide round them; in a room, with what the room puts round them (`RoomSlots`).
  */
 
 /**
@@ -97,9 +100,9 @@ function cashLine(language: string): { label: number; cash: number } {
 
 /**
  * The one thing to do next, where a thumb rests. In the finance phase it also says what the round
- * will leave in cash, and opens the list of orders. Null where the screen itself is the choice.
+ * will leave in cash, and on a phone it opens the list of orders (at desk width the orders are at the side). Null where the screen itself is the choice.
  */
-function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
+function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBasket(): void }) {
   const news = useT('news');
   const cards = useT('cards');
   const finance = useT('finance');
@@ -142,9 +145,11 @@ function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
           ) : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {/* The web's `shrink-0 px-3 text-[14px]`. */}
-            <Button variant="quiet" size={14} padX={12} onPress={onBasket}>
-              {finance('basket', { count: orders })}
-            </Button>
+            {desk ? null : (
+              <Button variant="quiet" size={14} padX={12} onPress={onBasket}>
+                {finance('basket', { count: orders })}
+              </Button>
+            )}
             <View style={{ flex: 1 }}>
               <PlayRound />
             </View>
@@ -168,8 +173,20 @@ function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
  * A card is the exception: its choices are the stage, so the tip follows them and never pushes them off a small screen.
  * The finances are the other: their tip stands over their tabs, which stick under the Hud, so it is drawn with them (`FinanceLeadIn`).
  */
-function StageView({ stage }: { stage: Stage }) {
-  const body = <StageBody stage={stage} />;
+function StageView({ stage, desk = false }: { stage: Stage; desk?: boolean }) {
+  const body = <StageBody stage={stage} desk={desk} />;
+  // At desk width nothing sticks under the Hud, which is at the side: the finances' tip and tabs stand over their panel, the tabs sticking to the top.
+  if (stage === 'finance' && desk) {
+    return (
+      <>
+        <Guide />
+        <StuckTop>
+          <FinanceTabs />
+        </StuckTop>
+        {body}
+      </>
+    );
+  }
   if (stage === 'finance') return body;
   if (stage !== 'cards') {
     return (
@@ -189,11 +206,11 @@ function StageView({ stage }: { stage: Stage }) {
   );
 }
 
-/** What each stage of the round shows. */
-function StageBody({ stage }: { stage: Stage }) {
+/** What each stage of the round shows. On a wide screen the headlines sit at the side, so the round opens on its own title. */
+function StageBody({ stage, desk }: { stage: Stage; desk: boolean }) {
   switch (stage) {
     case 'news':
-      return <NewsPanel />;
+      return desk ? <RoundOpener /> : <NewsPanel />;
     case 'cards':
       return <CardStage />;
     case 'outcome':
@@ -322,6 +339,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   const phone = useOwnT();
   const go = useGo();
   const { content, text } = useWords();
+  const desk = useIsDesk();
   const status = useGame((s) => s.status);
   const stage = useGame((s) => s.stage);
   const round = useGame((s) => s.view?.round ?? null);
@@ -354,10 +372,10 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
     }, [go]),
   );
 
-  // A sheet belongs to the stage it was opened in.
+  // A sheet belongs to the stage it was opened in, and to the layout: at desk width the orders are at the side.
   useEffect(() => {
     setBasketOpen(false);
-  }, [stage]);
+  }, [stage, desk]);
 
   // Two years go by as a round turns: the calendar loses a page. Not on opening a life already under way,
   // and never where motion is left out.
@@ -416,9 +434,44 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   // In a room the life moves on with the room, which says itself how many rounds the clock played: no word of another device.
   const notice = <Toast message={moved && !room ? phone('moved') : null} onDone={clearMoved} ms={6_000} />;
   // In a room, once the player has played, the wait stands in for the round's button.
-  const actions = room?.actions ?? <Actions stage={stage} onBasket={() => setBasketOpen(true)} />;
+  const actions = room?.actions ?? <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
   const hasActions = stage !== 'cards' || room?.actions != null;
   const heading = play('heading', { life: text.lives[lifeId ?? '']?.name ?? '', age: ageAt(content, round) });
+
+  if (desk) {
+    // The same pieces in three columns (PlayDesk.web.tsx): the profile is at the side, so is no sheet; the orders too.
+    return (
+      <FinanceShell>
+        <CoinTargets>
+          <PerfDrawn name={`stage: ${stage}`} />
+          <PlayDesk
+            stage={stage}
+            heading={heading}
+            stageName={stageName}
+            bar={bar}
+            scroller={scroller}
+            main={
+              <>
+                <StageView stage={stage} desk />
+                {/* In a room, under the ledger of a round, the room's order as it left it (the web's `mt-4`). */}
+                {room && stage === 'resolve' ? <View style={{ marginTop: 16 }}>{room.resolved}</View> : null}
+              </>
+            }
+            actions={hasActions ? actions : null}
+            fixed={
+              <>
+                <CoinFlights />
+                {notice}
+                {finances ? <FinanceToasts /> : null}
+                {pageTurn}
+                {moments}
+              </>
+            }
+          />
+        </CoinTargets>
+      </FinanceShell>
+    );
+  }
 
   return (
     // The page coins fly over: the HUD's cash is where they land, and they are drawn in the screen's own layer, over all of it (FlyingCoins.tsx).
