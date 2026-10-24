@@ -346,4 +346,11 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_credit_stolen: ['You let it go. And make a note.', null, null],
   luck_office_pool: ['A nice sum for everyone, and a round of drinks.', null],
   life_cooking_show: ['Your omelette stays famous at home only.', null, null],
+  luck_viral_bad: ['A month offline. When you come back, there is another meme.', null, null],
+  biz_influencer_review: [null, null],
+  health_smartwatch: [null, 'A test, an adjustment in time, and a heart like clockwork.'],
+  house_festival_rental: ['The festival plays in the background from your sofa.', null],
+  fam_school_treasurer: ['Another parent keeps the accounts. They look at you oddly at the gate.', 'Spreadsheets, receipts, and thirty families who know you.', 'The party is a hit. The whole school knows your name.'],
+  luck_drone_crash: ['The owner thanks you. And owes you one.', 'An envelope and a handshake.', null],
+  life_concert: ['You watch it in videos the next day.', 'You sing every song. Worth every penny.', 'You end up at the after-party with the drummer.'],
 };

@@ -334,4 +334,11 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_credit_stolen: ['Lo dejas pasar. Y lo apuntas.', null, null],
   luck_office_pool: ['Un buen pellizco para cada uno, y una ronda de cañas.', null],
   life_cooking_show: ['Tu tortilla sigue siendo famosa solo en casa.', null, null],
+  luck_viral_bad: ['Un mes sin redes. Cuando vuelves, ya hay otro meme.', null, null],
+  biz_influencer_review: [null, null],
+  health_smartwatch: [null, 'Una prueba, un ajuste a tiempo, y el corazón como un reloj.'],
+  house_festival_rental: ['El festival suena de fondo desde tu sofá.', null],
+  fam_school_treasurer: ['Otro padre lleva las cuentas. Te mira raro en la puerta.', 'Hojas de cálculo, recibos y treinta familias que te conocen.', 'La fiesta sale redonda. Todo el colegio sabe tu nombre.'],
+  luck_drone_crash: ['El dueño te da las gracias. Y te debe una.', 'Un sobre y un apretón de manos.', null],
+  life_concert: ['Lo ves en vídeos al día siguiente.', 'Cantas todas. Vale cada euro.', 'Acabas en el after con el batería.'],
 };

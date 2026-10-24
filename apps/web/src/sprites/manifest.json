@@ -1019,6 +1019,11 @@
     "w": 288,
     "h": 120
   },
+  "card.concert": {
+    "src": "cards/card.concert.png",
+    "w": 288,
+    "h": 120
+  },
   "card.contract_signing": {
     "src": "cards/card.contract_signing.png",
     "w": 288,
@@ -1179,6 +1184,11 @@
     "w": 288,
     "h": 120
   },
+  "card.drone_crash": {
+    "src": "cards/card.drone_crash.png",
+    "w": 288,
+    "h": 120
+  },
   "card.empty_street": {
     "src": "cards/card.empty_street.png",
     "w": 288,
@@ -1186,6 +1196,11 @@
   },
   "card.family_dinner": {
     "src": "cards/card.family_dinner.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.festival_rental": {
+    "src": "cards/card.festival_rental.png",
     "w": 288,
     "h": 120
   },
@@ -1251,6 +1266,11 @@
   },
   "card.hospital": {
     "src": "cards/card.hospital.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.influencer_review": {
+    "src": "cards/card.influencer_review.png",
     "w": 288,
     "h": 120
   },
@@ -1674,6 +1694,11 @@
     "w": 288,
     "h": 120
   },
+  "card.school_treasurer": {
+    "src": "cards/card.school_treasurer.png",
+    "w": 288,
+    "h": 120
+  },
   "card.server_room": {
     "src": "cards/card.server_room.png",
     "w": 288,
@@ -1721,6 +1746,11 @@
   },
   "card.small_house": {
     "src": "cards/card.small_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.smartwatch": {
+    "src": "cards/card.smartwatch.png",
     "w": 288,
     "h": 120
   },
@@ -1841,6 +1871,11 @@
   },
   "card.village_house": {
     "src": "cards/card.village_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.viral_bad": {
+    "src": "cards/card.viral_bad.png",
     "w": 288,
     "h": 120
   },

@@ -4431,6 +4431,41 @@
       "width": 288,
       "height": 120
     },
+    "card.viral_bad": {
+      "file": "cards/card.viral_bad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.influencer_review": {
+      "file": "cards/card.influencer_review.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.smartwatch": {
+      "file": "cards/card.smartwatch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.festival_rental": {
+      "file": "cards/card.festival_rental.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.school_treasurer": {
+      "file": "cards/card.school_treasurer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.drone_crash": {
+      "file": "cards/card.drone_crash.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.concert": {
+      "file": "cards/card.concert.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

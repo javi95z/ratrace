@@ -22,7 +22,7 @@ Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. No
 |---|---|---|---|
 | 1 | `cards/cards-40.png` | Retreat, trendy neighbourhood, boss leaving, tax letter | 288×120 |
 
-## Five sheets of six
+## Six sheets of six
 
 Attach one or two earlier card sheets (for example `cards-40.png`) so the style matches. Save each in `art/raw/cards/` with the name given.
 
@@ -86,7 +86,19 @@ Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each p
 6. A TV cooking contest: a television kitchen set with bright lights and cameras, the player flipping an omelette in a pan, a judge leaning in.
 ```
 
-The stag party (`card.stag_party`, in `cards-46`) waits alone for the next five cards, to make a sheet of six.
+Save as `art/raw/cards/cards-46.png` — `card.stag_party`, `card.viral_bad`, `card.influencer_review`, `card.smartwatch`, `card.festival_rental`, `card.school_treasurer`
+
+```text
+Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
+1. The stag party: a group of friends in matching silly T-shirts under the neon lights of a Las Vegas street at night, the player holding a clipboard and a bundle of tickets, looking slightly worried.
+2. Viral, the wrong way: the player frozen in a bar mid-argument, several phones raised and filming, a giant thumbs-up and heart shapes floating above.
+3. An influencer wants free meals: a stylish young person photographing a plate in a small restaurant with a ring light, the owner behind the counter forcing a smile.
+4. Your watch warns you: a close view of a wrist with a smartwatch showing a jagged red heartbeat line, the player on a sofa looking at it worried, a phone beside them.
+5. The festival comes to town: a home's front door handed over to a group of festival-goers with tents and glitter, fireworks over the city behind.
+6. The parents' group: a school hall after hours, parents on small chairs, the player at a table with a cash box, receipts and a laptop.
+```
+
+Save as `art/raw/cards/cards-47.png` once four more cards join it — `card.drone_crash`, `card.concert` (stand-ins for now).
 
 Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. The sprites keep their names.
 
@@ -98,3 +110,4 @@ Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. Th
 | `cards/cards-43.png` | AI, apps, copy trading, hacked, signal group, house out of town | 288×120 |
 | `cards/cards-44.png` | Back home, midlife, grandchild, black card, piggy bank, lift | 288×120 |
 | `cards/cards-45.png` | Street contest, Christmas dinner, sabbatical, credit taken, office pool, cooking show | 288×120 |
+| `cards/cards-46.png` | Stag party, viral, influencer, smartwatch, festival, parents' group | 288×120 |

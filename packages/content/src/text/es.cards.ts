@@ -1075,4 +1075,36 @@ export const cards: Record<string, CardText> = {
     ['Presentarte', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Se te quema la tortilla en directo.'],
     ['Presentarte y entrenar a fondo', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Los nervios pueden más.'],
   ]),
+  luck_viral_bad: c('Viral, para mal', 'Alguien grabó tu discusión en un bar y el vídeo da la vuelta al mundo. Ya tienes apodo.', [
+    'Desaparecer de las redes',
+    ['Pedir perdón en un vídeo', 'La gente te perdona. Hasta te cae bien.', 'Nadie lo ve. El original sigue circulando.'],
+    ['Aprovecharlo y vender camisetas', 'Las camisetas se agotan. Dos veces.', 'Vendes unas cuantas. La fama, entera.'],
+  ]),
+  biz_influencer_review: c('Un influencer quiere comer gratis', 'Un influencer de la zona te ofrece una reseña estupenda a cambio de comer gratis todo el año.', [
+    ['Decirle que no', 'No pasa nada. Ni se acuerda.', 'Publica una reseña horrible. Por despecho.'],
+    ['Aceptar el trato', 'La reseña funciona: hay cola en la puerta.', 'Unos cuantos clientes nuevos. Y un comensal fijo.'],
+  ]),
+  health_smartwatch: c('El reloj te avisa', 'Tu reloj inteligente te avisa de un ritmo cardíaco raro. Dos veces esta semana.', [
+    ['Pensar que el reloj exagera', 'Exageraba.', 'No exageraba. Un susto en urgencias.'],
+    'Ir al médico a que lo miren',
+  ]),
+  house_festival_rental: c('Llega el festival', 'Un festival enorme llega a la ciudad y te ofrecen una fortuna por tu casa durante una semana.', [
+    'Quedarte en casa',
+    ['Alquilarla esa semana', 'Te la devuelven impecable. Hasta con flores.', 'Te la devuelven con una fiesta dentro. Toca pintar.'],
+  ]),
+  fam_school_treasurer: c('Las cuentas del AMPA', 'El grupo de padres del colegio te propone llevar las cuentas. Nadie más levanta la mano.', [
+    'Escaquearte',
+    'Aceptar',
+    'Aceptar y organizar la fiesta de fin de curso',
+  ]),
+  luck_drone_crash: c('Un dron en tu terraza', 'Un dron se estrella en tu terraza. Su dueño llama al timbre y ofrece pagarte para que no lo denuncies.', [
+    'Devolverle el dron sin más',
+    'Aceptar el dinero',
+    ['Denunciarlo', 'Te indemnizan por los daños, y bien.', 'La denuncia se pierde en un cajón.'],
+  ]),
+  life_concert: c('Tu grupo favorito toca en la ciudad', 'Las entradas se agotaron en un minuto. Quedan las de reventa, al triple.', [
+    'Quedarte sin ir',
+    'Pagar la reventa',
+    'Pista, primera fila y fiesta después',
+  ]),
 };

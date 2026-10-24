@@ -1075,4 +1075,36 @@ export const cards: Record<string, CardText> = {
     ['Apply', 'You win. A prize and interviews.', 'You go far. The neighbourhood knows you.', 'Your omelette burns live on air.'],
     ['Apply and train hard', 'You win. A prize and interviews.', 'You go far. The neighbourhood knows you.', 'Nerves get the better of you.'],
   ]),
+  luck_viral_bad: c('Viral, the wrong way', 'Someone filmed your argument in a bar and the video goes round the world. You have a nickname now.', [
+    'Vanish from social media',
+    ['Apologise on video', 'People forgive you. They even like you.', 'Nobody watches it. The original keeps going round.'],
+    ['Cash in and sell T-shirts', 'The T-shirts sell out. Twice.', 'You sell a few. The fame you keep in full.'],
+  ]),
+  biz_influencer_review: c('An influencer wants free meals', 'A local influencer offers you a glowing review in exchange for eating free all year.', [
+    ['Say no', 'Nothing happens. They forget all about it.', 'They post a terrible review. Out of spite.'],
+    ['Take the deal', 'The review works: there is a queue at the door.', 'A few new customers. And one regular who never pays.'],
+  ]),
+  health_smartwatch: c('Your watch warns you', 'Your smartwatch flags an odd heart rhythm. Twice this week.', [
+    ['Think the watch is exaggerating', 'It was.', 'It was not. A scare in A&E.'],
+    'Have a doctor look at it',
+  ]),
+  house_festival_rental: c('The festival comes to town', 'A huge festival comes to town and someone offers a fortune for your home for a week.', [
+    'Stay at home',
+    ['Let it for the week', 'It comes back spotless. With flowers, even.', 'It comes back with a party in it. Time to repaint.'],
+  ]),
+  fam_school_treasurer: c('Treasurer of the parents\' group', 'The school\'s parents\' group asks you to keep the accounts. Nobody else raises a hand.', [
+    'Get out of it',
+    'Accept',
+    'Accept and organise the end-of-year party',
+  ]),
+  luck_drone_crash: c('A drone on your terrace', 'A drone crashes on your terrace. Its owner rings the bell and offers to pay you not to report it.', [
+    'Just give the drone back',
+    'Take the money',
+    ['Report it', 'You are paid for the damage, and well.', 'The report gets lost in a drawer.'],
+  ]),
+  life_concert: c('Your favourite band plays in town', 'Tickets sold out in a minute. Resale ones are left, at three times the price.', [
+    'Miss it',
+    'Pay the resale price',
+    'Front row, and the party after',
+  ]),
 };

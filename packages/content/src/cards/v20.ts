@@ -186,4 +186,43 @@ export const v20Cards: CardDef[] = [
     { effects: { cash: usd(-500) }, outcomes: [{ weight: 10, effects: { cash: usd(25_000), status: 4 } }, { weight: 30, effects: { status: 1 } }, { weight: 60, effects: { status: -1 } }] },
     { effects: { cash: usd(-500), focus: 1 }, outcomes: [{ weight: 20, effects: { cash: usd(25_000), status: 4 } }, { weight: 40, effects: { status: 1 } }, { weight: 40, effects: { status: -1 } }] },
   ]),
+  // A video of the player arguing in a bar goes round the world.
+  card('luck_viral_bad', 'luck', { once: true, when: { minRound: 1 } }, [
+    { effects: { status: -1 } },
+    { effects: { status: -1 }, outcomes: [{ weight: 50, effects: { status: 1 } }, { weight: 50, effects: {} }] },
+    { effects: { cash: usd(4_000), status: -3 }, outcomes: [{ weight: 25, effects: { cash: usd(12_000) } }, { weight: 75, effects: {} }] },
+  ]),
+  // An influencer offers a glowing review for a year of free meals; saying no has its own risk.
+  card('biz_influencer_review', 'business', { once: true, when: { hasBusiness: true } }, [
+    { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { businessesPct: -8 } }] },
+    { effects: { cash: usd(-2_500) }, outcomes: [{ weight: 60, effects: { businessesPct: 10 } }, { weight: 40, effects: { businessesPct: 2 } }] },
+  ]),
+  // The smartwatch flags something odd about the heart, from the forties on.
+  card('health_smartwatch', 'health', { once: true, when: { ownsLadder: 'tech', minRound: 8 } }, [
+    { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { cash: usd(-5_000), skills: { health: -3 } } }] },
+    { effects: { cash: usd(-600), skills: { health: 1 } } },
+  ]),
+  // A festival comes to town: the home let for a week at a fortune, and a party risked.
+  card('house_festival_rental', 'housing', { once: true, when: { ownsHome: true, minRound: 1 } }, [
+    {},
+    { effects: { cash: usd(4_000) }, outcomes: [{ weight: 75, effects: {} }, { weight: 25, effects: { cash: usd(-3_500) } }] },
+  ]),
+  // The parents' group at school names the player treasurer.
+  card('fam_school_treasurer', 'family', { once: true, when: { minChildren: 1, minRound: 5 } }, [
+    { effects: { status: -1 } },
+    { effects: { focus: 1, skills: { network: 1, management: 1 } } },
+    { effects: { focus: 1, cash: usd(-300), skills: { network: 2 }, status: 1 } },
+  ]),
+  // A drone crashes on the terrace, and its owner would rather pay than be reported.
+  card('luck_drone_crash', 'luck', { once: true, when: { minRound: 1 } }, [
+    {},
+    { effects: { cash: usd(1_500) } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { cash: usd(3_000) } }, { weight: 40, effects: {} }] },
+  ]),
+  // The favourite band plays, and only resale tickets are left.
+  card('life_concert', 'lifestyle', { when: { maxRound: 14 } }, [
+    {},
+    { effects: { cash: usd(-900), status: 1 } },
+    { effects: { cash: usd(-2_500), status: 2, skills: { network: 1 } } },
+  ]),
 ];
