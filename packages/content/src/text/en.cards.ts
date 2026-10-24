@@ -1019,4 +1019,60 @@ export const cards: Record<string, CardText> = {
     'Stay in the city',
     'Buy a house out of town',
   ]),
+  house_back_home: c('Back to your parents\' place', 'Past thirty and short of money, your parents offer you your old room. No rent.', [
+    'Keep renting',
+    'Move back for a couple of years',
+    'Move back for just a year',
+  ]),
+  life_midlife: c('The midlife crisis', 'You look in the mirror and something has to change. Now.', [
+    'Go to therapy',
+    'A motorbike, a tattoo and a trip',
+    'Take unpaid leave and go round the world',
+  ]),
+  fam_grandchild: c('Your first grandchild', 'You are going to be a grandparent. The new parents are worn out and short of money.', [
+    'Congratulate them, and that is all',
+    'Help them with money',
+    'Look after the baby a few days a week',
+  ]),
+  life_black_card: c('The black card', 'The bank offers you its most exclusive card: heavy metal, airport lounges and a yearly fee to match.', [
+    'No, thanks',
+    'Take it',
+    'Take it and christen it in style',
+  ]),
+  fam_piggy_bank: c('The piggy bank', 'Your child has broken the piggy bank and wants to "invest like grown-ups".', [
+    'Put it away in a drawer',
+    'Open them an account in an index fund',
+    'Teach them how money works',
+  ]),
+  house_lift_levy: c('The residents vote on an upgrade', 'The neighbours vote on a lift and new access. There is a levy, and your home will be worth more.', [
+    ['Vote against', 'It does not pass. Until the next meeting.', 'It passes anyway. You pay your share.'],
+    'Vote for it',
+  ]),
+  biz_street_contest: c('The neighbourhood contest', 'The neighbourhood gives a prize for the best terrace and shopfront. The prize is customers.', [
+    'Stay out of it',
+    ['Go for the prize', 'You win. The local paper runs it and the till notices.', 'Mid-table. Some new customers, at least.'],
+  ]),
+  career_xmas_dinner: c('The Christmas dinner', 'The company dinner is on its third wine. The boss is alone at the bar.', [
+    'Leave early',
+    'Stay and make contacts',
+    ['Tell the boss what you think', 'They listen, and in January your pay goes up.', 'Tomorrow nobody meets your eye.', 'In January you are moved off the good projects. And the bonus.'],
+  ]),
+  career_sabbatical: c('A sabbatical year', 'The company offers a year off without pay to whoever wants one. Your job is kept for you. Or one like it.', [
+    'No, thanks',
+    ['Take the year', 'You go back to the same desk, a new person.', 'Someone else does your job now. You get a slightly worse one.'],
+  ]),
+  career_credit_stolen: c('They take your credit', 'A colleague presents your project as theirs to the management.', [
+    'Say nothing',
+    ['Confront them', 'You set it straight in front of everyone. Management notices.', 'It looks like a fight. Nobody comes out well.'],
+    ['Go to HR with proof', 'The proof speaks. The project is yours again.', 'They tell you it is "a team thing".'],
+  ]),
+  luck_office_pool: c('The office pool', 'Everyone puts in twenty and you keep the ticket. It has won.', [
+    'Share the prize',
+    ['Say it did not win', 'Nobody ever checks.', 'Somebody checks.'],
+  ]),
+  life_cooking_show: c('A TV cooking contest', 'A cooking show is looking for contestants. Your friends say your omelette deserves television.', [
+    'Let it be',
+    ['Apply', 'You win. A prize and interviews.', 'You go far. The neighbourhood knows you.', 'Your omelette burns live on air.'],
+    ['Apply and train hard', 'You win. A prize and interviews.', 'You go far. The neighbourhood knows you.', 'Nerves get the better of you.'],
+  ]),
 };

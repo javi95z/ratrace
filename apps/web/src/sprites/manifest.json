@@ -684,6 +684,11 @@
     "w": 288,
     "h": 120
   },
+  "card.back_home": {
+    "src": "cards/card.back_home.png",
+    "w": 288,
+    "h": 120
+  },
   "card.bali_wedding": {
     "src": "cards/card.bali_wedding.png",
     "w": 288,
@@ -726,6 +731,11 @@
   },
   "card.beach_wedding": {
     "src": "cards/card.beach_wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.black_card": {
+    "src": "cards/card.black_card.png",
     "w": 288,
     "h": 120
   },
@@ -874,6 +884,11 @@
     "w": 288,
     "h": 120
   },
+  "card.child_piggy": {
+    "src": "cards/card.child_piggy.png",
+    "w": 288,
+    "h": 120
+  },
   "card.child_streamer": {
     "src": "cards/card.child_streamer.png",
     "w": 288,
@@ -1009,6 +1024,11 @@
     "w": 288,
     "h": 120
   },
+  "card.cooking_show": {
+    "src": "cards/card.cooking_show.png",
+    "w": 288,
+    "h": 120
+  },
   "card.copy_trading": {
     "src": "cards/card.copy_trading.png",
     "w": 288,
@@ -1026,6 +1046,11 @@
   },
   "card.crash_screens": {
     "src": "cards/card.crash_screens.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.credit_stolen": {
+    "src": "cards/card.credit_stolen.png",
     "w": 288,
     "h": 120
   },
@@ -1199,6 +1224,11 @@
     "w": 288,
     "h": 120
   },
+  "card.grandchild": {
+    "src": "cards/card.grandchild.png",
+    "w": 288,
+    "h": 120
+  },
   "card.gym": {
     "src": "cards/card.gym.png",
     "w": 288,
@@ -1269,6 +1299,11 @@
     "w": 288,
     "h": 120
   },
+  "card.lift_levy": {
+    "src": "cards/card.lift_levy.png",
+    "w": 288,
+    "h": 120
+  },
   "card.linkedin_post": {
     "src": "cards/card.linkedin_post.png",
     "w": 288,
@@ -1321,6 +1356,11 @@
   },
   "card.metro_works": {
     "src": "cards/card.metro_works.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.midlife": {
+    "src": "cards/card.midlife.png",
     "w": 288,
     "h": 120
   },
@@ -1431,6 +1471,11 @@
   },
   "card.office_east": {
     "src": "cards/card.office_east.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.office_pool": {
+    "src": "cards/card.office_pool.png",
     "w": 288,
     "h": 120
   },
@@ -1599,6 +1644,11 @@
     "w": 288,
     "h": 120
   },
+  "card.sabbatical": {
+    "src": "cards/card.sabbatical.png",
+    "w": 288,
+    "h": 120
+  },
   "card.sale_crowd": {
     "src": "cards/card.sale_crowd.png",
     "w": 288,
@@ -1709,6 +1759,11 @@
     "w": 288,
     "h": 120
   },
+  "card.street_contest": {
+    "src": "cards/card.street_contest.png",
+    "w": 288,
+    "h": 120
+  },
   "card.street_market": {
     "src": "cards/card.street_market.png",
     "w": 288,
@@ -1816,6 +1871,11 @@
   },
   "card.will_reading": {
     "src": "cards/card.will_reading.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.xmas_dinner": {
+    "src": "cards/card.xmas_dinner.png",
     "w": 288,
     "h": 120
   },

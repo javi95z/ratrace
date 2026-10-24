@@ -117,4 +117,73 @@ export const v20Cards: CardDef[] = [
     {},
     { effects: { property: { typeId: 'house', pricePct: 45, downPct: 20, rented: false }, skills: { health: 1 }, status: -6 } },
   ]),
+  // In the thirties and short of money: back to the parents' for a while, rent saved, standing lost.
+  card('house_back_home', 'housing', { once: true, when: { ownsHome: false, employed: true, maxNetWorth: usd(15_000), minRound: 4, maxRound: 8 } }, [
+    {},
+    { effects: { cashSalaryPct: 50, status: -4 } },
+    { effects: { cashSalaryPct: 25, status: -2 } },
+  ]),
+  // Forty, or near it: something has to change. The cheapest change is talking it through.
+  card('life_midlife', 'lifestyle', { once: true, when: { minRound: 8, maxRound: 11 } }, [
+    { effects: { cash: usd(-2_000), skills: { health: 1 } } },
+    { effects: { cash: usd(-18_000), status: 3 } },
+    { when: { employed: true, minNetWorth: usd(20_000) }, effects: { cash: usd(-8_000), cashSalaryPct: -50, skills: { health: 2, languages: 1 }, status: 2 } },
+  ]),
+  // A grandchild, from the mid-fifties on: help with money, or with time.
+  card('fam_grandchild', 'family', { once: true, when: { minChildren: 1, minRound: 16 } }, [
+    {},
+    { effects: { cash: usd(-8_000), status: 1 } },
+    { effects: { focus: 1, skills: { health: 1 }, status: 1 } },
+  ]),
+  // The bank's black card: a fee every year for the standing of taking it out.
+  card('life_black_card', 'lifestyle', { once: true, when: { minNetWorth: usd(150_000) } }, [
+    {},
+    { effects: { status: 3, recurring: [yearly('black_card', 'expense', 1_500, null)] } },
+    { effects: { status: 5, cash: usd(-10_000), recurring: [yearly('black_card', 'expense', 1_500, null)] } },
+  ]),
+  // A child breaks the piggy bank and wants to invest: an account, or a lesson that teaches the teacher too.
+  card('fam_piggy_bank', 'family', { once: true, when: { minChildren: 1, minRound: 6 } }, [
+    {},
+    { effects: { invest: { assetId: 'msci_world', amount: usd(500) } } },
+    { effects: { focus: 1, financeSkill: 1 } },
+  ]),
+  // The building, or the estate, votes on a lift and new access: it costs, and the home is worth more for it.
+  card('house_lift_levy', 'housing', { once: true, when: { ownsHome: true } }, [
+    { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cash: usd(-6_000), homeValue: usd(9_000) } }] },
+    { effects: { cash: usd(-6_000), homeValue: usd(9_000) } },
+  ]),
+  // The neighbourhood's contest for the best terrace or shopfront: a prize in customers for whoever dresses up.
+  card('biz_street_contest', 'business', { once: true, when: { hasBusiness: true } }, [
+    {},
+    { effects: { cash: usd(-3_000) }, outcomes: [{ weight: 30, effects: { businessesPct: 15, status: 1 } }, { weight: 70, effects: { businessesPct: 3 } }] },
+  ]),
+  // The company Christmas dinner, the wine, and the boss at the bar.
+  card('career_xmas_dinner', 'career', { once: true, when: { employed: true, minRound: 1 } }, [
+    {},
+    { effects: { skills: { network: 1 } } },
+    { outcomes: [{ weight: 20, effects: { salaryModPct: 8 } }, { weight: 60, effects: { status: -2 } }, { weight: 20, effects: { salaryModPct: -8, status: -3 } }] },
+  ]),
+  // A year off without pay: health and a language, and the desk may not be the same on return.
+  card('career_sabbatical', 'career', { once: true, when: { employed: true, minRound: 3 } }, [
+    {},
+    // Only with savings to live on for a year.
+    { when: { minNetWorth: usd(30_000) }, effects: { cashSalaryPct: -100, skills: { health: 2, languages: 2 } }, outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { salaryModPct: -5 } }] },
+  ]),
+  // A colleague takes the credit for the player's project.
+  card('career_credit_stolen', 'career', { once: true, when: { employed: true, minRound: 1 } }, [
+    {},
+    { effects: { skills: { negotiation: 1 } }, outcomes: [{ weight: 50, effects: { salaryModPct: 3 } }, { weight: 50, effects: { status: -1 } }] },
+    { effects: { focus: 1 }, outcomes: [{ weight: 40, effects: { salaryModPct: 4, careerSkill: 1 } }, { weight: 60, effects: { status: -2 } }] },
+  ]),
+  // The office pool wins, and the ticket is in the player's pocket.
+  card('luck_office_pool', 'luck', { once: true, when: { employed: true } }, [
+    { effects: { cash: usd(400), skills: { network: 1 } } },
+    { effects: { cash: usd(6_000) }, outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { status: -4 } }] },
+  ]),
+  // A cooking contest on television: a prize and a name, or a fool of oneself at prime time.
+  card('life_cooking_show', 'lifestyle', { once: true, when: { minRound: 2 } }, [
+    {},
+    { effects: { cash: usd(-500) }, outcomes: [{ weight: 10, effects: { cash: usd(25_000), status: 4 } }, { weight: 30, effects: { status: 1 } }, { weight: 60, effects: { status: -1 } }] },
+    { effects: { cash: usd(-500), focus: 1 }, outcomes: [{ weight: 20, effects: { cash: usd(25_000), status: 4 } }, { weight: 40, effects: { status: 1 } }, { weight: 40, effects: { status: -1 } }] },
+  ]),
 ];

@@ -1019,4 +1019,60 @@ export const cards: Record<string, CardText> = {
     'Seguir en la ciudad',
     'Comprar una casa en las afueras',
   ]),
+  house_back_home: c('Volver a casa de tus padres', 'Pasados los treinta y con las cuentas justas, tus padres te ofrecen tu antigua habitación. Sin alquiler.', [
+    'Seguir de alquiler',
+    'Volver un par de años',
+    'Volver solo un año',
+  ]),
+  life_midlife: c('La crisis de los cuarenta', 'Te miras al espejo y algo tiene que cambiar. Ya.', [
+    'Ir a terapia',
+    'Moto, tatuaje y un viaje',
+    'Pedir una excedencia y dar la vuelta al mundo',
+  ]),
+  fam_grandchild: c('Tu primer nieto', 'Vas a ser abuelo o abuela. Los padres primerizos están agotados y algo justos de dinero.', [
+    'Felicitarles y ya',
+    'Ayudarles con dinero',
+    'Cuidar del bebé unos días a la semana',
+  ]),
+  life_black_card: c('La tarjeta negra', 'El banco te ofrece su tarjeta más exclusiva: metal pesado, sala VIP en los aeropuertos y una cuota anual a juego.', [
+    'No, gracias',
+    'Aceptarla',
+    'Aceptarla y estrenarla a lo grande',
+  ]),
+  fam_piggy_bank: c('La hucha', 'Tu hijo ha roto la hucha y quiere «invertir como los mayores».', [
+    'Guardarlo en un cajón',
+    'Abrirle una cuenta en un fondo indexado',
+    'Enseñarle cómo funciona el dinero',
+  ]),
+  house_lift_levy: c('La comunidad vota una mejora', 'Los vecinos votan poner ascensor y arreglar los accesos. Toca derrama, y la casa valdrá más.', [
+    ['Votar en contra', 'No sale adelante. Hasta la próxima junta.', 'Sale igualmente. Pagas tu parte.'],
+    'Votar a favor',
+  ]),
+  biz_street_contest: c('El concurso del barrio', 'El barrio premia la mejor terraza y el mejor escaparate. El premio son clientes.', [
+    'No participar',
+    ['Ir a por el premio', 'Ganas. Sales en el periódico del barrio y se nota en caja.', 'Quedas a mitad de tabla. Algo de clientela nueva, al menos.'],
+  ]),
+  career_xmas_dinner: c('La cena de Navidad', 'La cena de empresa va por el tercer vino. El jefe está solo en la barra.', [
+    'Irte pronto',
+    'Quedarte y hacer contactos',
+    ['Decirle al jefe lo que piensas', 'Te escucha, y en enero te sube el sueldo.', 'Mañana nadie te mira a los ojos.', 'En enero te apartan de los proyectos buenos. Y del bonus.'],
+  ]),
+  career_sabbatical: c('Un año sabático', 'La empresa ofrece un año sin sueldo a quien quiera. Te guardan el puesto. O uno parecido.', [
+    'No, gracias',
+    ['Tomarte el año', 'Vuelves al mismo sitio, con otra cara.', 'Tu puesto ya lo hace otro. Te dan uno algo peor.'],
+  ]),
+  career_credit_stolen: c('Se lleva tu mérito', 'Un compañero presenta tu proyecto como suyo en la reunión con dirección.', [
+    'Callarte',
+    ['Enfrentarte a él', 'Lo aclaras delante de todos. Dirección toma nota.', 'Queda como una pelea. Nadie sale bien.'],
+    ['Ir a Recursos Humanos con pruebas', 'Las pruebas hablan. El proyecto vuelve a ser tuyo.', 'Te dicen que «es cosa del equipo».'],
+  ]),
+  luck_office_pool: c('La quiniela de la oficina', 'Todos ponen veinte y el boleto lo guardas tú. Ha tocado.', [
+    'Repartir el premio',
+    ['Decir que no ha tocado', 'Nadie lo comprueba nunca.', 'Alguien lo comprueba.'],
+  ]),
+  life_cooking_show: c('Un concurso de cocina en la tele', 'Buscan concursantes para un programa de cocina. Tus amigos dicen que tu tortilla merece la tele.', [
+    'Dejarlo estar',
+    ['Presentarte', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Se te quema la tortilla en directo.'],
+    ['Presentarte y entrenar a fondo', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Los nervios pueden más.'],
+  ]),
 };

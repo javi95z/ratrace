@@ -4326,11 +4326,6 @@
       "width": 288,
       "height": 120
     },
-    "card.stag_party": {
-      "file": "cards/card.stag_party.png",
-      "width": 288,
-      "height": 120
-    },
     "card.linkedin_post": {
       "file": "cards/card.linkedin_post.png",
       "width": 288,
@@ -4368,6 +4363,71 @@
     },
     "card.remote_outskirts": {
       "file": "cards/card.remote_outskirts.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.back_home": {
+      "file": "cards/card.back_home.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.midlife": {
+      "file": "cards/card.midlife.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.grandchild": {
+      "file": "cards/card.grandchild.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.black_card": {
+      "file": "cards/card.black_card.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.child_piggy": {
+      "file": "cards/card.child_piggy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lift_levy": {
+      "file": "cards/card.lift_levy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.street_contest": {
+      "file": "cards/card.street_contest.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.xmas_dinner": {
+      "file": "cards/card.xmas_dinner.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sabbatical": {
+      "file": "cards/card.sabbatical.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.credit_stolen": {
+      "file": "cards/card.credit_stolen.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.office_pool": {
+      "file": "cards/card.office_pool.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cooking_show": {
+      "file": "cards/card.cooking_show.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.stag_party": {
+      "file": "cards/card.stag_party.png",
       "width": 288,
       "height": 120
     },
