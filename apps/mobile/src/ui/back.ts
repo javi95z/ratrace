@@ -113,3 +113,12 @@ export const holdingTurn = (letGo: () => void): (() => void) => {
 export function letHeldTurnsGo(): void {
   for (const letGo of [...holding]) letGo();
 }
+
+/**
+ * Tells the browser's Back about a sheet that has opened, on the web (`back.web.ts`): its history gets an entry of the sheet's own. The phone's Back
+ * is the Modal's `onRequestClose`, which the Sheet answers by itself: nothing to do here. Returns what to call when it closes.
+ */
+export function closeOnBack(close: () => void): () => void {
+  void close;
+  return () => undefined;
+}

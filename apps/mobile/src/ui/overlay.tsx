@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
+import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { useIsDesk } from './desk';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
@@ -106,7 +106,8 @@ function endTurnOnceGone(id: number): void {
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet), in the middle of a browser's wide screen: the backdrop closes it,
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
- * `back` is the web's history-back switch and has no effect on native: Back always closes an open sheet.
+ * `back` is the web's history-back switch (`closeOnBack`: the browser's Back closes the sheet, an entry of the history its own) and has no effect
+ * on native: Back always closes an open sheet.
  * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine.
  *
  * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
@@ -115,7 +116,7 @@ function endTurnOnceGone(id: number): void {
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
-export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+export function Sheet({ open: asked, onClose, onGone, title, closeLabel, back = true, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
   // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
   const shut = useSyncExternalStore(subscribeShut, sheetsShut, () => false);
   const open = asked && !shut;
@@ -148,6 +149,12 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, tone, c
     if (!asked) return;
     return sheetAsked({ close: () => closing.current() });
   }, [asked]);
+  // On the web, the browser's Back closes it while it is open, an entry of the history its own (`back.web.ts`); nothing on the phone, whose Back is
+  // the Modal's. Not for a sheet whose answer replaces the page (`back` false): the entry would be the one replaced.
+  useEffect(() => {
+    if (!open || !back) return;
+    return closeOnBack(() => closing.current());
+  }, [open, back]);
   // Said by the panel that is leaving; one that was replaced by another opening has nothing left to say.
   const leave = useCallback(() => {
     setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current));
