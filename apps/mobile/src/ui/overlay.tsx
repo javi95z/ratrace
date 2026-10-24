@@ -150,7 +150,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, back = 
     if (!asked) return;
     return sheetAsked({ close: () => closing.current() });
   }, [asked]);
-  // On the web, the browser's Back closes it while it is open, an entry of the history its own (`back.web.ts`); nothing on the phone, whose Back is
+  // On the web, the browser's Back closes it while it is open, an entry of the history its own (`sheetHistory.web.ts`); nothing on the phone, whose Back is
   // the Modal's. Not for a sheet whose answer replaces the page (`back` false): the entry would be the one replaced.
   useEffect(() => {
     if (!open || !back) return;

@@ -1,7 +1,9 @@
+import { historySettled, onHistorySettled } from './sheetHistory';
+
 /*
- * The phone's counterpart of the web's ui/back.ts, for the one thing a screen asks of it: to be told when the sheets
- * are gone. (The rest of that file is the browser's Back button closing a sheet; the phone's Back is a Modal's
- * `onRequestClose`, which the Sheet answers by itself.)
+ * What a screen asks of the sheets: to be told when they are gone, to close them all, to keep them shut while the game starts again. On the web the
+ * browser's Back closes the sheet on top too (`closeOnBack`, from `sheetHistory.web.ts`, the Next web's `ui/back.ts`): a sheet is gone there once its
+ * entry of the history is out as well (`historySettled`). The phone's Back is a Modal's `onRequestClose`, which the Sheet answers by itself.
  *
  * A screen that closes its sheets and then moves on, or ends something under them, must not do it while a sheet is
  * still leaving: on iOS a Modal takes a moment to dismiss, and a screen changed under it is left with a view
@@ -9,14 +11,17 @@
  * (the Modal's `onDismiss` on iOS; at once where the platform hides a Modal as it is told to).
  */
 
+export { closeOnBack } from './sheetHistory';
+
 /** The sheets that are open, or leaving and not gone yet. */
 let open = 0;
 /** Who waits for every sheet to be gone. */
 const waiting: Array<() => void> = [];
 
 function settle(): void {
-  if (open === 0) for (const done of waiting.splice(0)) done();
+  if (open === 0 && historySettled()) for (const done of waiting.splice(0)) done();
 }
+onHistorySettled(settle);
 
 /**
  * Counts a sheet that has opened. Returns what to call when its Modal has dismissed (or the sheet has left the screen
@@ -33,7 +38,7 @@ export function sheetOpened(): () => void {
   };
 }
 
-/** Resolves once every sheet that is open has closed and its Modal has dismissed: at once if none is open. */
+/** Resolves once every sheet that is open has closed and its Modal has dismissed (on the web, its entry out of the history too): at once if none is open. */
 export function sheetsGone(): Promise<void> {
   return new Promise((done) => {
     waiting.push(done);
@@ -102,7 +107,7 @@ export const openSheetsAgain = (): void => {
 
 /**
  * The sheets taken away whole while they were shown, each holding its turn until its Modal has gone (overlay.tsx's `endTurnOnceGone`): what lets each
- * go. Kept here, where nothing is imported, so that a test's teardown reaches it without loading the kit.
+ * go. Kept here, where nothing of the kit is imported, so that a test's teardown reaches it without loading the kit.
  */
 const holding = new Set<() => void>();
 export const holdingTurn = (letGo: () => void): (() => void) => {
@@ -112,13 +117,4 @@ export const holdingTurn = (letGo: () => void): (() => void) => {
 /** Lets every turn held by a sheet already taken away go at once. For a test's teardown only (testing/setup.ts): the next test's sheets wait for none. */
 export function letHeldTurnsGo(): void {
   for (const letGo of [...holding]) letGo();
-}
-
-/**
- * Tells the browser's Back about a sheet that has opened, on the web (`back.web.ts`): its history gets an entry of the sheet's own. The phone's Back
- * is the Modal's `onRequestClose`, which the Sheet answers by itself: nothing to do here. Returns what to call when it closes.
- */
-export function closeOnBack(close: () => void): () => void {
-  void close;
-  return () => undefined;
 }
