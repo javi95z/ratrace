@@ -9,6 +9,7 @@ import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Raised, Segmented, Well } from '../../ui/kit';
+import { focusMarked, onKeys, useKeyboardContext } from '../../ui/keyboard';
 import { Sheet } from '../../ui/overlay';
 import { BottomBar, Screen } from '../../ui/Page';
 import type { ScreenScroller } from '../../ui/Page';
@@ -41,6 +42,8 @@ const LifeTile = memo(function LifeTile({ id, on, onChoose, onLayout, onNode }: 
     <View style={{ width: on ? '100%' : '50%', paddingHorizontal: 4 }} onLayout={(event) => onLayout(id, event)}>
       <Raised
         ref={node}
+        marks={{ life: id }}
+        tabbable={on}
         role="radio"
         checked={on}
         tone={on ? GOLD : {}}
@@ -251,6 +254,32 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
     if (node) nodes.current.set(id, node);
     else nodes.current.delete(id);
   }, []);
+  // On the web the keyboard picks a life as the Next web's (docs/keyboard.md): the arrows, Home and End through the open lives in their order, each
+  // chosen and given the focus; letters typed find one by its name (what is typed within 0.7 s of the last letter).
+  useKeyboardContext('new-life');
+  const { text: written } = useWords();
+  const typed = useRef({ text: '', at: 0 });
+  const chooseAndFocus = (id: string) => {
+    setChosen(id);
+    requestAnimationFrame(() => focusMarked('life', id));
+  };
+  const lifeKeys = onKeys((event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || available.length === 0) return false;
+    const direction = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0;
+    if (direction || event.key === 'Home' || event.key === 'End') {
+      const at = Math.max(0, available.findIndex((life) => life.id === chosen));
+      const next = event.key === 'Home' ? available[0] : event.key === 'End' ? available[available.length - 1] : available[(at + direction + available.length) % available.length];
+      chooseAndFocus(next.id);
+      return true;
+    }
+    if (event.key.length !== 1 || !/[\p{L}\p{N}]/u.test(event.key)) return false;
+    const now = Date.now();
+    typed.current = { text: (now - typed.current.at > 700 ? '' : typed.current.text) + event.key.toLocaleLowerCase(), at: now };
+    const match = available.find((life) => written.lives[life.id].name.toLocaleLowerCase().startsWith(typed.current.text));
+    if (!match) return false;
+    chooseAndFocus(match.id);
+    return true;
+  });
   /** The dice: another of the open lives, which is picked here and not in the state's update (a pick is not pure), and brought into view once it has moved. */
   const roll = () => {
     const next = anotherLife(openIds, chosen);
@@ -375,6 +404,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
 
       {/* The lives that can be lived, two to a row; the one chosen opens across the row with what it is. */}
       <View
+        {...lifeKeys}
         accessibilityRole="radiogroup"
         accessibilityLabel={t('title')}
         onLayout={(event) => void (group.current = event.nativeEvent.layout.y)}

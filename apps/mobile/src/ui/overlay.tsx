@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { useIsDesk } from './desk';
+import { focusMarked, onKeys, tabStop } from './keyboard';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -335,10 +336,12 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
   );
 }
 
-function TabButton({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+function TabButton({ id, label, on, onPress }: { id: string; label: string; on: boolean; onPress: () => void }) {
   const press = usePress({ onPress });
   return (
     <Pressable
+      {...{ dataSet: { tab: id } }}
+      {...tabStop(on)}
       accessibilityRole="tab"
       accessibilityState={{ selected: on }}
       aria-selected={on}
@@ -361,10 +364,23 @@ function TabButton({ label, on, onPress }: { label: string; on: boolean; onPress
   );
 }
 
-/** A strip of tabs that scrolls sideways, without an indicator. */
+/**
+ * A strip of tabs that scrolls sideways, without an indicator. On the web the keyboard moves among them as the Next web's (docs/keyboard.md): one Tab
+ * stop, the tab that is on; ← and → the next (round the ends), Home and End the first and last, each selected and given the focus.
+ */
 export function Tabs<T extends string>({ label, tabs, value, onChange }: { label?: string; tabs: Array<{ id: T; label: string }>; value: T; onChange(id: T): void }) {
+  const keys = onKeys((event) => {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (step === 0 && event.key !== 'Home' && event.key !== 'End') return false;
+    const at = tabs.findIndex((tab) => tab.id === value);
+    const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : tabs[(at + step + tabs.length) % tabs.length];
+    onChange(next.id);
+    focusMarked('tab', next.id);
+    return true;
+  });
   return (
     <ScrollView
+      {...keys}
       horizontal
       // A tab tapped while a field of the page has the keyboard up is the tab's (Page's `KEYBOARD`).
       keyboardShouldPersistTaps="handled"
@@ -375,7 +391,7 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
       contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}
     >
       {tabs.map((tab) => (
-        <TabButton key={tab.id} label={tab.label} on={tab.id === value} onPress={() => onChange(tab.id)} />
+        <TabButton key={tab.id} id={tab.id} label={tab.label} on={tab.id === value} onPress={() => onChange(tab.id)} />
       ))}
     </ScrollView>
   );

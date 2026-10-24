@@ -2,6 +2,7 @@ import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
+import { KeyboardControls } from '../game/KeyboardHelp';
 import { InstallProvider, ViewportSync } from '../pwa/install';
 import { useServiceWorker } from '../pwa/register';
 import { Visits } from '../pwa/visits';
@@ -45,6 +46,8 @@ export default function RootLayout() {
             {/* The web's offer to install the game (pwa/install.web.tsx), inside the game to count the install; nothing on the phone. */}
             <InstallProvider>
               <ViewportSync />
+              {/* The keyboard on the page and its reference, `?` (game/KeyboardHelp.tsx, the web's ui/keyboard.web.tsx); nothing on the phone. */}
+              <KeyboardControls />
               <Page>
                 <ThemeProvider value={GROUND_THEME}>
                   <Stack screenOptions={SCREENS} />

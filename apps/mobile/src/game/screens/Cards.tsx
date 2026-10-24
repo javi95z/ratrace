@@ -12,6 +12,7 @@ import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
 import { Panel, reach, Tag, useInlineRow, usePress } from '../../ui/kit';
+import { focusedMark, focusMarked, KeyboardHint, pressMarked, useKeyboardMode, useKeyboardScope } from '../../ui/keyboard';
 import { perfStart } from '../../ui/perf';
 import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
@@ -230,7 +231,7 @@ function Settling({ down, faded, children }: { down: boolean; faded: boolean; ch
 }
 
 /** One option of a card, to be chosen. `below` is the gap to what follows it, which a link under it reaches into no further. */
-function Option({ def, index, preview, onPick, disabled, below }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean; below: number }) {
+function Option({ def, index, preview, onPick, disabled, below, shortcut }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean; below: number; shortcut?: string }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
   const partnered = useGame((s) => s.view?.player.life.partner ?? false);
   // The option tapped is shown taken at once, pressed and lit, and the others step back, while the answer is on its way.
@@ -241,6 +242,8 @@ function Option({ def, index, preview, onPick, disabled, below }: { def: CardDef
   const [seeing, setSeeing] = useState<'career' | 'city' | null>(null);
   const off = disabled || !preview.available;
   const press = usePress({ onPress: onPick, disabled: off });
+  // On the web, once a keyboard is in use, the digit that picks it in its corner, its room kept (the web's `padding-right: 2.75rem`).
+  const keyboard = useKeyboardMode() && shortcut !== undefined;
   if (!world || !view) return null;
   const taken = picked === index;
   // An option that takes the player into another career can show that career whole before it is chosen.
@@ -250,13 +253,14 @@ function Option({ def, index, preview, onPick, disabled, below }: { def: CardDef
   const city = def.options[index]?.effects?.moveCity;
   // Drawn once, whatever the press does: only the box round it eases.
   const face = (
-    <Framed kind="raised" style={{ backgroundColor: COLORS['night-700'], minHeight: TOUCH, paddingHorizontal: 12, paddingVertical: 8, gap: 6 }}>
+    <Framed kind="raised" style={{ backgroundColor: COLORS['night-700'], minHeight: TOUCH, paddingHorizontal: 12, paddingRight: keyboard ? 44 : 12, paddingVertical: 8, gap: 6 }}>
       <Offer def={def} index={index} preview={preview} world={world} partnered={partnered} />
+      {shortcut !== undefined ? <KeyboardHint>{shortcut}</KeyboardHint> : null}
       {taken ? RING.map((side, i) => <View key={i} pointerEvents="none" style={{ position: 'absolute', backgroundColor: COLORS['gold-500'], ...side }} />) : null}
     </Framed>
   );
   const option = (
-    <Pressable accessibilityRole="button" accessibilityState={{ disabled: off, selected: taken }} aria-selected={taken} disabled={off} onPress={press}>
+    <Pressable {...{ dataSet: { cardOption: index } }} accessibilityRole="button" accessibilityState={{ disabled: off, selected: taken }} aria-selected={taken} disabled={off} onPress={press}>
       {/* The web's buttons are not faded when they cannot be pressed: only the ones not taken step back, once one is. */}
       {({ pressed }) => (
         <Settling down={taken || (pressed && !off)} faded={picked !== null && !taken}>
@@ -395,6 +399,35 @@ export function CardStage() {
     if (!now.swipeable) return;
     void now.pick(side > 0 ? now.shown[1] : now.shown[0]);
   }, []);
+  // The keyboard (the web's, docs/keyboard.md): a digit picks the choice it numbers at once, a held one never the next card's too; the arrows, Home
+  // and End move among the choices, Enter or Space then taking the one in focus. A card met with the keyboard puts its first choice in focus.
+  const keyboard = useKeyboardMode();
+  useKeyboardScope(
+    (event) => {
+      if (!waiting || busy || shown.length === 0 || event.altKey || event.ctrlKey || event.metaKey) return false;
+      if (event.repeat && /^[1-4]$/.test(event.key)) return true;
+      if (/^[1-4]$/.test(event.key)) {
+        const index = shown[Number(event.key) - 1];
+        return index !== undefined && pressMarked('card-option', index);
+      }
+      const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (!direction && event.key !== 'Home' && event.key !== 'End') return false;
+      const active = Number(focusedMark('card-option') ?? Number.NaN);
+      const at = shown.includes(active) ? shown.indexOf(active) : 0;
+      const next = event.key === 'Home' ? shown[0] : event.key === 'End' ? shown[shown.length - 1] : shown[(at + direction + shown.length) % shown.length];
+      focusMarked('card-option', next);
+      return true;
+    },
+    { active: waiting, priority: 20 },
+  );
+  const first = shown[0];
+  useEffect(() => {
+    if (!keyboard || def === undefined || first === undefined) return;
+    const frame = requestAnimationFrame(() => focusMarked('card-option', first));
+    return () => cancelAnimationFrame(frame);
+    // The card deliberately takes the focus to its first choice; which are shown belongs to that card.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [def?.id, keyboard]);
   if (!view || !def) return null;
 
   const written = text.cards[def.id];
@@ -415,7 +448,7 @@ export function CardStage() {
 
       <View role="group" aria-label={t('choices', { title: written.title })} style={{ gap: CHOICES_GAP }}>
         {shown.map((i, at) => (
-          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} below={at === shown.length - 1 ? STAGE_GAP : CHOICES_GAP} />
+          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} below={at === shown.length - 1 ? STAGE_GAP : CHOICES_GAP} shortcut={at < 4 ? String(at + 1) : undefined} />
         ))}
       </View>
       {swipeable ? (

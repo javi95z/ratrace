@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { Framed } from './Frame';
+import { acceleratedRangeKey, onKeys, tabStop } from './keyboard';
 import { COLORS, TOUCH } from './theme';
 
 /** The handle: the web's `.range::-webkit-slider-thumb`, 20 x 28. The track is 8 high. */
@@ -78,9 +79,23 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
   });
 
   const share = max > min ? Math.min(1, Math.max(0, (value - min) / (max - min))) : 0;
+  // On the web, the keyboard's (the Next web's range, docs/keyboard.md): an arrow one step, Shift and an arrow ten, Page Up and Down about a tenth,
+  // Home and End the ends.
+  const keys = onKeys((event) => {
+    const now = latest.current;
+    const top = topOf(now.min, now.max, now.step);
+    const fast = acceleratedRangeKey(event, now.value - now.min, top - now.min, now.step);
+    const direction = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 0;
+    const next = fast !== null ? now.min + fast : direction !== 0 ? Math.max(now.min, Math.min(top, now.value + direction * now.step)) : null;
+    if (next === null) return false;
+    set(next);
+    return true;
+  });
   return (
     <GestureDetector gesture={pan}>
       <View
+        {...keys}
+        {...tabStop(max > min)}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={label}

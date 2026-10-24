@@ -21,6 +21,7 @@ import { PerfDrawn } from '../../ui/perf';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
 import { useIsWide } from '../../ui/desk';
+import { dialogOpen, focusedMark, focusMarked, onKeys, stepMarked, useKeyboardScope } from '../../ui/keyboard';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
@@ -74,6 +75,9 @@ function useRound() {
  * sheet that buys that asset; `move`: the way of life's sheet of every city; `item-<id>`: the shop's sheet of that thing).
  */
 export const FinanceOpened = createContext<{ tab?: string; sheet?: string }>({});
+
+/** What the keyboard moves among in a tab's panel, ↓ and ↑ (the web's `data-finance-item`): its rows and tiles that open or buy something. */
+const ITEM = { dataSet: { financeItem: true } } as const;
 
 /** A heading in a sheet (the web's `h3 pixel text-[14px] uppercase tracking-wider text-ink-200`). */
 function SheetHeading({ children, below = 0 }: { children: string; below?: number }) {
@@ -158,7 +162,7 @@ function Portfolio() {
           ) : null}
         </View>
         {/* The pension opens a sheet of its own: what it is, and the money put in or taken out. */}
-        <Pressable accessibilityRole="button" onPress={openPension} style={{ borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 6 }}>
+        <Pressable {...ITEM} accessibilityRole="button" onPress={openPension} style={{ borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 6 }}>
           <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
         </Pressable>
       </Panel>
@@ -199,7 +203,7 @@ const Holding = memo(function Holding({ asset, value, gain, pays, planned, sella
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
       {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
-      <Pressable accessibilityRole="button" onPress={buy} style={{ flexDirection: 'row', minHeight: TOUCH, minWidth: 0, flex: 1, alignItems: 'center', gap: 12 }}>
+      <Pressable {...ITEM} accessibilityRole="button" onPress={buy} style={{ flexDirection: 'row', minHeight: TOUCH, minWidth: 0, flex: 1, alignItems: 'center', gap: 12 }}>
         <AssetMark asset={asset} />
         <View style={{ minWidth: 0, flex: 1 }}>
           <ReadText numberOfLines={1}>{names.assets[asset.id].name}</ReadText>
@@ -443,7 +447,7 @@ function Plans() {
 function PlanRow({ onPress, children }: { onPress(): void; children: ReactNode }) {
   const press = usePress({ onPress });
   return (
-    <Pressable accessibilityRole="button" onPress={press} style={{ flexDirection: 'row', minHeight: TOUCH, width: '100%', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
+    <Pressable {...ITEM} accessibilityRole="button" onPress={press} style={{ flexDirection: 'row', minHeight: TOUCH, width: '100%', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
       {children}
     </Pressable>
   );
@@ -545,7 +549,7 @@ const MarketRow = memo(function MarketRow({ asset, change, pays, plan, opening, 
   const press = usePress({ onPress: () => onBuy(asset) });
   const planned = plan === null ? null : `${pays > 0 ? ' · ' : ''}${t('planned', { amount: fmt.compact(plan) })}`;
   return (
-    <Pressable accessibilityRole="button" onPress={press} style={{ flexDirection: 'row', minHeight: TOUCH, width: '100%', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
+    <Pressable {...ITEM} accessibilityRole="button" onPress={press} style={{ flexDirection: 'row', minHeight: TOUCH, width: '100%', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
       <AssetMark asset={asset} />
       <View style={{ minWidth: 0, flex: 1 }}>
         <ReadText numberOfLines={1}>{names.assets[asset.id].name}</ReadText>
@@ -1018,7 +1022,7 @@ const OwnedHome = memo(function OwnedHome({
   return (
     <View style={[{ paddingVertical: 8 }, last ? null : { borderBottomWidth: 2, borderBottomColor: COLORS['night-900'] }]}>
       {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
-      <Pressable accessibilityRole="button" accessibilityState={{ disabled: sold }} disabled={sold} onPress={open} style={{ flexDirection: 'row', width: '100%', alignItems: 'center', gap: 12 }}>
+      <Pressable {...ITEM} accessibilityRole="button" accessibilityState={{ disabled: sold }} disabled={sold} onPress={open} style={{ flexDirection: 'row', width: '100%', alignItems: 'center', gap: 12 }}>
         <Bare>
           <Sprite id={propertyArt(typeId, cityId)} fallback={HOME} />
         </Bare>
@@ -1072,7 +1076,7 @@ const HomeTile = memo(function HomeTile({ typeId, cityId, price, down, letOnly, 
   const { text, fmt } = useWords();
   return (
     <View style={{ width: '50%', paddingHorizontal: 4 }}>
-      <Raised place={{ flexGrow: 1 }} style={{ flexGrow: 1, alignItems: 'center', gap: 4, padding: 8 }} onPress={() => onBuy(typeId)}>
+      <Raised marks={ITEM.dataSet} place={{ flexGrow: 1 }} style={{ flexGrow: 1, alignItems: 'center', gap: 4, padding: 8 }} onPress={() => onBuy(typeId)}>
         <Bare style={{ width: '100%', paddingVertical: 4 }}>
           <Sprite id={propertyArt(typeId, cityId)} fallback={HOME} />
         </Bare>
@@ -2144,6 +2148,7 @@ const ShelfTile = memo(function ShelfTile({ itemId, owned, ownedUsed, price, sta
   return (
     <View style={{ width: '50%', paddingHorizontal: 4 }}>
       <Raised
+        marks={ITEM.dataSet}
         tone={owned ? GOLD : {}}
         place={{ flexGrow: 1, minWidth: 0 }}
         style={{ flexGrow: 1, flexDirection: wide ? 'row' : 'column', alignItems: 'center', gap: wide ? 8 : 4, padding: 6 }}
@@ -2436,6 +2441,14 @@ export function FinanceTabs() {
   const t = useT('finance');
   const { tab, setTab } = useFinanceTab();
   const tabs = useTabs();
+  // On the web, [ and ] move between tabs from anywhere on the stage, without going back to the tab strip first (docs/keyboard.md).
+  useKeyboardScope((event) => {
+    if ((event.key !== '[' && event.key !== ']') || event.altKey || event.ctrlKey || event.metaKey || dialogOpen()) return false;
+    const next = tabs[(tabs.indexOf(tab) + (event.key === ']' ? 1 : -1) + tabs.length) % tabs.length];
+    setTab(next);
+    requestAnimationFrame(() => focusMarked('tab', next));
+    return true;
+  });
   return (
     <View style={{ marginHorizontal: -GUTTER }}>
       <Tabs<TabId> label={t('tabsLabel')} tabs={tabs.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
@@ -2452,8 +2465,14 @@ export function Finance() {
   const [shopView, setShopView] = useState<ShopView>('affordable');
   const shop = useMemo(() => ({ view: shopView, setView: setShopView }), [shopView]);
   const Body = TAB_BODIES[tab];
+  // On the web, ↓ and ↑ (Home, End) move among the panel's rows that open or buy something, and Escape goes back to the tab that is on.
+  const items = onKeys((event) => {
+    if (focusedMark('finance-item') === null) return false;
+    if (event.key === 'Escape') return focusMarked('tab', tab);
+    return stepMarked('finance-item', event.key);
+  });
   return (
-    <View role="tabpanel" aria-label={t(`tabs.${tab}`)} style={{ paddingTop: 4 }}>
+    <View {...items} role="tabpanel" aria-label={t(`tabs.${tab}`)} style={{ paddingTop: 4 }}>
       <PerfDrawn name={`tab: ${tab}`} />
       <ShopViewKept.Provider value={shop}>{Body ? <Body /> : null}</ShopViewKept.Provider>
     </View>

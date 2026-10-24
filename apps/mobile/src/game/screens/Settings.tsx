@@ -13,6 +13,7 @@ import Animated from 'react-native-reanimated';
 import { useBlink } from '../../ui/animations';
 import type { HostInstance } from 'react-native';
 import { sheetsGone } from '../../ui/back';
+import { KeyboardGuide } from '../KeyboardHelp';
 import { Framed } from '../../ui/Frame';
 import { GoogleMark } from '../../ui/GoogleMark';
 import { LinkText } from '../../ui/LinkText';
@@ -426,6 +427,8 @@ export function Preferences() {
     <View style={{ gap: 8 }}>
       <LanguagePick />
       <Switches />
+      {/* The keys, on the web (game/KeyboardHelp.tsx); nothing on the phone. */}
+      <KeyboardGuide />
       <AccountBlock signOut />
     </View>
   );

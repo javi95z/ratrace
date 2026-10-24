@@ -17,6 +17,7 @@ import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useIsDesk } from '../../ui/desk';
+import { dialogOpen, pressMarked, useKeyboardContext, useKeyboardScope } from '../../ui/keyboard';
 import { onHardwareBack } from '../../ui/hardwareBack';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { useOwnT } from '../ownWords';
@@ -37,8 +38,8 @@ import { useGo } from '../pages';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone, and on a browser's wide screen in its three columns (`PlayDesk.web.tsx`, from the
- * web's desk width: `useIsDesk`, never on the phone). What the phone leaves out: the keyboard (its shortcut and skip links), and a ranked life's
- * notices, which a life on the phone never has. Every stage is drawn by its own screen, with the stage machine, the bar of the next thing to do and
+ * web's desk width: `useIsDesk`, never on the phone), with the web's keyboard (Ctrl/⌘ + Enter, the skip links of the desk: `ui/keyboard.web.tsx`).
+ * What the phone leaves out: the keyboard, and a ranked life's notices, which a life on the phone never has. Every stage is drawn by its own screen, with the stage machine, the bar of the next thing to do and
  * the guide round them; in a room, with what the room puts round them (`RoomSlots`).
  */
 
@@ -62,7 +63,7 @@ function PlayRound() {
   };
   return (
     <>
-      <Button variant="primary" wide disabled={busy} onPress={() => (warnings.length > 0 ? setAsking(true) : go())}>
+      <Button variant="primary" wide primary disabled={busy} onPress={() => (warnings.length > 0 ? setAsking(true) : go())}>
         {t('play')}
       </Button>
       <Sheet open={asking} onClose={() => setAsking(false)} title={t('warn.title')} tone="wine" closeLabel={common('close')}>
@@ -123,13 +124,13 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
   switch (stage) {
     case 'news':
       return (
-        <Button variant="primary" wide onPress={leaveNews}>
+        <Button variant="primary" wide primary onPress={leaveNews}>
           {cardsWait ? news('toCards') : news('toFinance')}
         </Button>
       );
     case 'outcome':
       return (
-        <Button variant="primary" wide disabled={busy} onPress={afterCard}>
+        <Button variant="primary" wide primary disabled={busy} onPress={afterCard}>
           {cardsWait ? cards('next') : cards('toFinance')}
         </Button>
       );
@@ -159,7 +160,7 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
     }
     case 'resolve':
       return (
-        <Button variant="primary" wide onPress={next}>
+        <Button variant="primary" wide primary onPress={next}>
           {finished ? resolve('finish') : resolve('next')}
         </Button>
       );
@@ -370,6 +371,17 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
         return true;
       });
     }, [go]),
+  );
+
+  // The keyboard (the web's): its reference says what applies to the stage, and Ctrl/⌘ + Enter presses the stage's safe main action, never twice for a
+  // key held down, never under a sheet. Nothing on the phone.
+  useKeyboardContext(stage === 'cards' ? 'cards' : stage === 'finance' ? 'finance' : 'play');
+  useKeyboardScope(
+    (event) => {
+      if (event.repeat || event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey) || dialogOpen()) return false;
+      return pressMarked('primary-action');
+    },
+    { active: status === 'playing', priority: 10 },
   );
 
   // A sheet belongs to the stage it was opened in, and to the layout: at desk width the orders are at the side.

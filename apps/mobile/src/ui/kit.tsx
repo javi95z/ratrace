@@ -1,8 +1,9 @@
-import { Children, createContext, Fragment, memo, useContext, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { Children, createContext, Fragment, memo, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react';
 import { Animated, Easing, Pressable, View, type HostInstance, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { webBaseline } from './fonts';
 import { Framed } from './Frame';
+import { focusMarked, KeyboardHint, onKeys, tabStop, useKeyboardMode } from './keyboard';
 import { CREAM, GOLD, WINE, type FrameCut, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
 import { Language, PixelText, ReadText, TIGHT } from './text';
@@ -82,14 +83,34 @@ export function reach(height: number, room: { above: number; below: number }, { 
  * its Button its own (the basket's `px-3 text-[14px]`, the savings' `px-2 text-[13px]`): the web's Button takes a screen's in place of its own 17
  * and 16. `cell` is a button in a cell of a grid of
  * them (the web's `grid grid-cols-2 gap-2`, placed in a row): an equal share of the row, and as tall as the tallest in it, as the grid stretches it.
+ * On the web (`ui/keyboard.web.tsx`): `primary` is the round's safe main action, which Ctrl/⌘ + Enter presses (the web's `data-primary-action`,
+ * with its badge); `hint` is a shortcut's badge in its corner, the room for it kept on both sides once the player uses a keyboard, so the label stays
+ * centred (the web's `padding-inline: 5.5rem`); `expanded` says that what it unfolds is open. None of it shows on a phone.
  */
-export function Button({ variant, wide = false, cell = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number }) {
+export function Button({
+  variant,
+  wide = false,
+  cell = false,
+  disabled = false,
+  size = 17,
+  padX = 16,
+  primary = false,
+  hint,
+  expanded,
+  onPress,
+  children,
+}: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number; primary?: boolean; hint?: ReactNode; expanded?: boolean }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
+  const badge = primary ? <KeyboardHint>{'Ctrl/⌘ ↵'}</KeyboardHint> : (hint ?? null);
+  // The badge's room, on both sides, once a keyboard is in use (it shows only then).
+  const keyboard = useKeyboardMode() && badge !== null;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, ...(expanded === undefined ? null : { expanded }) }}
+      {...(expanded === undefined ? null : { 'aria-expanded': expanded })}
+      {...(primary ? { dataSet: { primaryAction: true }, 'aria-keyshortcuts': 'Control+Enter Meta+Enter' } : null)}
       disabled={disabled}
       onPress={press}
       style={({ pressed }) => ({
@@ -106,7 +127,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         style={{
           backgroundColor: COLORS[bg],
           minHeight: TOUCH,
-          paddingHorizontal: padX,
+          paddingHorizontal: keyboard ? Math.max(padX, 88) : padX,
           paddingVertical: 8,
           flexDirection: 'row',
           alignItems: 'center',
@@ -118,6 +139,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         {setIn(children, (s) => (
           <PixelText size={size} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
         ))}
+        {badge}
       </Framed>
     </Pressable>
   );
@@ -175,9 +197,15 @@ export function Raised({
   style,
   place,
   testID,
+  marks,
+  tabbable,
   ref,
   children,
 }: PressProps & {
+  /** In a composite control on the web, whether it is the control's one Tab stop (the choice that is on); the arrows reach the rest. */
+  tabbable?: boolean;
+  /** Marks the keyboard finds it by on the web (`data-…`, react-native-web's `dataSet`): a row of the finances it moves among. */
+  marks?: Record<string, string | number | boolean>;
   /** The pressable itself, for what asks something of the thing on screen (the screen reader's focus). */
   ref?: Ref<HostInstance>;
   role?: 'button' | 'link' | 'radio' | 'menuitem';
@@ -198,6 +226,8 @@ export function Raised({
   return (
     <Pressable
       ref={ref}
+      {...(marks ? { dataSet: marks } : null)}
+      {...(tabbable === undefined ? null : tabStop(tabbable))}
       accessibilityRole={role}
       accessibilityLabel={label}
       accessibilityLanguage={language}
@@ -692,11 +722,13 @@ interface Choice<T> {
   icon?: string;
 }
 
-function Segment<T extends string | number>({ option, on, onChange, wide }: { option: Choice<T>; on: boolean; onChange(value: T): void; wide: boolean }) {
+function Segment<T extends string | number>({ option, on, onChange, wide, mark }: { option: Choice<T>; on: boolean; onChange(value: T): void; wide: boolean; mark: string }) {
   const disabled = option.disabled ?? false;
   const press = usePress({ onPress: () => onChange(option.value), disabled });
   return (
     <Pressable
+      {...{ dataSet: { segment: mark } }}
+      {...tabStop(on)}
       accessibilityRole="radio"
       accessibilityState={{ checked: on, disabled }}
       aria-checked={on}
@@ -754,12 +786,28 @@ export function Segmented<T extends string | number>({
   columns?: number;
 }) {
   const row = orientation === 'horizontal';
-  const segment = (option: Choice<T>) => <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide />;
+  // On the web the keyboard moves among them as the Next web's (docs/keyboard.md): one Tab stop, the choice that is on; the arrows of its way
+  // (→ ← in a row or a grid, ↓ ↑ in a column), Home and End, each choosing an enabled one and giving it the focus.
+  const group = useId();
+  const markOf = (option: Choice<T>) => `${group}:${String(option.value)}`;
+  const keys = onKeys((event) => {
+    const forward = row ? event.key === 'ArrowRight' : event.key === 'ArrowDown';
+    const backward = row ? event.key === 'ArrowLeft' : event.key === 'ArrowUp';
+    if (!forward && !backward && event.key !== 'Home' && event.key !== 'End') return false;
+    const enabled = options.filter((option) => !option.disabled);
+    if (enabled.length === 0) return true;
+    const at = Math.max(0, enabled.findIndex((option) => option.value === value));
+    const next = event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled[enabled.length - 1] : enabled[(at + (forward ? 1 : -1) + enabled.length) % enabled.length];
+    onChange(next.value);
+    focusMarked('segment', markOf(next));
+    return true;
+  });
+  const segment = (option: Choice<T>) => <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide mark={markOf(option)} />;
   if (columns !== undefined && columns > 0) {
     const rows: Array<Array<Choice<T>>> = [];
     for (let i = 0; i < options.length; i += columns) rows.push(options.slice(i, i + columns));
     return (
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'column', gap: 8 }}>
+      <View {...keys} accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'column', gap: 8 }}>
         {rows.map((cells, r) => (
           <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
             {cells.map(segment)}
@@ -773,12 +821,13 @@ export function Segmented<T extends string | number>({
   }
   return (
     <View
+      {...keys}
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
       style={{ flexDirection: row ? 'row' : 'column', gap: 8 }}
     >
       {options.map((option) => (
-        <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide={row} />
+        <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide={row} mark={markOf(option)} />
       ))}
     </View>
   );

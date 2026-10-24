@@ -21,6 +21,7 @@ import { Screen } from '../../ui/Page';
 import { PERF, PerfDrawn } from '../../ui/perf';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { useIsWide } from '../../ui/desk';
+import { focusMarked, onKeys } from '../../ui/keyboard';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
@@ -1093,6 +1094,8 @@ const LifeChoice = memo(function LifeChoice({ id, on, onChoose }: { id: string; 
     // Half the row, or all of it for the life chosen: 4 on each side, the grid 8 wider than its sheet, so the gap between two is 8.
     <View style={{ width: on ? '100%' : '50%', paddingHorizontal: 4 }}>
       <Raised
+        marks={{ roomLife: id }}
+        tabbable={on}
         role="radio"
         checked={on}
         tone={on ? CREAM : {}}
@@ -1111,8 +1114,18 @@ const LifeChoice = memo(function LifeChoice({ id, on, onChoose }: { id: string; 
 /** One of the lives the player may live, each with its face: a choice in two columns, the one chosen across both (the web's dense grid). */
 function LifePicker({ label, lives: choices, value, onChange }: { label: string; lives: readonly string[]; value: string; onChange(id: string): void }) {
   const order = useMemo(() => lifeRows(choices, value).flat(), [choices, value]);
+  // On the web the arrows, Home and End move through the lives in their order, each chosen and given the focus (the web's `LifePicker`).
+  const keys = onKeys((event) => {
+    const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+    if (!step && event.key !== 'Home' && event.key !== 'End') return false;
+    const at = Math.max(0, choices.indexOf(value));
+    const next = event.key === 'Home' ? choices[0] : event.key === 'End' ? choices[choices.length - 1] : choices[(at + step + choices.length) % choices.length];
+    onChange(next);
+    requestAnimationFrame(() => focusMarked('room-life', next));
+    return true;
+  });
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}>
+    <View {...keys} accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}>
       {order.map((id) => (
         <LifeChoice key={id} id={id} on={id === value} onChoose={onChange} />
       ))}

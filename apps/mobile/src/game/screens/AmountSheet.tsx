@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { Button, useOnce, usePress } from '../../ui/kit';
+import { KeyboardHint, onKeys, useKeyboardMode } from '../../ui/keyboard';
 import { Sheet } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
 import { PixelText, ReadText } from '../../ui/text';
@@ -72,6 +73,13 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
     if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(fmt.money(next));
   };
   const available = t('available', { amount: fmt.money(max) });
+  // On the web, Ctrl/⌘ + Enter anywhere in the sheet gives the amount (never for a key held down); the slider's keys are said once a keyboard is in use.
+  const keyboard = useKeyboardMode();
+  const keys = onKeys((event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.key !== 'Enter' || event.repeat || amount <= 0) return false;
+    submit();
+    return true;
+  });
 
   return (
     <Sheet open onClose={onClose} title={title} closeLabel={common('close')}>
@@ -79,7 +87,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
       {max <= 0 ? (
         <ReadText tone="ink-300" style={{ paddingVertical: 16, textAlign: 'center' }}>{t('nothing')}</ReadText>
       ) : (
-        <View style={{ gap: 12 }}>
+        <View {...keys} style={{ gap: 12 }}>
           {/* The web's `<output aria-live="polite">`: TalkBack hears it change. VoiceOver has no live regions: a chip's amount is said as it is pressed. */}
           <View accessibilityLiveRegion="polite">
             <PixelText size={30} tone="gold-500" style={{ textAlign: 'center' }}>{money}</PixelText>
@@ -92,7 +100,8 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
           </View>
           {preview && amount > 0 ? preview(amount) : null}
           <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{available}</ReadText>
-          <Button variant="primary" wide disabled={amount <= 0} onPress={submit}>
+          {keyboard ? <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{t('keyboardHelp')}</ReadText> : null}
+          <Button variant="primary" wide disabled={amount <= 0} hint={<KeyboardHint>{'Ctrl/⌘ ↵'}</KeyboardHint>} onPress={submit}>
             {t('confirm', { amount: money })}
           </Button>
         </View>

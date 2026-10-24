@@ -19,6 +19,7 @@ vi.mock('./ui/gameFonts', () => ({ useGameFonts: () => true }));
 vi.mock('./game/context', () => ({ GameProvider: box('game') }));
 vi.mock('./ui/Page', () => ({ Page: box('page') }));
 vi.mock('./pwa/visits', () => ({ Visits: () => <div data-piece="visits" /> }));
+vi.mock('./game/KeyboardHelp', () => ({ KeyboardControls: () => <div data-piece="keyboard" /> }));
 
 const { default: RootLayout } = await import('./app/_layout');
 
@@ -33,4 +34,11 @@ test('the whole app is inside one gesture root that fills the screen, so a drag 
 test('the visits are counted from the shell, once, over every page (the web counts them; the phone\'s draws nothing)', () => {
   const { container } = render(<RootLayout />);
   expect(container.querySelectorAll('[data-piece="visits"]')).toHaveLength(1);
+});
+
+test('the keyboard is heard once, inside the game, whose words its reference speaks (the web\'s; the phone\'s draws nothing)', () => {
+  const { container } = render(<RootLayout />);
+  const keyboard = container.querySelectorAll('[data-piece="keyboard"]');
+  expect(keyboard).toHaveLength(1);
+  expect(keyboard[0].closest('[data-piece="game"]')).not.toBeNull();
 });
