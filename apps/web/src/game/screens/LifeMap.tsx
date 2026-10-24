@@ -24,7 +24,7 @@ export function LifeMap({ route, label }: { route: readonly string[]; label: str
   return (
     <figure role="img" aria-label={label} className="relative mx-auto w-full overflow-hidden border-2 border-night-900" style={{ maxWidth: map.w }}>
       {/* The pixels of the map stay square at any width. */}
-      <img src={map.src} alt="" aria-hidden className="block h-auto w-full [image-rendering:pixelated]" draggable={false} />
+      <img src={`/sprites/${map.src}`} alt="" aria-hidden className="block h-auto w-full [image-rendering:pixelated]" draggable={false} />
       <svg aria-hidden viewBox={`0 0 100 ${100 * ratio}`} className="absolute inset-0 size-full">
         {places.length > 1 ? (
           <polyline
