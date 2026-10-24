@@ -38,7 +38,7 @@ Plan 5a's Global Constraints hold (`docs/superpowers/plans/2026-10-23-expo-phase
 - Create: `apps/mobile/src/game/pages.ts` — `hrefOf(page: Page, options?: { query?: Record<string, string>; hash?: string; locale?: string }): string` and `useGo(): { push(page, options?): void; replace(page, options?): void; home(): void }`; `type Page = '' | 'new' | 'challenge' | 'room' | 'rankings' | 'collection' | 'records' | 'play' | 'player' | 'legal'`
 - Create: `apps/mobile/src/app/+native-intent.tsx` (`redirectSystemPath`: `theratrace://<page>[?query][#hash]` → `/{phone language}/<page>…`; `theratrace://auth` unchanged)
 - Modify: the 17 files with 48 navigation calls (`router.push/replace/navigate/dismissTo`, `href=`) to use `useGo`/`hrefOf`; `online/push.ts` `pageOf`; the language switch in Settings (web: the same page in the other language; phone: as today); `game/locale.ts` (on the web the language is the URL's)
-- Modify: `apps/mobile/src/architecture.test.ts` — no literal route path (`'/play'`, `` `/${…}` ``) in `src/game` or `src/ui` outside `game/pages.ts`
+- Modify: `apps/mobile/src/architecture.test.ts` — (from 5a's final review) the twin guard also keys a twin named `index` by its directory (`@/online` for `online/index.web.ts`), checks names re-exported by shared files (`export { x } from '…'`), and its self-check covers both; and — no literal route path (`'/play'`, `` `/${…}` ``) in `src/game` or `src/ui` outside `game/pages.ts`
 
 **Interfaces:**
 - Produces: `hrefOf`, `useGo`, `Page` (every later task navigates through them); `useLocaleParam(): string` for the web's language.
