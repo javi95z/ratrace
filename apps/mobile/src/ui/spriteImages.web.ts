@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { ImageSourcePropType } from 'react-native';
-import { getAssetByID } from 'react-native-web/dist/modules/AssetRegistry';
 import { SOURCES } from '../sprites/sources';
+import { uriOf } from './assetUri.web';
 import { reportMissing } from './sprites';
 
 /*
@@ -24,20 +24,8 @@ export interface SpritePicture {
 /** Reads a sprite's file: null when the browser could not load it. */
 export type LoadSprite = (source: ImageSourcePropType) => Promise<SpritePicture | null>;
 
-/** The address of a sprite's file, from what `sourceOf` gives (a registry number, an object with a `uri`, or the address itself). */
-export function uriOf(source: ImageSourcePropType | string): string | null {
-  if (typeof source === 'string') return source;
-  if (typeof source === 'number') {
-    const asset = getAssetByID(source);
-    if (!asset) return null;
-    // The closest scale to the screen's, as react-native-web's own Image picks it.
-    const wanted = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
-    const scale = asset.scales.reduce((prev, now) => (Math.abs(now - wanted) < Math.abs(prev - wanted) ? now : prev), asset.scales[0] ?? 1);
-    return `${asset.httpServerLocation}/${asset.name}${scale !== 1 ? `@${scale}x` : ''}.${asset.type}`;
-  }
-  const one = Array.isArray(source) ? source[0] : source;
-  return one && typeof one.uri === 'string' && one.uri !== '' ? one.uri : null;
-}
+/** The address of a sprite's file, from what `sourceOf` gives (`assetUri.web.ts`, which the typefaces share). */
+export { uriOf };
 
 /** The browser's: the file fetched by an image of its own and decoded, so that the `<img>` drawn after it finds it ready. */
 const loadInBrowser: LoadSprite = (source) =>

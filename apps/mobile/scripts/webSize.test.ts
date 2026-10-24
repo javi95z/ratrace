@@ -1,6 +1,7 @@
 import { gzipSync } from 'node:zlib';
+import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -117,9 +118,11 @@ describe('the first page', () => {
   const LATIN = ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold'];
   const CYRILLIC = ['Oswald_500Medium', 'Exo2_400Regular', 'Exo2_600SemiBold'];
   const FONTS = ahead(LATIN);
-  const page = (path: string, scripts: string[], head: string) => ({
+  /** The front door's tagline in a language, as the built page carries it (its HTML escapes the apostrophes and ampersands of a text). */
+  const tagline = (locale: 'en' | 'es' | 'ru') => MESSAGES[locale].meta.description;
+  const page = (path: string, scripts: string[], head: string, words = tagline(path.slice(0, 2) as 'en' | 'es' | 'ru')) => ({
     path,
-    bytes: Buffer.from(`<!DOCTYPE html><html lang="en"><head>${head}</head><body>${scripts.map((src) => `<script defer="" src="/${src}"></script>`).join('')}</body></html>`),
+    bytes: Buffer.from(`<!DOCTYPE html><html lang="en"><head>${head}</head><body><div>${words}</div>${scripts.map((src) => `<script defer="" src="/${src}"></script>`).join('')}</body></html>`),
   });
   const firstPage = (scripts: string[], head = FONTS) => page(FIRST_PAGE, scripts, head);
 
@@ -185,6 +188,48 @@ describe('the first page', () => {
     expect(judgeWebExport([clean, words, text, firstPage([clean.path, words.path, text.path])], [])).toEqual([
       expect.stringMatching(/first page .* carries words of a language: \/packages\/i18n\/messages\/es\.json, \/packages\/content\/src\/text\/ru\.cards\.ts/),
     ]);
+  });
+});
+
+describe('the words of each language\'s front door', () => {
+  const door = (locale: string, words: string) => ({ path: `${locale}/index.html`, bytes: Buffer.from(`<!DOCTYPE html><html lang="${locale}"><body><p>${words}</p></body></html>`) });
+  const own = (locale: 'en' | 'es' | 'ru') => MESSAGES[locale].meta.description;
+  const escaped = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;').replace(/"/g, '&quot;');
+
+  it('are its language\'s, as the build drew them (the page\'s HTML speaks before any script runs), in runs of a font each', () => {
+    const runs = (text: string) => text.split(' ').map((word) => `<span style="font-family:Exo2_400Regular">${word}</span><span> </span>`).join('').replace(/<span> <\/span>$/, '');
+    const doors = [door('en', own('en')), door('es', escaped(own('es'))), door('ru', runs(own('ru')))];
+    expect(judgeWebExport([small, ...doors], []).filter((problem) => /words/.test(problem))).toEqual([]);
+  });
+
+  it('are reported missing where the build drew a page without them (a language not in when the server drew it)', () => {
+    const doors = [door('en', own('en')), door('es', 'Loading…'), door('ru', own('ru'))];
+    expect(judgeWebExport([small, ...doors], []).filter((problem) => /words/.test(problem))).toEqual([expect.stringMatching(/es\/index\.html does not speak its language/)]);
+  });
+
+  it('are reported where a page speaks another language\'s (the build drew it in the wrong one)', () => {
+    const doors = [door('en', own('en')), door('es', `${own('es')} ${own('en')}`), door('ru', own('en'))];
+    expect(judgeWebExport([small, ...doors], []).filter((problem) => /words/.test(problem))).toEqual([
+      expect.stringMatching(/es\/index\.html carries the words of en/),
+      expect.stringMatching(/ru\/index\.html does not speak its language/),
+      expect.stringMatching(/ru\/index\.html carries the words of en/),
+    ]);
+  });
+});
+
+describe('the first page\'s words', () => {
+  it('are weighed with it: the chunk of its language (its map names game/languages/en.ts) and what that chunk loads with it, as the first draw fetches them', () => {
+    const named = { path: `${APP}entry.js`, bytes: Buffer.from(`x;{"paths":{"12":["/${APP}en-abc.js","/${APP}__shared-homes.js"],"13":["/${APP}es-abc.js","/${APP}__shared-homes.js"]}}`), sources: ['/apps/mobile/src/game/languageWords.web.ts'] };
+    const en = { path: `${APP}en-abc.js`, bytes: noise(3000), sources: ['/apps/mobile/src/game/languages/en.ts', '/packages/i18n/messages/en.json'] };
+    const es = { path: `${APP}es-abc.js`, bytes: noise(3000), sources: ['/apps/mobile/src/game/languages/es.ts'] };
+    const homes = { path: `${APP}__shared-homes.js`, bytes: noise(1000), sources: ['/packages/content/src/text/homes.ts'] };
+    const html = { path: FIRST_PAGE, bytes: Buffer.from(`<html><body>${MESSAGES.en.meta.description}<script src="/${named.path}"></script></body></html>`) };
+    const files = [named, en, es, homes, html];
+    expect(firstWordsOf(files)).toEqual([`/${en.path}`, `/${homes.path}`]);
+    expect(firstPageOf(files, firstWordsOf(files))?.scripts.map((file) => file.path)).toEqual([named.path, en.path, homes.path]);
+    // The words are its first draw's, not its HTML's: the check that its HTML's scripts carry none still holds.
+    expect(judgeWebExport(files, []).filter((problem) => /carries words/.test(problem))).toEqual([]);
+    expect(firstWordsOf([named, html])).toEqual([]);
   });
 });
 

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { LOCALES } from '@ratrace/i18n';
+import { LOCALES, MESSAGES } from '@ratrace/i18n';
 import { bundlesIn } from './rules';
 
 /**
@@ -73,6 +73,61 @@ export function firstPageOf(files: readonly ExportFile[], requested: readonly st
   return { scripts, weight: [first, ...scripts].reduce((total, file) => total + gzipSync(file.bytes).length, 0) };
 }
 
+/** The source of the first page's own words: the chunk of its language (`game/languageWords.web.ts` loads it when the page first speaks). */
+const FIRST_WORDS = '/apps/mobile/src/game/languages/en.ts';
+
+/**
+ * The scripts the first page's words come in, as its first draw fetches them (addresses, as `requested` takes them): the chunk whose map names
+ * `FIRST_WORDS`, and the chunks Metro loads with it (the `paths` list of the `import()` that asks for it, in the script that asks). Nothing in an
+ * export made without source maps.
+ */
+export function firstWordsOf(files: readonly ExportFile[]): string[] {
+  const words = files.find((file) => file.sources?.includes(FIRST_WORDS));
+  if (words === undefined) return [];
+  const address = `/${words.path}`;
+  for (const file of files) {
+    if (!file.path.endsWith('.js') || file === words) continue;
+    const text = file.bytes.toString('utf8');
+    if (!text.includes(address)) continue;
+    for (const [list] of text.matchAll(/\[("[^"\]]*"\s*,?\s*)+\]/g)) {
+      if (!list.includes(address)) continue;
+      try {
+        return JSON.parse(list) as string[];
+      } catch {
+        // Not a list of addresses after all (a string of the code's own): look on.
+      }
+    }
+  }
+  return [address];
+}
+
+/**
+ * The text an HTML page shows, as one string: its tags dropped (the kit cuts a line into a span for each font that draws a run of it) and the
+ * entities React writes decoded.
+ */
+export function textOfHtml(html: string): string {
+  const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", nbsp: '\u00a0' };
+  return html.replace(/<[^>]*>/g, '').replace(/&(amp|lt|gt|quot|#39|#x27|nbsp);/g, (_, name: string) => entities[name]);
+}
+
+/**
+ * What is wrong with the words of each language's front door as the build drew it (nothing when it is fine): each `<l>/index.html` speaks its own
+ * language (the front door's tagline, `meta.description`) and carries no other's. The build's machine has every language at once
+ * (`game/languageWords.web.ts`); a language not in when it drew a page would leave that page in another, or speaking none.
+ */
+function judgeDoorWords(byPath: ReadonlyMap<string, ExportFile>): string[] {
+  const problems: string[] = [];
+  for (const locale of LOCALES) {
+    const html = byPath.get(`${locale}/index.html`)?.bytes.toString('utf8');
+    if (html === undefined) continue;
+    const text = textOfHtml(html);
+    const speaks = (other: (typeof LOCALES)[number]) => text.includes(MESSAGES[other].meta.description);
+    if (!speaks(locale)) problems.push(`${locale}/index.html does not speak its language: the build drew it without its words`);
+    for (const other of LOCALES) if (other !== locale && speaks(other)) problems.push(`${locale}/index.html carries the words of ${other}`);
+  }
+  return problems;
+}
+
 /**
  * What is wrong with a first visit to the first page (nothing when it is fine): its weight with every script the browser fetched for it, those its
  * first draw imports after the HTML among them (`requested`, as a browser run on the served export saw them: `web-life.ts --export`).
@@ -129,21 +184,24 @@ const RULES_FOLDER = 'rules/';
  * `rules` the names of the older rules' files the export must serve (those of apps/web/public/rules), `pages` the HTML files of the pages it must
  * have (`pageFiles`). The budget counts the app's own JavaScript, not the rules the site serves for older lives. A missing or partial `rules/`
  * folder is a problem: a life begun under a version whose file is not there would wait forever. The first page, where the export has it, is held
- * to its own budget: its HTML and the scripts it loads.
+ * to its own budget: its HTML, the scripts it loads and its words' chunks (`firstWordsOf`); and each language's front door to its own words.
  */
 export function judgeWebExport(files: ExportFile[], sources: string[], rules: readonly string[] = [], pages: readonly string[] = []): string[] {
   const problems: string[] = [];
   const byPath = new Map(files.map((file) => [file.path, file]));
   const absent = pages.filter((page) => !byPath.has(page));
   if (absent.length > 0) problems.push(`${absent.length} of the ${pages.length} pages are missing from the export, e.g. ${absent[0]}: that address would be the page of nothing`);
-  const first = firstPageOf(files);
+  const first = firstPageOf(files, firstWordsOf(files));
   if (first !== null) {
     if (first.weight > FIRST_PAGE_GZIP_BUDGET) {
-      problems.push(`the first page (${FIRST_PAGE} and the ${first.scripts.length} scripts it loads) is ${mib(first.weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`);
+      problems.push(`the first page (${FIRST_PAGE}, the ${first.scripts.length} scripts it loads and its words) is ${mib(first.weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`);
     }
-    const words = [...new Set(first.scripts.flatMap((script) => script.sources ?? []).filter((source) => WORDS.test(source)))];
+    // The scripts its HTML names, which every page loads: the words of a language are the first draw's, fetched for the page's language.
+    const named = firstPageOf(files)?.scripts ?? [];
+    const words = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => WORDS.test(source)))];
     if (words.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries words of a language: ${words.join(', ')}`);
   }
+  problems.push(...judgeDoorWords(byPath));
   for (const { page, faces } of FRONT_DOORS) {
     const html = byPath.get(page)?.bytes.toString('utf8');
     if (html === undefined) continue;
@@ -241,9 +299,11 @@ function main(): void {
       `web export: ${files.length} files, ${js.length} app JS files ${mib(raw)} (${mib(gzipped)} gzip, budget ${mib(JS_GZIP_BUDGET)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
     );
     const pages = pageFiles(routedPages(), LOCALES);
-    const first = firstPageOf(files);
+    const words = firstWordsOf(files);
+    const first = firstPageOf(files, words);
+    const named = firstPageOf(files)?.scripts.length ?? 0;
     console.log(
-      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts, ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
+      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts (${named} named by its HTML, ${first.scripts.length - named} of its words), ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
     );
     const problems = judgeWebExport(files, sources, rules, pages);
     for (const problem of problems) console.error(`problem: ${problem}`);

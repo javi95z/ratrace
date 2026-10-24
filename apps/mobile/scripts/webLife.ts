@@ -1,6 +1,7 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { extname, join, relative, resolve } from 'node:path';
+import { createGzip } from 'node:zlib';
 
 /*
  * What `web-life.ts` checks of a run apart from the browser, so it can be tested without starting one (the script runs as it is imported).
@@ -70,7 +71,16 @@ export function fileFor(dir: string, pathname: string): { path: string; type: st
   return existsSync(nothing) ? { ...html(nothing), status: 404 } : html(join(dir, 'index.html'));
 }
 
-/** Serves the export at `dir` on `port` of this machine (`fileFor`), as the site will; the server, once it listens. Port 0 is any free port. */
+/**
+ * The files the site's host sends compressed to a browser that takes gzip, by their type (Vercel compresses text, scripts, styles, JSON, SVG and the
+ * TrueType and OpenType faces; pictures, sound and woff2 are compressed already).
+ */
+const COMPRESSED = /^(text\/|application\/json|image\/svg|font\/(ttf|otf))/;
+
+/**
+ * Serves the export at `dir` on `port` of this machine (`fileFor`), as the site will: compressed where the host compresses (`COMPRESSED`), for a
+ * browser that takes gzip. The server, once it listens. Port 0 is any free port.
+ */
 export function serveExport(dir: string, port: number): Promise<Server> {
   const server = createServer((request, response) => {
     const file = request.method === 'GET' || request.method === 'HEAD' ? fileFor(dir, new URL(request.url ?? '/', 'http://localhost').pathname) : null;
@@ -79,8 +89,10 @@ export function serveExport(dir: string, port: number): Promise<Server> {
       response.end('not found');
       return;
     }
-    response.writeHead(file.status ?? 200, { 'content-type': file.type, 'cache-control': 'no-store' });
+    const gzip = COMPRESSED.test(file.type) && /\bgzip\b/.test(String(request.headers['accept-encoding'] ?? ''));
+    response.writeHead(file.status ?? 200, { 'content-type': file.type, 'cache-control': 'no-store', ...(gzip ? { 'content-encoding': 'gzip', vary: 'Accept-Encoding' } : null) });
     if (request.method === 'HEAD') response.end();
+    else if (gzip) createReadStream(file.path).pipe(createGzip()).pipe(response);
     else createReadStream(file.path).pipe(response);
   });
   return new Promise((done, fail) => {

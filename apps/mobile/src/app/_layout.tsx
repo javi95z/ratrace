@@ -2,7 +2,6 @@ import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
-import { useLocaleParam } from '../game/pages';
 import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
@@ -19,8 +18,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
  * words, sound, motion) and the ground. Screens change at once, as a web page does, over the one ground.
  */
 export default function RootLayout() {
-  // The page's language: the web fetches ahead only the typefaces it draws first (ui/gameFonts.web.ts); the phone loads them all.
-  const fonts = useGameFonts(useLocaleParam());
+  const fonts = useGameFonts();
   useEffect(() => {
     if (fonts) void SplashScreen.hideAsync().catch(() => undefined);
   }, [fonts]);

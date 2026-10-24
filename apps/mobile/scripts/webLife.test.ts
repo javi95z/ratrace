@@ -1,7 +1,9 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { get } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { expect, test } from 'vitest';
 import { appWebOf, fileFor, onThisMachine, projectNamed, serveExport } from './webLife';
 
@@ -98,4 +100,47 @@ test('the whole life can run on the export, and runs on the development server u
   expect(script).toContain('serveExport(');
   // And a new visitor's first page on it is weighed with what its first draw fetches after the HTML, and held to the first page's gate.
   expect(script).toContain('problems.push(...judgeFirstVisit(files, scripts));');
+});
+
+/** A file of the served export as the browser is sent it: its encoding and its bytes, asked with (or without) `Accept-Encoding: gzip`. */
+function sent(port: number, path: string, gzip: boolean): Promise<{ encoding: string | undefined; vary: string | undefined; body: Buffer }> {
+  return new Promise((done, fail) => {
+    get({ host: '127.0.0.1', port, path, headers: gzip ? { 'accept-encoding': 'gzip, deflate, br' } : {} }, (response) => {
+      const parts: Buffer[] = [];
+      response.on('data', (part: Buffer) => parts.push(part));
+      response.on('end', () => done({ encoding: response.headers['content-encoding'], vary: response.headers.vary, body: Buffer.concat(parts) }));
+    }).on('error', fail);
+  });
+}
+
+test('the export is sent compressed, as the site\'s host sends it, to a browser that takes gzip: its pages, scripts and typefaces, not its pictures', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
+  try {
+    mkdirSync(join(dir, 'en'));
+    mkdirSync(join(dir, 'sprites'));
+    const script = 'console.log("the same line, again and again");\n'.repeat(200);
+    writeFileSync(join(dir, 'en/index.html'), '<!doctype html><title>en</title>');
+    writeFileSync(join(dir, 'entry.js'), script);
+    writeFileSync(join(dir, 'face.ttf'), Buffer.alloc(4000, 7));
+    writeFileSync(join(dir, 'sprites/coin.png'), Buffer.from([137, 80, 78, 71]));
+    const server = await serveExport(dir, 0);
+    try {
+      const port = (server.address() as AddressInfo).port;
+      const js = await sent(port, '/entry.js', true);
+      expect([js.encoding, js.vary]).toEqual(['gzip', 'Accept-Encoding']);
+      expect(js.body.length).toBeLessThan(script.length / 10);
+      expect(gunzipSync(js.body).toString('utf8')).toBe(script);
+      expect((await sent(port, '/en', true)).encoding).toBe('gzip');
+      expect((await sent(port, '/face.ttf', true)).encoding).toBe('gzip');
+      // A picture is sent as it is (it is compressed already), and so is anything to a browser that does not take gzip.
+      const png = await sent(port, '/sprites/coin.png', true);
+      expect([png.encoding, [...png.body]]).toEqual([undefined, [137, 80, 78, 71]]);
+      const plain = await sent(port, '/entry.js', false);
+      expect([plain.encoding, plain.body.toString('utf8')]).toEqual([undefined, script]);
+    } finally {
+      await new Promise((done) => server.close(done));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

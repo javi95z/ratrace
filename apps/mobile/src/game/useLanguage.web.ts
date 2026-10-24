@@ -11,7 +11,8 @@ import { hrefOf, pageAt, useLocaleParam } from './pages';
  * chooses where an address with no language leads (the bare `/`, a development route): the cookie's, else the browser's, else English.
  *
  * Choosing a language opens the same page in it (the Next web's `Link locale={code}`), the cookie written for the next visit, once its words are in (each
- * language is a chunk of its own: `languageWords.web.ts`), so the page in front stays as it is until the next can speak. Following an account's
+ * language is a chunk of its own: `languageWords.web.ts`), so the page in front stays as it is until the next can speak; of two asked for in turn,
+ * the last is the one opened, whichever's words come in first. Following an account's
  * language as someone signs in puts the same page in it in place of this one, its query and hash kept, as the Next web's `online/language.ts` does
  * (`location.replace`): Back does not lead to the language the account left. Both keep their identity from page to page (the address is read when they
  * are called), so nothing that holds them starts again, nor is drawn again, as the player moves.
@@ -28,10 +29,14 @@ export function useLanguage(keep: LanguageKeep): GameLanguage {
   useEffect(() => {
     if (isLocale(param)) keep.write(param);
   }, [keep, param]);
+  // The language last asked for (chosen, or the account's): a language whose words come in after another was asked for is not opened.
+  const asked = useRef<Locale | null>(null);
   const choose = useCallback(
     (next: Locale) => {
       keep.write(next);
+      asked.current = next;
       onceSpoken(next, () => {
+        if (asked.current !== next) return;
         setChosen(next);
         const page = pageAt(now.current.path);
         if (next !== now.current.locale && page !== null) router.push(hrefOf(page, { locale: next }));
@@ -42,7 +47,9 @@ export function useLanguage(keep: LanguageKeep): GameLanguage {
   const follow = useCallback(
     (next: Locale) => {
       keep.write(next);
+      asked.current = next;
       onceSpoken(next, () => {
+        if (asked.current !== next) return;
         setChosen(next);
         // The page in the browser's address bar when the account's answer comes (and the words of its language are in), whichever the player has
         // moved to since.

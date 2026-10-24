@@ -13,8 +13,6 @@ vi.mock('expo-router', () => ({
   Stack: () => <div data-piece="stack" />,
   ThemeProvider: box('theme'),
   DarkTheme: { dark: true, colors: {}, fonts: {} },
-  // The page's language, for the typefaces the web fetches ahead (none here).
-  useGlobalSearchParams: () => ({}),
 }));
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 vi.mock('./ui/gameFonts', () => ({ useGameFonts: () => true }));

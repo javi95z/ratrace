@@ -121,6 +121,20 @@ test('a language whose words are not in yet opens its page once they are: the pa
   expect(router.push).toHaveBeenCalledWith('/ru/rankings');
 });
 
+test('of two languages picked one after the other, the last is the one opened, whichever\'s words come in first', async () => {
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  words.held = 'ru';
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
+  expect(router.push).toHaveBeenCalledWith('/es/rankings');
+  await act(async () => words.release());
+  expect(router.push).not.toHaveBeenCalledWith('/ru/rankings');
+  expect(router.push).toHaveBeenCalledTimes(1);
+  expect(cookie()).toBe('es');
+});
+
 test('the language\'s setter keeps its identity from page to page, and nothing that reads the settings is drawn again as the player moves', () => {
   params.locale = 'en';
   pathname.now = '/en/records';
