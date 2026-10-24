@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+import { useRef, type Ref } from 'react';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { View, type HostInstance, type LayoutChangeEvent } from 'react-native';
 import { Framed } from './Frame';
 import { acceleratedRangeKey, onKeys, tabStop } from './keyboard';
 import { COLORS, TOUCH } from './theme';
@@ -39,7 +39,7 @@ const topOf = (min: number, max: number, step: number) => min + Math.floor((max 
  * bare number (a sum of money), `hint` what it is for (the web's `aria-describedby`: how much there is), and the reader's
  * increment and decrement move one `step`.
  */
-export function Slider({ value, min, max, step, onChange, label, valueText, hint }: { value: number; min: number; max: number; step: number; onChange(value: number): void; label: string; valueText?: string; hint?: string }) {
+export function Slider({ value, min, max, step, onChange, label, valueText, hint, ref }: { value: number; min: number; max: number; step: number; onChange(value: number): void; label: string; valueText?: string; hint?: string; /** The slider itself, for a sheet that gives it the first focus (the web). */ ref?: Ref<HostInstance> }) {
   const width = useRef(0);
   // What the pan's callbacks read is the latest render's, not the one they were made in.
   const latest = useRef({ value, min, max, step, onChange });
@@ -94,6 +94,7 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
   return (
     <GestureDetector gesture={pan}>
       <View
+        ref={ref}
         {...keys}
         {...tabStop(max > min)}
         accessible

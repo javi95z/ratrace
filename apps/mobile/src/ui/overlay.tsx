@@ -1,10 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions, type HostInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { useIsDesk } from './desk';
 import { focusMarked, onKeys, tabStop } from './keyboard';
+import { holdSheet, sheetPanelProps, sheetRootProps } from './sheetDialog';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -104,6 +105,9 @@ function endTurnOnceGone(id: number): void {
   const stop = holdingTurn(letGo);
 }
 
+/** What a sheet gives the focus to as it opens, on the web (the Next web's `initialFocus`): its panel, its Close, or what it holds (a slider). */
+export type InitialFocus = 'panel' | 'close' | { readonly current: unknown };
+
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet), in the middle of a browser's wide screen: the backdrop closes it,
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
@@ -117,7 +121,27 @@ function endTurnOnceGone(id: number): void {
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
-export function Sheet({ open: asked, onClose, onGone, title, closeLabel, back = true, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+export function Sheet({
+  open: asked,
+  onClose,
+  onGone,
+  title,
+  closeLabel,
+  back = true,
+  tone,
+  initialFocus = 'panel',
+  children,
+}: {
+  open: boolean;
+  onClose(): void;
+  onGone?: () => void;
+  title: string;
+  closeLabel: string;
+  back?: boolean;
+  tone?: 'gold' | 'wine';
+  initialFocus?: InitialFocus;
+  children: ReactNode;
+}) {
   // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
   const shut = useSyncExternalStore(subscribeShut, sheetsShut, () => false);
   const open = asked && !shut;
@@ -174,7 +198,7 @@ export function Sheet({ open: asked, onClose, onGone, title, closeLabel, back = 
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>
-      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone}>
+      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus}>
         {children}
       </SheetPanel>
     </SheetParent.Provider>
@@ -207,7 +231,38 @@ function useKeyboardUp(): boolean {
 const NEVER_SHOWN_MS = 150;
 const DISMISS_BACKSTOP_MS = 1000;
 
-function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone(): void; onShown(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
+function SheetPanel({
+  open,
+  onClose,
+  onGone,
+  onShown,
+  title,
+  closeLabel,
+  tone,
+  initialFocus,
+  children,
+}: {
+  open: boolean;
+  onClose(): void;
+  onGone(): void;
+  onShown(): void;
+  title: string;
+  closeLabel: string;
+  tone?: 'gold' | 'wine';
+  initialFocus: InitialFocus;
+  children: ReactNode;
+}) {
+  // The dialog on the web (`sheetDialog.web.ts`): the panel, named by its title, takes the focus as it is shown (or its Close, or what the sheet
+  // names), and the page behind it is inert while it is open. Nothing more on the phone, where the sheet's window is modal to the screen reader.
+  const titleId = useId();
+  const panel = useRef<HostInstance>(null);
+  const closeButton = useRef<HostInstance>(null);
+  const first = useRef(initialFocus);
+  useEffect(() => {
+    if (!open) return;
+    const wanted = first.current;
+    return holdSheet(panel.current, () => (wanted === 'close' ? closeButton.current : wanted === 'panel' ? null : wanted.current));
+  }, [open]);
   const inset = useSafeAreaInsets();
   // Presented: its turn is held until it has gone.
   const shown = useRef(onShown);
@@ -279,8 +334,7 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
        */}
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View
-          accessibilityViewIsModal
-          aria-modal
+          {...sheetRootProps()}
           onTouchEnd={perfTouched}
           style={
             desk
@@ -293,41 +347,48 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
           <Pressable
             testID="sheet-backdrop"
             accessible={false}
+            // Never the focus's, nor a screen reader's (react-native-web would make a pressable a Tab stop): the panel is the sheet.
+            focusable={false}
+            {...tabStop(false)}
+            aria-hidden
             importantForAccessibility="no"
             onPress={onClose}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
           />
           {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
           <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
-            <Framed
-              kind="bevel"
-              tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
-              style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
-            >
-              <ScrollView
-                // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
-                keyboardShouldPersistTaps="handled"
-                bounces={false}
-                style={{ flexGrow: 0, flexShrink: 1 }}
-                // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
-                contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
+            <View ref={panel} {...sheetPanelProps(titleId)} style={{ flexShrink: 1, minHeight: 0 }}>
+              <Framed
+                kind="bevel"
+                tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
+                style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                  <View accessibilityRole="header" style={{ flexShrink: 1, paddingTop: 4 }}>
-                    <PixelText size={19}>{title}</PixelText>
+                <ScrollView
+                  // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
+                  keyboardShouldPersistTaps="handled"
+                  bounces={false}
+                  style={{ flexGrow: 0, flexShrink: 1 }}
+                  // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
+                  contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                    <View nativeID={titleId} accessibilityRole="header" style={{ flexShrink: 1, paddingTop: 4 }}>
+                      <PixelText size={19}>{title}</PixelText>
+                    </View>
+                    <Pressable
+                      ref={closeButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={closeLabel}
+                      onPress={close}
+                      style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
+                    >
+                      <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
+                    </Pressable>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={closeLabel}
-                    onPress={close}
-                    style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
-                  >
-                    <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
-                  </Pressable>
-                </View>
-                {children}
-              </ScrollView>
-            </Framed>
+                  {children}
+                </ScrollView>
+              </Framed>
+            </View>
           </Animated.View>
           {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
         </View>

@@ -24,8 +24,9 @@ async function sheetAt(width: number) {
       <p>inside</p>
     </Sheet>,
   );
-  const title = await screen.findByRole('heading', { name: 'Details' });
-  return title.closest('[aria-modal="true"]') as HTMLElement;
+  await screen.findByRole('heading', { name: 'Details' });
+  // The box over the page that holds the backdrop and places the panel (the panel itself is the dialog).
+  return screen.getByTestId('sheet-backdrop').parentElement as HTMLElement;
 }
 
 describe('a sheet on the web', () => {

@@ -54,7 +54,7 @@ export function KeyboardControls() {
   return (
     <>
       <KeyboardListener />
-      <Sheet open={help.open} onClose={help.close} title={t('title')} closeLabel={common('close')}>
+      <Sheet open={help.open} onClose={help.close} title={t('title')} closeLabel={common('close')} initialFocus="close">
         <ReadText size={14} lineHeight={14 * 1.375} tone="ink-200" style={{ marginBottom: 12 }}>{t('intro')}</ReadText>
         <View style={{ gap: 8 }}>
           {rowsFor(help.context, t).map(([keys, words], i) => (

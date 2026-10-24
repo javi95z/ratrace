@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
+import { useRef, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, Platform, Pressable, View, type HostInstance } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { Button, useOnce, usePress } from '../../ui/kit';
 import { KeyboardHint, onKeys, useKeyboardMode } from '../../ui/keyboard';
@@ -73,6 +73,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
     if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(fmt.money(next));
   };
   const available = t('available', { amount: fmt.money(max) });
+  const slider = useRef<HostInstance>(null);
   // On the web, Ctrl/⌘ + Enter anywhere in the sheet gives the amount (never for a key held down); the slider's keys are said once a keyboard is in use.
   const keyboard = useKeyboardMode();
   const keys = onKeys((event) => {
@@ -82,7 +83,8 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
   });
 
   return (
-    <Sheet open onClose={onClose} title={title} closeLabel={common('close')}>
+    // On the web the slider has the first focus, its keys at once (the Next web's `initialFocus={slider}`).
+    <Sheet open onClose={onClose} title={title} closeLabel={common('close')} initialFocus={slider}>
       {children}
       {max <= 0 ? (
         <ReadText tone="ink-300" style={{ paddingVertical: 16, textAlign: 'center' }}>{t('nothing')}</ReadText>
@@ -92,7 +94,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
           <View accessibilityLiveRegion="polite">
             <PixelText size={30} tone="gold-500" style={{ textAlign: 'center' }}>{money}</PixelText>
           </View>
-          <Slider value={Math.min(amount, max)} min={0} max={max} step={step} onChange={setSafeAmount} label={t('amount')} valueText={money} hint={available} />
+          <Slider ref={slider} value={Math.min(amount, max)} min={0} max={max} step={step} onChange={setSafeAmount} label={t('amount')} valueText={money} hint={available} />
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {[25, 50, 100].map((pct) => (
               <Share key={pct} pct={pct} onPress={() => choose(Math.floor((max * pct) / 100))} />

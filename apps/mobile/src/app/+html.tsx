@@ -51,8 +51,10 @@ const PAGE_STYLES = `
         outline: 3px solid #ffe9a8;
         outline-offset: 3px;
       }
-      /* The round's stage takes the focus at each step, for the keyboard to carry on from (the Next web's \`main outline-none\`): no ring round it. */
-      #round-stage:focus {
+      /* The round's stage takes the focus at each step, and a sheet's panel as it opens, for the keyboard to carry on from (the Next web's
+         \`outline-none\` on both): no ring round them. */
+      #round-stage:focus,
+      [data-sheet-panel]:focus {
         outline: none;
       }
 `;
