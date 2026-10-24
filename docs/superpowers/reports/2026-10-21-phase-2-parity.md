@@ -1899,9 +1899,17 @@ clean.
 - `end-bankrupt`: the nurse of `screen-seed-5` earns a legendary badge; its line keeps the confetti over both ends (end-standing's class), and is
   measured 1.67 pt from the letters the confetti leaves. `end-standing` 169 (one pixel more of the same confetti); `end-escaped` one pixel of a glyph
   at the foot.
-- `room-playing` 2129: with the way out under the figures, the paper stands at another fraction of a point and more of its rules and masthead are a
-  device pixel apart (its class: play-guide-r1's and play-news-r1's).
+- `room-playing` 2129 and `room-resolved` 345, measured (fix round 1). The room's bar now stands 8 pt higher (the web's `pt-2` under the way out),
+  which brings a line to the edge of the bar of the next step, where it is covered and not measured as text. `room-playing`: 1457 px of the
+  masthead (as before: the paper stands 1 to 3 device pixels lower on the phone from its masthead down, measured band by band, the same in the shots
+  before the port), 4 of rats, 30 of the way-out lamp's sliver, and 638 in the last 15 rows above the bar: a clipping's coin picture and headline,
+  their tops 3 device pixels apart (shot rows 2335 on the web, 2338 on the phone). `room-resolved`: 2 of a rat, and 343 in the last 16 rows: the
+  ledger's "Income tax" line and its figure, showing from their ascenders to their x-height, a device pixel lower on the phone (ascenders from 2342
+  against 2341, x-height from 2350 against 2349; "Living costs" above it on the same rows on both): finance-taxes' class, where only the tops of a
+  few letters showed (31). Neither is an offset the port brought: the shots before it have the same offsets; what changed is the line the bar's
+  edge catches.
 - `legal` (the phone's own page): its baseline is 79002 since the phone's notice says what the online app keeps (04dc0138); not this task's change.
+  The page was looked at, shot beside the web's: its layout is alike (the headings, the paragraphs' measure and spacing), only the phone's text differs.
 
 **The new layout, seen.** The front door without the last life's link and with the foot unframed, `home-member` with the profile and the settings
 full width under the account, the room card plain "Multiplayer" with no game over shown; and in a round the figures alone in the sticky block, the

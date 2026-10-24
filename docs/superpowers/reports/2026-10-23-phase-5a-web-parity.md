@@ -312,5 +312,7 @@ the app's web too: its views are flex boxes, not the browser's inline block.
   unframed foot (`home-member`, 5), the rats of the room's bar and seats (`room-lobby-friends` 19, `room-lobby-public` 9 and 21 over two shoots,
   `room-end` 20, `room-playing` and `room-loans` 21 besides the lamps), the torn page (`play-pageturn` 376), a pixel at the foot of the member's
   profile (`player-member`, `player-friend-code` 31).
+  Records that vary between shoots keep the rule of `room-lobby-friends`, the most measured and as much again as the spread measured (fix round
+  1): `room-lobby-public` 21 + 12, `room-loans` 51 + 4 (its rats 17 then 21), `room-playing` 51 + 12 (its rats and city 9 then 21).
 - Three scenes were "never still" in the first run (`play-cards-legendary`, `play-guide-r1`, `collection-badges`) with the machine busy shooting;
   shot again alone they were still: `play-guide-r1` within its record, the other two clean.

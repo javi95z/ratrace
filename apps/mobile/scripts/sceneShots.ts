@@ -446,10 +446,12 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-playing': {
+    // Measured on Task P's shots (2129): 1457 of the masthead (play-news-r1's, as before), 4 of the rats, 30 of the way-out bar's lamp (a column at
+    // x 321, the web's sliver, profile-r6's class), and 638 in the last 15 rows above the bar of the next step (compared rows 2145 to 2159).
     shape: 2129,
     oneSided: 0,
-    reason: 'Everything under the guide\'s note a device pixel lower (play-guide-r1\'s: the web paints the note\'s foot at a whole CSS pixel, the phone at a device pixel), and the paper\'s masthead (play-news-r1\'s); since the way out scrolls under the figures (Task P), the paper stands where it falls at another fraction of a point, and more of its rules and masthead are a device pixel apart.',
-    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+    reason: 'The paper stands 1 to 3 device pixels lower on the phone from its masthead down (measured band by band, the same before the port: the old record\'s "a device pixel under the guide\'s note"), so its masthead\'s glyphs are shape (play-news-r1\'s, 1457 px). Since Task P the room\'s bar stands 8 pt higher (the web\'s `pt-2` under the way out), which brings a clipping of the paper (its coin picture and headline) to the edge of the bar of the next step: covered there, so not measured as text, its tops 3 device pixels apart (the web\'s glyphs from shot row 2335, the phone\'s from 2338) are 638 px of shape in the last 15 rows. And 30 px of the way-out bar\'s lamp sliver (profile-r6\'s class) since content 1.48.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'room-loans': {
     shape: 34,
@@ -458,10 +460,11 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-resolved': {
+    // Measured on Task P's shots (345): 2 of a rat of the room's bar, and 343 in the last 16 rows above the bar of the next step (compared rows 2144 to 2159).
     shape: 345,
     oneSided: 0,
-    reason: 'Two pixels of a rat of the room\'s bar, drawn small nearest-neighbour by each its own way, as in room-loans; and, since the way out scrolls under the figures (Task P), the tops of the letters of the ledger\'s line under the bar of the next step peek over the bar\'s edge a device pixel apart (finance-taxes\' class).',
-    report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
+    reason: 'Two pixels of a rat of the room\'s bar, drawn small nearest-neighbour by each its own way, as in room-loans. Since Task P the room\'s bar stands 8 pt higher, which brings the ledger\'s "Income tax" line and its figure to the edge of the bar of the next step, its letters showing from their ascenders down to their x-height: that line stands a device pixel lower on the phone (shot rows: ascenders from 2342 against 2341, x-height from 2350 against 2349; the line above, "Living costs", on the same rows on both), a row of the ledger rounded to the device pixel its own way. Covered, so not measured as text, its pixels are 343 px of shape: finance-taxes\' class, where only the tops of a few letters show (31).',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'room-end': {
     shape: 22,
@@ -611,14 +614,16 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-lobby-public': {
-    // 9 and 21 over Task P's two shoots, as room-lobby-friends' rats vary from one shot of the Next web's page to the next.
-    shape: 21,
+    // 9 and 21 over Task P's two shoots, as room-lobby-friends' rats vary from one shot of the Next web's page to the next: the most measured and as
+    // much again as the spread (12), as room-lobby-friends.
+    shape: 21 + 12,
     oneSided: 0,
     reason: 'The rats of the seats, as in rankings-friends.',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-loans': {
-    shape: 51,
+    // 51 in both of Task P's shoots; its rats 17 in phase 5a's and 21 in Task P's: the most measured and as much again as that spread (4).
+    shape: 51 + 4,
     oneSided: 0,
     reason: 'The rats of the room\'s bar, as in rankings-friends (21 in Task P\'s shots), and, since content 1.48, the way-out bar\'s lamps of profile-r6\'s class (30).',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
@@ -649,7 +654,8 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-playing': {
-    shape: 51,
+    // 51 in both of Task P's shoots; its rats and city 9 in phase 5a's and 21 in Task P's: the most measured and as much again as that spread (12).
+    shape: 51 + 12,
     oneSided: 0,
     reason: 'A pixel of the city\'s picture, and the rats of the room\'s bar, as in room-resolved (21 in Task P\'s shots); since content 1.48, the way-out bar\'s lamps of profile-r6\'s class (30). (The paper\'s rows under the room\'s slot: as in play-guide-r1, mended.)',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
