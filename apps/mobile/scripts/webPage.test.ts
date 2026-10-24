@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MESSAGES } from '@ratrace/i18n';
 import { expect, test, vi } from 'vitest';
 
 /** What the export hands the document of a page (expo-router's document context): here, as a test sets it. */
@@ -47,7 +48,8 @@ test('the browser\'s bar is the colour the Next web gives it', () => {
 
 test('the page holds the app where expo-router draws it, full height, the body not scrolled (react-native-web\'s root, as Expo\'s own template)', () => {
   expect(page).toContain('<meta charSet="utf-8"/>');
-  expect(page).toMatch(/<body><script>[^<]*<\/script><div id="root"><\/div><\/body>/);
+  // The script that takes the page's own address first, the words of a fault as JSON (nothing run), then the app's root.
+  expect(page).toMatch(/<body><script>[^<]*<\/script><script id="ratrace-fault-words" type="application\/json">[^<]*<\/script><div id="root"><\/div><\/body>/);
   expect(page).toMatch(/html,\s*body \{\s*height: 100%;/);
   expect(page).toMatch(/body \{\s*overflow: hidden;/);
   expect(page).toMatch(/#root \{\s*display: flex;\s*height: 100%;\s*flex: 1;/);
@@ -92,7 +94,7 @@ test('a keyboard\'s focus is the Next web\'s gold ring (globals.css `:focus-visi
 
 test('a page opened at the bare address (the worker answers `/` offline with the last language\'s front door) takes its own address before the app takes it over', () => {
   // The script the document runs first in its body, before the app's scripts: the router then draws the page the HTML is, not the bare address's.
-  const script = /<body><script>([\s\S]*?)<\/script><div id="root">/.exec(page)?.[1];
+  const script = /<body><script>([\s\S]*?)<\/script>/.exec(page)?.[1];
   expect(script).toBeDefined();
   const run = (pathname: string, canonical: string | null, search = '', hash = '') => {
     const moved: string[] = [];
@@ -108,4 +110,13 @@ test('a page opened at the bare address (the worker answers `/` offline with the
   expect(run('/es', 'https://ratrace-plum.vercel.app/es')).toEqual([]);
   expect(run('/es/play', 'https://ratrace-plum.vercel.app/es/play')).toEqual([]);
   expect(run('/', null)).toEqual([]);
+});
+
+test('holds the words of the page of a fault in the page\'s language, and no other\'s: what it says if the language\'s own words cannot be had', () => {
+  for (const locale of ['en', 'es', 'ru'] as const) {
+    const held = /<script id="ratrace-fault-words" type="application\/json">([^<]*)<\/script>/.exec(pageIn(locale))?.[1];
+    const play = MESSAGES[locale].play;
+    expect(JSON.parse(held ?? 'null'), locale).toEqual({ faultTitle: play.faultTitle, faultBody: play.faultBody, retry: play.retry, newLife: play.newLife, home: play.home });
+  }
+  expect(pageIn(undefined)).toContain(JSON.stringify(MESSAGES.en.play.faultTitle));
 });
