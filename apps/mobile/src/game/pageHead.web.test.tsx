@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { params } from '../testing/fakes';
+import { inFront, params } from '../testing/fakes';
 import { PageHead } from './pageHead';
 import { PAGES } from './pageList';
 import { headTagsOf, type HeadTag, type MetaWords } from './pageMeta';
@@ -47,6 +47,24 @@ describe('PageHead', () => {
     expect(document.title).toBe('Clasificaciones · The Rat Race');
     expect(inTheHead()).toContainEqual({ tag: 'link', rel: 'canonical', href: new URL('/es/rankings', SITE_URL).href });
     expect(inTheHead().filter((tag) => tag.tag === 'link' && tag.rel === 'alternate').map((tag) => (tag as { hrefLang: string }).hrefLang)).toEqual(['en', 'es', 'ru', 'x-default']);
+  });
+
+  it('says nothing while its page is not the one in front, as the stack keeps the pages a player came through', () => {
+    inFront.is = false;
+    render(<PageHead page="new" />);
+    expect(inTheHead()).toEqual([]);
+  });
+
+  it('takes its tags away when its page stops being the one in front, and writes them again when it is', () => {
+    const { rerender } = render(<PageHead page="new" />);
+    expect(document.title).toBe('Choose a life · The Rat Race');
+    inFront.is = false;
+    rerender(<PageHead page="new" />);
+    expect(inTheHead()).toEqual([]);
+    inFront.is = true;
+    rerender(<PageHead page="new" />);
+    expect(document.title).toBe('Choose a life · The Rat Race');
+    expect(inTheHead()).toHaveLength(headTagsOf('en', 'new', messagesFor('en').meta as MetaWords, SITE_URL).length);
   });
 
   it('says nothing at an address with no language of the game\'s: that page is the router\'s page of nothing', () => {

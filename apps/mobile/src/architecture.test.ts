@@ -482,16 +482,39 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(importsIn(join(SRC, 'game/screens/X.tsx'), "import { DashedRule } from '../../ui/DashedRule';").some((i) => CANVAS.test(i.from))).toBe(false);
   });
 
-  it('plays the phone\'s own sounds: no file of the app takes `@/ui/sound`, which the tsconfig maps to the web\'s synth for one test (game/cues.test.ts)', () => {
-    // `@/ui/sound` is not the phone's ui/sound.tsx: it is the web's Web Audio board, there only so a test can run the web's cues. Imported by the app,
-    // it would type-check and then fail on the phone (no AudioContext). The phone's sounds are `ui/sound` by a relative path.
-    // Read as written: a relative path to the phone's own `ui/sound` is placed as `@/ui/sound` by the wall's reader, and is the right one.
-    const WEB_SOUND = /(?:from\s*|import\(\s*|require\(\s*|import\s+)['"]@\/ui\/sound['"]/;
-    const webSound = mine.filter((path) => WEB_SOUND.test(readFileSync(path, 'utf8'))).map(rel);
-    expect(webSound).toEqual([]);
-    expect(WEB_SOUND.test("import { useSound } from '@/ui/sound';")).toBe(true);
-    expect(WEB_SOUND.test("const s = require('@/ui/sound');")).toBe(true);
-    expect(WEB_SOUND.test("import { useSound } from '../../ui/sound';")).toBe(false);
+  it('depends on nothing of `apps/web`: no file of the app (a test is not one) names a file of the web, by a path into it or by one of the tsconfig\'s `@/` aliases for the web\'s files', () => {
+    // The tsconfig maps a few of the web's files by the web's own alias (`@/ui/sound`, `@/i18n/metadata`, `@/i18n/routing`, `@/lib/site`), only so the tests that
+    // run the web's code (game/cues.test.ts, game/pageMeta.test.ts, scripts/sitePieces.test.ts) typecheck. Taken by the app they would typecheck and then fail
+    // on the phone (`@/ui/sound` is the web's Web Audio board: no AudioContext there), and the app would depend on the web, which it never does: what it
+    // shares with it is copied and held to the web's by a test. The phone's own `ui/sound` is taken by a relative path, which the wall's reader places as
+    // `@/ui/sound` too, and is the right one: so this reads the import as written, comments left out.
+    const WEB_NAMES = /(?:from\s*|import\(\s*|require\(\s*|import\s+)['"](?:@\/(?:ui\/sound|i18n\/metadata|i18n\/routing|lib\/site)|(?:\.\.\/)+web\/[^'"]*|[^'"]*apps\/web\/[^'"]*)['"]/;
+    const code = (source: string) => source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    expect(mine.length).toBeGreaterThan(200);
+    expect(mine.filter((path) => WEB_NAMES.test(code(readFileSync(path, 'utf8')))).map(rel)).toEqual([]);
+    for (const named of [
+      "import { useSound } from '@/ui/sound';",
+      "const s = require('@/ui/sound');",
+      "import { pageMetadata } from '@/i18n/metadata';",
+      "import { routing } from '@/i18n/routing';",
+      "export { SITE_URL } from '@/lib/site';",
+      "const { roomServer } = await import('../../../web/src/testing/roomServer');",
+      "import { x } from '../../../../apps/web/src/lib/site';",
+      "import web from 'apps/web/src/game/context';",
+    ]) {
+      expect(WEB_NAMES.test(code(named)), named).toBe(true);
+    }
+    for (const fine of [
+      "import { useSound } from '../../ui/sound';",
+      "import { SITE_URL } from './site';",
+      "import { LOCALES } from '@ratrace/i18n/locales';",
+      "import { webSize } from '../scripts/webSize';",
+      "import { x } from './web/thing';",
+      "// the web's own (apps/web/src/lib/site.ts): import x from '../../web/src/lib/site'\nconst a = 1;",
+      "/* import { x } from '@/ui/sound' */ const b = 2;",
+    ]) {
+      expect(WEB_NAMES.test(code(fine)), fine).toBe(false);
+    }
   });
 
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {

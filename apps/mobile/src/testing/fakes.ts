@@ -63,6 +63,9 @@ function useFocusEffect(effect: () => void | (() => void)): void {
   }, [effect]);
 }
 
+/** Whether the screen a test draws is the one in front (`useIsFocused`): it is, unless a test says it is not (and draws it again). */
+export const inFront = { is: true };
+
 export const expoRouter = {
   useRouter: () => routerNow.is,
   usePathname: () => pathname.now,
@@ -78,7 +81,7 @@ export const expoRouter = {
   Unmatched: () => createElement('div', { 'data-unmatched': '' }),
   // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn, and again when it is shown again.
   useFocusEffect,
-  useIsFocused: () => true,
+  useIsFocused: () => inFront.is,
 };
 
 /** Who listens to Android's Back (`BackHandler.addEventListener('hardwareBackPress', …)`), in the order they began to: the phone asks the latest first. */
@@ -476,6 +479,7 @@ export function resetFakes(): void {
   device.timeZone = 'UTC';
   for (const key of Object.keys(params)) delete params[key];
   pathname.now = '/';
+  inFront.is = true;
   kv.clear();
   appState.currentState = 'active';
   appState.listeners.clear();
