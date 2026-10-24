@@ -56,7 +56,7 @@ cd apps/mobile && eas build --profile development --platform android   # a build
 pnpm --filter @ratrace/mobile web:size   # the web export's weight, offline: no .wasm, the app's JS ≤ 1.35 MB gzip, no Skia, SQLite, formatjs polyfills, webview, media library or bundled older rules in it
 cd apps/mobile && EXPO_NO_METRO_LAZY=1 npx expo start --web --port 8091   # the app's web in development, offline (no EXPO_PUBLIC_SUPABASE_*): its /scene route is development only
 pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts [web] appweb compare --against=appweb [--only=a,b]   # its scenes beside the Next web's (phase-5a-web-parity/, its own records: APP_WEB)
-pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts   # a life begun on the Next web (3021), its saves copied, finished on the app's web (8091)
+pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts [--export]   # a life begun on the Next web (3021), its saves copied, finished on the app's web (8091: Metro, or with --export the export made offline and served statically)
 ```
 
 Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`. The same eight can be counted in the game's own project through the function `track` (`_shared/events.ts`; `private.app_events`, by day and platform, nothing of who sent them; any caller with the publishable key, and a ceiling of 20,000 a day for each event and platform), and `pnpm online:stats` prints them.

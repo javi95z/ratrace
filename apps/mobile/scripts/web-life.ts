@@ -1,11 +1,16 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import type { Server } from 'node:http';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { MESSAGES } from '@ratrace/i18n';
+import { bundlesIn } from './rules';
 import { APP_WEB, APP_WEB_PORT } from './sceneShots';
-import { onThisMachine, projectNamed } from './webLife';
+import { appWebOf, onThisMachine, projectNamed, serveExport } from './webLife';
+import { exportEnv } from './webSize';
 import type { Page } from './shotDrivers';
-import { PORT, raw, root, withWebPage } from './shotDrivers';
+import { PORT, raw, refuseServerInUse, root, withWebPage } from './shotDrivers';
 
 /**
  * A whole life in the browser, begun on the Next web and finished on the app's web (phase 5a, Task 9): the swap, where the same site is served by
@@ -13,7 +18,12 @@ import { PORT, raw, root, withWebPage } from './shotDrivers';
  * (started and stopped here, with no project in its environment), the app's web the Metro already serving it on 8091 (`npx expo start --web
  * --port 8091` in apps/mobile, with no EXPO_PUBLIC_SUPABASE_*), and the browser is kept from every host but this machine.
  *
- *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts
+ *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts [--export]
+ *
+ * With `--export` the app's web is not Metro's development server but the export the site will serve: made here (`expo export --platform web`, with
+ * no project in its environment, as the size check makes it), into a folder of its own, and served on 8091 as a static host serves it (every route
+ * the app's page, the older rules at `/rules`: `serveExport`). It is the release build: no `__DEV__`, `NODE_ENV=production`, minified, the export's
+ * own asset paths. Its pictures and steps are kept apart (`life-export-<n>-...`, `web-life-export-steps.txt`).
  *
  * 1. On the Next web, a life begun (the nurse) and played to round 3.
  * 2. What the Next web keeps of it read from its origin: the `ratrace` IndexedDB's three stores, and the localStorage keys of the inventory.
@@ -82,13 +92,19 @@ const WORDS = {
 const settle = () => sleep(430);
 
 const out = join(root, 'docs/superpowers/reports', APP_WEB.folder);
+/** The app's web this run plays on: Metro's development server, or the export (`--export`). */
+const target = appWebOf(process.argv.slice(2));
+/** What its pictures and steps are named by: the export's apart from the development server's. */
+const named = target === 'export' ? 'life-export' : 'life';
+/** How the steps name the app's web. */
+const appWeb = target === 'export' ? 'app web export (8091)' : 'app web (8091)';
 let shotNumber = 0;
 const steps: string[] = [];
 
 /** Says a step, and keeps its picture. */
 async function step(page: LifePage, what: string, file: string): Promise<void> {
   shotNumber += 1;
-  const png = join(out, `life-${shotNumber}-${file}.png`);
+  const png = join(out, `${named}-${shotNumber}-${file}.png`);
   await settle();
   await page.screenshot({ path: png });
   const line = `${shotNumber}. ${what} (${png.slice(root.length + 1)})`;
@@ -233,8 +249,42 @@ const WRITE_KEPT = async (kept: Kept): Promise<number> => {
   return written;
 };
 
+/**
+ * The export the site will serve, made into a folder of its own with no project in its environment (`exportEnv`, the size check's), and served on
+ * the app's web's port. Its folder, and the server to stop.
+ */
+async function servedExport(): Promise<{ dir: string; server: Server }> {
+  const up = await fetch(`http://localhost:${APP_WEB_PORT}/`).then(() => true, () => false);
+  refuseServerInUse(up, APP_WEB_PORT);
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-web-life-'));
+  console.log(`exporting the app's web into ${dir} (no EXPO_PUBLIC_SUPABASE_*)`);
+  const made = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', dir], {
+    cwd: join(root, 'apps/mobile'),
+    env: exportEnv(process.env) as NodeJS.ProcessEnv,
+    encoding: 'utf8',
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  if (made.status !== 0) {
+    rmSync(dir, { recursive: true, force: true });
+    throw new Error(`the web export failed (exit ${made.status ?? made.signal}):\n${`${made.stdout}\n${made.stderr}`.trim().split('\n').slice(-20).join('\n')}`);
+  }
+  return { dir, server: await serveExport(dir, APP_WEB_PORT) };
+}
+
 async function main() {
   mkdirSync(out, { recursive: true });
+  const exported = target === 'export' ? await servedExport() : null;
+  try {
+    await playLife();
+  } finally {
+    if (exported) {
+      await new Promise((done) => exported.server.close(done));
+      rmSync(exported.dir, { recursive: true, force: true });
+    }
+  }
+}
+
+async function playLife() {
   const problems: string[] = [];
   await withWebPage(`http://localhost:${PORT}/en`, async (shaped) => {
     const page = shaped as LifePage;
@@ -282,26 +332,31 @@ async function main() {
 
     // 4. The app's web: Continue reaches the same round, and the life is played to its end.
     await page.goto(`http://localhost:${APP_WEB_PORT}/`, { waitUntil: 'load' });
-    // Offline: the page's environment, as Expo's development server gives it, names no project (it was started with no EXPO_PUBLIC_SUPABASE_*).
-    const env = await page.evaluate(() => {
-      const known = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
-      return { EXPO_PUBLIC_SUPABASE_URL: known.EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: known.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY, root: known.EXPO_PUBLIC_PROJECT_ROOT };
-    });
-    if (env.root === undefined) throw new Error("the app's web page has no environment of Expo's development server: it cannot be told offline");
-    const named = projectNamed(env);
-    if (named !== null) throw new Error(`the app's web was started with a project (${named}): start it with no EXPO_PUBLIC_SUPABASE_*`);
-    steps.push("   the app's web is offline: its page's environment names no EXPO_PUBLIC_SUPABASE_*");
+    if (target === 'dev') {
+      // Offline: the page's environment, as Expo's development server gives it, names no project (it was started with no EXPO_PUBLIC_SUPABASE_*).
+      const env = await page.evaluate(() => {
+        const known = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+        return { EXPO_PUBLIC_SUPABASE_URL: known.EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: known.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY, root: known.EXPO_PUBLIC_PROJECT_ROOT };
+      });
+      if (env.root === undefined) throw new Error("the app's web page has no environment of Expo's development server: it cannot be told offline");
+      const named = projectNamed(env);
+      if (named !== null) throw new Error(`the app's web was started with a project (${named}): start it with no EXPO_PUBLIC_SUPABASE_*`);
+      steps.push("   the app's web is offline: its page's environment names no EXPO_PUBLIC_SUPABASE_*");
+    } else {
+      // The export has no environment at run time: what it was built with is written into it, and it was built here with none.
+      steps.push("   the app's web is the export, made by this run with no EXPO_PUBLIC_SUPABASE_* (exportEnv), served statically on 8091");
+    }
     console.log(steps.at(-1));
     const goOn = page.getByRole('link', { name: new RegExp(`^${WORDS.continue}`) });
     await goOn.waitFor({ state: 'visible', timeout: 120_000 });
-    await step(page, 'app web (8091): the front door offers to continue the life', 'app-home');
+    await step(page, `${appWeb}: the front door offers to continue the life`, 'app-home');
     await goOn.click();
     await page.getByRole('button', { name: WORDS.toCards }).waitFor({ state: 'visible', timeout: 60_000 });
     const shown = await roundShown(page);
     if (shown !== 3) throw new Error(`the app's web continued at round ${shown}, not 3`);
-    await step(page, 'app web (8091): Continue reaches round 3, its news', 'app-round3');
+    await step(page, `${appWeb}: Continue reaches round 3, its news`, 'app-round3');
     await playUntil(page, async () => page.getByRole('heading', { name: WORDS.theEnd }).isVisible());
-    await step(page, 'app web (8091): the life played to its end, the end screen', 'app-end');
+    await step(page, `${appWeb}: the life played to its end, the end screen`, 'app-end');
 
     // The records show it.
     await page.goto(`http://localhost:${APP_WEB_PORT}/records`, { waitUntil: 'load' });
@@ -311,7 +366,7 @@ async function main() {
     // (The list's items hold items of their own, a life's badges: the life is the first, and it is the nurse's.)
     const first = (await past.first().textContent()) ?? '';
     if (!first.includes('Nurse')) throw new Error(`the records' first life is not the nurse's: ${first.slice(0, 80)}`);
-    await step(page, 'app web (8091): the records list the life', 'app-records');
+    await step(page, `${appWeb}: the records list the life`, 'app-records');
     // And the life the records keep is the one the Next web began.
     const after = await page.evaluate(READ_KEPT, [...LOCAL_KEYS]);
     const runs = (after.stores.runs ?? []).map((record) => record.value as { runId: string; seed: string });
@@ -320,6 +375,21 @@ async function main() {
     // The life ended is still the one the front door shows the end of, as the Next web keeps it (its end screen survives a reload).
     const ended = (after.stores.currentGame ?? []).map((record) => record.value as { gameId: string; state: { finished: boolean } });
     if (ended.length !== 1 || ended[0].gameId !== saved.gameId || !ended[0].state.finished) throw new Error(`the app's web keeps another life in progress: ${JSON.stringify(ended.map((game) => game.gameId))}`);
+    if (target === 'export') {
+      // The older rules a life begun under them finishes under: every one the site must serve, served as a script, and one loaded as the game's
+      // loader loads it (a module of the page's origin).
+      const files = bundlesIn(readdirSync(join(root, 'apps/web/public/rules'))).map((bundle) => bundle.file);
+      const answers = await Promise.all(files.map(async (file) => {
+        const answer = await fetch(`http://localhost:${APP_WEB_PORT}/rules/${file}`);
+        return `${answer.status} ${answer.headers.get('content-type')}`;
+      }));
+      const wrong = answers.map((answer, i) => [files[i], answer] as const).filter(([, answer]) => answer !== '200 text/javascript; charset=utf-8');
+      if (files.length === 0 || wrong.length > 0) throw new Error(`the export does not serve the older rules: ${JSON.stringify(wrong.slice(0, 3))} of ${files.length}`);
+      const loaded = await page.evaluate(async (url) => Object.keys((await (new Function('url', 'return import(url)') as (url: string) => Promise<object>)(url)) ?? {}).length, `/rules/${files[0]}`);
+      if (loaded === 0) throw new Error(`the older rules /rules/${files[0]} loaded as a module with nothing in it`);
+      steps.push(`   the export serves the older rules: ${files.length} of ${files.length} at /rules/ as scripts, /rules/${files[0]} loaded as a module (${loaded} exports)`);
+      console.log(steps.at(-1));
+    }
     steps.push(`   the 8091 origin keeps the finished life ${saved.gameId} among its records (1 of 1), and the same life, ended, as the one whose end the front door shows`);
     console.log(steps.at(-1));
     // Nothing left this machine from the app's web, and no page asked a Supabase project for anything.
@@ -330,7 +400,7 @@ async function main() {
     steps.push(`   asked beyond this machine: from the app's web nothing; from the Next web ${[...new Set(asked)].map((line) => line.slice(line.indexOf(' ') + 1)).join(', ') || 'nothing'} (kept from it)`);
     console.log(steps.at(-1));
   });
-  writeFileSync(join(raw, 'web-life-steps.txt'), `${steps.join('\n')}\n`);
+  writeFileSync(join(raw, `web-${named}-steps.txt`), `${steps.join('\n')}\n`);
   if (problems.length > 0) {
     console.error(`the pages said:\n${problems.join('\n')}`);
     process.exitCode = 1;

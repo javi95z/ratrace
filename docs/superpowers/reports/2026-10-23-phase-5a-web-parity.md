@@ -238,6 +238,30 @@ runs found what the script then learned: a sheet over the game (closed now as a 
 own (the life is checked by its words and in the store). One found a fault of the app's web, fixed: Play listened to Android's Back through
 `BackHandler`, which react-native-web answers with a console error, shown in development as a toast over the bar of the next step.
 
+## The same life on the export
+
+The final fix wave (review I1) ran the same life on the export the site will serve instead of Metro's development server:
+`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts --export`. The run makes the export itself (`npx expo export --platform web`
+into a temporary folder, with the size check's `exportEnv`: no `EXPO_PUBLIC_SUPABASE_*` nor Turnstile key), serves it on 8091 as a static
+host serves it (`serveExport` in `scripts/webLife.ts`: any path that names no file is the app's page, `index.html`, so `/records` and `/play` load
+the router; a file is served as itself with its type; a missing file is a 404, never the page), runs the same steps, then stops the server and
+removes the folder. The release paths the development server never takes (`__DEV__` false, `NODE_ENV=production`, minified, the export's asset
+paths for sprites and fonts) all ran. The last run (exit 0), its pictures `phase-5a-web-parity/life-export-<n>-*.png`:
+
+1. Next web (3021): the nurse begun, round 1; played to round 3. Read from its origin: `currentGame` 1, `profile` 1, `runs` 0, no localStorage
+   key. The life `8204bb97-f883-492f-b693-c01afd8d57d0`, round 3; 2 records written into the 8091 origin before its first load.
+2. The app's web export (8091), built by the run with no project: the front door offers to continue the life (sprites, fonts and the
+   rat drawn from the export's own asset paths); Continue reaches round 3; played to the end; the records list the nurse's life; the 8091
+   origin keeps that finished life (`runs` 1 of 1, same id and seed) and the same life, ended, in `currentGame`.
+3. The older rules: all 18 of `apps/web/public/rules` answered at `/rules/` with `200 text/javascript`, and `/rules/v0.30.0-1.30.0.js` loaded in
+   the page as the game's loader loads it (a module of the page's origin, 14 exports).
+4. Nothing left this machine from the export; the Next web asked only va.vercel-scripts.com (kept from it). Neither page threw nor wrote a
+   console error.
+
+Nothing broke in the export, so the wave fixed nothing in it. Offline, the release-only senders have nothing to send through: `track.ts` counts
+through the cloud the account connected, and `watchErrors` is started only for a cloud with a project. The review recommends one export run on
+the fake project (`scripts/fakeCloud.ts`) before the preview, so that they are seen sending to something. That run is 5b's.
+
 ## The Next web's shots, shot again
 
 The comparison reads the Next web's shots in `phase-2-parity/`, where the phone's comparison reads them, and the `web` step writes them there. This
@@ -268,7 +292,8 @@ provider was already in the bundle.)
   fraction (`ui/layoutTop.web.ts`). No other scene showed it; a layout read to place something drawn (the coins' flight, a row's reveal) may be a
   pixel off on the web.
 - **A sign on a Russian page** (the ← of `end-ru`, above).
-- **The development server only.** The shots and the whole life ran on `expo start --web` (its `/scene` route is `__DEV__`); the export itself was
-  checked for weight only. 5b's preview deployment is the first place the exported page runs.
+- **The scenes on the development server only.** The scenes' shots ran on `expo start --web` (its `/scene` route is `__DEV__`). The whole life ran on
+  both the development server and the export (`web-life.ts --export`, above), offline. The export has not yet run on the fake project (its
+  release-only senders seen sending): that comes before 5b's preview.
 - **Next.js's dev server** stopped now and then to recommend an upgrade of Next.js (a security notice of its own, in `.kit-shots/web-server.log`);
   the shots' driver starts it again, as it was built to. Nothing was upgraded: that is the user's call, on `dev`.
