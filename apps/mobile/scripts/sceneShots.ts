@@ -418,11 +418,9 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-history': {
-    // 17 against phase 3's shots of the web, 20 against phase 5a's (2026-10-23) with the phone's shots unchanged: the web's own rats differ by a few
-    // pixels from one shot to the next. The most measured and the spread again.
-    shape: 20 + 3,
+    shape: 17,
     oneSided: 0,
-    reason: 'The rats of the game\'s players in its sheet, pictures at a fraction of a point, a device pixel apart; the web\'s own shots of them differ by a few pixels from one shot to the next (17 and 20 measured).',
+    reason: 'The rats of the game\'s players in its sheet, pictures at a fraction of a point, a device pixel apart.',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
 };

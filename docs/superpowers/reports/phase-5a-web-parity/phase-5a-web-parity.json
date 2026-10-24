@@ -42,7 +42,7 @@
   {"scene":"finance-lifestyle","locale":"en","verdict":"clean","rawPercent":3.97,"beyondPercent":0.017,"loose":140,"shape":0,"shapeBlended":0,"textLines":47,"unmeasured":4,"oneSided":0,"worstPt":0.33},
   {"scene":"finance-move","locale":"en","verdict":"clean","rawPercent":0.09,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":72,"unmeasured":47,"oneSided":0,"worstPt":0},
   {"scene":"play-cards-city","locale":"en","verdict":"clean","rawPercent":0.03,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":50,"unmeasured":37,"oneSided":0,"worstPt":0},
-  {"scene":"work-panel","locale":"en","verdict":"clean","rawPercent":4.67,"beyondPercent":0.018,"loose":128,"shape":0,"shapeBlended":0,"textLines":33,"unmeasured":0,"oneSided":0,"worstPt":0.33},
+  {"scene":"work-panel","locale":"en","verdict":"clean","rawPercent":4.66,"beyondPercent":0.018,"loose":128,"shape":0,"shapeBlended":0,"textLines":33,"unmeasured":0,"oneSided":0,"worstPt":0.33},
   {"scene":"finance-shop","locale":"en","verdict":"clean","rawPercent":4.78,"beyondPercent":0.017,"loose":142,"shape":0,"shapeBlended":0,"textLines":50,"unmeasured":6,"oneSided":0,"worstPt":0.33},
   {"scene":"finance-item","locale":"en","verdict":"clean","rawPercent":0.04,"beyondPercent":0.02,"loose":226,"shape":0,"shapeBlended":0,"textLines":71,"unmeasured":50,"oneSided":0,"worstPt":0},
   {"scene":"finance-taxes","locale":"en","verdict":"clean","rawPercent":3.94,"beyondPercent":0.017,"loose":140,"shape":0,"shapeBlended":0,"textLines":48,"unmeasured":4,"oneSided":0,"worstPt":0.33},
@@ -62,7 +62,7 @@
   {"scene":"records-three","locale":"en","verdict":"clean","rawPercent":10.52,"beyondPercent":0,"loose":4,"shape":0,"shapeBlended":0,"textLines":28,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"records-detail","locale":"en","verdict":"clean","rawPercent":0,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":42,"unmeasured":28,"oneSided":0,"worstPt":0},
   {"scene":"collection-items","locale":"en","verdict":"clean","rawPercent":7.74,"beyondPercent":0.001,"loose":10,"shape":0,"shapeBlended":0,"textLines":14,"unmeasured":0,"oneSided":0,"worstPt":0},
-  {"scene":"collection-badges","locale":"en","verdict":"clean","rawPercent":7.88,"beyondPercent":0.001,"loose":7,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":0,"oneSided":0,"worstPt":0},
+  {"scene":"collection-badges","locale":"en","verdict":"clean","rawPercent":7.92,"beyondPercent":0.001,"loose":7,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"profile-financed","locale":"en","verdict":"clean","rawPercent":0,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":95,"unmeasured":77,"oneSided":0,"worstPt":0},
   {"scene":"settings-account-guest","locale":"en","verdict":"clean","rawPercent":0.01,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":31,"unmeasured":17,"oneSided":0,"worstPt":0},
   {"scene":"settings-account-member","locale":"en","verdict":"clean","rawPercent":0,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":35,"unmeasured":19,"oneSided":0,"worstPt":0},
@@ -77,10 +77,10 @@
   {"scene":"player-editor-body","locale":"en","verdict":"clean","rawPercent":8.47,"beyondPercent":0.001,"loose":18,"shape":0,"shapeBlended":0,"textLines":7,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"player-editor-wear","locale":"en","verdict":"clean","rawPercent":1.9,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":10,"unmeasured":1,"oneSided":0,"worstPt":0},
   {"scene":"player-editor-scene","locale":"en","verdict":"clean","rawPercent":8.47,"beyondPercent":0.001,"loose":18,"shape":0,"shapeBlended":0,"textLines":8,"unmeasured":0,"oneSided":0,"worstPt":0},
-  {"scene":"player-friend-code","locale":"en","verdict":"accepted","rawPercent":4.22,"beyondPercent":0.019,"loose":221,"shape":30,"shapeBlended":0,"textLines":27,"unmeasured":1,"oneSided":0,"worstPt":0.33},
+  {"scene":"player-friend-code","locale":"en","verdict":"accepted","rawPercent":4.23,"beyondPercent":0.019,"loose":221,"shape":30,"shapeBlended":0,"textLines":27,"unmeasured":1,"oneSided":0,"worstPt":0.33},
   {"scene":"home-member","locale":"en","verdict":"clean","rawPercent":7.69,"beyondPercent":0,"loose":3,"shape":0,"shapeBlended":0,"textLines":20,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"challenge-attempt","locale":"en","verdict":"clean","rawPercent":7.35,"beyondPercent":0.002,"loose":11,"shape":0,"shapeBlended":0,"textLines":18,"unmeasured":0,"oneSided":0,"worstPt":0},
-  {"scene":"challenge-played","locale":"en","verdict":"clean","rawPercent":8.13,"beyondPercent":0.001,"loose":9,"shape":0,"shapeBlended":0,"textLines":18,"unmeasured":0,"oneSided":0,"worstPt":0},
+  {"scene":"challenge-played","locale":"en","verdict":"clean","rawPercent":8.14,"beyondPercent":0.001,"loose":9,"shape":0,"shapeBlended":0,"textLines":18,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"end-standing","locale":"en","verdict":"clean","rawPercent":4.5,"beyondPercent":0.013,"loose":215,"shape":0,"shapeBlended":0,"textLines":25,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"new-ranked","locale":"en","verdict":"clean","rawPercent":11.24,"beyondPercent":0.015,"loose":204,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":1,"oneSided":0,"worstPt":0.67},
   {"scene":"room-door","locale":"en","verdict":"clean","rawPercent":13.99,"beyondPercent":0.003,"loose":35,"shape":0,"shapeBlended":0,"textLines":21,"unmeasured":0,"oneSided":0,"worstPt":0},
@@ -91,5 +91,5 @@
   {"scene":"room-loans","locale":"en","verdict":"accepted","rawPercent":3.84,"beyondPercent":0.026,"loose":239,"shape":17,"shapeBlended":15,"textLines":50,"unmeasured":5,"oneSided":0,"worstPt":0.33},
   {"scene":"room-resolved","locale":"en","verdict":"accepted","rawPercent":5.67,"beyondPercent":0.02,"loose":194,"shape":7,"shapeBlended":1,"textLines":38,"unmeasured":3,"oneSided":0,"worstPt":0.33},
   {"scene":"room-end","locale":"en","verdict":"accepted","rawPercent":4.19,"beyondPercent":0.007,"loose":86,"shape":17,"shapeBlended":15,"textLines":45,"unmeasured":0,"oneSided":0,"worstPt":0},
-  {"scene":"room-history","locale":"en","verdict":"accepted","rawPercent":0.02,"beyondPercent":0.007,"loose":89,"shape":12,"shapeBlended":11,"textLines":38,"unmeasured":15,"oneSided":0,"worstPt":0}
+  {"scene":"room-history","locale":"en","verdict":"accepted","rawPercent":0.01,"beyondPercent":0.006,"loose":86,"shape":9,"shapeBlended":8,"textLines":38,"unmeasured":15,"oneSided":0,"worstPt":0}
 ]

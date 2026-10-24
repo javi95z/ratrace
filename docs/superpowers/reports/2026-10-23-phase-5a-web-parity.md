@@ -65,7 +65,8 @@ the Next web's shots of the same day): both exit 0, with the same numbers. **73 
 moving, none in other words. Every line of text of every scene stands within a point of the Next web's (the worst 1 pt), but the arrow of `end-ru`
 (below). The raw share (any pixel unlike, by any amount) is near 12 % on a plain page: the ground's weave of dots, the Next web's radial gradient
 against the app's `dots.png` tile, a shade apart; nothing of it is beyond a device pixel and a shade. The table is the comparison over the Next web's
-shots taken last (below), whose numbers are the two runs' but `room-lobby-friends` (10, where the runs' web shots gave 5).
+shots kept in `phase-2-parity/` (below), after the paper's layer was mended (`play-guide-r1`, `room-playing`): the two runs' numbers but those two
+and `room-lobby-friends` (10, where the runs' web shots gave 5).
 
 | Scene | Verdict | Raw % | Shape px | Text lines (one shot only) | Worst pt |
 |---|---|---|---|---|---|
@@ -86,7 +87,7 @@ shots taken last (below), whose numbers are the two runs' but `room-lobby-friend
 | play-outcome-r1 | clean | 10.1 | 0 | 31 (0) | 1 |
 | play-resolve-r6 | accepted | 5.75 | 3 | 41 (0) | 0.33 |
 | play-news-r6 | accepted | 3.67 | 1 | 41 (0) | 0.33 |
-| play-guide-r1 | accepted | 4.74 | 241 | 42 (0) | 1 |
+| play-guide-r1 | accepted | 3.69 | 4 | 42 (0) | 0.33 |
 | play-fault | clean | 15.55 | 0 | 6 (0) | 0 |
 | play-pageturn | accepted | 3.64 | 365 | 51 (0) | 0.33 |
 | finance-basket | clean | 0.04 | 0 | 56 (0) | 0 |
@@ -112,7 +113,7 @@ shots taken last (below), whose numbers are the two runs' but `room-lobby-friend
 | finance-lifestyle | clean | 3.97 | 0 | 47 (0) | 0.33 |
 | finance-move | clean | 0.09 | 0 | 72 (0) | 0 |
 | play-cards-city | clean | 0.03 | 0 | 50 (0) | 0 |
-| work-panel | clean | 4.67 | 0 | 33 (0) | 0.33 |
+| work-panel | clean | 4.66 | 0 | 33 (0) | 0.33 |
 | finance-shop | clean | 4.78 | 0 | 50 (0) | 0.33 |
 | finance-item | clean | 0.04 | 0 | 71 (0) | 0 |
 | finance-taxes | clean | 3.94 | 0 | 48 (0) | 0.33 |
@@ -132,7 +133,7 @@ shots taken last (below), whose numbers are the two runs' but `room-lobby-friend
 | records-three | clean | 10.52 | 0 | 28 (0) | 0 |
 | records-detail | clean | 0 | 0 | 42 (0) | 0 |
 | collection-items | clean | 7.74 | 0 | 14 (0) | 0 |
-| collection-badges | clean | 7.88 | 0 | 29 (0) | 0 |
+| collection-badges | clean | 7.92 | 0 | 29 (0) | 0 |
 | profile-financed | clean | 0 | 0 | 95 (0) | 0 |
 | settings-account-guest | clean | 0.01 | 0 | 31 (0) | 0 |
 | settings-account-member | clean | 0 | 0 | 35 (0) | 0 |
@@ -147,21 +148,21 @@ shots taken last (below), whose numbers are the two runs' but `room-lobby-friend
 | player-editor-body | clean | 8.47 | 0 | 7 (0) | 0 |
 | player-editor-wear | clean | 1.9 | 0 | 10 (0) | 0 |
 | player-editor-scene | clean | 8.47 | 0 | 8 (0) | 0 |
-| player-friend-code | accepted | 4.22 | 30 | 27 (0) | 0.33 |
+| player-friend-code | accepted | 4.23 | 30 | 27 (0) | 0.33 |
 | home-member | clean | 7.69 | 0 | 20 (0) | 0 |
 | challenge-attempt | clean | 7.35 | 0 | 18 (0) | 0 |
-| challenge-played | clean | 8.13 | 0 | 18 (0) | 0 |
+| challenge-played | clean | 8.14 | 0 | 18 (0) | 0 |
 | end-standing | clean | 4.5 | 0 | 25 (0) | 0 |
 | new-ranked | clean | 11.24 | 0 | 29 (0) | 0.67 |
 | room-door | clean | 13.99 | 0 | 21 (0) | 0 |
 | room-lobby-friends | accepted | 7.17 | 10 | 26 (0) | 0 |
 | room-lobby-public | accepted | 7.55 | 9 | 25 (0) | 0 |
 | room-join-code | clean | 13.23 | 0 | 7 (0) | 0 |
-| room-playing | accepted | 4.84 | 99 | 43 (0) | 1 |
+| room-playing | accepted | 3.78 | 9 | 43 (0) | 0.33 |
 | room-loans | accepted | 3.84 | 17 | 50 (0) | 0.33 |
 | room-resolved | accepted | 5.67 | 7 | 38 (0) | 0.33 |
 | room-end | accepted | 4.19 | 17 | 45 (0) | 0 |
-| room-history | accepted | 0.02 | 12 | 38 (0) | 0 |
+| room-history | accepted | 0.01 | 9 | 38 (0) | 0 |
 
 
 ## Residuals of the app's web: pictures at a fraction of a point
@@ -201,11 +202,12 @@ choices, the screens that say the app's own words):
   fold of every end (`[data-backdrop="rays"]` and the route's `svg` looked for in all 93 scenes on the app's web: none in view). Those two
   drawings are held by their own tests (`ui/Rays.test.tsx`, `ui/RouteLayer.test.tsx` and their web twins'), not by a shot.
 - The rest: `challenge-*`, `player-*`, `home-*`, `legal`, `room-*`, `collection-badges`, `moment-escape`, `finance-move`,
-  `settings-account-member`, `celebrate-legendary`: clean or within their records, but `room-history` (below). `home-lost-newer` once never said
+  `settings-account-member`, `celebrate-legendary`: clean or within their records against phase 3's shots of the Next web (`room-history` measured 20 against
+  the Next web's shots re-taken, 17 against phase 3's: the web's own jitter, below). `home-lost-newer` once never said
   it was ready in 60 s on the first route after Expo Go was opened fresh, and was ready and clean when shot again.
 
-Then the whole phone comparison (`scene-shots.ts compare`, every scene, the phone's shots of phases 2 and 3 against the Next web's shots of
-today) exits 0: the phone is unchanged.
+Then the phone comparison over the Next web's shots kept in `phase-2-parity/` exits 0 with the phone's records as phase 3 left them: the phone is
+unchanged.
 
 ## A whole life in the browser
 
@@ -234,15 +236,15 @@ own (the life is checked by its words and in the store). One found a fault of th
 
 ## The Next web's shots, shot again
 
-The Next web's shots in `phase-2-parity/` were taken again by this task (`scene-shots.ts web`, the same `next dev` and Chrome) and are committed:
-the Next web as it is on `expo` today, which both comparisons read. Fifteen of them differ from phase 3's: `legal` by its words (the Next web's
-notice changed with the merge of `dev`, `a0cf71f3`), the rest by a few pixels of their pictures. The Next web's own shots of one page differ from
-one shot to the next in its pictures (a banner drawn pixel for pixel at a scale that is not whole, the rats of a row): measured over three shots,
-`room-lobby-friends` against the app's web was 5 and 10 px, and the phone's `room-history` 17 and 20 px against phase 3's and today's shots with the
-phone's shots unchanged. Their records are the most measured and the spread again (`ACCEPTED_APP_WEB['room-lobby-friends']` 15,
-`ACCEPTED['room-history']` 23, each saying so). The phone's results file was written again by the comparison over today's shots: every line as
-before but `legal` (shape 39283, within its baseline's drift) and `room-history` (20). Two full runs of the app's web were taken over the shots of
-the first web step; a third comparison over the shots taken last exits 0 too.
+The comparison reads the Next web's shots in `phase-2-parity/`, where the phone's comparison reads them, and the `web` step writes them there. This
+task took them again; of the fifteen that came out unlike phase 3's, only `legal` changed by what the Next web draws (its notice's words changed with
+the merge of `dev`, `a0cf71f3`), and only `legal`'s new shot is kept. The fourteen others differed by a few pixels of their pictures (a banner drawn
+pixel for pixel at a scale that is not whole, the rats of a row: the Next web's own shots of one page are not alike from one shot to the next), and
+are phase 3's again, with their pictures of what is unlike and their lines in the phone's results. The phone's comparison over that folder
+(`compare --only` those fifteen, the phone's shots unchanged) exits 0: every line as phase 3 left it but `legal` (shape 39283, within its
+baseline's drift), and `room-history` at its record of 17. The app's web's comparison over the same folder exits 0 too (the table above).
+The Next web's shots of one page jitter: `room-lobby-friends` against the app's web measured 5 and 10 px over its shots, and its record is the
+most measured and as much again (`ACCEPTED_APP_WEB['room-lobby-friends']` 15, saying so). The phone's records are as phase 3 left them.
 
 ## Weight
 
