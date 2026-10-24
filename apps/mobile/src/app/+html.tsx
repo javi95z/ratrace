@@ -51,6 +51,10 @@ const PAGE_STYLES = `
         outline: 3px solid #ffe9a8;
         outline-offset: 3px;
       }
+      /* The round's stage takes the focus at each step, for the keyboard to carry on from (the Next web's \`main outline-none\`): no ring round it. */
+      #round-stage:focus {
+        outline: none;
+      }
 `;
 
 /** The document a page is drawn in: `params` are its route's (`locale` the first part of its address), `children` the app's root. */

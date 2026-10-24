@@ -110,6 +110,11 @@ export function tabStop(on: boolean): Record<string, never> {
   return {};
 }
 
+/** Gives the focus to the part of the page named `id` (the round's stage), without scrolling to it. Nothing on a phone. */
+export function focusPart(id: string): void {
+  void id;
+}
+
 /** Whether a sheet is open over the page. Not asked on a phone. */
 export function dialogOpen(): boolean {
   return false;

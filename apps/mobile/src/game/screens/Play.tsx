@@ -17,7 +17,7 @@ import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useIsDesk } from '../../ui/desk';
-import { dialogOpen, pressMarked, useKeyboardContext, useKeyboardScope } from '../../ui/keyboard';
+import { dialogOpen, focusPart, pressMarked, tabStop, useKeyboardContext, useKeyboardScope } from '../../ui/keyboard';
 import { onHardwareBack } from '../../ui/hardwareBack';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { useOwnT } from '../ownWords';
@@ -412,6 +412,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   useEffect(() => {
     if (!playing) return;
     scroller.current?.reveal(0, 0, false);
+    // On the web the stage takes the focus, as the Next web's: the keyboard carries on from there (nothing on the phone).
+    focusPart('round-stage');
     if (shownStage.current !== null && shownStage.current !== stage) AccessibilityInfo.announceForAccessibility(stageName);
     shownStage.current = stage;
     // Said once a stage, in the words it has when it opens.
@@ -526,7 +528,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           {/* In a room, its bar, 8 under the Hud (the web's `pt-2`); in the finances it stands over their tabs (`FinanceLeadIn`). */}
           {bar && !finances ? bar : null}
           {/* The web's `main pt-3` under the figures, 8 of it the page's gap. In the finances that room is over their tabs, which the panel stands right under. */}
-          <View role="main" aria-label={stageName} style={finances ? { marginTop: -8 } : { paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
+          <View nativeID="round-stage" {...tabStop(false)} role="main" aria-label={stageName} style={finances ? { marginTop: -8 } : { paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
             {stageView}
             {/* In a room, under the ledger of a round, the room's order as it left it (the web's `mt-4`). */}
             {room && stage === 'resolve' ? <View style={{ marginTop: 16 }}>{room.resolved}</View> : null}

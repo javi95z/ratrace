@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode } from 'react';
+import { useImperativeHandle, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';
@@ -145,11 +145,6 @@ export function PlayDesk({ stage, heading, stageName, bar, main, actions, fixed,
     }),
     [],
   );
-  // A new stage takes the focus, so a screen reader says where the player now is and the keyboard carries on from there (the web's).
-  useEffect(() => {
-    document.getElementById('round-stage')?.focus({ preventScroll: true });
-  }, [stage]);
-
   const finances = stage === 'finance';
   const art = Math.min(columns.middle, STAGE.max) >= STAGE.artFrom ? 2 : 1;
   const column: ViewStyle = { width: '100%', maxWidth: STAGE.max, alignSelf: 'center' };

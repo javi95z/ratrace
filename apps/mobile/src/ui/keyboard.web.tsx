@@ -204,6 +204,11 @@ export function pressMarked(mark: string, value?: string | number): boolean {
   return true;
 }
 
+/** Gives the focus to the part of the page named `id` (the round's stage), without scrolling to it: a screen reader says where the player now is. */
+export function focusPart(id: string): void {
+  document.getElementById(id)?.focus({ preventScroll: true });
+}
+
 /** The mark of what has the focus (its `data-<mark>`), or null. */
 export function focusedMark(mark: string): string | null {
   const active = document.activeElement;
