@@ -1,10 +1,8 @@
 import { useImperativeHandle, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, View, useWindowDimensions, type ScrollViewInstance, type ViewStyle } from 'react-native';
-import { Framed } from '../../ui/Frame';
+import { ScrollView, View, useWindowDimensions, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import { Panel, SrOnly } from '../../ui/kit';
 import { KEYBOARD, scrollToShow } from '../../ui/Page';
 import { ArtScale } from '../../ui/Sprite';
-import { PixelText } from '../../ui/text';
 import { COLORS, GUTTER } from '../../ui/theme';
 import { useT } from '../context';
 import { BasketList } from './Finance';
@@ -12,6 +10,7 @@ import { Hud } from './Hud';
 import { Headlines } from './News';
 import type { PlayDeskProps } from './PlayDesk';
 import { Leave, ProfileBody } from './Profile';
+import { SkipLinks } from './SkipLinks';
 
 export type { PlayDeskProps } from './PlayDesk';
 
@@ -49,54 +48,6 @@ const STAGE = { max: 680, artFrom: 640 } as const;
 
 /** CSS react-native-web passes through that React Native's types do not name: `position: sticky`, `fixed`. */
 const css = (style: Record<string, unknown>): ViewStyle => style as ViewStyle;
-
-/** A skip link: a gold button that leads the focus to a part of the page (`id`), drawn only while it, or another of them, has the focus. */
-function SkipLink({ target, label, onFocus, onBlur }: { target: string; label: string; onFocus(): void; onBlur(): void }) {
-  return (
-    <Pressable
-      accessibilityRole="link"
-      onFocus={onFocus}
-      onBlur={onBlur}
-      onPress={() => {
-        // The address is left as it is (no `#`): the router would take a new hash for a page to open.
-        const to = document.getElementById(target);
-        to?.focus();
-        to?.scrollIntoView?.({ block: 'nearest' });
-      }}
-    >
-      <Framed kind="raised" style={{ backgroundColor: COLORS['gold-500'], paddingHorizontal: 12, paddingVertical: 8 }}>
-        <PixelText tone="ink-900">{label}</PixelText>
-      </Framed>
-    </Pressable>
-  );
-}
-
-/** The skip links of the desk, in the web's order: the round, the profile, the news, the orders (in the finances), the round's actions. */
-function SkipLinks({ finance, actions }: { finance: boolean; actions: boolean }) {
-  const t = useT('keyboard.skip');
-  const [focused, setFocused] = useState(0);
-  const on = () => setFocused((n) => n + 1);
-  const off = () => setFocused((n) => Math.max(0, n - 1));
-  const links: Array<[string, string]> = [
-    ['round-stage', t('stage')],
-    ['player-profile', t('profile')],
-    ['round-news', t('news')],
-    ...(finance ? ([['round-orders', t('orders')]] as Array<[string, string]>) : []),
-    ...(actions ? ([['round-actions', t('actions')]] as Array<[string, string]>) : []),
-  ];
-  return (
-    // The web's `.skip-links`: fixed 12 from the top left, over everything, lifted out of sight until one of them has the focus (`:focus-within`).
-    <View
-      role="navigation"
-      aria-label={t('stage')}
-      style={css({ position: 'fixed', left: 12, top: 12, zIndex: 80, flexDirection: 'row', gap: 8, transform: focused > 0 ? 'translateY(0)' : 'translateY(-180%)' })}
-    >
-      {links.map(([target, label]) => (
-        <SkipLink key={target} target={target} label={label} onFocus={on} onBlur={off} />
-      ))}
-    </View>
-  );
-}
 
 /** A side column: sticky to the top of the window, as tall as it at most, scrolling on its own, its scrollbar hidden. */
 function Aside({ id, label, width, height, style, children }: { id: string; label: string; width: number; height: number; style: ViewStyle; children: ReactNode }) {
@@ -162,7 +113,7 @@ export function PlayDesk({ stage, heading, stageName, bar, main, actions, fixed,
         style={{ flex: 1 }}
         contentContainerStyle={{ width: '100%', maxWidth: GRID.max, alignSelf: 'center', minHeight: window.height, flexDirection: 'row', gap: GRID.gap, paddingHorizontal: GRID.pad }}
       >
-        <SkipLinks finance={finances} actions={actions !== null} />
+        <SkipLinks desk finance={finances} actions={actions !== null} />
         <Aside id="player-profile" label={profile('title')} width={columns.left} height={window.height} style={{ paddingTop: 8, paddingBottom: 20 }}>
           <View accessibilityRole="header" style={{ position: 'absolute' }}>
             <SrOnly>{heading}</SrOnly>

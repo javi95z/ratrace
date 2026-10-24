@@ -4,6 +4,7 @@ import { FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, View, type
 import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
+import { tabStop } from './keyboard';
 import { COLORS, GUTTER, SHELL_WIDTH } from './theme';
 
 /** The ground: dots.png (6 pt tile; @2x/@3x picked by the device) repeated, never stretched. */
@@ -292,10 +293,12 @@ export function ListScreen<T>({
  * round `mx-auto w-full max-w-md px-3`): night-900 across the whole width, its side insets padded, 12 on top and the
  * larger of 12 and the bottom inset below, and what it holds in the 448 column with the gutter.
  */
-export function BottomBar({ children }: { children: ReactNode }) {
+export function BottomBar({ children, id }: { children: ReactNode; /** On the web, where the keyboard can be led to it (a skip link's target). */ id?: string }) {
   const inset = useSafeAreaInsets();
   return (
     <View
+      nativeID={id}
+      {...(id === undefined ? null : tabStop(false))}
       style={{
         backgroundColor: COLORS['night-900'],
         paddingTop: 12,

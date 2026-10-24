@@ -32,6 +32,7 @@ import { NewsPanel, RoundOpener } from './News';
 import { PageTurn } from './PageTurn';
 import { End } from './End';
 import { PlayDesk, StuckTop } from './PlayDesk';
+import { SkipLinks } from './SkipLinks';
 import { ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
 import { useGo } from '../pages';
@@ -503,13 +504,15 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           bar={
             hasActions ? (
               // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
-              <BottomBar>
+              <BottomBar id="round-actions">
                 {actions}
               </BottomBar>
             ) : null
           }
           fixed={
             <>
+              {/* On the web, the keyboard's way to the round and to its actions (nothing on the phone). */}
+              <SkipLinks finance={finances} actions={hasActions} />
               <CoinFlights />
               {notice}
               {finances ? <FinanceToasts /> : null}

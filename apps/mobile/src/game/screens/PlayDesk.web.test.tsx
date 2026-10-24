@@ -100,10 +100,16 @@ describe('a life at desk width', () => {
     expect(document.getElementById('round-actions')?.style.position).toBe('sticky');
   });
 
-  it('is the phone\'s one column under the desk\'s width', async () => {
+  it('is the phone\'s one column under the desk\'s width, with the skip links to the round and to its actions', async () => {
     await playingAt(1000);
     expect(screen.queryByRole('complementary')).toBeNull();
-    expect(screen.queryByRole('navigation')).toBeNull();
     expect(screen.getByRole('button', { name: 'Open your profile' })).toBeTruthy();
+    const nav = screen.getByRole('navigation');
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((link) => link.textContent)).toEqual(['Skip to the round', 'Skip to round actions']);
+    fireEvent.click(links[1]);
+    expect(document.activeElement).toBe(document.getElementById('round-actions'));
+    fireEvent.click(links[0]);
+    expect(document.activeElement).toBe(screen.getByRole('main'));
   });
 });
