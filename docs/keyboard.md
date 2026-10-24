@@ -75,7 +75,8 @@ controls are react-native-web's:
 A composite control hears its own keys where it stands (`onKeys`). React bubbles events out of a
 portal through the components that drew it, so a sheet opened from inside a control would hand its
 keys to that control: `onKeys` leaves alone a key whose target is inside a sheet the control is not
-in. Sheets are dialogs as the Next web's are (`apps/mobile/src/ui/sheetDialog.web.ts`): the panel is
-named by the title and takes the focus (or its Close, or an amount's slider), the backdrop is no Tab
-stop, the page behind is inert while any sheet is open, a focused row taken out hands the focus to
+in. Sheets are dialogs as the Next web's are (`apps/mobile/src/ui/sheetDialog.web.tsx`): the one
+dialog (react-native-web's Modal's) is named by the title, the panel takes the focus (or its Close,
+or an amount's slider), Tab goes round the panel's controls, the backdrop can take no focus, the
+page behind is inert while any sheet is open, a focused row taken out hands the focus to
 the row in its place, and the focus goes back to the opener when the sheet closes.

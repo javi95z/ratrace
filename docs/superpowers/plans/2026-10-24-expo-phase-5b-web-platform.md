@@ -114,7 +114,7 @@ Plan 5a's Global Constraints hold (`docs/superpowers/plans/2026-10-23-expo-phase
 - Create: `apps/mobile/src/ui/desk.ts` (+ `.web.ts`): `useIsDesk()` (phone: false; web: `(min-width: 64rem)`)
 - Modify: `game/screens/Play.tsx` (three columns at desk width as `apps/web/src/game/screens/Play.tsx:230,322-360`: `max-w 1480`, columns `minmax(280px,372px)` / `minmax(360px,1fr)` / `minmax(260px,340px)`, sticky profile and news asides, the stage `max-w 680` with art at 2× from 640 px, skip links), `ui/Sheet` (centred at desk width), `End.tsx` (two columns at `lg`), page widths (`max-w-md`: Home, NewLife, Challenge, PlayerProfile; `max-w-2xl`: Rankings, Records, Collection, Legal)
 - Create: `apps/mobile/src/ui/keyboard.web.tsx` — the Next web's shortcuts and `?` sheet (`apps/web/src/ui/keyboard.tsx`, `docs/keyboard.md`)
-- Create: `apps/mobile/src/ui/back.web.ts` additions — the browser's Back closes an open sheet (`history.pushState` mark + `popstate`, as `apps/web/src/ui/back.ts`), 5a final review
+- Create: `apps/mobile/src/ui/sheetHistory.web.ts` (used by `ui/back.ts`; the phone's `sheetHistory.ts` does nothing) — the browser's Back closes an open sheet (`history.pushState` mark + `popstate`, as `apps/web/src/ui/back.ts`), 5a final review
 
 - [ ] **Step 1–5:** tests: Play at 1280 px wide has three columns in that order with the skip links; a sheet at desk width is centred; Back with a sheet open closes the sheet and stays on the page; each shortcut of `docs/keyboard.md` does its action; run, implement, run (also the `appweb` shots at 1280 px for Play, End, Rankings beside the Next web's), commit (`feat(mobile): the web at desk width, with the keyboard and Back`).
 

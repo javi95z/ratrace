@@ -5,14 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
 import { useIsDesk } from './desk';
 import { focusMarked, onKeys, tabStop } from './keyboard';
-import { holdSheet, sheetPanelProps, sheetRootProps } from './sheetDialog';
+import { holdSheet, SheetBackdrop, sheetModalProps, sheetPanelProps, sheetRootProps } from './sheetDialog';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
 import { pressDown, usePress } from './kit';
 import { PerfDrawn, perfSheet, perfTouched } from './perf';
 import { PixelText, ReadText } from './text';
-import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
+import { COLORS, SHELL_WIDTH, TOUCH } from './theme';
 
 /*
  * What is drawn over everything: the toasts being shown, and the sheets open, kept outside React. The web's toast stands over its sheets (z 60
@@ -252,8 +252,9 @@ function SheetPanel({
   initialFocus: InitialFocus;
   children: ReactNode;
 }) {
-  // The dialog on the web (`sheetDialog.web.ts`): the panel, named by its title, takes the focus as it is shown (or its Close, or what the sheet
-  // names), and the page behind it is inert while it is open. Nothing more on the phone, where the sheet's window is modal to the screen reader.
+  // The dialog on the web (`sheetDialog.web.tsx`): the Modal's own, named by the title; the panel takes the focus as it is shown (or its Close, or
+  // what the sheet names), Tab goes round it, and the page behind it is inert while it is open. Nothing more on the phone, where the sheet's window
+  // is modal to the screen reader.
   const titleId = useId();
   const panel = useRef<HostInstance>(null);
   const closeButton = useRef<HostInstance>(null);
@@ -327,7 +328,7 @@ function SheetPanel({
   }, [open, dismissed, me]);
 
   return (
-    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
+    <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
       {/*
        * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
        * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.
@@ -344,20 +345,10 @@ function SheetPanel({
         >
           {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
           <PerfDrawn name={`sheet: ${title}`} />
-          <Pressable
-            testID="sheet-backdrop"
-            accessible={false}
-            // Never the focus's, nor a screen reader's (react-native-web would make a pressable a Tab stop): the panel is the sheet.
-            focusable={false}
-            {...tabStop(false)}
-            aria-hidden
-            importantForAccessibility="no"
-            onPress={onClose}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
-          />
+          <SheetBackdrop onClose={onClose} />
           {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
           <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
-            <View ref={panel} {...sheetPanelProps(titleId)} style={{ flexShrink: 1, minHeight: 0 }}>
+            <View ref={panel} {...sheetPanelProps()} style={{ flexShrink: 1, minHeight: 0 }}>
               <Framed
                 kind="bevel"
                 tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}

@@ -428,9 +428,10 @@ export function CardStage() {
     if (!keyboard || def === undefined || first === undefined) return;
     const frame = requestAnimationFrame(() => focusMarked('card-option', first));
     return () => cancelAnimationFrame(frame);
-    // The card deliberately takes the focus to its first choice; which are shown belongs to that card.
+    // The card deliberately takes the focus to its first choice; which are shown belongs to that card. Once an answer on its way is given up (the
+    // card back, still busy for a moment: a server that never answered), the first choice takes it again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [def?.id, keyboard]);
+  }, [def?.id, keyboard, busy]);
   if (!view || !def) return null;
 
   const written = text.cards[def.id];

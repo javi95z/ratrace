@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { Unreachable } from '@ratrace/core/session/errors';
+import type { GameSession } from '@ratrace/core/session/types';
 import { memoryServices, renderGame } from '../../testing/render';
 import { KeyboardControls } from '../KeyboardHelp';
 import { Play } from './Play';
@@ -72,7 +74,7 @@ describe('a life played with the keyboard', () => {
     await waitFor(() => expect(stageName()).toMatch(/^Card 1 of/));
     fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));
     const sheet = await screen.findByRole('dialog', { name: 'Settings' });
-    await waitFor(() => expect(document.activeElement).toBe(sheet));
+    await waitFor(() => expect(document.activeElement).toBe(sheet.querySelector('[data-sheet-panel]')));
     await key({ key: '1' }, document.body);
     await key({ key: 'ArrowDown' }, document.body);
     expect(stageName()).toMatch(/^Card 1 of/);
@@ -147,5 +149,37 @@ describe('a life played with the keyboard', () => {
     await key({ key: '?' }, document.body);
     const sheet = (await screen.findByRole('heading', { name: 'Keyboard controls' })).closest('[aria-modal="true"]') as HTMLElement;
     expect(within(sheet).getByText(words('[ / ]'))).toBeTruthy();
+  });
+
+  it('puts the first choice in focus again once a card comes back from an answer the server never gave (busy until then)', async () => {
+    const services = memoryServices();
+    const real = await services.sessions.start('nurse');
+    // A ranked life: the answer is the server's, and this one never comes back. The card turns, then returns, still busy, to be answered again.
+    const served: GameSession = {
+      gameId: real.gameId, lifeId: real.lifeId, served: true, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [],
+      answerCard: async () => {
+        await new Promise((done) => setTimeout(done, 300));
+        throw new Unreachable();
+      },
+      playRound: (choices) => real.playRound(choices),
+    };
+    services.sessions.resume = async () => ({ lost: null, session: served });
+    renderGame(
+      <>
+        <KeyboardControls />
+        <Play />
+      </>,
+      services,
+    );
+    await waitFor(() => expect(stageName()).toBe('News'));
+    await key({ key: 'Enter', ctrlKey: true });
+    await waitFor(() => expect(stageName()).toMatch(/^Card 1 of/));
+    const first = () => within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0];
+    await waitFor(() => expect(document.activeElement).toBe(first()));
+    await key({ key: '1' });
+    await waitFor(() => expect(stageName()).toBe('What happened'));
+    // Back on the card, and once the answer is given up, the first choice has the focus again.
+    await waitFor(() => expect(stageName()).toMatch(/^Card 1 of/), { timeout: 3000 });
+    await waitFor(() => expect(document.activeElement).toBe(first()), { timeout: 3000 });
   });
 });
