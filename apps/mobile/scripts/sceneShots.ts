@@ -535,16 +535,16 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'play-guide-r1': {
-    shape: 241,
+    shape: 4,
     oneSided: 0,
-    reason: 'The tops of the letters of the paper\'s last line, under the bar of the next step, peek over the bar\'s edge a device pixel apart (finance-taxes\'s class on the phone); and the four pixels of the city\'s picture of play-news-r1.',
-    report: 'Residuals of the app\'s web: what lies under the bar of the next step',
+    reason: 'The four pixels of the city\'s picture of play-news-r1. (The paper\'s rows under the guide\'s note, a device pixel or two apart, were Chrome\'s layer of the Next web\'s thrown paper: kept on the app\'s web too, ui/keptLayer.web.ts.)',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-playing': {
-    shape: 99,
+    shape: 9,
     oneSided: 0,
-    reason: 'The tops of the letters of a line under the bar of the next step, as in play-guide-r1, and a pixel of the city\'s picture.',
-    report: 'Residuals of the app\'s web: what lies under the bar of the next step',
+    reason: 'A pixel of the city\'s picture, and eight of the rats of the room\'s bar, as in room-resolved. (The paper\'s rows under the room\'s slot: as in play-guide-r1, mended.)',
+    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'play-pageturn': {
     shape: 365,

@@ -9,6 +9,7 @@ import { View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { DashedRule } from '../../ui/DashedRule';
 import { usePaper } from '../../ui/animations';
+import { KEPT_LAYER } from '../../ui/keptLayer';
 import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';
 import { RatAvatar } from '../../ui/RatAvatar';
@@ -145,7 +146,8 @@ const SHADOW_FOOT: ViewStyle = { position: 'absolute', left: 4, right: 0, bottom
 /** A newspaper, thrown onto the table once a round, spinning: masthead, the double rule of its border, and its stories. */
 function Paper({ children }: { children: ReactNode }) {
   const paper = usePaper();
-  return <Animated.View style={paper}>{children}</Animated.View>;
+  // A layer of its own on the web, as Chrome keeps the Next web's paper once thrown (ui/keptLayer.web.ts); nothing more on the phone.
+  return <Animated.View style={[paper, KEPT_LAYER]}>{children}</Animated.View>;
 }
 
 /** The headlines about the next two years, and the gauges of the economy. */

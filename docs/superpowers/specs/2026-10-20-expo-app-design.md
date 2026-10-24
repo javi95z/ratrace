@@ -226,12 +226,13 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
    (viewport, body). `web:size`: 1.17 MB gzip of the app's JavaScript (budget 1.35 MB), no `.wasm`, none of Skia, SQLite,
    formatjs's polyfills, the webview, the media library or the bundled older rules. Its ninety-three scenes were shot in the same Chrome as the
    Next web's (`scene-shots.ts appweb`, `compare --against=appweb`): 73 clean and 20 within
-   a recorded and measured residual (a picture's edge at a fraction of a point, letters under the bar,
-   the Next web's own lamp sliver, an arrow on a Russian page); two full runs exit 0.
+   a recorded and measured residual (a picture's edge at a fraction of a point, the Next web's own lamp
+   sliver, an arrow on a Russian page); two full runs exit 0.
    The shots found and fixed, in shared kit code with the phone unchanged, what a browser lays out
    otherwise than iOS (the line a text is set from, a span's and a fallback run's line, Chrome's
    1/64 px rounding of a ratio line, whole-pixel `onLayout`, an emoji's and a system sign's font
-   and size, CSS underlines, a blend isolated by react-native-web's `z-index: 0`, the safe areas
+   and size, CSS underlines, a blend isolated by react-native-web's `z-index: 0`, the layer Chrome keeps for a
+   box whose animation keeps its last frame, the safe areas
    expo-router gives the web as zero, `BackHandler` on the web). A whole life was begun on the Next
    web, its saves copied into the app's web's origin, continued there from the same round and
    finished, the records keeping it (`scripts/web-life.ts`). The phone's scenes whose drawing the

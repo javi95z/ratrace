@@ -55,6 +55,7 @@ shot again. In the order they were found:
 | The rat's choices 0.3 pt high (phase 2's unexplained editor residual). | react-native-web tells a layout in whole pixels (`offsetTop`): the grid under its heading (14.296875 + 6) was placed at 20, not 20.296875. | `ui/layoutTop(.web).ts`, used by the editor's grids. |
 | The rat's body cut on other pixels. | The clip, a mask, was scaled pixel for pixel; the Next web's mask is smooth. | `RatAvatar.web.tsx`: no `image-rendering` on the mask. |
 | The web said "update the app", "this phone", and the phone's legal notice. | The phone's own words (`phone.*`). | `game/ownWords(.web).ts`: on the web the Next web's (`home.*`, `common.notSaved`, `play.moved`, `legal`). |
+| The paper's rows one or two device pixels off, each by its own amount, under the guide's note or a room's slot (`play-guide-r1` 241 px, `room-playing` 99), never under nothing (`play-news-r1`). | Measured with `getBoundingClientRect`, every line of both pages stands at the same place to 0.001 px. The paper sits under a block of a fractional height (576.484 pt). The Next web's paper is thrown by a CSS animation that keeps its last frame (`animate-paper`, `both`), and Chrome keeps such a box a layer of its own, rastering its lines against the layer. The app's paper ends on a still transform, which Chrome rasters with the page. With the layer forced in the page, the paper's unlike pixels fell from 34 532 to 5 024. | `ui/keptLayer(.web).ts`: `will-change: transform` on the paper on the web (241 → 4 px, 99 → 9). |
 | A workplace's screens, a banner, never still. | A `Loop` plays on both webs; Chrome now and then rasters a picture at a scale that is not whole on other pixels for one shot, nothing of the page changed. | The loops' boxes are allowed to turn (`changedWithin`); twice the tries to stand still. |
 
 ## Results
@@ -169,12 +170,8 @@ A picture laid at a fraction of a point (a rat in a row, the city's picture in t
 1/64 px on both sides (measured with `getBoundingClientRect`), and is drawn nearest-neighbour from its art: a few of its edge pixels are sampled on
 the next device row. `rankings-friends` (17), `room-lobby-friends` (5 and 10 over the Next web's shots of one page, recorded 15), `room-lobby-public` (14), `room-loans` (17), `room-resolved` (7), `room-end`
 (17), `room-history` (12): the rats. `play-news-r1` (4), `play-news-r6` (1), `hud-news-r1` (4), `play-resolve-r6` (3), `finance-business` (4): the
-city's picture and a picture's edge. `celebrate-earned` (230): the last row of the light under the last card, the width of the page.
-
-## Residuals of the app's web: what lies under the bar of the next step
-
-The tops of the letters of a line the bar of the next step covers (covered at its middle, so no text to the check) peek over the bar's edge a device
-pixel apart: `play-guide-r1` (241, and the city's four pixels), `room-playing` (99). The phone's `finance-taxes` class.
+city's picture and a picture's edge. `celebrate-earned` (230): the last row of the light under the last card, the width of the page. `play-guide-r1` (4): the city's four pixels;
+`room-playing` (9): a pixel of the city's picture and eight of the rats of the room's bar.
 
 ## Residuals of the app's web: the Next web's own
 
