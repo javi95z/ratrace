@@ -17,6 +17,7 @@ import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '.
 import { Sheet } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { Rising } from '../../ui/Rising';
+import { useIsDesk } from '../../ui/desk';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -139,6 +140,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const words = useWords();
   const { content, text, names, fmt } = words;
   const go = useGo();
+  // Two columns from the web's `lg` (its desk width), on a browser's wide screen.
+  const desk = useIsDesk();
   // The panels under the first screen come once the first are on it.
   const rest = useDrawnFirst();
   const history = useGame((s) => s.history);
@@ -203,11 +206,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const fresh = earned.filter(isNew).length;
   const route = routeOf(lifeId, story);
 
-  return (
-    // The web's `main mx-auto w-full max-w-md px-3 pb-8 pt-6`, its two columns one on a phone: everything in it 16 apart (the columns' `gap-4`).
-    <Screen contentStyle={{ gap: 16, paddingTop: 24, paddingBottom: 32 }}>
-      <PerfDrawn name="stage: end" />
-      {extra ? <View>{extra}</View> : null}
+  // The verdict on the life: who, the last picture, the score, what it earned for the first time, the week's attempt, its tale.
+  const verdict = (
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ marginVertical: 6, marginLeft: 6, flexShrink: 0 }}>
           <Framed kind="double" tone={{ ring: 'gold-500' }}>
@@ -346,7 +347,11 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
           </Rising>
         </Panel>
       ) : null}
-
+    </>
+  );
+  // The life in figures, and the ways on.
+  const figures = (
+    <>
       {/* The panels under the first screen, once the first are on it (ui/drawnFirst.ts): the figures, the map, the rivals, the line of the life and
           its badges are some thirty pictures and charts, and all of the page at once kept the end from the screen for them (measured, the parity
           report's performance part). The share card and the ways out under them come with them: put in before them, they would be pushed down
@@ -401,6 +406,25 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
           </View>
         </>
       ) : null}
+    </>
+  );
+  return (
+    // The web's `main mx-auto w-full max-w-md px-3 pb-8 pt-6 lg:max-w-5xl`: everything in it 16 apart (the columns' `gap-4`), its two columns one
+    // on a phone, and side by side from `lg` on a browser's wide screen (`lg:grid-cols-2 lg:items-start`), in a column of at most 1024.
+    <Screen width={desk ? 1024 : undefined} contentStyle={{ gap: 16, paddingTop: 24, paddingBottom: 32 }}>
+      <PerfDrawn name="stage: end" />
+      {extra ? <View>{extra}</View> : null}
+      {desk ? (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
+          <View style={{ flex: 1, minWidth: 0, gap: 16 }}>{verdict}</View>
+          <View style={{ flex: 1, minWidth: 0, gap: 16 }}>{figures}</View>
+        </View>
+      ) : (
+        <>
+          {verdict}
+          {figures}
+        </>
+      )}
     </Screen>
   );
 }

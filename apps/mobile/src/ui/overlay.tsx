@@ -3,6 +3,7 @@ import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pre
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
+import { useIsDesk } from './desk';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -103,7 +104,7 @@ function endTurnOnceGone(id: number): void {
 }
 
 /**
- * A panel that comes up from the bottom over a dimmed page (the web's Sheet): the backdrop closes it,
+ * A panel that comes up from the bottom over a dimmed page (the web's Sheet), in the middle of a browser's wide screen: the backdrop closes it,
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
  * `back` is the web's history-back switch and has no effect on native: Back always closes an open sheet.
  * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine.
@@ -208,6 +209,8 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
     Keyboard.dismiss();
   }, []);
   const { height } = useWindowDimensions();
+  // In the middle of a browser's wide screen, 24 from its edges (the web's `desk:items-center desk:p-6`); from the foot everywhere else.
+  const desk = useIsDesk();
   const typing = useKeyboardUp();
   const rise = useRise();
   const close = usePress({ onPress: onClose });
@@ -271,7 +274,11 @@ function SheetPanel({ open, onClose, onGone, onShown, title, closeLabel, tone, c
           accessibilityViewIsModal
           aria-modal
           onTouchEnd={perfTouched}
-          style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }}
+          style={
+            desk
+              ? { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }
+              : { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }
+          }
         >
           {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
           <PerfDrawn name={`sheet: ${title}`} />
