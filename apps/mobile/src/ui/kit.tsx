@@ -369,6 +369,19 @@ export function LineTag({ tone, line = ['read', BODY.size, BODY.size * BODY.line
 }
 
 /**
+ * Where a row of tags (the web's `flex flex-wrap` of them) stands when the web holds it in an inline block of a line of words (a reading 15 in the
+ * page's line of 1.45): the row's baseline is its first tag's, which stands on the line's, so the row is a point down and the box is never less than
+ * the line, the strut's descent under the tags' baseline. A row of one line of tags is 2.75 shorter than its box; a row of two fills it below.
+ */
+export function useInlineRow(): ViewStyle {
+  const language = useContext(Language);
+  const strut = webBaseline('read', 400, BODY.size, BODY.size * BODY.lineHeight, language);
+  const tag = 2 + webBaseline('pixel', 400, 12, 12 * TIGHT, language);
+  const above = Math.max(strut, tag);
+  return { paddingTop: above - tag, minHeight: above + BODY.size * BODY.lineHeight - strut };
+}
+
+/**
  * Words only a screen reader reads (the web's `sr-only`): in the tree, so a button is named by them, but clipped to a point and out of the flow,
  * so they take no room and no tap.
  */

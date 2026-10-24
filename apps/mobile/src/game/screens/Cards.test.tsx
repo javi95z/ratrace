@@ -728,6 +728,17 @@ describe('what a card did', () => {
   });
 });
 
+describe('the line the changes of a card stand in', () => {
+  it('is as tall as the web\'s inline block round them makes it: one row of tags a point down, in a line of 21.75', async () => {
+    // The engineer's first card, a freelance gig taken: three tags on one row.
+    await answer('engineer', (shown) => shown - 1);
+    const region = screen.getByRole('region', { name: 'What changes' });
+    const row = within(region).getByText('+1 career skill').closest('[style*="flex-wrap"]')!.parentElement!;
+    expect(row.style.paddingTop).toBe('1px');
+    expect(row.style.minHeight).toBe('21.75px');
+  });
+});
+
 describe('the money a card paid', () => {
   const coins = () => document.querySelectorAll('[data-testid="coin-layer"] > div');
 

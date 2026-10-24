@@ -11,7 +11,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
-import { Panel, reach, Tag, usePress } from '../../ui/kit';
+import { Panel, reach, Tag, useInlineRow, usePress } from '../../ui/kit';
 import { perfStart } from '../../ui/perf';
 import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
@@ -449,12 +449,16 @@ const COINS_AFTER_MS = 450;
  */
 const PAID_FROM = 'card';
 
-/** The box of what a card changed, as the web's `inline-block` span: as wide as its tags. One that paid is where its coins fly from. */
+/**
+ * The box of what a card changed, as the web's `inline-block` span: as wide as its tags, and as tall as the line of words it stands in makes it
+ * (`useInlineRow`, where there are tags: the words of nothing changing are a line of their own). One that paid is where its coins fly from.
+ */
 const CHANGES_BOX: ViewStyle = { alignSelf: 'flex-start', maxWidth: '100%' };
-function PaidFrom({ children }: { children: ReactNode }) {
+function ChangesBox({ paid, inline, children }: { paid: boolean; inline: boolean; children: ReactNode }) {
   const place = useCoinTarget(PAID_FROM);
+  const row = useInlineRow();
   return (
-    <View ref={place} collapsable={false} style={CHANGES_BOX}>
+    <View ref={paid ? place : undefined} collapsable={false} style={inline ? [CHANGES_BOX, row] : CHANGES_BOX}>
       {children}
     </View>
   );
@@ -531,7 +535,9 @@ function Changes({ event, itemStatus }: { event: Extract<GameEvent, { kind: 'car
   return (
     <Animated.View style={rise}>
       <View role="region" aria-label={t('changes')}>
-        <Panel title={t('changes')}>{event.cash > 0 ? <PaidFrom>{changes}</PaidFrom> : <View style={CHANGES_BOX}>{changes}</View>}</Panel>
+        <Panel title={t('changes')}>
+          <ChangesBox paid={event.cash > 0} inline={event.cash !== 0 || tags.length > 0}>{changes}</ChangesBox>
+        </Panel>
       </View>
     </Animated.View>
   );
