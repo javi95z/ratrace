@@ -125,6 +125,12 @@ export const careerCards: CardDef[] = [
     { effects: { setFlags: ['remote_work'], workMode: 'remote' } },
     { outcomes: [{ weight: 40, effects: { salaryModPct: 4 } }, { weight: 60, effects: {} }] },
   ]),
+  // A boss on their way to a rival who wants to take the player along: more pay, if the new place holds.
+  card('career_boss_leaves', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 2 } }, [
+    {},
+    { outcomes: [{ weight: 60, effects: { salaryModPct: 12, status: 2 } }, { weight: 40, effects: { salaryModPct: -5 } }] },
+    { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: { salaryModPct: 5 } }, { weight: 50, effects: { status: -1 } }] },
+  ]),
   card('career_become_manager', 'career', { once: true, when: { employed: true, minLevel: 1 } }, [
     { effects: { careerSkill: 1 } },
     { effects: { focus: 1, salaryModPct: 5, status: 3 } },

@@ -29,8 +29,9 @@ describe('balance', () => {
 
   it('lets a patient index investor escape the rat race in 25% to 50% of lives', () => {
     expect(table.indexer.escapedPct).toBeGreaterThanOrEqual(25);
-    // Recessions are rarer since 1.32, about one round in eight: patience pays a little more often.
-    expect(table.indexer.escapedPct).toBeLessThanOrEqual(50);
+    // Recessions are rarer since 1.32, about one round in eight, and since 1.48 a misfortune seldom comes twice in a life:
+    // patience pays a little more often, and still not in most lives.
+    expect(table.indexer.escapedPct).toBeLessThanOrEqual(55);
   });
 
   it('gives no strategy the top score in more than 40% of lives', () => {

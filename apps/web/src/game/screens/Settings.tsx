@@ -374,16 +374,15 @@ export function HomePreferences() {
 }
 
 /**
- * The same at the foot of the front door, as it always was: the account in sight, with the way
- * into Google, and the settings a button below it.
+ * The foot of the front door, with no frame round it: the account, with the way into Google for a
+ * guest; the player's profile; and the settings, a button below it.
  */
-export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
+export function HomeAccount({ profile = null }: { profile?: ReactNode }) {
   const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
       <AccountBlock compact />
-      {/* The player's profile, next to the account it belongs to. */}
       {profile}
       <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <Sprite id="icon.settings" />

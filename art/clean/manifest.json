@@ -4256,6 +4256,236 @@
       "width": 288,
       "height": 120
     },
+    "card.retreat": {
+      "file": "cards/card.retreat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.trendy_area": {
+      "file": "cards/card.trendy_area.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_leaves": {
+      "file": "cards/card.boss_leaves.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tax_letter": {
+      "file": "cards/card.tax_letter.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.barn_car": {
+      "file": "cards/card.barn_car.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.mlm": {
+      "file": "cards/card.mlm.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.squatters": {
+      "file": "cards/card.squatters.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.solar": {
+      "file": "cards/card.solar.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.village_house": {
+      "file": "cards/card.village_house.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.company_ipo": {
+      "file": "cards/card.company_ipo.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.metro_works": {
+      "file": "cards/card.metro_works.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.strike": {
+      "file": "cards/card.strike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.school_reunion": {
+      "file": "cards/card.school_reunion.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.child_streamer": {
+      "file": "cards/card.child_streamer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.linkedin_post": {
+      "file": "cards/card.linkedin_post.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.podcast": {
+      "file": "cards/card.podcast.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.ai_agent": {
+      "file": "cards/card.ai_agent.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.gig_apps": {
+      "file": "cards/card.gig_apps.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.copy_trading": {
+      "file": "cards/card.copy_trading.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hacked": {
+      "file": "cards/card.hacked.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.signal_group": {
+      "file": "cards/card.signal_group.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.remote_outskirts": {
+      "file": "cards/card.remote_outskirts.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.back_home": {
+      "file": "cards/card.back_home.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.midlife": {
+      "file": "cards/card.midlife.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.grandchild": {
+      "file": "cards/card.grandchild.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.black_card": {
+      "file": "cards/card.black_card.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.child_piggy": {
+      "file": "cards/card.child_piggy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lift_levy": {
+      "file": "cards/card.lift_levy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.street_contest": {
+      "file": "cards/card.street_contest.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.xmas_dinner": {
+      "file": "cards/card.xmas_dinner.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sabbatical": {
+      "file": "cards/card.sabbatical.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.credit_stolen": {
+      "file": "cards/card.credit_stolen.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.office_pool": {
+      "file": "cards/card.office_pool.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cooking_show": {
+      "file": "cards/card.cooking_show.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.stag_party": {
+      "file": "cards/card.stag_party.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.viral_bad": {
+      "file": "cards/card.viral_bad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.influencer_review": {
+      "file": "cards/card.influencer_review.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.smartwatch": {
+      "file": "cards/card.smartwatch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.festival_rental": {
+      "file": "cards/card.festival_rental.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.school_treasurer": {
+      "file": "cards/card.school_treasurer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.drone_crash": {
+      "file": "cards/card.drone_crash.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.concert": {
+      "file": "cards/card.concert.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.police_auction": {
+      "file": "cards/card.police_auction.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.protected_flat": {
+      "file": "cards/card.protected_flat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.startup_advisor": {
+      "file": "cards/card.startup_advisor.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.upstairs_leak": {
+      "file": "cards/card.upstairs_leak.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

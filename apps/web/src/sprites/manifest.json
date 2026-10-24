@@ -664,6 +664,11 @@
     "w": 288,
     "h": 120
   },
+  "card.ai_agent": {
+    "src": "cards/card.ai_agent.png",
+    "w": 288,
+    "h": 120
+  },
   "card.airport": {
     "src": "cards/card.airport.png",
     "w": 288,
@@ -676,6 +681,11 @@
   },
   "card.app_launch": {
     "src": "cards/card.app_launch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.back_home": {
+    "src": "cards/card.back_home.png",
     "w": 288,
     "h": 120
   },
@@ -709,6 +719,11 @@
     "w": 288,
     "h": 120
   },
+  "card.barn_car": {
+    "src": "cards/card.barn_car.png",
+    "w": 288,
+    "h": 120
+  },
   "card.beach_club": {
     "src": "cards/card.beach_club.png",
     "w": 288,
@@ -716,6 +731,11 @@
   },
   "card.beach_wedding": {
     "src": "cards/card.beach_wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.black_card": {
+    "src": "cards/card.black_card.png",
     "w": 288,
     "h": 120
   },
@@ -731,6 +751,11 @@
   },
   "card.boss_door": {
     "src": "cards/card.boss_door.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.boss_leaves": {
+    "src": "cards/card.boss_leaves.png",
     "w": 288,
     "h": 120
   },
@@ -859,6 +884,16 @@
     "w": 288,
     "h": 120
   },
+  "card.child_piggy": {
+    "src": "cards/card.child_piggy.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.child_streamer": {
+    "src": "cards/card.child_streamer.png",
+    "w": 288,
+    "h": 120
+  },
   "card.city_arrival": {
     "src": "cards/card.city_arrival.png",
     "w": 288,
@@ -979,8 +1014,28 @@
     "w": 288,
     "h": 120
   },
+  "card.company_ipo": {
+    "src": "cards/card.company_ipo.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.concert": {
+    "src": "cards/card.concert.png",
+    "w": 288,
+    "h": 120
+  },
   "card.contract_signing": {
     "src": "cards/card.contract_signing.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.cooking_show": {
+    "src": "cards/card.cooking_show.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.copy_trading": {
+    "src": "cards/card.copy_trading.png",
     "w": 288,
     "h": 120
   },
@@ -996,6 +1051,11 @@
   },
   "card.crash_screens": {
     "src": "cards/card.crash_screens.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.credit_stolen": {
+    "src": "cards/card.credit_stolen.png",
     "w": 288,
     "h": 120
   },
@@ -1124,6 +1184,11 @@
     "w": 288,
     "h": 120
   },
+  "card.drone_crash": {
+    "src": "cards/card.drone_crash.png",
+    "w": 288,
+    "h": 120
+  },
   "card.empty_street": {
     "src": "cards/card.empty_street.png",
     "w": 288,
@@ -1131,6 +1196,11 @@
   },
   "card.family_dinner": {
     "src": "cards/card.family_dinner.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.festival_rental": {
+    "src": "cards/card.festival_rental.png",
     "w": 288,
     "h": 120
   },
@@ -1159,13 +1229,28 @@
     "w": 288,
     "h": 120
   },
+  "card.gig_apps": {
+    "src": "cards/card.gig_apps.png",
+    "w": 288,
+    "h": 120
+  },
   "card.graduation": {
     "src": "cards/card.graduation.png",
     "w": 288,
     "h": 120
   },
+  "card.grandchild": {
+    "src": "cards/card.grandchild.png",
+    "w": 288,
+    "h": 120
+  },
   "card.gym": {
     "src": "cards/card.gym.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.hacked": {
+    "src": "cards/card.hacked.png",
     "w": 288,
     "h": 120
   },
@@ -1181,6 +1266,11 @@
   },
   "card.hospital": {
     "src": "cards/card.hospital.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.influencer_review": {
+    "src": "cards/card.influencer_review.png",
     "w": 288,
     "h": 120
   },
@@ -1229,6 +1319,16 @@
     "w": 288,
     "h": 120
   },
+  "card.lift_levy": {
+    "src": "cards/card.lift_levy.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.linkedin_post": {
+    "src": "cards/card.linkedin_post.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lodger_friend": {
     "src": "cards/card.lodger_friend.png",
     "w": 288,
@@ -1271,6 +1371,21 @@
   },
   "card.mentor_session": {
     "src": "cards/card.mentor_session.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.metro_works": {
+    "src": "cards/card.metro_works.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.midlife": {
+    "src": "cards/card.midlife.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.mlm": {
+    "src": "cards/card.mlm.png",
     "w": 288,
     "h": 120
   },
@@ -1379,6 +1494,11 @@
     "w": 288,
     "h": 120
   },
+  "card.office_pool": {
+    "src": "cards/card.office_pool.png",
+    "w": 288,
+    "h": 120
+  },
   "card.office_west": {
     "src": "cards/card.office_west.png",
     "w": 288,
@@ -1449,6 +1569,16 @@
     "w": 288,
     "h": 120
   },
+  "card.podcast": {
+    "src": "cards/card.podcast.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.police_auction": {
+    "src": "cards/card.police_auction.png",
+    "w": 288,
+    "h": 120
+  },
   "card.prenup": {
     "src": "cards/card.prenup.png",
     "w": 288,
@@ -1461,6 +1591,11 @@
   },
   "card.private_sale": {
     "src": "cards/card.private_sale.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.protected_flat": {
+    "src": "cards/card.protected_flat.png",
     "w": 288,
     "h": 120
   },
@@ -1504,6 +1639,11 @@
     "w": 288,
     "h": 120
   },
+  "card.remote_outskirts": {
+    "src": "cards/card.remote_outskirts.png",
+    "w": 288,
+    "h": 120
+  },
   "card.rent_letter": {
     "src": "cards/card.rent_letter.png",
     "w": 288,
@@ -1519,6 +1659,11 @@
     "w": 288,
     "h": 120
   },
+  "card.retreat": {
+    "src": "cards/card.retreat.png",
+    "w": 288,
+    "h": 120
+  },
   "card.ring_light": {
     "src": "cards/card.ring_light.png",
     "w": 288,
@@ -1526,6 +1671,11 @@
   },
   "card.rival_shop": {
     "src": "cards/card.rival_shop.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sabbatical": {
+    "src": "cards/card.sabbatical.png",
     "w": 288,
     "h": 120
   },
@@ -1546,6 +1696,16 @@
   },
   "card.school_gate": {
     "src": "cards/card.school_gate.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.school_reunion": {
+    "src": "cards/card.school_reunion.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.school_treasurer": {
+    "src": "cards/card.school_treasurer.png",
     "w": 288,
     "h": 120
   },
@@ -1589,8 +1749,23 @@
     "w": 288,
     "h": 120
   },
+  "card.signal_group": {
+    "src": "cards/card.signal_group.png",
+    "w": 288,
+    "h": 120
+  },
   "card.small_house": {
     "src": "cards/card.small_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.smartwatch": {
+    "src": "cards/card.smartwatch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.solar": {
+    "src": "cards/card.solar.png",
     "w": 288,
     "h": 120
   },
@@ -1614,8 +1789,33 @@
     "w": 288,
     "h": 120
   },
+  "card.squatters": {
+    "src": "cards/card.squatters.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.stag_party": {
+    "src": "cards/card.stag_party.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.startup_advisor": {
+    "src": "cards/card.startup_advisor.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.street_contest": {
+    "src": "cards/card.street_contest.png",
+    "w": 288,
+    "h": 120
+  },
   "card.street_market": {
     "src": "cards/card.street_market.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.strike": {
+    "src": "cards/card.strike.png",
     "w": 288,
     "h": 120
   },
@@ -1631,6 +1831,11 @@
   },
   "card.tax_amnesty": {
     "src": "cards/card.tax_amnesty.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.tax_letter": {
+    "src": "cards/card.tax_letter.png",
     "w": 288,
     "h": 120
   },
@@ -1664,6 +1869,11 @@
     "w": 288,
     "h": 120
   },
+  "card.trendy_area": {
+    "src": "cards/card.trendy_area.png",
+    "w": 288,
+    "h": 120
+  },
   "card.two_ladders": {
     "src": "cards/card.two_ladders.png",
     "w": 288,
@@ -1671,6 +1881,21 @@
   },
   "card.unpaid_rent": {
     "src": "cards/card.unpaid_rent.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.upstairs_leak": {
+    "src": "cards/card.upstairs_leak.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.village_house": {
+    "src": "cards/card.village_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.viral_bad": {
+    "src": "cards/card.viral_bad.png",
     "w": 288,
     "h": 120
   },
@@ -1701,6 +1926,11 @@
   },
   "card.will_reading": {
     "src": "cards/card.will_reading.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.xmas_dinner": {
+    "src": "cards/card.xmas_dinner.png",
     "w": 288,
     "h": 120
   },

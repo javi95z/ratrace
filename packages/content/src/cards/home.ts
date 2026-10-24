@@ -35,7 +35,7 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-7_000), protection: { insurance: 'home', coverPct: 90 } } },
     { effects: { focus: 1, cash: usd(-2_500), protection: { insurance: 'home', coverPct: 90 } } },
   ]),
-  card('house_move_in', 'housing', { weight: 40, cooldown: 2, when: { flags: ['dating'], partner: false } }, [
+  card('house_move_in', 'housing', { weight: 40, cooldown: 2, soon: true, when: { flags: ['dating'], partner: false } }, [
     {},
     { effects: { partner: { salaryPct: 85 }, clearFlags: ['dating'], setFlags: ['cohabiting'] } },
   ]),
@@ -46,6 +46,18 @@ export const lifestyleCards: CardDef[] = [
     {},
     { effects: { buyItem: { itemId: 'car_vw_golf_gti', pricePct: 85 } } },
     { effects: { loan: usd(95_000), buyItem: { itemId: 'car_bmw_m3', pricePct: 100 } } },
+  ]),
+  // A week of retreat: health bought with money, and a little standing with it.
+  card('life_retreat', 'lifestyle', { once: true, when: { minRound: 2 } }, [
+    {},
+    { effects: { cash: usd(-3_500), skills: { health: 2 }, status: 1 } },
+    { effects: { cash: usd(-9_000), skills: { health: 2 }, status: 3 }, outcomes: [{ weight: 60, effects: { skills: { health: 1 } } }, { weight: 40, effects: {} }] },
+  ]),
+  // Renting in the neighbourhood everyone talks about: more rent for ten years, and standing for good.
+  card('house_trendy_area', 'housing', { once: true, when: { ownsHome: false, minRound: 1 } }, [
+    {},
+    { effects: { cash: usd(-2_000), recurring: [yearly('trendy_rent', 'expense', 3_000, 5)], status: 4 } },
+    { effects: { cash: usd(-800), recurring: [yearly('trendy_rent', 'expense', 1_200, 5)], status: 2, skills: { network: 1 } } },
   ]),
   card('life_ibiza', 'lifestyle', { cooldown: 3 }, [
     {},
@@ -109,7 +121,7 @@ const split = (pct: number): Effects => ({
 });
 
 export const familyCards: CardDef[] = [
-  card('fam_dating', 'family', { weight: 25, cooldown: 2, when: { partner: false, notFlags: ['dating'] } }, [
+  card('fam_dating', 'family', { weight: 25, cooldown: 2, soon: true, when: { partner: false, notFlags: ['dating'] } }, [
     {},
     { effects: { focus: 1, cash: usd(-600), setFlags: ['dating'] } },
   ]),
@@ -120,7 +132,7 @@ export const familyCards: CardDef[] = [
   ]),
   // A couple is asked more often than chance would, and it can come again while the first child is still at home:
   // a family of four is two of these, some years apart. Once in a few hundred lives was no way to earn a badge.
-  card('fam_first_child', 'family', { weight: 60, cooldown: 2, when: { partner: true, maxChildren: 1, maxRound: 10 } }, [
+  card('fam_first_child', 'family', { weight: 60, cooldown: 2, soon: true, when: { partner: true, maxChildren: 1, maxRound: 10 } }, [
     {},
     { effects: { children: 1, lifestyleFloor: 1, status: 8 } },
   ]),

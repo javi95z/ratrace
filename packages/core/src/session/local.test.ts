@@ -95,13 +95,17 @@ describe('playing', () => {
     expect((await saveOf(store)).log).toEqual([{ picks: [0], orders: null }]);
     expect((await saveOf(store)).state.answered).toBe(1);
 
-    for (let i = 1; i < before.hand.length; i++) {
+    // A card answered may change the life so that one still waiting no longer fits, and another takes its place:
+    // each answer is to the card waiting at that moment.
+    while (session.view().phase === 'cards') {
+      const waiting = session.view().hand[session.view().answered];
       const next = await session.answerCard(0);
-      expect(next.events.filter((e) => e.kind === 'card')).toMatchObject([{ cardId: before.hand[i] }]);
+      expect(next.events.filter((e) => e.kind === 'card')).toMatchObject([{ cardId: waiting }]);
     }
-    expect(session.view()).toMatchObject({ phase: 'finance', answered: before.hand.length });
+    const hand = session.view().hand;
+    expect(session.view()).toMatchObject({ phase: 'finance', answered: hand.length });
     const save = await saveOf(store);
-    expect(save.log).toEqual([{ picks: before.hand.map(() => 0), orders: null }]);
+    expect(save.log).toEqual([{ picks: hand.map(() => 0), orders: null }]);
     expect(save.state.phase).toBe('finance');
   });
 

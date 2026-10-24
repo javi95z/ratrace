@@ -9,19 +9,18 @@ import { RatAvatar } from '@/ui/RatAvatar';
 import { ageAt } from '@ratrace/core/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
-import { Button, Panel } from '@/ui/kit';
+import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
-import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
+import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
   const common = useT('common');
-  const settings = useT('settings');
   const legal = useT('legal');
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
@@ -48,7 +47,6 @@ export function Home() {
   const returning = inProgress || (runs !== null && runs.length > 0);
   const install = useInstallOffer();
   // A life that is over stays on the device until another begins, so its score can still be looked at.
-  const over = status === 'playing' && view !== null && view.finished;
   // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
   const week = useThisWeek();
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
@@ -120,11 +118,6 @@ export function Home() {
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             <FriendRequests />
-            {over ? (
-              <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
-                {t('lastLife')}
-              </Link>
-            ) : null}
             <div className="grid grid-cols-2 gap-3">
               <Link href="/collection" className="pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
                 <Sprite id="icon.star" />
@@ -147,10 +140,10 @@ export function Home() {
         )}
       </div>
 
-      {/* At the foot, as it always was: the account and the settings, also behind the gear above. */}
-      <Panel className="mt-auto w-full" label={settings('title')}>
-        <HomeSettingsPanel profile={<ProfileLink />} />
-      </Panel>
+      {/* At the foot, as it always was, with no frame round it: the account, the player's profile and the settings, these also behind the gear above. */}
+      <div className="mt-auto w-full">
+        <HomeAccount profile={<ProfileLink />} />
+      </div>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
         <p role="alert" className="frame w-full bg-wine-900 px-3 py-2 text-[13px]">

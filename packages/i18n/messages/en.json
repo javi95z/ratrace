@@ -6,7 +6,7 @@
       "new": "Choose a life",
       "play": "Your life",
       "collection": "Collection",
-      "records": "Records",
+      "records": "History",
       "rankings": "Rankings",
       "challenge": "Weekly challenge",
       "room": "Multiplayer",
@@ -48,11 +48,10 @@
     "continueChallenge": "Weekly challenge",
     "continuePractice": "Challenge practice",
     "continueDetail": "{life} · age {age} · {city}",
-    "lastLife": "See how your last life ended",
     "movedGone": "That life was ended in another tab or on another device.",
     "newLife": "New life",
     "collection": "Collection",
-    "records": "Records",
+    "records": "History",
     "language": "Language",
     "motion": "Reduce motion",
     "motionHint": "Turns off roll-ups and particles.",
@@ -75,11 +74,8 @@
     "roomTurn": "Your turn · {time} left",
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
-    "roomDone": "Over",
     "lostWaiting": "Your life began on an earlier version of the game and cannot be opened just now. It is kept: try again in a while, with a connection.",
     "profile": "Your profile",
-    "roomResult": "See how your game ended",
-    "roomPlace": "You came #{place} of {total}",
     "friendRequests": "{n, plural, one {# friend request} other {# friend requests}}"
   },
   "newLife": {
@@ -1280,7 +1276,7 @@
     "rarityAll": "All"
   },
   "records": {
-    "title": "Records",
+    "title": "History",
     "bests": "Personal bests",
     "bestScore": "Best score",
     "richest": "Greatest net worth",
@@ -1945,7 +1941,7 @@
     "badges": "Badges",
     "games": "Games",
     "more": "More",
-    "toRecords": "Records",
+    "toRecords": "History",
     "toCollection": "Collection",
     "toRankings": "Rankings",
     "layers": {

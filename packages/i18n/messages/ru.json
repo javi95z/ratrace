@@ -6,7 +6,7 @@
       "new": "Выбери жизнь",
       "play": "Твоя жизнь",
       "collection": "Коллекция",
-      "records": "Рекорды",
+      "records": "История",
       "rankings": "Рейтинги",
       "challenge": "Испытание недели",
       "room": "Мультиплеер",
@@ -48,11 +48,10 @@
     "continueChallenge": "Испытание недели",
     "continuePractice": "Тренировка испытания",
     "continueDetail": "{life} · {age, plural, one {# год} few {# года} many {# лет} other {# года}} · {city}",
-    "lastLife": "Чем кончилась прошлая жизнь",
     "movedGone": "Эту жизнь завершили в другой вкладке или на другом устройстве.",
     "newLife": "Новая жизнь",
     "collection": "Коллекция",
-    "records": "Рекорды",
+    "records": "История",
     "language": "Язык",
     "motion": "Меньше анимации",
     "motionHint": "Отключает бегущие цифры и частицы.",
@@ -75,11 +74,8 @@
     "roomTurn": "Твой ход · осталось {time}",
     "roomWaiting": "Ждём: {names}",
     "roomRematch": "Реванш ждёт",
-    "roomDone": "Окончена",
     "lostWaiting": "Твоя жизнь началась в прошлой версии игры, и сейчас её не открыть. Она сохранена: попробуй позже, с подключением к интернету.",
     "profile": "Твой профиль",
-    "roomResult": "Итоги вашей партии",
-    "roomPlace": "Ваше место: #{place} из {total}",
     "friendRequests": "{n, plural, one {# заявка в друзья} few {# заявки в друзья} many {# заявок в друзья} other {# заявки в друзья}}"
   },
   "newLife": {
@@ -1280,7 +1276,7 @@
     "rarityAll": "Все"
   },
   "records": {
-    "title": "Рекорды",
+    "title": "История",
     "bests": "Личные рекорды",
     "bestScore": "Максимум очков",
     "richest": "Наибольший чистый капитал",
@@ -1945,7 +1941,7 @@
     "badges": "Значки",
     "games": "Партии",
     "more": "Ещё",
-    "toRecords": "Рекорды",
+    "toRecords": "История",
     "toCollection": "Коллекция",
     "toRankings": "Рейтинги",
     "layers": {

@@ -1156,9 +1156,9 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
     if (status === 'none') void lookForLobbies();
   }, [status, lookForLobbies]);
   if (status === 'booting' || status === 'unavailable') return null;
-  const inRoom = status === 'in' && room !== null && room.status !== 'closed';
-  // A game that is over is kept for its result, and a rematch, until the player leaves it: it is not a game to go back to.
-  const over = inRoom && room?.status === 'finished' && room.rematch?.open !== true;
+  // A game that is over is not shown at the door: its result is in the records. A rematch on offer still is.
+  const over = room?.status === 'finished' && room.rematch?.open !== true;
+  const inRoom = status === 'in' && room !== null && room.status !== 'closed' && !over;
   const me = room?.members.find((member) => member.me);
   let detail: string | null = null;
   if (inRoom && room) {
@@ -1168,8 +1168,6 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
       const waitingFor = here.filter((member) => !member.ready && !member.me);
       detail = me && !me.ready ? t('roomTurn', { time: left === null ? '—' : clock(left) }) : t('roomWaiting', { names: waitingFor.map(nameOf).join(', ') });
     } else if (room.rematch?.open) detail = t('roomRematch');
-    else if (me && !me.left && me.standing) detail = t('roomPlace', { place: rankOf(room.members, me), total: here.length });
-    else detail = t('roomDone');
   } else if (lobbies && lobbies.live + lobbies.slow > 0) detail = t('roomOpenNow', { count: lobbies.live + lobbies.slow });
   return (
     <Link
@@ -1177,8 +1175,8 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
       className={`pixel frame-raised flex min-h-12 flex-col items-center justify-center gap-0.5 px-4 py-2 text-center ${primary ? 'frame-gold bg-gold-500 text-ink-900' : 'bg-night-600 text-cream'}`}
     >
       <span className={`flex items-center gap-2 ${primary ? 'text-[19px]' : 'text-[17px]'}`}>
-        <Sprite id={over ? 'icon.room_podium' : room?.rematch?.open && inRoom ? 'icon.room_rematch' : inRoom && room?.status === 'open' ? 'icon.room_lobby' : 'icon.multiplayer'} />
-        {over ? t('roomResult') : inRoom ? t('inRoom') : t('room')}
+        <Sprite id={room?.rematch?.open && inRoom ? 'icon.room_rematch' : inRoom && room?.status === 'open' ? 'icon.room_lobby' : 'icon.multiplayer'} />
+        {inRoom ? t('inRoom') : t('room')}
       </span>
       {detail ? <span className={`font-sans text-[13px] font-normal ${primary ? 'text-ink-700' : 'text-ink-200'}`}>{detail}</span> : null}
     </Link>

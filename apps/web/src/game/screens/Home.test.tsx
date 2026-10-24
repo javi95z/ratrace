@@ -94,7 +94,7 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices(), 'ru');
     expect((await screen.findByRole('link', { name: 'Новая жизнь' })).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Коллекция' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Рекорды' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'История' })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Настройки' })[0]).toBeTruthy();
     // Nothing of another language is left on it, but the game's own name and the names of the languages.
     expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
@@ -103,12 +103,12 @@ describe('the front door', () => {
   it('leads to the collection and to the records', async () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');
-    expect(screen.getByRole('link', { name: 'Records' }).getAttribute('href')).toBe('/records');
+    expect(screen.getByRole('link', { name: 'History' }).getAttribute('href')).toBe('/records');
   });
 
   it('leads to the rankings where someone is signed in, and shows no way to them where nobody is', async () => {
     renderGame(<Home />, memoryServices());
-    await screen.findByRole('link', { name: 'Records' });
+    await screen.findByRole('link', { name: 'History' });
     expect(screen.queryByRole('link', { name: 'Rankings' })).toBeNull();
     cleanup();
     const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
@@ -165,7 +165,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('link', { name: /^Weekly challenge/ })).toBeNull();
   });
 
-  it('offers a look at the life that just ended, and nothing to continue', async () => {
+  it('offers nothing of the life that just ended: its look back is in the records', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (!session.view().finished) {
@@ -173,9 +173,9 @@ describe('the front door', () => {
       await session.playRound({ orders: [] });
     }
     renderGame(<Home />, services);
-    expect((await screen.findByRole('link', { name: 'See how your last life ended' })).getAttribute('href')).toBe('/play');
+    expect(await screen.findByRole('link', { name: 'New life' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-    expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /last life/ })).toBeNull();
   });
 
   it('says so plainly when the browser is not saving, instead of promising that it is', async () => {

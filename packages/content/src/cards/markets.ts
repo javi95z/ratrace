@@ -77,6 +77,12 @@ export const taxCards: CardDef[] = [
     {},
     { effects: { focus: 1, cashSalaryPct: 4 } },
   ]),
+  // Not an inspection: a letter that says the return had a mistake, and what it comes to.
+  card('tax_letter', 'tax', { when: { minRound: 2 } }, [
+    { effects: { cashSalaryPct: -4 } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: { cashSalaryPct: -6 } }] },
+    { effects: { cash: usd(-700), financeSkill: 1 }, outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { cashSalaryPct: -4 } }] },
+  ]),
   card('tax_audit', 'tax', { weight: 6, cooldown: 6, when: { minRound: 3 } }, [
     { effects: { cashSalaryPct: -8, protection: { flag: 'tax_advisor', coverPct: 80 } } },
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { cashSalaryPct: -12 } }] },

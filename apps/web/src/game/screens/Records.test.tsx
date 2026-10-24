@@ -31,7 +31,7 @@ describe('the records', () => {
   it('says there is nothing yet before a first life is finished', async () => {
     renderGame(<Records />, memoryServices());
     expect(await screen.findByText('No life finished yet. Your first one will appear here.')).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 1, name: 'Records' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'History' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Personal bests' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Back' }).getAttribute('href')).toBe('/');
   });

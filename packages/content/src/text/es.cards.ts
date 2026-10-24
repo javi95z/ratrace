@@ -70,6 +70,11 @@ export const cards: Record<string, CardText> = {
     'Pasarte al teletrabajo',
     ['Pedir a cambio un aumento', 'Prefieren pagarte a quedarse sin la mesa.', 'No.'],
   ]),
+  career_boss_leaves: c('Tu jefe se va', 'Tu jefe se marcha a la competencia y te quiere en su equipo. Promete más sueldo.', [
+    'Quedarte',
+    ['Irte con él', 'La nueva empresa va como un tiro. Y tú con ella.', 'A los seis meses lo echan a él. Y tú te quedas sin padrino.'],
+    ['Usar la oferta para negociar', 'Tu empresa no quiere perderte y te sube el sueldo.', 'Te dicen que la puerta está abierta. Para salir.'],
+  ]),
   career_become_manager: c('Dirigir el equipo', 'Tu responsable se va y ha propuesto tu nombre.', [
     'Seguir en lo técnico',
     'Aceptar el equipo',
@@ -262,6 +267,16 @@ export const cards: Record<string, CardText> = {
     'Encogerte de hombros',
     'Comprarle barato su viejo {item:car_vw_golf_gti}',
     'Financiar un {item:car_bmw_m3}',
+  ]),
+  life_retreat: c('Un retiro en Tulum', 'Una amiga vuelve de una semana de yoga y silencio y no para de hablar de ello.', [
+    'Seguir currando',
+    'Una semana sencilla',
+    ['El retiro de lujo, con chamán', 'Vuelves como nuevo. Hasta duermes mejor.', 'Bonito, carísimo y te picaron los mosquitos.'],
+  ]),
+  house_trendy_area: c('El barrio de moda', 'Se queda libre un piso en el barrio del que todo el mundo habla. Cafés de especialidad, galerías y un alquiler a la altura.', [
+    'Quedarte donde estás',
+    'Mudarte al piso entero',
+    'Compartir piso en el barrio',
   ]),
   life_ibiza: c('Ibiza', 'En el grupo ya hay villa, fechas y un plazo para pagar la señal.', [
     'Quedarte en casa',
@@ -524,6 +539,11 @@ export const cards: Record<string, CardText> = {
   tax_optimise: c('La declaración de la renta', 'Una caja de zapatos llena de facturas y una fecha límite.', [
     'Presentarla como siempre',
     'Repasar todas las facturas',
+  ]),
+  tax_letter: c('Una carta de Hacienda', 'Hacienda dice que tu declaración tenía un error y te propone lo que debes.', [
+    'Pagar y olvidarte',
+    ['Recurrir', 'Tenías razón: archivan el expediente.', 'Pierdes, y pagas con intereses.'],
+    ['Pagar a una gestora para que lo mire', 'Lo arregla con una llamada.', 'Ni ella puede: toca pagar.'],
   ]),
   tax_audit: c('Una inspección de Hacienda', 'Una carta certificada. Quieren tres años de papeles.', [
     'Pagar lo que piden',
@@ -905,5 +925,203 @@ export const cards: Record<string, CardText> = {
   celeb_ortiga: c('Amancio Ortiga abre enfrente', 'Una tienda enorme justo delante de tu negocio. Viene él en persona: «O te puedes unir a nosotros».', [
     'Aguantar',
     'Aceptar su franquicia',
+  ]),
+  luck_barn_car: c('Un clásico en el granero', 'En el granero del abuelo, bajo una lona, hay un deportivo de los setenta. Lleno de polvo y entero.', [
+    'Venderlo tal cual',
+    ['Restaurarlo y venderlo', 'Un coleccionista paga lo que vale. Y algo más.', 'El motor estaba peor de lo que parecía. Sacas poco.'],
+    'Restaurarlo y quedártelo',
+  ]),
+  life_mlm: c('«¿Has pensado en ser tu propio jefe?»', 'Una amiga del colegio te escribe por primera vez en diez años. Vende batidos y busca «socios».', [
+    'Decirle que no',
+    ['Comprar el kit de inicio', 'Vendes más de lo que esperabas. Sobre todo a tu familia.', 'Le vendes uno a tu madre. El resto, al trastero.'],
+    ['Comprar el kit y meter a otros', 'Tu red crece y cobras comisiones. Tus amigos te esquivan.', 'Nadie entra. Y ya nadie te coge el teléfono.'],
+  ]),
+  house_squatters: c('Okupas en tu piso', 'El piso que alquilabas estaba vacío entre inquilinos. Ya no lo está: han cambiado la cerradura.', [
+    'Ir a juicio',
+    'Pagarles para que se vayan',
+    ['Llamar a una empresa de desokupación', 'Una visita y se van esa misma tarde.', 'Sale en las noticias. Y tú también.'],
+  ]),
+  house_solar: c('Placas solares', 'Un instalador ha pasado por la urbanización: con el tejado que tienes, dice, la luz te saldría casi gratis.', [
+    'Seguir con la factura de siempre',
+    'Instalarlas',
+    'Instalarlas con batería',
+  ]),
+  fam_village_house: c('La casa del pueblo', 'Te dejan la casa de la familia en el pueblo. El tejado tiene goteras y la higuera, higos.', [
+    'Venderla como está',
+    'Arreglarla para los veranos',
+    'Arreglarla y alquilarla a turistas',
+  ]),
+  career_company_ipo: c('Tu empresa sale a bolsa', 'La empresa sale a bolsa y tus acciones de empleado por fin valen algo. Las puedes vender el primer día o esperar.', [
+    'Venderlo todo el primer día',
+    ['Aguantar seis meses', 'Las acciones se disparan. Hay quien deja de trabajar.', 'Siguen donde estaban.', 'Caen por debajo del precio de salida.'],
+    ['Vender la mitad', 'La mitad que guardaste sube bien.', 'La mitad que guardaste se queda en nada.'],
+  ]),
+  biz_metro_works: c('Obras delante de tu negocio', 'El ayuntamiento abre una zanja delante de tu puerta para una línea de metro. Dicen que serán dos años.', [
+    'Aguantar',
+    ['Reclamar al ayuntamiento', 'Te dan una indemnización. Tarde, pero llega.', 'Te dan cita para dentro de un año.'],
+    'Empezar a llevarlo a domicilio',
+  ]),
+  career_strike: c('Huelga en la empresa', 'Convocan huelga por los sueldos. El jefe pregunta, sin preguntar, quién va a venir.', [
+    ['Ir a trabajar', 'El jefe se acuerda de quién vino.', 'Nadie se acuerda de nada. Salvo tus compañeros.'],
+    ['Unirte a la huelga', 'La huelga sale bien: sube el sueldo de todos.', 'No consiguen nada. Pierdes el día.'],
+    ['Ser quien negocia', 'Sales con un acuerdo y con nombre propio.', 'La empresa se acuerda de ti. Para mal.'],
+  ]),
+  life_school_reunion: c('La reunión de antiguos alumnos', 'Veinte años después, cena con la clase. Ya se sabe quién va a contar que le va genial.', [
+    'No ir',
+    'Ir a aparentar',
+    ['Ir y contar la verdad', 'Alguien de la clase busca a alguien como tú.', 'Os reís mucho. Nada más, y nada menos.'],
+  ]),
+  fam_child_streamer: c('Tu hijo quiere ser streamer', 'Tu hijo quiere dejarlo todo para hacer directos. Necesita un ordenador, cámara, micro y luces.', [
+    'Que estudie primero',
+    ['Comprarle el equipo', 'Un directo se hace viral. Hay patrocinadores llamando.', 'Doce espectadores. Tres son la familia.'],
+    ['Comprarle el equipo y llevarle la carrera', 'Con contratos y horarios, lo petáis.', 'Doce espectadores y un mánager muy implicado.'],
+  ]),
+  life_stag_party: c('Te toca organizar la despedida', 'Se casa tu mejor amigo y la despedida te toca a ti. El grupo ya habla de Las Vegas.', [
+    'Escaquearte',
+    'Algo sencillo, aquí',
+    'A lo grande, en Las Vegas',
+  ]),
+  career_linkedin_post: c('El post de LinkedIn', 'Has escrito un post sobre «lo que aprendí cuando todo salió mal». Solo falta darle a publicar.', [
+    'Borrarlo',
+    ['Publicarlo', 'Se comparte miles de veces. Te escriben dos empresas.', 'Unos cuantos likes y contactos nuevos.', 'Tus compañeros lo leen en voz alta en la oficina.'],
+  ]),
+  life_podcast: c('Te invitan a un pódcast', 'Un pódcast de finanzas personales quiere entrevistarte. Saben que entiendes de dinero.', [
+    'Decir que no',
+    ['Ir tal cual', 'Buena charla. Te escriben oyentes.', 'Un corte de diez segundos tuyo diciendo una barbaridad se hace viral.'],
+    ['Prepararlo a fondo', 'Te preparaste las cifras y se nota.', 'Aun así, alguien recorta la frase equivocada.'],
+  ]),
+  career_ai_agent: c('Una IA para tu puesto', 'La empresa prueba un agente de IA que hace buena parte de tu trabajo. Tú eres quien debe enseñarle.', [
+    ['Seguir como siempre', 'La prueba no convence. Todo sigue igual.', 'Funciona. Te recolocan en algo peor pagado.'],
+    'Aprender a manejarla',
+    ['Volcarte en lo que no hace la máquina', 'Tratar con personas sigue siendo cosa tuya.', 'La máquina también aprende a negociar.'],
+  ]),
+  life_gig_apps: c('Fines de semana con una app', 'Las apps de reparto y de coche con conductor buscan gente para los fines de semana.', [
+    'Descansar el fin de semana',
+    'Repartir en bici',
+    ['Conducir con tu coche', 'Dos años de carreras sin un rasguño.', 'Un golpe tonto en una rotonda. El seguro no cubre el trabajo.'],
+  ]),
+  inv_copy_trading: c('Copiar a un trader', 'Un trader de redes enseña un 400 % en un año. Una app copia sus operaciones automáticamente en tu cuenta.', [
+    'No tocarlo',
+    ['Probar con poco', 'Sale bien. De momento.', 'Recuperas la mitad.', 'El trader borra la cuenta. Y tu dinero con ella.'],
+    ['Ir en serio', 'Triplicas lo que pusiste.', 'Recuperas la mitad.', 'El trader borra la cuenta. Y tu dinero con ella.'],
+  ]),
+  luck_hacked: c('Te han hackeado', 'Te roban el correo y piden un rescate por tus fotos y tus documentos.', [
+    'Cambiar todas las claves y empezar de cero',
+    ['Pagar el rescate', 'Te devuelven el acceso.', 'Pagas, y aun así publican algunas fotos.'],
+    ['Denunciarlo', 'La policía cierra la cuenta de los ladrones a tiempo.', 'Antes de que hagan nada, tus fotos ya circulan.'],
+  ]),
+  fam_signal_group: c('El grupo de tu suegro', 'Tu suegro te añade a un grupo de WhatsApp que invierte siguiendo las «señales» de un gurú anónimo.', [
+    'Silenciar el grupo',
+    'Salirte del grupo',
+    ['Seguir las señales', 'Una señal sale bien. Tu suegro te lo recuerda en cada comida.', 'Casi todo se pierde. Nadie en el grupo vuelve a hablar del tema.'],
+  ]),
+  house_remote_outskirts: c('Una casa a una hora, con fibra', 'Teletrabajas y pagas alquiler en la ciudad. A una hora hay casas con jardín y fibra por menos de la mitad.', [
+    'Seguir en la ciudad',
+    'Comprar una casa en las afueras',
+  ]),
+  house_back_home: c('Volver a casa de tus padres', 'Pasados los treinta y con las cuentas justas, tus padres te ofrecen tu antigua habitación. Sin alquiler.', [
+    'Seguir de alquiler',
+    'Volver un par de años',
+    'Volver solo un año',
+  ]),
+  life_midlife: c('La crisis de los cuarenta', 'Te miras al espejo y algo tiene que cambiar. Ya.', [
+    'Ir a terapia',
+    'Moto, tatuaje y un viaje',
+    'Pedir una excedencia y dar la vuelta al mundo',
+  ]),
+  fam_grandchild: c('Tu primer nieto', 'Vas a ser abuelo o abuela. Los padres primerizos están agotados y algo justos de dinero.', [
+    'Felicitarles y ya',
+    'Ayudarles con dinero',
+    'Cuidar del bebé unos días a la semana',
+  ]),
+  life_black_card: c('La tarjeta negra', 'El banco te ofrece su tarjeta más exclusiva: metal pesado, sala VIP en los aeropuertos y una cuota anual a juego.', [
+    'No, gracias',
+    'Aceptarla',
+    'Aceptarla y estrenarla a lo grande',
+  ]),
+  fam_piggy_bank: c('La hucha', 'Tu hijo ha roto la hucha y quiere «invertir como los mayores».', [
+    'Guardarlo en un cajón',
+    'Abrirle una cuenta en un fondo indexado',
+    'Enseñarle cómo funciona el dinero',
+  ]),
+  house_lift_levy: c('La comunidad vota una mejora', 'Los vecinos votan poner ascensor y arreglar los accesos. Toca derrama, y la casa valdrá más.', [
+    ['Votar en contra', 'No sale adelante. Hasta la próxima junta.', 'Sale igualmente. Pagas tu parte.'],
+    'Votar a favor',
+  ]),
+  biz_street_contest: c('El concurso del barrio', 'El barrio premia la mejor terraza y el mejor escaparate. El premio son clientes.', [
+    'No participar',
+    ['Ir a por el premio', 'Ganas. Sales en el periódico del barrio y se nota en caja.', 'Quedas a mitad de tabla. Algo de clientela nueva, al menos.'],
+  ]),
+  career_xmas_dinner: c('La cena de Navidad', 'La cena de empresa va por el tercer vino. El jefe está solo en la barra.', [
+    'Irte pronto',
+    'Quedarte y hacer contactos',
+    ['Decirle al jefe lo que piensas', 'Te escucha, y en enero te sube el sueldo.', 'Mañana nadie te mira a los ojos.', 'En enero te apartan de los proyectos buenos. Y del bonus.'],
+  ]),
+  career_sabbatical: c('Un año sabático', 'La empresa ofrece un año sin sueldo a quien quiera. Te guardan el puesto. O uno parecido.', [
+    'No, gracias',
+    ['Tomarte el año', 'Vuelves al mismo sitio, con otra cara.', 'Tu puesto ya lo hace otro. Te dan uno algo peor.'],
+  ]),
+  career_credit_stolen: c('Se lleva tu mérito', 'Un compañero presenta tu proyecto como suyo en la reunión con dirección.', [
+    'Callarte',
+    ['Enfrentarte a él', 'Lo aclaras delante de todos. Dirección toma nota.', 'Queda como una pelea. Nadie sale bien.'],
+    ['Ir a Recursos Humanos con pruebas', 'Las pruebas hablan. El proyecto vuelve a ser tuyo.', 'Te dicen que «es cosa del equipo».'],
+  ]),
+  luck_office_pool: c('La quiniela de la oficina', 'Todos ponen veinte y el boleto lo guardas tú. Ha tocado.', [
+    'Repartir el premio',
+    ['Decir que no ha tocado', 'Nadie lo comprueba nunca.', 'Alguien lo comprueba.'],
+  ]),
+  life_cooking_show: c('Un concurso de cocina en la tele', 'Buscan concursantes para un programa de cocina. Tus amigos dicen que tu tortilla merece la tele.', [
+    'Dejarlo estar',
+    ['Presentarte', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Se te quema la tortilla en directo.'],
+    ['Presentarte y entrenar a fondo', 'Ganas. Premio y entrevistas.', 'Llegas lejos. Te conocen en el barrio.', 'Los nervios pueden más.'],
+  ]),
+  luck_viral_bad: c('Viral, para mal', 'Alguien grabó tu discusión en un bar y el vídeo da la vuelta al mundo. Ya tienes apodo.', [
+    'Desaparecer de las redes',
+    ['Pedir perdón en un vídeo', 'La gente te perdona. Hasta te cae bien.', 'Nadie lo ve. El original sigue circulando.'],
+    ['Aprovecharlo y vender camisetas', 'Las camisetas se agotan. Dos veces.', 'Vendes unas cuantas. La fama, entera.'],
+  ]),
+  biz_influencer_review: c('Un influencer quiere comer gratis', 'Un influencer de la zona te ofrece una reseña estupenda a cambio de comer gratis todo el año.', [
+    ['Decirle que no', 'No pasa nada. Ni se acuerda.', 'Publica una reseña horrible. Por despecho.'],
+    ['Aceptar el trato', 'La reseña funciona: hay cola en la puerta.', 'Unos cuantos clientes nuevos. Y un comensal fijo.'],
+  ]),
+  health_smartwatch: c('El reloj te avisa', 'Tu reloj inteligente te avisa de un ritmo cardíaco raro. Dos veces esta semana.', [
+    ['Pensar que el reloj exagera', 'Exageraba.', 'No exageraba. Un susto en urgencias.'],
+    'Ir al médico a que lo miren',
+  ]),
+  house_festival_rental: c('Llega el festival', 'Un festival enorme llega a la ciudad y te ofrecen una fortuna por tu casa durante una semana.', [
+    'Quedarte en casa',
+    ['Alquilarla esa semana', 'Te la devuelven impecable. Hasta con flores.', 'Te la devuelven con una fiesta dentro. Toca pintar.'],
+  ]),
+  fam_school_treasurer: c('Las cuentas del AMPA', 'El grupo de padres del colegio te propone llevar las cuentas. Nadie más levanta la mano.', [
+    'Escaquearte',
+    'Aceptar',
+    'Aceptar y organizar la fiesta de fin de curso',
+  ]),
+  luck_drone_crash: c('Un dron en tu terraza', 'Un dron se estrella en tu terraza. Su dueño llama al timbre y ofrece pagarte para que no lo denuncies.', [
+    'Devolverle el dron sin más',
+    'Aceptar el dinero',
+    ['Denunciarlo', 'Te indemnizan por los daños, y bien.', 'La denuncia se pierde en un cajón.'],
+  ]),
+  life_concert: c('Tu grupo favorito toca en la ciudad', 'Las entradas se agotaron en un minuto. Quedan las de reventa, al triple.', [
+    'Quedarte sin ir',
+    'Pagar la reventa',
+    'Pista, primera fila y fiesta después',
+  ]),
+  luck_police_auction: c('La subasta de la policía', 'La policía subasta lo que ha requisado: coches, relojes, hasta un jet ski.', [
+    'Mirar y no pujar',
+    ['Pujar por un coche', 'Lo revendes con beneficio en un mes.', 'Era un cacharro. Lo vendes por piezas.'],
+    ['Pujar por un reloj de lujo', 'Auténtico. Y en tu muñeca.', 'Falso. Lo revendes como falso.'],
+  ]),
+  house_protected_flat: c('Te toca un piso protegido', 'Te ha tocado el sorteo de vivienda protegida: un piso a un precio muy por debajo del de mercado.', [
+    'Renunciar',
+    'Comprarlo',
+  ]),
+  career_startup_advisor: c('Asesor a cambio de acciones', 'Una startup te pide consejo financiero los fines de semana. No pueden pagarte: te ofrecen acciones.', [
+    'Decir que no',
+    ['Aceptar las acciones', 'La startup cierra. Las acciones no valen nada.', 'Una empresa grande la compra. Te toca algo.', 'Se convierte en una de las grandes. Tus acciones también.'],
+  ]),
+  house_upstairs_leak: c('El vecino de arriba te inunda', 'Se rompe una tubería en el piso de arriba y tu techo gotea. Su seguro dice que pagará. Algún día.', [
+    ['Esperar a que pague su seguro', 'El seguro paga y la obra se hace.', 'Meses de humedad. Al final, parte de la obra la pagas tú.'],
+    ['Adelantar la obra tú', 'El seguro te lo devuelve todo.', 'El seguro encuentra una cláusula. Pagas tú.'],
   ]),
 };

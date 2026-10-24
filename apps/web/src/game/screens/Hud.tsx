@@ -233,16 +233,6 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const [jail, setJail] = useState(false);
   // What sticks to the top tells the tabs under it how far down to stick.
   const stuck = useRef<HTMLDivElement>(null);
-  // The row with the portrait, watched so that once it has scrolled away the strip that sticks says whose life and which round it is.
-  const top = useRef<HTMLDivElement>(null);
-  const [away, setAway] = useState(false);
-  useEffect(() => {
-    const el = top.current;
-    if (!el || flush || typeof IntersectionObserver === 'undefined') return;
-    const watch = new IntersectionObserver(([entry]) => setAway(!entry.isIntersecting), { threshold: 0 });
-    watch.observe(el);
-    return () => watch.disconnect();
-  }, [flush]);
   useEffect(() => {
     const el = stuck.current;
     if (!el || flush) return;
@@ -295,7 +285,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       {/* A round opens in the first light and closes at night; a boom and a crisis each have a sky of their own. */}
       {skyline ? <div className={flush ? '' : 'mt-3 px-3'}><CityBanner cityId={p.cityId} light={cityLight(shown.timeline[shown.round], stage === 'news')} /></div> : null}
 
-      <div ref={top} className={`flex items-center gap-3 ${flush ? '' : `px-3 ${skyline ? 'mt-2' : 'mt-3'}`}`}>
+      <div className={`flex items-center gap-3 ${flush ? '' : `px-3 ${skyline ? 'mt-2' : 'mt-3'}`}`}>
         {onProfile ? (
           <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="shrink-0 leading-[0]">
             {framed}
@@ -331,16 +321,8 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         </button>
       </div>
 
+      {/* Only the three figures stick to the top: who, which round and the way out scroll away with the page. */}
       <div ref={stuck} className={flush ? 'flex flex-col gap-2' : 'sticky top-safe z-30 mt-2 flex flex-col gap-2 bg-night-800 px-3 pb-2 pt-1'}>
-      {away ? (
-        <div className="flex items-baseline justify-between gap-2 text-[13px] text-ink-200">
-          <span className="pixel truncate">
-            {character ? <span className="text-gold-500">{character} · </span> : null}
-            {common('age', { age })}
-          </span>
-          <span className="shrink-0">{t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })}</span>
-        </div>
-      ) : null}
       <div className="@container">
         <div className="grid grid-cols-3 gap-1.5">
           {/* Where money that comes in lands: coins fly here from a card that paid. */}
@@ -351,8 +333,9 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => setOpen('status')} />
         </div>
       </div>
+      </div>
 
-      <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block min-h-11 w-full text-left">
+      <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className={`block min-h-11 w-full text-left ${flush ? '' : 'px-3'}`}>
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
           <span className="pixel">{escaped ? t('escaped', { age: escapeAge(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
           <span className="pixel text-[14px] text-ink-200">
@@ -361,7 +344,6 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         </div>
         <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
       </button>
-      </div>
 
       {/* Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page: only the figures stay stuck. */}
       {compact ? (

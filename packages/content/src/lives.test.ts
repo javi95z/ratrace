@@ -256,7 +256,8 @@ describe('whole lives on the v1 content', () => {
           // One that failed in its first round is gone, and what was got back of it is cash.
           const failed = result.events.filter((e): e is Extract<typeof e, { kind: 'businessFailed' }> => e.kind === 'businessFailed');
           for (const owned of held.businesses) {
-            const fail = owned.age === 0 ? failed.find((e) => e.typeId === owned.typeId) : undefined;
+            // Two new ones of a kind (one from a card, one from an order) are told apart by what was got back of each.
+            const fail = owned.age === 0 ? failed.find((e) => e.typeId === owned.typeId && e.recovered === Math.floor((owned.capital * content.business.failRecoverPct) / 100)) : undefined;
             if (fail) {
               businesses += fail.recovered - owned.capital;
               failed.splice(failed.indexOf(fail), 1);
