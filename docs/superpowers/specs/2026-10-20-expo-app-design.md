@@ -214,7 +214,40 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
    listing from the game's art, the closed test (12 testers, 14 days), release.
 5. **The web on Expo.** Desk layout, locale URLs, PWA with its offline cache and service worker
    rules, legal pages, sitemap and share image, saves moved from IndexedDB, analytics; then the swap
-   on Vercel, with the user's go-ahead.
+   on Vercel, with the user's go-ahead. Three plans (below, "Phase 5 design").
+
+   **5a done, 2026-10-23** (report: `docs/superpowers/reports/2026-10-23-phase-5a-web-parity.md`).
+   The app's web export is light and keeps the Next web's browser contracts: what differs in a
+   browser is a `.web.ts(x)` twin of the phone's file (the store on the Next web's IndexedDB and
+   localStorage keys, older rules fetched from `/rules`, sprites, glows, charts and drawings as
+   images, CSS and SVG, the share card on a canvas, the cloud wired as the Next web wires it with
+   Google by redirect, the browser's clipboard and share sheet, Turnstile, error reports, the
+   Next web's words where the phone has its own), and `public/index.html` is the Next web's page
+   (viewport, body). `web:size`: 1.17 MB gzip of the app's JavaScript (budget 1.35 MB), no `.wasm`, none of Skia, SQLite,
+   formatjs's polyfills, the webview, the media library or the bundled older rules. Its ninety-three scenes were shot in the same Chrome as the
+   Next web's (`scene-shots.ts appweb`, `compare --against=appweb`): 73 clean and 20 within
+   a recorded and measured residual (a picture's edge at a fraction of a point, letters under the bar,
+   the Next web's own lamp sliver, an arrow on a Russian page); two full runs exit 0.
+   The shots found and fixed, in shared kit code with the phone unchanged, what a browser lays out
+   otherwise than iOS (the line a text is set from, a span's and a fallback run's line, Chrome's
+   1/64 px rounding of a ratio line, whole-pixel `onLayout`, an emoji's and a system sign's font
+   and size, CSS underlines, a blend isolated by react-native-web's `z-index: 0`, the safe areas
+   expo-router gives the web as zero, `BackHandler` on the web). A whole life was begun on the Next
+   web, its saves copied into the app's web's origin, continued there from the same round and
+   finished, the records keeping it (`scripts/web-life.ts`). The phone's scenes whose drawing the
+   phase moved into the kit were shot again on the simulator: unchanged (the news page's rules within
+   their records; no scene shows the gold rays or the life map in view, held by their tests).
+
+   **5b starts from** that web, still in development only (`/scene` and the shots need `__DEV__`),
+   reached at `/` with no language in its address: the language in the URL and `/` → `/{l}`, static
+   HTML per page, the service worker and its notices (VAPID), the install offer, Vercel Analytics,
+   the desk layout and its keyboard, code split by page (the first page ≤ 0.8 MB), and a preview
+   deployment beside the live web, with `EXPO_PUBLIC_*` set there as the Next web's `NEXT_PUBLIC_*`
+   are (`EXPO_PUBLIC_SITE_URL` per deployment, or the page's origin, for room invitations). Left
+   for it by 5a: the phone's words with no Next web counterpart (a picture saved to the photos, a
+   room of another version of the app, the notices refused), a sign on a Russian page set otherwise
+   than Chrome's fallback (the ← of the end, 5.33 pt), whole-pixel `onLayout` everywhere but the
+   rat's choices, and the minors the phase's reviews parked.
 6. **iPhone.** Sign in with Apple if required, App Store review, release.
 
 ## Calls made by the designer (not asked of the user; the user may overrule)

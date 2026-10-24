@@ -418,9 +418,11 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-history': {
-    shape: 17,
+    // 17 against phase 3's shots of the web, 20 against phase 5a's (2026-10-23) with the phone's shots unchanged: the web's own rats differ by a few
+    // pixels from one shot to the next. The most measured and the spread again.
+    shape: 20 + 3,
     oneSided: 0,
-    reason: 'The rats of the game\'s players in its sheet, pictures at a fraction of a point, a device pixel apart.',
+    reason: 'The rats of the game\'s players in its sheet, pictures at a fraction of a point, a device pixel apart; the web\'s own shots of them differ by a few pixels from one shot to the next (17 and 20 measured).',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
 };
@@ -495,9 +497,11 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-lobby-friends': {
-    shape: 5,
+    // 5 and 10 over three shots of the Next web's page (its own rats are drawn a few pixels otherwise from one shot to the next, the app's web's
+    // the same): the record is the most measured and as much again.
+    shape: 10 + 5,
     oneSided: 0,
-    reason: 'The rats of the seats, as in rankings-friends.',
+    reason: 'The rats of the seats, as in rankings-friends; the Next web\'s own shots of them differ by a few pixels from one shot to the next (5 and 10 measured).',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-lobby-public': {

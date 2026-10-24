@@ -59,13 +59,115 @@ shot again. In the order they were found:
 
 ## Results
 
-RESULTS
+Two full runs of `appweb compare --against=appweb` over the 93 scenes, one after the other (`scene-shots.ts`, the app's web served by Metro on 8091,
+the Next web's shots of the same day): both exit 0, with the same numbers. **73 clean, 20 accepted** (their records in `ACCEPTED_APP_WEB`, below), none
+moving, none in other words. Every line of text of every scene stands within a point of the Next web's (the worst 1 pt), but the arrow of `end-ru`
+(below). The raw share (any pixel unlike, by any amount) is near 12 % on a plain page: the ground's weave of dots, the Next web's radial gradient
+against the app's `dots.png` tile, a shade apart; nothing of it is beyond a device pixel and a shade. The table is the comparison over the Next web's
+shots taken last (below), whose numbers are the two runs' but `room-lobby-friends` (10, where the runs' web shots gave 5).
+
+| Scene | Verdict | Raw % | Shape px | Text lines (one shot only) | Worst pt |
+|---|---|---|---|---|---|
+| home-new | clean | 11.93 | 0 | 15 (0) | 0 |
+| home-continue | clean | 12.53 | 0 | 15 (0) | 0 |
+| home-settings | clean | 0 | 0 | 29 (0) | 0 |
+| home-lost-newer | clean | 10.41 | 0 | 17 (0) | 0 |
+| new-first | clean | 12.61 | 0 | 25 (0) | 0.67 |
+| new-unlocked | clean | 10.52 | 0 | 32 (0) | 0.67 |
+| new-locked | clean | 2.84 | 0 | 65 (0) | 0.33 |
+| new-replace | clean | 0.01 | 0 | 31 (0) | 0 |
+| play-news-r1 | accepted | 3.68 | 4 | 42 (0) | 0.33 |
+| play-cards-r1 | clean | 5.95 | 0 | 42 (0) | 0.33 |
+| play-cards-legendary | clean | 9.72 | 0 | 35 (0) | 0.33 |
+| play-cards-three | clean | 6.33 | 0 | 40 (0) | 0.33 |
+| play-cards-ru-360 | clean | 8.47 | 0 | 37 (0) | 0.33 |
+| play-finance-r6 | clean | 3.92 | 0 | 52 (0) | 0.33 |
+| play-outcome-r1 | clean | 10.1 | 0 | 31 (0) | 1 |
+| play-resolve-r6 | accepted | 5.75 | 3 | 41 (0) | 0.33 |
+| play-news-r6 | accepted | 3.67 | 1 | 41 (0) | 0.33 |
+| play-guide-r1 | accepted | 4.74 | 241 | 42 (0) | 1 |
+| play-fault | clean | 15.55 | 0 | 6 (0) | 0 |
+| play-pageturn | accepted | 3.64 | 365 | 51 (0) | 0.33 |
+| finance-basket | clean | 0.04 | 0 | 56 (0) | 0 |
+| finance-pension | clean | 0.03 | 0 | 68 (0) | 0 |
+| finance-tabs-ru-360 | clean | 5.97 | 0 | 51 (0) | 0.33 |
+| finance-market | clean | 4.02 | 0 | 61 (0) | 0.33 |
+| finance-buy-stock | clean | 0.04 | 0 | 83 (0) | 0.33 |
+| finance-property | clean | 4.04 | 0 | 40 (0) | 0.33 |
+| finance-debt | clean | 6.99 | 0 | 36 (0) | 0.33 |
+| hud-news-r1 | accepted | 15.57 | 4 | 20 (0) | 0.33 |
+| hud-cash | clean | 0.03 | 0 | 30 (0) | 0 |
+| hud-flow | clean | 0.03 | 0 | 32 (0) | 0 |
+| hud-race | clean | 0.06 | 0 | 36 (0) | 0 |
+| hud-status-ru | clean | 0.26 | 0 | 44 (0) | 0.33 |
+| hud-jailed | clean | 0.03 | 0 | 33 (0) | 0 |
+| hud-crisis | clean | 16.3 | 0 | 21 (0) | 0.33 |
+| hud-crisis-details | clean | 0.03 | 0 | 33 (0) | 0 |
+| amount-savings | clean | 0.03 | 0 | 30 (0) | 0 |
+| celebrate-legendary | clean | 0.04 | 0 | 24 (0) | 0 |
+| celebrate-earned | accepted | 13.24 | 230 | 27 (0) | 0.33 |
+| challenge-practice | clean | 9.64 | 0 | 15 (0) | 0 |
+| legal | clean | 19.12 | 0 | 34 (0) | 0 |
+| finance-lifestyle | clean | 3.97 | 0 | 47 (0) | 0.33 |
+| finance-move | clean | 0.09 | 0 | 72 (0) | 0 |
+| play-cards-city | clean | 0.03 | 0 | 50 (0) | 0 |
+| work-panel | clean | 4.67 | 0 | 33 (0) | 0.33 |
+| finance-shop | clean | 4.78 | 0 | 50 (0) | 0.33 |
+| finance-item | clean | 0.04 | 0 | 71 (0) | 0 |
+| finance-taxes | clean | 3.94 | 0 | 48 (0) | 0.33 |
+| finance-business | accepted | 4.1 | 4 | 58 (0) | 0.33 |
+| profile-r6 | accepted | 0.12 | 30 | 77 (0) | 0.33 |
+| profile-owned | clean | 0.08 | 0 | 85 (0) | 0 |
+| balance-r6 | clean | 0.07 | 0 | 90 (0) | 0 |
+| rivals-r6 | clean | 14.88 | 0 | 20 (0) | 0.33 |
+| end-escaped | clean | 4.54 | 0 | 24 (0) | 0 |
+| end-bankrupt | clean | 4.54 | 0 | 25 (0) | 0 |
+| end-share | clean | 0 | 0 | 29 (0) | 0 |
+| end-ru | accepted | 5.33 | 0 | 25 (0) | 5.33 |
+| moment-escape | clean | 0.03 | 0 | 52 (0) | 0 |
+| moment-bankrupt | clean | 0.03 | 0 | 54 (0) | 0 |
+| moment-crisis | clean | 0.03 | 0 | 56 (0) | 0 |
+| records-empty | clean | 19.61 | 0 | 3 (0) | 0 |
+| records-three | clean | 10.52 | 0 | 28 (0) | 0 |
+| records-detail | clean | 0 | 0 | 42 (0) | 0 |
+| collection-items | clean | 7.74 | 0 | 14 (0) | 0 |
+| collection-badges | clean | 7.88 | 0 | 29 (0) | 0 |
+| profile-financed | clean | 0 | 0 | 95 (0) | 0 |
+| settings-account-guest | clean | 0.01 | 0 | 31 (0) | 0 |
+| settings-account-member | clean | 0 | 0 | 35 (0) | 0 |
+| home-offer | clean | 0 | 0 | 29 (0) | 0 |
+| home-account-taken | clean | 9.9 | 0 | 18 (0) | 0 |
+| rankings-all | clean | 5.95 | 0 | 63 (0) | 0.33 |
+| rankings-week | clean | 9.58 | 0 | 45 (0) | 0.33 |
+| rankings-friends | accepted | 6.24 | 17 | 47 (0) | 0.33 |
+| rankings-challenge | clean | 7.49 | 0 | 43 (0) | 0 |
+| rankings-nickname | clean | 5.72 | 0 | 54 (0) | 0.33 |
+| player-member | accepted | 4.22 | 30 | 26 (0) | 0.33 |
+| player-editor-body | clean | 8.47 | 0 | 7 (0) | 0 |
+| player-editor-wear | clean | 1.9 | 0 | 10 (0) | 0 |
+| player-editor-scene | clean | 8.47 | 0 | 8 (0) | 0 |
+| player-friend-code | accepted | 4.22 | 30 | 27 (0) | 0.33 |
+| home-member | clean | 7.69 | 0 | 20 (0) | 0 |
+| challenge-attempt | clean | 7.35 | 0 | 18 (0) | 0 |
+| challenge-played | clean | 8.13 | 0 | 18 (0) | 0 |
+| end-standing | clean | 4.5 | 0 | 25 (0) | 0 |
+| new-ranked | clean | 11.24 | 0 | 29 (0) | 0.67 |
+| room-door | clean | 13.99 | 0 | 21 (0) | 0 |
+| room-lobby-friends | accepted | 7.17 | 10 | 26 (0) | 0 |
+| room-lobby-public | accepted | 7.55 | 9 | 25 (0) | 0 |
+| room-join-code | clean | 13.23 | 0 | 7 (0) | 0 |
+| room-playing | accepted | 4.84 | 99 | 43 (0) | 1 |
+| room-loans | accepted | 3.84 | 17 | 50 (0) | 0.33 |
+| room-resolved | accepted | 5.67 | 7 | 38 (0) | 0.33 |
+| room-end | accepted | 4.19 | 17 | 45 (0) | 0 |
+| room-history | accepted | 0.02 | 12 | 38 (0) | 0 |
+
 
 ## Residuals of the app's web: pictures at a fraction of a point
 
 A picture laid at a fraction of a point (a rat in a row, the city's picture in the Hud, a card's glow ending) stands where the Next web's does to the
 1/64 px on both sides (measured with `getBoundingClientRect`), and is drawn nearest-neighbour from its art: a few of its edge pixels are sampled on
-the next device row. `rankings-friends` (17), `room-lobby-friends` (5), `room-lobby-public` (14), `room-loans` (17), `room-resolved` (7), `room-end`
+the next device row. `rankings-friends` (17), `room-lobby-friends` (5 and 10 over the Next web's shots of one page, recorded 15), `room-lobby-public` (14), `room-loans` (17), `room-resolved` (7), `room-end`
 (17), `room-history` (12): the rats. `play-news-r1` (4), `play-news-r6` (1), `hud-news-r1` (4), `play-resolve-r6` (3), `finance-business` (4): the
 city's picture and a picture's edge. `celebrate-earned` (230): the last row of the light under the last card, the width of the page.
 
@@ -90,20 +192,77 @@ to settle if the user wants the arrow exact on Russian pages.
 
 ## The phone, where the phase moved its drawing
 
-PHONE
+Task 6 moved the phone's Skia drawings of the news page's rules, the Hud's gold rays and the life map's route into kit components (`ui/DashedRule`,
+`ui/Rays`, `ui/RouteLayer`, with web twins). The phone's scenes were shot again on the iPhone 16 Pro simulator (iOS 18.0, Expo Go from the Metro
+on 8090, `scene-shots.ts app compare`), with the scenes this task touched on the phone's side (Play's Back, the challenge's link, the rat's
+choices, the screens that say the app's own words):
+
+- **The news page's dashed rules**: `play-news-r1`, `play-news-r6`, `play-guide-r1`, `play-pageturn`, `room-playing`: each within its phase 2/3
+  record, the same numbers (1443, 1443, 3453, 3897, 1551 shape px).
+- **The Hud** (`hud-cash`, `hud-race`, `hud-status-ru`): clean. **The life's end** (`end-escaped` clean, `end-bankrupt`, `end-ru` within record).
+- **The gold rays and the life map's route are on no scene's screen**: no scene's status reaches the rays' tier, and the map stands below the
+  fold of every end (`[data-backdrop="rays"]` and the route's `svg` looked for in all 93 scenes on the app's web: none in view). Those two
+  drawings are held by their own tests (`ui/Rays.test.tsx`, `ui/RouteLayer.test.tsx` and their web twins'), not by a shot.
+- The rest: `challenge-*`, `player-*`, `home-*`, `legal`, `room-*`, `collection-badges`, `moment-escape`, `finance-move`,
+  `settings-account-member`, `celebrate-legendary`: clean or within their records, but `room-history` (below). `home-lost-newer` once never said
+  it was ready in 60 s on the first route after Expo Go was opened fresh, and was ready and clean when shot again.
+
+Then the whole phone comparison (`scene-shots.ts compare`, every scene, the phone's shots of phases 2 and 3 against the Next web's shots of
+today) exits 0: the phone is unchanged.
 
 ## A whole life in the browser
 
-LIFE
+`apps/mobile/scripts/web-life.ts`, offline: the Next web is the shots' own `next dev` on 3021 (no project in its environment), the app's web the Metro
+on 8091 (no `EXPO_PUBLIC_SUPABASE_*`), one Chrome kept from every host but this machine. Two ports are two origins, where the swap keeps one: the
+Next web's records are copied into the app's web's origin before its first load. The last run (exit 0), step by step, its pictures in
+`phase-5a-web-parity/`:
+
+1. Next web (3021): a new life, the nurse, begun from the front door: round 1, its news (`life-1-next-round1.png`).
+2. Next web: played to round 3, a press at a time (each card's first open choice, no orders), its news (`life-2-next-round3.png`).
+   - Read from the 3021 origin with `page.evaluate`: IndexedDB `ratrace` v1, `currentGame` 1 record, `profile` 1, `runs` 0; of the inventory's
+     localStorage keys (`ratrace.basket`, `ratrace:given-up`, `ratrace:refused`, `ratrace.lastAccount`) none was set (no orders, no account).
+   - The life in progress: `15e98c5b-4af3-4ffa-851c-e7a2f3258488`, round 3.
+   - Written into the 8091 origin on a page of that origin that is not the app (`/seed`, answered by the script, never served), with the Next
+     web's own schema (`apps/web/src/session/indexeddb.ts`): 2 records, 0 localStorage keys.
+3. App's web (8091): the front door offers to continue the life (`life-3-app-home.png`).
+4. Continue reaches round 3, its news (`life-4-app-round3.png`).
+5. Played to the end (moments' buttons and any sheet closed as a player closes them), the end screen (`life-5-app-end.png`).
+6. The records list the life, the nurse's (`life-6-app-records.png`); the 8091 origin keeps that finished life (`runs`: 1 record, its `runId` the
+   saved game's id and its seed the same) and the same life, ended, as the one whose end the front door shows, as the Next web keeps it.
+
+The pages said nothing (no page error, no console error) but the analytics request the shots' browser keeps from va.vercel-scripts.com. Two earlier
+runs found what the script then learned: a sheet over the game (closed now as a player closes it), and the records' items holding items of their
+own (the life is checked by its words and in the store). One found a fault of the app's web, fixed: Play listened to Android's Back through
+`BackHandler`, which react-native-web answers with a console error, shown in development as a toast over the bar of the next step.
 
 ## The Next web's shots, shot again
 
-WEBSHOTS
+The Next web's shots in `phase-2-parity/` were taken again by this task (`scene-shots.ts web`, the same `next dev` and Chrome) and are committed:
+the Next web as it is on `expo` today, which both comparisons read. Fifteen of them differ from phase 3's: `legal` by its words (the Next web's
+notice changed with the merge of `dev`, `a0cf71f3`), the rest by a few pixels of their pictures. The Next web's own shots of one page differ from
+one shot to the next in its pictures (a banner drawn pixel for pixel at a scale that is not whole, the rats of a row): measured over three shots,
+`room-lobby-friends` against the app's web was 5 and 10 px, and the phone's `room-history` 17 and 20 px against phase 3's and today's shots with the
+phone's shots unchanged. Their records are the most measured and the spread again (`ACCEPTED_APP_WEB['room-lobby-friends']` 15,
+`ACCEPTED['room-history']` 23, each saying so). The phone's results file was written again by the comparison over today's shots: every line as
+before but `legal` (shape 39283, within its baseline's drift) and `room-history` (20). Two full runs of the app's web were taken over the shots of
+the first web step; a third comparison over the shots taken last exits 0 too.
 
 ## Weight
 
-SIZE
+`pnpm --filter @ratrace/mobile web:size`, offline: `web export: 1194 files, 20 app JS files 4.89 MB (1.17 MB gzip, budget 1.32), 0 wasm, 18/18 older
+rules, 2836 sources` and `the web export is as light as it must be`. (The fixes of this task add no library: `react-native-safe-area-context`'s web
+provider was already in the bundle.)
 
 ## For phase 5b
 
-FIVEB
+- **Words.** The app's web says the Next web's words where the phone has its own and the Next web has a counterpart (`game/ownWords.web.ts`); a
+  word of the phone's with none stays the phone's on the web: a picture saved to the photos or not, a room of another version ("update the app"),
+  the notices refused in the phone's settings, a life's row's hint. 5b settles them with the platform's pieces they belong to.
+- **`onLayout` in whole pixels.** react-native-web reads a layout from `offsetTop`/`offsetWidth`; only the rat's choices read theirs to the
+  fraction (`ui/layoutTop.web.ts`). No other scene showed it; a layout read to place something drawn (the coins' flight, a row's reveal) may be a
+  pixel off on the web.
+- **A sign on a Russian page** (the ← of `end-ru`, above).
+- **The development server only.** The shots and the whole life ran on `expo start --web` (its `/scene` route is `__DEV__`); the export itself was
+  checked for weight only. 5b's preview deployment is the first place the exported page runs.
+- **Next.js's dev server** stopped now and then to recommend an upgrade of Next.js (a security notice of its own, in `.kit-shots/web-server.log`);
+  the shots' driver starts it again, as it was built to. Nothing was upgraded: that is the user's call, on `dev`.
