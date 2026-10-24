@@ -60,8 +60,11 @@ test('a build that names the address empty, or as spaces, gets the published one
 
 test('the way into the game a picture of a life carries is that address, in the language of the life, as the web\'s share card writes it', async () => {
   const { SITE_URL } = await import('./site');
+  const { hrefOf } = await import('./pages');
   expect(new URL('/en', SITE_URL).href).toBe(`${SITE_URL.origin}/en`);
   const card = readFileSync(new URL('../../../web/src/game/screens/ShareCard.tsx', import.meta.url), 'utf8');
   expect(card).toContain("const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });");
-  expect(readFileSync(new URL('./screens/ShareCard.tsx', import.meta.url), 'utf8')).toContain("const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });");
+  // The app writes the address of the front door of a language through its pages (`hrefOf`), which is the web's `/${locale}`.
+  expect(readFileSync(new URL('./screens/ShareCard.tsx', import.meta.url), 'utf8')).toContain("const invite = t('invite', { url: new URL(hrefOf('', { locale }), SITE_URL).href });");
+  for (const locale of ['en', 'es', 'ru']) expect(hrefOf('', { locale })).toBe(`/${locale}`);
 });

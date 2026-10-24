@@ -160,7 +160,7 @@ describe('the rankings', () => {
     expect(screen.getByRole('heading', { name: 'Rankings' })).toBeTruthy();
     expect(screen.queryByRole('tablist')).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('lists the best ranked life of each player, the highest first, and marks the player\'s own line', async () => {

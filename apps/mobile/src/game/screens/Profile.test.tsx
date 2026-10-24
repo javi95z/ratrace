@@ -366,7 +366,7 @@ describe('the way out of a life, at the foot of the profile', () => {
     const profile = await openProfile();
     expect(within(profile).getByText('Your life is saved after every step.')).toBeTruthy();
     fireEvent.click(within(profile).getByRole('link', { name: 'Leave to the home screen' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
     expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
   });
 
@@ -377,7 +377,7 @@ describe('the way out of a life, at the foot of the profile', () => {
     const leave = await screen.findByRole('link', { name: 'Leave to the home screen' });
     fireEvent.click(leave);
     fireEvent.click(leave);
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(router.dismissTo).toHaveBeenCalledTimes(1);
   });

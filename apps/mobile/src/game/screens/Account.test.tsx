@@ -74,7 +74,7 @@ describe('the account in the settings', () => {
     const sheet = sheetTitled('Sign out?');
     expect(sheet.textContent).toContain('Your lives and progress stay in your account, but leave this device.');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Sign out' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
     expect(said()).toContain('sign out');
     expect(await services.store.loadGame()).toBeNull();
   });

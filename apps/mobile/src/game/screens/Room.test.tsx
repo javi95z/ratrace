@@ -142,7 +142,7 @@ describe('the way to the rooms', () => {
     const { server, services } = inRooms();
     renderGame(<Home />, services);
     press(await screen.findByRole('link', { name: /Multiplayer/ }));
-    expect(router.push).toHaveBeenCalledWith('/room');
+    expect(router.push).toHaveBeenCalledWith('/en/room');
     cleanup();
     const room = await lobby(server);
     renderGame(<Home />, services);
@@ -1275,7 +1275,7 @@ describe('a quick game from the end of a life alone', () => {
     renderGame(<End />, services);
     expect(await screen.findByText('In a quick game everyone lives the same life in the same world, and whoever ends with the most points wins.', {}, { timeout: 10_000 })).toBeTruthy();
     press(screen.getByRole('button', { name: 'Quick game' }));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/room'));
     expect(server.db.members.map((m) => m.user_id)).toEqual([HOST]);
     expect(counted).toContainEqual({ name: 'game_join', via: 'quick' });
   });

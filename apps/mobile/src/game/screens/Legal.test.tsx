@@ -77,7 +77,7 @@ describe('the legal notice', () => {
   it('leads back to the front door', () => {
     renderGame(<Legal />, memoryServices());
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('is written in Spanish and in Russian too, each with its own words', () => {

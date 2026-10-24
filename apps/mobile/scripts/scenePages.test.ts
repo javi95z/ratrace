@@ -381,7 +381,7 @@ test('the games with others are drawn at the same table on both sides, the core\
   expect(web).toContain("address.searchParams.set('code', code);");
   expect(read('../../web/src/game/screens/Room.tsx')).toContain("new URLSearchParams(window.location.search).get('code')");
   expect(app).toContain("room: (scene) => (scene.name === 'room-history' ? <Records game={sceneGameOpened(scene.name)} /> : <Room code={sceneInvite(scene.name)} />),");
-  expect(read('../src/app/room.tsx')).toContain('<Room code={');
+  expect(read('../src/app/[locale]/room.tsx')).toContain('<Room code={');
 });
 
 test('a game with others in play is drawn on both sides once the life in its room is open, its one round played by the same script; the games over are the records\'', () => {

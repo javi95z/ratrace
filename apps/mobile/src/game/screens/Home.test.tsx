@@ -33,9 +33,9 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'New life' })).textContent).toBe('New life');
     fireEvent.click(screen.getByRole('link', { name: 'New life' }));
-    expect(router.push).toHaveBeenCalledWith('/new');
+    expect(router.push).toHaveBeenCalledWith('/en/new');
     fireEvent.click(screen.getByRole('link', { name: /^Weekly challenge/ }));
-    expect(router.push).toHaveBeenCalledWith('/challenge');
+    expect(router.push).toHaveBeenCalledWith('/en/challenge');
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
     // Where it is kept is said behind the settings, not on the door.
     expect(screen.queryByText('Your life saves itself after every step.')).toBeNull();
@@ -97,9 +97,9 @@ describe('the front door', () => {
   it('leads to the collection and to the records', async () => {
     renderGame(<Home />, memoryServices());
     fireEvent.click(await screen.findByRole('link', { name: 'Collection' }));
-    expect(router.push).toHaveBeenLastCalledWith('/collection');
+    expect(router.push).toHaveBeenLastCalledWith('/en/collection');
     fireEvent.click(screen.getByRole('link', { name: 'Records' }));
-    expect(router.push).toHaveBeenLastCalledWith('/records');
+    expect(router.push).toHaveBeenLastCalledWith('/en/records');
     expect(document.querySelector('[data-sprite="icon.star"]')).not.toBeNull();
     expect(document.querySelector('[data-sprite="icon.trophy"]')).not.toBeNull();
   });
@@ -120,7 +120,7 @@ describe('the front door', () => {
     renderGame(<Home />, services);
     const carry = await screen.findByRole('link', { name: /Continue your life/ });
     fireEvent.click(carry);
-    expect(router.push).toHaveBeenCalledWith('/play');
+    expect(router.push).toHaveBeenCalledWith('/en/play');
     expect(carry.textContent).toContain('Software engineer · age 22 · Tokyo');
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
     // It is the first of the links.
@@ -175,7 +175,7 @@ describe('the front door', () => {
     renderGame(<Home />, services);
     const last = await screen.findByRole('link', { name: 'See how your last life ended' });
     fireEvent.click(last);
-    expect(router.push).toHaveBeenCalledWith('/play');
+    expect(router.push).toHaveBeenCalledWith('/en/play');
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
   });
@@ -195,7 +195,7 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices());
     const link = await screen.findByRole('link', { name: 'Privacy and legal notice' });
     fireEvent.click(link);
-    expect(router.push).toHaveBeenCalledWith('/legal');
+    expect(router.push).toHaveBeenCalledWith('/en/legal');
     const all = screen.getAllByRole('link');
     expect(all[all.length - 1]).toBe(link);
   });
@@ -446,7 +446,7 @@ describe('the life waiting in the account', () => {
     // The sheets gone, the game is opened, and the question was not there.
     act(() => leaving());
     await waitFor(() => expect(pushedWithSheet).toEqual([false]));
-    expect(router.push).toHaveBeenCalledWith('/play');
+    expect(router.push).toHaveBeenCalledWith('/en/play');
     expect(asked).toEqual(['take']);
     // The game on screen is the one that was taken.
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');
@@ -653,7 +653,7 @@ describe('the front door of a player with an account', () => {
       // The account read: it brought the further copy, which the device now holds and the game opens; the line says where it is now, and Play opens it.
       await services.store.saveGame(newer as never);
       cloud.readNow();
-      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/play'));
       expect(opened).toEqual([newerRound]);
       expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).not.toBe(before);
     } finally {
@@ -689,7 +689,7 @@ describe('the front door of a player with an account', () => {
       expect(router.push).not.toHaveBeenCalled();
       await services.store.saveGame(newer as never);
       cloud.readNow();
-      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'));
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/play'));
       expect(opened).toEqual([newerRound]);
     } finally {
       router.push.mockReset();
@@ -718,7 +718,7 @@ describe('the front door of a player with an account', () => {
     const pressed = Date.now();
     fireEvent.click(carry);
     expect(router.push).not.toHaveBeenCalled();
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/play'), { timeout: 3000 });
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/play'), { timeout: 3000 });
     expect(Date.now() - pressed).toBeGreaterThanOrEqual(1400);
   });
   /** The other players, answering only what the front door asks: the player's own profile, their friends, today's attempt. */
@@ -730,7 +730,7 @@ describe('the front door of a player with an account', () => {
     renderGame(<Home />, { ...memoryServices(), account: accountOf(GUEST).account, community: () => othersOf() });
     const rankings = await screen.findByRole('link', { name: 'Rankings' });
     fireEvent.click(rankings);
-    expect(router.push).toHaveBeenLastCalledWith('/rankings');
+    expect(router.push).toHaveBeenLastCalledWith('/en/rankings');
     expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
     // Across the row under the collection and the records, as the web's `col-span-2`.
     expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'Records', 'Rankings', 'Privacy and legal notice']);
@@ -749,7 +749,7 @@ describe('the front door of a player with an account', () => {
     const requests = await screen.findByRole('link', { name: '2 friend requests' });
     expect(requests.querySelector('[data-sprite="icon.multiplayer"]')).not.toBeNull();
     fireEvent.click(requests);
-    expect(router.push).toHaveBeenLastCalledWith('/rankings?tab=friends');
+    expect(router.push).toHaveBeenLastCalledWith('/en/rankings#friends');
     expect(asked).toEqual(['friends']);
     cleanup();
     renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => othersOf({ friends: async () => ({ friends: [friend('c')], incoming: [], outgoing: [] }) }) });
@@ -772,7 +772,7 @@ describe('the front door of a player with an account', () => {
     renderGame(<Home />, { ...services, account: accountOf(MEMBER).account });
     const profile = await screen.findByRole('link', { name: 'Your profile' });
     fireEvent.click(profile);
-    expect(router.push).toHaveBeenLastCalledWith('/player');
+    expect(router.push).toHaveBeenLastCalledWith('/en/player');
     // In the settings panel at the foot, after the account.
     const foot = screen.getByRole('region', { name: 'Account' });
     expect(foot.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -798,7 +798,7 @@ describe('the front door of a player with an account', () => {
     });
     renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => others });
     fireEvent.click(await screen.findByRole('link', { name: '2 friend requests' }));
-    expect(router.push).toHaveBeenLastCalledWith('/rankings?tab=friends');
+    expect(router.push).toHaveBeenLastCalledWith('/en/rankings#friends');
     await screen.findByText(/^(Ends today|\d days? left)$/);
     const before = { friends: asked.filter((what) => what === 'friends').length, me: asked.filter((what) => what === 'me').length };
     // On the rankings' page both requests are answered; on the profile's the rat is dressed; and today's attempt is played.

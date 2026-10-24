@@ -7,7 +7,6 @@ import { obituary } from '@ratrace/core/game/quips';
 import { bestsOf } from '@ratrace/core/game/records';
 import type { Best } from '@ratrace/core/game/records';
 import { shareCard } from '@ratrace/core/game/share';
-import { useRouter } from 'expo-router';
 import { createContext, memo, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useCountUp } from '../../ui/animations';
@@ -33,6 +32,7 @@ import { RankGain } from './RankCard';
 import { RivalsBoard } from './Rivals';
 import { ShareCard } from './ShareCard';
 import { WorthGraph } from './WorthGraph';
+import { useGo } from '../pages';
 
 /*
  * The web's End.tsx, on the phone, in the web's phone layout (its desk's two columns are one). `extra` is a room's.
@@ -138,7 +138,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const meta = useT('meta');
   const words = useWords();
   const { content, text, names, fmt } = words;
-  const router = useRouter();
+  const go = useGo();
   // The panels under the first screen come once the first are on it.
   const rest = useDrawnFirst();
   const history = useGame((s) => s.history);
@@ -273,7 +273,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
                 bg="night-600"
                 place={{ marginTop: 12, alignSelf: 'stretch' }}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12 }}
-                onPress={() => router.push('/rankings')}
+                onPress={() => go.push('rankings')}
               >
                 <Sprite id="icon.trophy" />
                 <PixelText size={15} tone="teal-300" style={{ flexShrink: 1, textAlign: 'center' }}>{t('rankedLink')}</PixelText>
@@ -381,7 +381,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
 
           <Panel title={t('badges')} label={t('badges')}>
             {earned.length === 0 ? <ReadText size={14} tone="ink-300">{t('noBadges')}</ReadText> : <EarnedBadges earned={earned} gameId={gameId} />}
-            <Raised role="link" bg="night-600" place={{ marginTop: 12 }} style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/collection')}>
+            <Raised role="link" bg="night-600" place={{ marginTop: 12 }} style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.push('collection')}>
               <PixelText size={15} tone="ink-200" style={{ textAlign: 'center' }}>{t('collection')}</PixelText>
             </Raised>
           </Panel>
@@ -392,10 +392,10 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
           <View style={{ gap: 12, paddingTop: 8 }}>
             <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} opened={opened.share === true} />
             {/* Another life takes the place of this screen; the front door is wherever it stands in the stack. */}
-            <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.replace('/new')}>
+            <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.replace('new')}>
               <PixelText size={19} tone="ink-900" style={{ textAlign: 'center' }}>{t('again')}</PixelText>
             </Raised>
-            <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.dismissTo('/')}>
+            <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.home()}>
               <PixelText size={17} style={{ textAlign: 'center' }}>{t('home')}</PixelText>
             </Raised>
           </View>
@@ -464,7 +464,7 @@ const EarnedBadge = memo(function EarnedBadge({ id, name, fresh, onOpen }: { id:
 function UnlockedLife({ lifeId }: { lifeId: string }) {
   const t = useT('end');
   const { text } = useWords();
-  const router = useRouter();
+  const go = useGo();
   const start = useGame((s) => s.start);
   const ranking = useRanking();
   const [starting, setStarting] = useState(false);
@@ -473,10 +473,10 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
     setStarting(true);
     try {
       // In place of this screen, as another life is begun from it: never a second Play on the stack.
-      if (!(await start(lifeId, { ranked: ranking === 'yes' }))) router.replace('/new');
+      if (!(await start(lifeId, { ranked: ranking === 'yes' }))) go.replace('new');
     } catch (error) {
       console.error('the life could not be started:', error);
-      router.replace('/new');
+      go.replace('new');
     } finally {
       setStarting(false);
     }
@@ -507,7 +507,7 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
 function VersusOthers() {
   const t = useT('end');
   const track = useTrack();
-  const router = useRouter();
+  const go = useGo();
   const status = useRoom((s) => s.status);
   const busy = useRoom((s) => s.busy);
   const quick = useRoom((s) => s.quick);
@@ -524,7 +524,7 @@ function VersusOthers() {
             // Seated or not, the rooms' page says how it went: the lobby, or why not.
             void quick().then((joined) => {
               if (joined) track({ name: 'game_join', via: 'quick' });
-              router.push('/room');
+              go.push('room');
             });
           }}
         >

@@ -331,6 +331,7 @@ async function playLife() {
     console.log(steps.at(-1));
 
     // 4. The app's web: Continue reaches the same round, and the life is played to its end.
+    // The bare address, which leads to the front door of the cookie's language (the Next web's, on this same host): `/en`.
     await page.goto(`http://localhost:${APP_WEB_PORT}/`, { waitUntil: 'load' });
     if (target === 'dev') {
       // Offline: the page's environment, as Expo's development server gives it, names no project (it was started with no EXPO_PUBLIC_SUPABASE_*).
@@ -359,7 +360,7 @@ async function playLife() {
     await step(page, `${appWeb}: the life played to its end, the end screen`, 'app-end');
 
     // The records show it.
-    await page.goto(`http://localhost:${APP_WEB_PORT}/records`, { waitUntil: 'load' });
+    await page.goto(`http://localhost:${APP_WEB_PORT}/en/records`, { waitUntil: 'load' });
     // The past lives: the Next web's section of them, the app's list (a FlatList, named as the section is).
     const past = page.getByRole('list', { name: en.records.history }).getByRole('listitem');
     await past.first().waitFor({ state: 'visible', timeout: 60_000 });

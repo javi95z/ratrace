@@ -1,4 +1,5 @@
 import type { Account, Community } from '@ratrace/online/types';
+import type { Page } from '../game/pages';
 
 /*
  * The web export's twin of `push.ts` (Metro picks it for the web). The game's notices on the web are the browser's own push subscription, which come
@@ -21,6 +22,12 @@ export interface PushNote {
   write(noted: PushNoted): void;
 }
 
+/** A page a notice opens, and the query it opens it with (the phone's). */
+export interface NoticePage {
+  page: Page;
+  query: Record<string, string>;
+}
+
 /** The device, as the server knows it. */
 type Target = { expo: string };
 
@@ -35,7 +42,7 @@ export interface Push {
   resume(): void;
   target(): Promise<Target | null>;
   follow(account: Account, community: () => Community | null, locale: string): () => void;
-  onTap(open: (path: string) => void): () => void;
+  onTap(open: (to: NoticePage) => void): () => void;
 }
 
 /** The notices of a page that has none: never on, never asked, nothing for the account to keep or forget. Called as the phone's, its note unread. */

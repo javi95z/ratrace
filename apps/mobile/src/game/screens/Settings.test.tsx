@@ -152,7 +152,7 @@ describe('the settings of a life in progress', () => {
     fireEvent.click(within(again.sheet).getByRole('link', { name: /Back to the home screen/ }));
     // The sheet is closed first, and the page moves on when it is gone: never with a sheet still leaving.
     expect(onClosed).toHaveBeenCalledTimes(2);
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
     expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull();
   });
 });

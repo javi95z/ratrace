@@ -120,7 +120,7 @@ describe('the end of a life, as it is left', () => {
     renderGame(<Play />, services);
     const card = await screen.findByLabelText('A new life is open');
     await settled(() => void fireEvent.click(within(card).getByRole('button', { name: 'Try it now' })));
-    expect(router.replace).toHaveBeenCalledWith('/new');
+    expect(router.replace).toHaveBeenCalledWith('/en/new');
     // In place of this screen, as "Live another life" goes: never a second Play on the stack.
     expect(router.push).not.toHaveBeenCalled();
     said.mockRestore();
@@ -376,7 +376,7 @@ describe('the end of a ranked life', { timeout: 60_000 }, () => {
     const link = screen.getByRole('link', { name: 'This life is ranked: see the rankings' });
     expect(within(screen.getByRole('group', { name: 'Score' })).getByRole('link', { name: 'This life is ranked: see the rankings' })).toBe(link);
     fireEvent.click(link);
-    expect(router.push).toHaveBeenCalledWith('/rankings');
+    expect(router.push).toHaveBeenCalledWith('/en/rankings');
     cleanup();
 
     const casual = rankedGame();

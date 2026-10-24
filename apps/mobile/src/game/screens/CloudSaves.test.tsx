@@ -168,7 +168,7 @@ describe('a guest whose Google account is already a player\'s, on the phone', { 
     expect(router.push).not.toHaveBeenCalled();
     act(() => leaving());
     await waitFor(() => expect(pushedWithSheet).toEqual([false]));
-    expect(router.push).toHaveBeenCalledWith('/play');
+    expect(router.push).toHaveBeenCalledWith('/en/play');
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');
     expect(((await phone.device.loadGame()) as SavedGame).lifeId).toBe('engineer');
     expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull();
@@ -182,7 +182,7 @@ describe('a guest whose Google account is already a player\'s, on the phone', { 
     await waitFor(() => expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull());
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
     expect(((await phone.device.loadGame()) as SavedGame).lifeId).toBe('nurse');
-    expect(router.push).not.toHaveBeenCalledWith('/play');
+    expect(router.push).not.toHaveBeenCalledWith('/en/play');
     // The account is told a little later that the life is over: never offered again, here or anywhere.
     await act(async () => phone.later());
     expect(project.held('member-1').games.find((game) => game.lifeId === 'engineer')?.status).toBe('abandoned');

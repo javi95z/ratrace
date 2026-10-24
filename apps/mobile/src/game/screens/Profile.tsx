@@ -2,7 +2,6 @@ import { balanceArt, familyArt, homeLifeArt, homeName, insuranceArt, itemArt, li
 import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty, taxAnnual } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { ageAt, insuranceCover } from '@ratrace/core/game/present';
-import { useRouter } from 'expo-router';
 import { createContext, memo, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
@@ -26,6 +25,7 @@ import { ItemUses } from './ItemUses';
 import { RivalsBoard } from './Rivals';
 import { realStatus, StatusNote } from './StatusNote';
 import { WorkPanel } from './Work';
+import { useGo } from '../pages';
 
 /*
  * The web's Profile.tsx, on the phone. What the phone leaves out: the desk's side column (the profile is always the sheet the portrait opens, as on a
@@ -593,7 +593,7 @@ export function Leave({ onLeave }: { onLeave?: () => void }) {
   const t = useT('profile');
   const phone = useOwnT();
   const saving = useSaving();
-  const router = useRouter();
+  const go = useGo();
   const leaving = useRef(false);
   // A life in a room is left with the room, from the room's own sheet.
   const inRoom = useInRoom();
@@ -608,7 +608,7 @@ export function Leave({ onLeave }: { onLeave?: () => void }) {
           if (leaving.current) return;
           leaving.current = true;
           onLeave?.();
-          void sheetsGone().then(() => router.dismissTo('/'));
+          void sheetsGone().then(() => go.home());
         }}
       >
         <PixelText size={15} tone="ink-200">{t('leave')}</PixelText>

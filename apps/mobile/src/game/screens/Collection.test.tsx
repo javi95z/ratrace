@@ -186,7 +186,7 @@ describe('the collection', () => {
     expect(screen.getByRole('heading', { name: 'Collection' })).toBeTruthy();
     expect(screen.getByText('Everything you have ever owned, in any life, and every badge you have earned.')).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('shows all the rarities again when the badges are shown again: the choice of one is the badges\' tab\'s own', async () => {

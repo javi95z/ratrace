@@ -1,7 +1,7 @@
 import { CHALLENGE_ART, ratArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt } from '@ratrace/core/game/present';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
@@ -22,6 +22,7 @@ import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
+import { useGo } from '../pages';
 
 /** The letter spacing of a pixel button set in the page's 15: 0.03 of it. */
 const BUTTON_SPACING = 15 * 0.03;
@@ -47,7 +48,7 @@ export function Home() {
   const ranked = useGame((s) => s.ranked);
   const challenge = useGame((s) => s.challenge);
   const saving = useSaving();
-  const router = useRouter();
+  const go = useGo();
   const open = status === 'playing' && lifeId !== null && round !== null && cityId !== null;
   const inProgress = open && !atEnd;
   // Whoever has played before knows the game: the rat and its line make way for what they came for.
@@ -80,11 +81,11 @@ export function Home() {
   const carryOn = () => {
     if (continuing) return;
     const waiting = untilFresh();
-    if (waiting === null) return router.push('/play');
+    if (waiting === null) return go.push('play');
     setContinuing(true);
     void waiting.then(() => {
       setContinuing(false);
-      if (here.current && stillInProgress.current) router.push('/play');
+      if (here.current && stillInProgress.current) go.push('play');
     });
   };
 
@@ -147,7 +148,7 @@ export function Home() {
               tone={inProgress || turn ? {} : GOLD}
               bg={inProgress || turn ? 'night-600' : 'gold-500'}
               style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
-              onPress={() => router.push('/new')}
+              onPress={() => go.push('new')}
             >
               <PixelText size={19} tone={inProgress || turn ? 'cream' : 'ink-900'} style={{ textAlign: 'center' }}>{t('newLife')}</PixelText>
             </Raised>
@@ -155,7 +156,7 @@ export function Home() {
             {turn ? null : <RoomCard />}
             <FriendRequests />
             {over ? (
-              <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/play')}>
+              <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.push('play')}>
                 <PixelText size={15} tone="cream" style={{ textAlign: 'center' }}>{t('lastLife')}</PixelText>
               </Raised>
             ) : null}
@@ -165,7 +166,7 @@ export function Home() {
                 bg="night-700"
                 place={{ flex: 1 }}
                 style={{ flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-                onPress={() => router.push('/collection')}
+                onPress={() => go.push('collection')}
               >
                 <Sprite id="icon.star" />
                 <PixelText size={15} tone="ink-200">{t('collection')}</PixelText>
@@ -175,7 +176,7 @@ export function Home() {
                 bg="night-700"
                 place={{ flex: 1 }}
                 style={{ flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-                onPress={() => router.push('/records')}
+                onPress={() => go.push('records')}
               >
                 <Sprite id="icon.trophy" />
                 <PixelText size={15} tone="ink-200">{t('records')}</PixelText>
@@ -208,7 +209,7 @@ export function Home() {
       )}
 
       {/* The small print, out of the way: only here, at the very foot. */}
-      <SmallPrint label={legal('link')} onPress={() => router.push('/legal')} above={returning ? 16 : 20} />
+      <SmallPrint label={legal('link')} onPress={() => go.push('legal')} above={returning ? 16 : 20} />
     </Screen>
   );
 }
@@ -230,7 +231,7 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
   const common = useT('common');
   const { content, text, names } = useWords();
   const { offer, takeOffer, declineOffer } = useAccountOffer();
-  const router = useRouter();
+  const go = useGo();
   const opened = useContext(HomeOpened);
   // The life in the account the player has asked about, by its id.
   const [asking, setAsking] = useState<string | null>(() => (opened.offer ? (offer?.gameId ?? null) : null));
@@ -279,7 +280,7 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
               </ReadText>
             ) : null}
             <View style={{ marginTop: 16, gap: 12 }}>
-              <Button variant="primary" wide disabled={busy} onPress={answer(takeOffer, () => router.push('/play'))}>
+              <Button variant="primary" wide disabled={busy} onPress={answer(takeOffer, () => go.push('play'))}>
                 {t('accountLifeTake')}
               </Button>
               <Button variant="danger" wide disabled={busy} onPress={answer(declineOffer)}>
@@ -296,7 +297,7 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
 /** The way to the rankings, where someone is signed in to ask the others (a leaf of its own: the connection coming and going draws nothing). */
 function RankingsLink() {
   const t = useT('home');
-  const router = useRouter();
+  const go = useGo();
   const signedIn = useSignedIn();
   if (!signedIn) return null;
   return (
@@ -304,7 +305,7 @@ function RankingsLink() {
       role="link"
       bg="night-700"
       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-      onPress={() => router.push('/rankings')}
+      onPress={() => go.push('rankings')}
     >
       <Sprite id="icon.status" />
       <PixelText size={15} tone="ink-200">{t('rankings')}</PixelText>
@@ -320,7 +321,7 @@ function FriendRequests() {
   const t = useT('home');
   const { state } = useAccount();
   const community = useCommunity();
-  const router = useRouter();
+  const go = useGo();
   const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
   // Asked each time the front door is shown: it stays drawn under the screens over it (the requests answered on the rankings' page), where the web's
   // is drawn anew on every visit.
@@ -333,7 +334,7 @@ function FriendRequests() {
       tone={GOLD}
       bg="night-600"
       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}
-      onPress={() => router.push('/rankings?tab=friends')}
+      onPress={() => go.push('rankings', { hash: 'friends' })}
     >
       <Sprite id="icon.multiplayer" />
       <PixelText size={15} tone="gold-500" style={{ flexShrink: 1, textAlign: 'center' }}>{t('friendRequests', { n: waiting })}</PixelText>
@@ -346,7 +347,7 @@ function ProfileLink() {
   const t = useT('home');
   const { state } = useAccount();
   const community = useCommunity();
-  const router = useRouter();
+  const go = useGo();
   const userId = state.kind === 'member' ? state.userId : null;
   // Asked each time the front door is shown (the rat may have been dressed on the profile's page over it), as `FriendRequests` asks.
   const ask = useMemo(() => (userId === null || community === null ? null : () => community.me().then((me) => me?.avatar ?? null)), [userId, community]);
@@ -357,7 +358,7 @@ function ProfileLink() {
       role="link"
       bg="night-700"
       style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-      onPress={() => router.push('/player')}
+      onPress={() => go.push('player')}
     >
       <RatAvatar look={ratLookOf(avatar, userId)} size="sm" />
       <PixelText size={15} tone="ink-200">{t('profile')}</PixelText>

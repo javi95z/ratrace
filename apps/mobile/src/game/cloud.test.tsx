@@ -566,7 +566,7 @@ describe('signing out, on the phone', () => {
     expect(seen.lifeId).toBeNull();
     expect(asked.map((one) => one.what)).toEqual(['start en', 'sign out', 'start en']);
     // On the front door, on purpose, once the game is drawn anew: the stack started again is not left to say where.
-    expect(router.dismissTo.mock.calls).toEqual([['/']]);
+    expect(router.dismissTo.mock.calls).toEqual([['/en']]);
     expect(landed).toEqual([2]);
     // The second start drew the player's settings from its first drawing: less motion and no sound never flashed back to their defaults.
     const second = motion.slice(drawnBefore);

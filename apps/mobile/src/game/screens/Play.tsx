@@ -1,7 +1,7 @@
 import { ageAt } from '@ratrace/core/game/present';
 import { roundWarnings } from '@ratrace/core/game/roundWarnings';
 import type { Stage } from '@ratrace/core/game/store';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -31,6 +31,7 @@ import { PageTurn } from './PageTurn';
 import { End } from './End';
 import { ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
+import { useGo } from '../pages';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
@@ -212,13 +213,13 @@ function StageBody({ stage }: { stage: Stage }) {
  */
 function WaysOut() {
   const t = useT('play');
-  const router = useRouter();
+  const go = useGo();
   return (
     <>
-      <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.replace('/new')}>
+      <Raised role="link" tone={GOLD} bg="gold-500" style={{ minHeight: 48, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.replace('new')}>
         <PixelText size={17} tone="ink-900">{t('newLife')}</PixelText>
       </Raised>
-      <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.dismissTo('/')}>
+      <Raised role="link" bg="night-600" style={{ paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }} onPress={() => go.home()}>
         <PixelText size={15}>{t('home')}</PixelText>
       </Raised>
     </>
@@ -318,7 +319,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   const play = useT('play');
   const end = useT('end');
   const phone = useOwnT();
-  const router = useRouter();
+  const go = useGo();
   const { content, text } = useWords();
   const status = useGame((s) => s.status);
   const stage = useGame((s) => s.stage);
@@ -338,18 +339,18 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
 
   // No life to play: the front door is where one is started. A room says itself where to go: its life may not be open yet, and is asked for again.
   useEffect(() => {
-    if (status === 'none' && !room) router.dismissTo('/');
-  }, [status, router, room]);
+    if (status === 'none' && !room) go.home();
+  }, [status, go, room]);
 
   // Android's Back, while this screen is in front: home, with the life as it stands (it is saved at every step). An open sheet is a Modal,
   // which takes Back itself and closes.
   useFocusEffect(
     useCallback(() => {
       return onHardwareBack(() => {
-        router.dismissTo('/');
+        go.home();
         return true;
       });
-    }, [router]),
+    }, [go]),
   );
 
   // A sheet belongs to the stage it was opened in.

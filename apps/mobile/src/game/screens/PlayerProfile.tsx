@@ -1,7 +1,6 @@
 import { progressOf } from '@ratrace/content';
 import { avatarOf, ratLookOf } from '@ratrace/core/game/avatar';
 import type { RatLook } from '@ratrace/core/game/avatar';
-import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
@@ -22,6 +21,7 @@ import { BackLink } from './BackLink';
 import { NAME } from './Rankings';
 import { RankCard, useRankName } from './RankCard';
 import { RatEditor } from './RatEditor';
+import { useGo } from '../pages';
 
 
 /** The page's head: the way back and the title (the web's `size-11` arrow and `pixel text-[24px] text-gold-500`). */
@@ -67,7 +67,7 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   const t = useT('player');
   const ranks = useT('rankings');
   const common = useT('common');
-  const router = useRouter();
+  const go = useGo();
   const { state } = useAccount();
   const settled = useAccountSettled();
   const community = useCommunity();
@@ -258,9 +258,9 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
 
       {/* Where the rest of the player's game is. */}
       <View role="navigation" aria-label={t('more')} style={{ flexDirection: 'row', gap: 8 }}>
-        <More label={t('toRecords')} onPress={() => router.push('/records')} />
-        <More label={t('toCollection')} onPress={() => router.push('/collection')} />
-        <More label={t('toRankings')} onPress={() => router.push('/rankings')} />
+        <More label={t('toRecords')} onPress={() => go.push('records')} />
+        <More label={t('toCollection')} onPress={() => go.push('collection')} />
+        <More label={t('toRankings')} onPress={() => go.push('rankings')} />
       </View>
     </>,
   );

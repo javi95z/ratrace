@@ -4,7 +4,6 @@ import { MAX_MEMBERS, memberName, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SH
 import type { PublicPace, RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
 import type { GameStore } from '@ratrace/core/game/store';
 import { indexed } from '@ratrace/engine';
-import { useRouter } from 'expo-router';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -40,6 +39,7 @@ import type { RoomSlots } from './Play';
 import { NAME } from './Rankings';
 import { LinkButton, LoanOffers, LoanReplies, PlayerSheet } from './RoomLoans';
 import type { LoanReply } from './RoomLoans';
+import { useGo } from '../pages';
 
 /*
  * The web's Room.tsx, on the phone: the way into a game with others (a public one, one of the player's own, one joined by its code or by an
@@ -1501,7 +1501,7 @@ const CARD_SPACING = 15 * 0.03;
  */
 export function RoomCard({ primary = false }: { primary?: boolean }) {
   const t = useT('home');
-  const router = useRouter();
+  const go = useGo();
   const nameOf = useNameOf();
   const status = useRoom((s) => s.status);
   const room = useRoom((s) => s.room);
@@ -1536,7 +1536,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
       tone={primary ? GOLD : {}}
       bg={primary ? 'gold-500' : 'night-600'}
       style={{ minHeight: 48, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', gap: 2 }}
-      onPress={() => router.push('/room')}
+      onPress={() => go.push('room')}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Sprite id={icon} />

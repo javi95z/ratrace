@@ -108,7 +108,7 @@ describe('the play screen in a room', () => {
 describe('the play screen', () => {
   it('sends a visitor with no life in progress back to the front door', async () => {
     renderGame(<Play />, memoryServices());
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
     expect(screen.queryByRole('button', { name: 'Play the round' })).toBeNull();
   });
 
@@ -320,9 +320,9 @@ describe('the play screen', () => {
     expect(alert.textContent).toContain('Your life is saved as it stood before this step');
     // A new life takes the place of the screen that failed; home is the front door, wherever it is in the stack.
     fireEvent.click(screen.getByRole('link', { name: 'New life' }));
-    expect(router.replace).toHaveBeenCalledWith('/new');
+    expect(router.replace).toHaveBeenCalledWith('/en/new');
     fireEvent.click(screen.getByRole('link', { name: 'Home' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
     expect(logged).toHaveBeenCalled();
     logged.mockRestore();
   });
@@ -560,7 +560,7 @@ describe('Android\'s Back', () => {
     await screen.findByText(/^Card 2 of/);
     const before = await saved(services.store);
     expect(pressBack()).toBe('screen');
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
     expect(router.replace).not.toHaveBeenCalled();
     expect(await saved(services.store)).toEqual(before);
   });
@@ -576,7 +576,7 @@ describe('Android\'s Back', () => {
     expect(router.dismissTo).not.toHaveBeenCalled();
     // The next press is the screen's: home.
     expect(pressBack()).toBe('screen');
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('leaves the app from the front door, and nothing of the life listens once it is gone', async () => {
@@ -785,7 +785,7 @@ describe('the end of a life', () => {
     // Nothing to beat in a first life, so no personal best is claimed.
     expect(screen.queryByText('New best score')).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'See your collection' }));
-    expect(router.push).toHaveBeenCalledWith('/collection');
+    expect(router.push).toHaveBeenCalledWith('/en/collection');
 
     // The picture to share is shown to someone else: it speaks of the life, not to the player. No sprite arrives in a test: each is left out.
     fireEvent.click(screen.getByRole('button', { name: 'Share this life' }));
@@ -798,9 +798,9 @@ describe('the end of a life', () => {
 
     // The two ways out: another life, in place of this screen, and the front door.
     fireEvent.click(screen.getByRole('link', { name: 'Live another life' }));
-    expect(router.replace).toHaveBeenCalledWith('/new');
+    expect(router.replace).toHaveBeenCalledWith('/en/new');
     fireEvent.click(screen.getByRole('link', { name: 'Home' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
 
     // The app is closed on the score and opened again: the score is still there.
     expect((await saved(services.store)).state.finished).toBe(true);
@@ -813,7 +813,7 @@ describe('the end of a life', () => {
     fireEvent.click(within(panel('A new life is open')).getByRole('button', { name: 'Try it now' }));
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect((await saved(services.store)).lifeId).toBe('rider');
-    expect(router.push).not.toHaveBeenCalledWith('/new');
+    expect(router.push).not.toHaveBeenCalledWith('/en/new');
   });
 
   it('marks a second life that beats the first', async () => {

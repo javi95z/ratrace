@@ -19,8 +19,8 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Locale } from '@ratrace/i18n';
 import { offlineAccount } from '@ratrace/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@ratrace/online/types';
-import { getCalendars, getLocales } from 'expo-localization';
-import { usePathname, useRouter } from 'expo-router';
+import { getCalendars } from 'expo-localization';
+import { usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
@@ -45,7 +45,9 @@ import { cuesFor } from './cues';
 import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
-import { localeOf, type LanguageKeep } from './locale';
+import { deviceLanguages, localeOf, type LanguageKeep } from './locale';
+import { pageAt, useGo } from './pages';
+import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
 import { WordsProvider } from './words';
@@ -345,8 +347,11 @@ export function forgetTheGame(): void {
 /** Round stores that have already asked the device for a life in progress. */
 const booted = new WeakSet<GameStore>();
 
-/** The phone's languages, in its order of preference. */
-const phoneLanguages = (): string[] => getLocales().map((locale) => locale.languageCode ?? '');
+/**
+ * The phone's language, outside the game: the player's choice, else the phone's own. What the app's own links are opened in (`app/+native-intent.tsx`),
+ * which the router asks before anything is drawn.
+ */
+export const linkLocale = (): Locale => localeOf(kvLanguage.read(), deviceLanguages());
 
 /**
  * The sounds follow the round on screen: every change of it is heard as the web hears it (`cues.ts`). The tap of a press
@@ -384,14 +389,17 @@ const SHEETS_PATIENCE = 2_000;
  * place, never a second copy over it. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
  */
 function Taps({ push }: { push: Push }): null {
-  const router = useRouter();
+  // The way to the pages as it is now: in the language of the address in front, whichever that is when the tap comes.
+  const now = useGo();
+  const go = useRef(now);
+  go.current = now;
   const pathname = usePathname();
   // The screen in front, as the router last said.
   const shown = useRef(pathname);
   shown.current = pathname;
   useEffect(() => {
     let live = true;
-    const stop = push.onTap((path) => {
+    const stop = push.onTap(({ page, query }) => {
       closeAllSheets();
       let timer: ReturnType<typeof setTimeout> | undefined;
       const late = new Promise<false>((resolve) => {
@@ -400,10 +408,9 @@ function Taps({ push }: { push: Push }): null {
       void Promise.race([sheetsGone().then(() => true as const), late]).then((gone) => {
         clearTimeout(timer);
         if (!live || !gone) return;
-        const page = path.split('?')[0];
         try {
-          if (shown.current === page) router.replace(path);
-          else router.push(path);
+          if (pageAt(shown.current) === page) go.current.replace(page, { query });
+          else go.current.push(page, { query });
         } catch {
           // The router could not go there: the screen stays as it is, with nothing of the tap left behind.
         }
@@ -413,7 +420,7 @@ function Taps({ push }: { push: Push }): null {
       live = false;
       stop();
     };
-  }, [push, router]);
+  }, [push]);
   return null;
 }
 
@@ -452,7 +459,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   // Taken away halfway (the layout above it drawn anew), the game leaves no sheet shut for whatever comes next.
   useEffect(() => openSheetsAgain, []);
-  const router = useRouter();
+  const go = useGo();
   // Once the game is drawn anew: the sheets may open again, and whatever the stack is, the front door, on purpose. Once for each start, whatever else
   // draws this again.
   const landed = useRef(0);
@@ -461,8 +468,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     landed.current = started.count;
     shutForStart.current?.();
     shutForStart.current = null;
-    router.dismissTo('/');
-  }, [started, router]);
+    go.home();
+  }, [started, go]);
   return (
     <>
       <Place />
@@ -476,7 +483,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
 
 function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => Promise<void>; children: ReactNode }) {
   const [game] = useState(() => made.game);
-  const [locale, setLocaleState] = useState<Locale>(() => localeOf(made.language.read(), phoneLanguages()));
+  // The phone's choice, else its own; on the web, the page's address (`useLanguage.web.ts`).
+  const [locale, setLocale] = useLanguage(made.language);
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
   const [profile, setProfile] = useState<Profile>(() => (startedWith ? { ...newProfile(), settings: startedWith } : newProfile()));
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
@@ -568,14 +576,6 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
       stopAccount();
     };
   }, [made, game, holdProfile, holdRuns]);
-
-  const setLocale = useCallback(
-    (next: Locale) => {
-      made.language.write(next);
-      setLocaleState(next);
-    },
-    [made],
-  );
 
   // The game opened and its first screen on the phone's screen (the UI thread at its pace again): what waited for it is told, once a start.
   const opened = useSyncExternalStore(game.subscribe, () => game.getState().status !== 'booting');

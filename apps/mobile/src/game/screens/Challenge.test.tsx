@@ -53,7 +53,7 @@ describe('the weekly challenge page', () => {
     expect(screen.queryByText(/sign in/)).toBeNull();
     expect(document.body.textContent).not.toContain('To play the attempt that counts');
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
   });
 
@@ -67,7 +67,7 @@ describe('the weekly challenge page', () => {
     };
     renderGame(<WeeklyChallenge />, services);
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(asked).toEqual([[week.lifeId, { ranked: false, challenge: week.week, replace: undefined }]]);
     expect(((await saved(services)) as { ranked?: boolean }).ranked).toBeUndefined();
   });
@@ -111,7 +111,7 @@ describe('the weekly challenge page', () => {
     // And yes ends it, and begins the challenge.
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
     fireEvent.click(within((await screen.findByRole('heading', { name: ask.confirmTitle })).closest('[aria-modal="true"]') as HTMLElement).getByRole('button', { name: ask.confirmYes }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
   });
 
@@ -133,7 +133,7 @@ describe('the weekly challenge page', () => {
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     cleanup();
     router.replace.mockClear();
 
@@ -141,7 +141,7 @@ describe('the weekly challenge page', () => {
     sheets.gone = new Promise<void>(() => undefined);
     renderGame(<WeeklyChallenge />, memoryServices());
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 
   it('says so when the practice could not be begun, and lets the player try again', async () => {
@@ -159,7 +159,7 @@ describe('the weekly challenge page', () => {
     const practise = screen.getByRole('button', { name: 'Practise' });
     await waitFor(() => expect(practise.getAttribute('aria-disabled')).not.toBe('true'));
     fireEvent.click(practise);
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'), { timeout: 10_000 });
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'), { timeout: 10_000 });
     expect(screen.queryByRole('alert')).toBeNull();
     error.mockRestore();
   });
@@ -167,7 +167,7 @@ describe('the weekly challenge page', () => {
   it('leads back to the front door', () => {
     renderGame(<WeeklyChallenge />, memoryServices());
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('offers no ranking of the others: there is nobody to ask', () => {
@@ -203,7 +203,7 @@ describe('the weekly challenge on the front door', () => {
   it('leads to the challenge', () => {
     renderGame(<WeeklyChallengeCard />, memoryServices());
     fireEvent.click(screen.getByRole('link'));
-    expect(router.push).toHaveBeenCalledWith('/challenge');
+    expect(router.push).toHaveBeenCalledWith('/en/challenge');
   });
 });
 
@@ -266,7 +266,7 @@ describe('the weekly challenge page, for a player signed in', () => {
     renderGame(<WeeklyChallenge />, services);
     fireEvent.click(await screen.findByRole('button', { name: "Play today's attempt" }));
     await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: true, challenge: week.week, replace: undefined }]));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     // Nobody is told to sign in who is.
     expect(document.body.textContent).not.toContain('To play the attempt that counts');
   });
@@ -298,7 +298,7 @@ describe('the weekly challenge page, for a player signed in', () => {
     const { services } = withAccount(null);
     renderGame(<WeeklyChallenge />, services);
     fireEvent.click(await screen.findByRole('link', { name: "See the challenge ranking" }));
-    expect(router.push).toHaveBeenCalledWith('/rankings?tab=challenge');
+    expect(router.push).toHaveBeenCalledWith('/en/rankings?tab=challenge');
   });
 
   it('offers no attempt with no connection, and says what the web says to anyone who cannot have it: to sign in', async () => {
@@ -392,7 +392,7 @@ describe('a ranked attempt with a ranked life in progress on another device', { 
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 
   it('is taken up in place of the attempt when the player would rather go on with it, once the sheet has gone', async () => {
@@ -410,7 +410,7 @@ describe('a ranked attempt with a ranked life in progress on another device', { 
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 });
 

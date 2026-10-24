@@ -2,7 +2,6 @@ import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitA
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
-import { useRouter } from 'expo-router';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
@@ -22,6 +21,7 @@ import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ElsewhereSheet } from './NewLife';
+import { useGo } from '../pages';
 
 /**
  * This week's challenge, by the clock the game reads the date by (the phone's own, unless a scene holds it at one day). The server keeps its own,
@@ -68,7 +68,7 @@ export function WeeklyChallengeCard() {
   const week = useThisWeek();
   const now = useClock();
   const ruleText = useRuleText();
-  const router = useRouter();
+  const go = useGo();
   const community = useCommunity();
   // Whether the player has had today's attempt: not asked where nobody is signed in, and said only once known (an account that cannot say keeps what
   // was said). Asked each time the front door is shown again, which stays drawn under the screens over it (the web's is drawn anew on every visit).
@@ -84,7 +84,7 @@ export function WeeklyChallengeCard() {
       role="link"
       bg="night-600"
       style={{ minHeight: 48, paddingHorizontal: 12, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 10 }}
-      onPress={() => router.push('/challenge')}
+      onPress={() => go.push('challenge')}
     >
       <Sprite id={CHALLENGE_ART.icon} />
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -125,7 +125,7 @@ export function WeeklyChallenge() {
   const community = useCommunity();
   const ranking = useRanking();
   const canSignIn = useCanSignIn();
-  const router = useRouter();
+  const go = useGo();
   const start = useGame((s) => s.start);
   const continueElsewhere = useGame((s) => s.continueElsewhere);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
@@ -160,7 +160,7 @@ export function WeeklyChallenge() {
     try {
       if (await start(week.lifeId, { ranked: rankedAttempt && ranking === 'yes', challenge: week.week, replace })) {
         if (fromSheet) await sheetsGone();
-        router.replace('/play');
+        go.replace('play');
       }
     } catch (error) {
       console.error('the challenge could not be started:', error);
@@ -182,7 +182,7 @@ export function WeeklyChallenge() {
       const answer = await continueElsewhere();
       if (answer === 'taken') {
         await sheetsGone();
-        router.replace('/play');
+        go.replace('play');
       } else if (answer === 'away') setAway(true);
     } catch (error) {
       console.error('the life could not be taken up:', error);
@@ -264,7 +264,7 @@ export function WeeklyChallenge() {
         </Button>
       </View>
       <ReadText size={12} tone="ink-300" lineHeight={12 * SNUG}>{t('practiceHint')}</ReadText>
-      {community !== null ? <RankingLink label={t('rankingLink')} onPress={() => router.push('/rankings?tab=challenge')} /> : null}
+      {community !== null ? <RankingLink label={t('rankingLink')} onPress={() => go.push('rankings', { query: { tab: 'challenge' } })} /> : null}
 
       <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={lifeT('confirmTitle')} closeLabel={common('close')} back={false}>
         <ReadText lineHeight={15 * SNUG} tone="ink-200">{lifeT('confirmBody', { life: text.lives[living ?? '']?.name ?? '', age: ageAt(content, round) })}</ReadText>

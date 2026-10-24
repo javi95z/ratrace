@@ -227,7 +227,7 @@ describe('choosing a life', () => {
     fireEvent.click(rider);
     expect(chosen()).toBe(rider);
     fireEvent.click(screen.getByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect((await saved(services))?.lifeId).toBe('rider');
   });
 
@@ -249,7 +249,7 @@ describe('choosing a life', () => {
     renderGame(<NewLife />, services);
     fireEvent.click(await screen.findByRole('radio', { name: /^Software engineer/ }));
     fireEvent.click(screen.getByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     // Pushed, the Back button of a phone would land here again, one tap away from ending the life.
     expect(router.push).not.toHaveBeenCalled();
     expect((await saved(services))?.lifeId).toBe('engineer');
@@ -260,7 +260,7 @@ describe('choosing a life', () => {
     // Found by hand in the release build: between the life begun and the page replaced, the bar said the new life would be ended.
     renderGame(<NewLife />, memoryServices());
     fireEvent.click(await screen.findByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     await settled();
     expect(screen.queryByText(en.newLife.replace)).toBeNull();
     // Nor is a second press, now that a life is in progress, the question that would end it.
@@ -303,7 +303,7 @@ describe('choosing a life', () => {
 
     fireEvent.click(screen.getByRole('button', START));
     fireEvent.click(within(await ask()).getByRole('button', { name: 'End it and start this one' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(await saved(services)).toMatchObject({ lifeId: 'civil_servant', log: [] });
   });
 
@@ -318,14 +318,14 @@ describe('choosing a life', () => {
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 
   it('does not wait for a sheet when the start came from the button, whatever is said of sheets', async () => {
     sheets.gone = new Promise<void>(() => undefined);
     renderGame(<NewLife />, memoryServices());
     fireEvent.click(await screen.findByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 
   it('does not ask when the last life is already over', async () => {
@@ -340,7 +340,7 @@ describe('choosing a life', () => {
     await waitFor(async () => expect((await saved(services))?.state.finished).toBe(true));
     expect(screen.queryByText('This ends the life you have in progress.')).toBeNull();
     fireEvent.click(screen.getByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(screen.queryByRole('heading', { name: en.newLife.confirmTitle })).toBeNull();
     expect((await saved(services))?.state.finished).toBe(false);
   });
@@ -348,7 +348,7 @@ describe('choosing a life', () => {
   it('leads back to the front door', async () => {
     renderGame(<NewLife />, memoryServices());
     fireEvent.click(await screen.findByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('says nothing of the ranking, an account or the connection: nobody is signed in to ask', async () => {
@@ -374,7 +374,7 @@ describe('a life that cannot be started', () => {
     await waitFor(() => expect(screen.getByRole('button', START).getAttribute('aria-disabled')).not.toBe('true'));
     refuse = false;
     fireEvent.click(screen.getByRole('button', START));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(screen.queryByRole('alert')).toBeNull();
     quiet.mockRestore();
   });
@@ -388,7 +388,7 @@ describe('a life that cannot be started', () => {
     fireEvent.click(await screen.findByRole('button', START));
     await waitFor(() => expect(screen.getByRole('button', START).getAttribute('aria-disabled')).toBe('true'));
     finish();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 });
 
@@ -710,7 +710,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(server.games.get(there.gameId)?.status).toBe('playing');
     expect(server.games.size).toBe(1);
   });
@@ -729,7 +729,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     await new Promise((done) => setTimeout(done, 30));
     expect(router.replace).not.toHaveBeenCalled();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
   });
 
   it('says nothing of ending the life it has just taken up, while it waits for the sheet to go', async () => {
@@ -745,7 +745,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     // The life on the phone now is the one taken up: no warning that starting would end it, while the page waits and while it is on its way out.
     expect(screen.queryByText(en.newLife.replace)).toBeNull();
     gone();
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     await settled();
     expect(screen.queryByText(en.newLife.replace)).toBeNull();
   });
@@ -760,7 +760,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     const button = await ready(await elsewhere(), 'Continue that life');
     fireEvent.click(button);
     fireEvent.click(button);
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect(takenUp).toBe(1);
   });
 

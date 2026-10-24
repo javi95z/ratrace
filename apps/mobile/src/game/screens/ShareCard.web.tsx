@@ -11,6 +11,7 @@ import { readSprite } from '../../ui/spriteImages.web';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useSettings, useT, useTrack } from '../context';
+import { hrefOf } from '../pages';
 import { SITE_URL } from '../site';
 import { canShareFile, shareFile } from '../sharing.web';
 
@@ -165,7 +166,7 @@ export function ShareCard({ ops, fileName, alt, load, faces, opened = false }: {
   const track = useTrack();
   const { locale } = useSettings();
   // The picture travels with a way into the game, in the language it was played in.
-  const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });
+  const invite = t('invite', { url: new URL(hrefOf('', { locale }), SITE_URL).href });
   const [open, setOpen] = useState(opened);
   const [picture, setPicture] = useState<{ url: string; file: File } | 'failed' | null>(null);
 

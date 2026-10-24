@@ -14,7 +14,10 @@ import { painted } from '../ui/testing/skia';
 export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn(), canGoBack: vi.fn(() => true) };
 /** The router `useRouter` hands a screen: the one above, unless a test hands another (the same moves, a new identity: a router drawn anew). */
 export const routerNow = { is: router };
-/** The query of the address the screen was opened with (`/scene?name=`): none, unless a test gives it some. A `Redirect` is a box that names where it goes. */
+/**
+ * The query of the address the screen was opened with (`/scene?name=`), and the language of the page (`locale`, `/[locale]/…`): none, unless a test
+ * gives them. A `Redirect` is a box that names where it goes.
+ */
 export const params: Record<string, string> = {};
 /** The path of the screen in front, as the router says it (`usePathname`). */
 export const pathname = { now: '/' };
@@ -51,7 +54,11 @@ export const expoRouter = {
   useRouter: () => routerNow.is,
   usePathname: () => pathname.now,
   useLocalSearchParams: () => params,
+  // The address's own parameters and its query, as one: the language of the page (`/[locale]/…`) among them.
+  useGlobalSearchParams: () => params,
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
+  // The router's page of nothing, for an address it has no page for.
+  Unmatched: () => createElement('div', { 'data-unmatched': '' }),
   // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn, and again when it is shown again.
   useFocusEffect,
 };

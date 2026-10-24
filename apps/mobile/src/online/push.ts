@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import type * as NotificationsModule from 'expo-notifications';
 import { Platform } from 'react-native';
+import type { Page } from '../game/pages';
 
 /*
  * The game's notices on the phone: the web's push subscription (apps/web/src/pwa/notifications.ts), through Expo's push service. The player is
@@ -68,14 +69,20 @@ export interface Push {
    * game, and for a new token from Expo. The channel the notices show in (Android) is named in the game's language. Returns how to stop.
    */
   follow(account: Account, community: () => Community | null, locale: string): () => void;
-  /** Opens what a tap on a notice names (`open`, with the app's path): the tap that opened the app, and each one while it runs. Returns how to stop. */
-  onTap(open: (path: string) => void): () => void;
+  /** Opens what a tap on a notice names (`open`, with the page and its query): the tap that opened the app, and each one while it runs. Returns how to stop. */
+  onTap(open: (to: NoticePage) => void): () => void;
+}
+
+/** A page a notice opens, and the query it opens it with: opened in the language of the address in front (`game/pages.ts`). */
+export interface NoticePage {
+  page: Page;
+  query: Record<string, string>;
 }
 
 /** The app's own scheme, which the server writes a phone's links in (`APP_LINK`). */
 const SCHEME = 'theratrace://';
 /** The screens a notice may open, each with what of its query it reads, and what that may be. */
-const PAGES: Record<string, Record<string, RegExp>> = {
+const PAGES: Partial<Record<Page, Record<string, RegExp>>> = {
   challenge: {},
   play: {},
   // A room's code: six letters and digits (Room.tsx's `codeOf`).
@@ -86,15 +93,15 @@ const PAGES: Record<string, Record<string, RegExp>> = {
 const LONGEST = 200;
 
 /**
- * The path in the app a notice's link opens: the app's scheme, one of the screens a notice names, and only the query that screen reads (each name
- * once, the first as written), each value as the server writes it. Null for anything else, which is not opened.
+ * The page a notice's link opens: the app's scheme, one of the screens a notice names, and only the query that screen reads (each name once, the first
+ * as written), each value as the server writes it. Null for anything else, which is not opened.
  */
-export function pageOf(url: unknown): string | null {
+export function pageOf(url: unknown): NoticePage | null {
   if (typeof url !== 'string' || url.length > LONGEST || !url.startsWith(SCHEME)) return null;
   const found = /^([a-z]+)\/?(?:\?([^#]*))?$/.exec(url.slice(SCHEME.length));
   if (found === null || !Object.hasOwn(PAGES, found[1])) return null;
-  const page = found[1];
-  const reads = PAGES[page];
+  const page = found[1] as Page;
+  const reads = PAGES[page] ?? {};
   const kept = new Map<string, string>();
   for (const pair of (found[2] ?? '').split('&')) {
     if (pair === '') continue;
@@ -104,8 +111,7 @@ export function pageOf(url: unknown): string | null {
     if (!reads[name].test(value)) return null;
     kept.set(name, value);
   }
-  const query = [...kept].map(([name, value]) => `${name}=${value}`).join('&');
-  return query === '' ? `/${page}` : `/${page}?${query}`;
+  return { page, query: Object.fromEntries(kept) };
 }
 
 /** The Android channel the server's notices are shown in: Expo's own default, which a message with no channel goes to. */
@@ -352,8 +358,8 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
         opened.add(request.identifier);
         // The tap that opened the app is had: a reload of the app does not open it again.
         if (first) library.clearLastNotificationResponse();
-        const path = pageOf(request.content?.data?.url);
-        if (path !== null) open(path);
+        const to = pageOf(request.content?.data?.url);
+        if (to !== null) open(to);
       };
       void quietly(async () => {
         const library = await notifications();

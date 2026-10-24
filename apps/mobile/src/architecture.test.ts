@@ -127,6 +127,11 @@ function namesTaken(names: string): string[] {
   return [...defaulted, ...inside];
 }
 
+/** What a file passes on from another (`export { a, b as c } from '…'`, `export type { T } from '…'`), as `importsIn` gives what it takes: the names as the other file has them. */
+function reexportsIn(path: string, source: string): Array<{ names: string; from: string }> {
+  return [...source.matchAll(/\bexport\s+(?:type\s+)?(\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s+from\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: m[1], from: placeOf(path, m[2]) }));
+}
+
 /**
  * What the shared files (every one that is not a `.web` twin) take from a module that has a web twin, and the twin does not export: on the web Metro
  * reads the twin, and a name it lacks is `undefined` there, with no build error (the type checker reads only the phone's file). `files` maps each
@@ -135,11 +140,17 @@ function namesTaken(names: string): string[] {
 function twinGaps(files: ReadonlyMap<string, string>): string[] {
   const placeOfFile = (path: string) => `@/${rel(path).replace(/\.(tsx?)$/, '')}`;
   const twins = new Map<string, Set<string>>();
-  for (const [path, source] of files) if (/\.web\.tsx?$/.test(path)) twins.set(placeOfFile(path).replace(/\.web$/, ''), exportsIn(source));
+  for (const [path, source] of files) {
+    if (!/\.web\.tsx?$/.test(path)) continue;
+    const place = placeOfFile(path).replace(/\.web$/, '');
+    twins.set(place, exportsIn(source));
+    // A twin named `index` is its directory's too: `'../online'` is `online/index.ts` on the phone, and `online/index.web.ts` on the web.
+    if (place.endsWith('/index')) twins.set(place.slice(0, -'/index'.length), exportsIn(source));
+  }
   const gaps: string[] = [];
   for (const [path, source] of files) {
     if (/\.web\.tsx?$/.test(path)) continue;
-    for (const { names, from } of importsIn(path, source)) {
+    for (const { names, from } of [...importsIn(path, source), ...reexportsIn(path, source)]) {
       const twin = twins.get(from);
       if (!twin) continue;
       for (const name of namesTaken(names)) if (!twin.has(name)) gaps.push(`${rel(path)} takes ${name} from ${from}, which its web twin does not export`);
@@ -147,6 +158,11 @@ function twinGaps(files: ReadonlyMap<string, string>): string[] {
   }
   return gaps;
 }
+
+/** The pages of the game, and its languages: the first part of a page's address. */
+const PAGE_PATH = /(['"`])\/(?:(?:en|es|ru|new|challenge|room|rankings|collection|records|play|player|legal)\b[^'"`\n]*)?\1|`\/\$\{/g;
+/** A page's address written out in code (`'/play'`, `'/'`, `` `/${page}` ``), its comments left out. */
+const pagePathsIn = (source: string): string[] => [...source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '').matchAll(PAGE_PATH)].map((m) => m[0]);
 
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
@@ -171,7 +187,7 @@ describe('the wall between the phone\'s screens and the game', () => {
 
   it('finds the screens', () => {
     const names = screens.map(rel);
-    for (const screen of ['app/_layout.tsx', 'app/index.tsx', 'app/kit.tsx', 'ui/kit.tsx', 'ui/Page.tsx', 'game/screens/Records.tsx']) expect(names).toContain(screen);
+    for (const screen of ['app/_layout.tsx', 'app/index.tsx', 'app/[locale]/index.tsx', 'app/+native-intent.tsx', 'app/kit.tsx', 'ui/kit.tsx', 'ui/Page.tsx', 'game/screens/Records.tsx']) expect(names).toContain(screen);
   });
 
   it('lets no screen change the game except through the session', () => {
@@ -390,7 +406,7 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(reaching).toEqual(['apps/mobile/src/online/push.ts', 'apps/mobile/src/testing/setup.ts']);
     // The push opens only what `pageOf` lets through, and takes no store of the phone's: its note is handed in by the game's context.
     const push = readFileSync(join(SRC, 'online/push.ts'), 'utf8');
-    expect(push).toMatch(/const path = pageOf\(/);
+    expect(push).toMatch(/const to = pageOf\(/);
     // Loaded late, and only there: nothing of it is taken as the app loads (in Expo Go it warns as it loads), but its types.
     expect(importsOf(join(SRC, 'online/push.ts')).filter((i) => i.from === 'expo-notifications' && !i.typeOnly).map((i) => i.names)).toEqual(['*']);
     expect(push).toContain("import('expo-notifications')");
@@ -414,6 +430,34 @@ describe('the wall between the phone\'s screens and the game', () => {
       'game/screens/Uses.tsx takes Kind from @/ui/Thing, which its web twin does not export',
       'game/screens/Uses.tsx takes lost from @/ui/Thing, which its web twin does not export',
     ]);
+    // A twin named `index`, taken by its directory's name; and what a shared file passes on is taken as much as what it imports.
+    const more = new Map([
+      [join(SRC, 'online/index.ts'), 'export const phoneOnline = 1;\nexport const gone = 2;'],
+      [join(SRC, 'online/index.web.ts'), 'export const phoneOnline = 3;'],
+      [join(SRC, 'game/wires.ts'), "import { phoneOnline, gone } from '../online';\nimport { gone as also } from '../online/index';"],
+      [join(SRC, 'ui/Thing.tsx'), 'export const a = 1;\nexport function lost() {}'],
+      [join(SRC, 'ui/Thing.web.tsx'), 'export const a = 2;'],
+      [join(SRC, 'game/passes.ts'), "export { a, lost as found } from '../ui/Thing';\nexport type { Kind } from '../ui/Thing';\nexport * from '../ui/Thing';"],
+    ]);
+    expect(twinGaps(more)).toEqual([
+      'game/wires.ts takes gone from @/online, which its web twin does not export',
+      'game/wires.ts takes gone from @/online/index, which its web twin does not export',
+      'game/passes.ts takes lost from @/ui/Thing, which its web twin does not export',
+      'game/passes.ts takes Kind from @/ui/Thing, which its web twin does not export',
+    ]);
+  });
+
+  it('writes no page\'s address in the game or the kit but in `game/pages.ts`: every move between pages goes through `hrefOf` and `useGo`, in the language of the address', () => {
+    const inTheGame = mine.filter((path) => /^(game|ui)\//.test(rel(path)) && rel(path) !== 'game/pages.ts');
+    expect(inTheGame.length).toBeGreaterThan(50);
+    expect(inTheGame.flatMap((path) => pagePathsIn(readFileSync(path, 'utf8')).map((one) => `${rel(path)}: ${one}`))).toEqual([]);
+    // How one is told: a page's path in quotes, the front door's among them, or one made from a template; never a word in a comment, nor an address
+    // that is not a page of the game.
+    expect(pagePathsIn("router.push('/play');")).toEqual(["'/play'"]);
+    expect(pagePathsIn('router.dismissTo("/");')).toEqual(['"/"']);
+    expect(pagePathsIn("router.push('/rankings?tab=friends'); router.replace('/es/room?code=ABC123');")).toEqual(["'/rankings?tab=friends'", "'/es/room?code=ABC123'"]);
+    expect(pagePathsIn('router.push(`/${page}?code=${code}`);')).toEqual(['`/${']);
+    expect(pagePathsIn("go.push('play'); // not router.push('/play')\nconst rules = `/rules/${file}`;\nconst link = `${origin}/${locale}/room`;")).toEqual([]);
   });
 
   it('gives a small thing that is pressed its 44 points in its own box (the kit\'s `reach`), never by a `hitSlop`: React Native looks for no touch past a parent\'s edge', () => {

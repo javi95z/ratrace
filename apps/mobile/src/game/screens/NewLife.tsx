@@ -2,7 +2,6 @@ import { lives, portraitArt } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import { unlockProgress } from '@ratrace/core/game/unlockProgress';
-import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
 import type { HostInstance, LayoutChangeEvent } from 'react-native';
@@ -20,6 +19,7 @@ import { useGame, useProfile, useRanking, useRuns, useStill, useT, useWords } fr
 import { anotherLife, lifeRows } from '../lives';
 import { BackLink } from './BackLink';
 import { Difficulty, LifeBrief, LifeSummary } from './LifeSummary';
+import { useGo } from '../pages';
 
 const byId = new Map<string, LifeDef>(lives.map((life) => [life.id, life]));
 
@@ -188,7 +188,7 @@ export function ElsewhereSheet({ starting, away, onTake, onEnd }: { starting: bo
 export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const t = useT('newLife');
   const common = useT('common');
-  const router = useRouter();
+  const go = useGo();
   const start = useGame((s) => s.start);
   const continueElsewhere = useGame((s) => s.continueElsewhere);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
@@ -277,7 +277,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
       if (await start(chosen, { ranked: ranking === 'yes' && wantRanked, replace })) {
         setBegun(true);
         if (fromSheet) await sheetsGone();
-        router.replace('/play');
+        go.replace('play');
       }
     } catch (error) {
       console.error('the life could not be started:', error);
@@ -298,7 +298,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
       if (answer === 'taken') {
         setBegun(true);
         await sheetsGone();
-        router.replace('/play');
+        go.replace('play');
       }
       // Gone, there is nothing in the way any more, and the sheet has closed by itself.
       else if (answer === 'away') setAway(true);

@@ -6,13 +6,14 @@ import { CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, Community } from '@ratrace/online/types';
 import { cleanup, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
+import CollectionRoute from '../app/[locale]/collection';
+import PlayerRoute from '../app/[locale]/player';
+import RankingsRoute from '../app/[locale]/rankings';
+import RecordsRoute from '../app/[locale]/records';
+import RoomRoute from '../app/[locale]/room';
 import AuthRoute from '../app/auth';
-import CollectionRoute from '../app/collection';
-import PlayerRoute from '../app/player';
-import RankingsRoute from '../app/rankings';
-import RecordsRoute from '../app/records';
-import RoomRoute from '../app/room';
+import IndexRoute from '../app/index';
 import { routerNow } from '../testing/fakes';
 import { GameProvider } from './context';
 import { memoryServices, params, renderGame, router } from '../testing/render';
@@ -20,16 +21,58 @@ import { roomServer } from '../../../web/src/testing/roomServer';
 
 // Beside app/, not in it: every file there is a route.
 afterEach(cleanup);
+// Every page of the game is under its language, as the router hands it: English, unless a test says otherwise.
+beforeEach(() => {
+  params.locale = 'en';
+});
 
-test('the routes are the web\'s pages after the front door, and the phone\'s own for development', () => {
-  const routes = readdirSync(join(dirname(fileURLToPath(import.meta.url)), '../app'))
-    .filter((file) => file.endsWith('.tsx') && !file.startsWith('_'))
+test('the routes are the web\'s pages under each language, and the phone\'s own for development', () => {
+  const app = join(dirname(fileURLToPath(import.meta.url)), '../app');
+  const routes = readdirSync(app, { recursive: true, encoding: 'utf8' })
+    .filter((file) => file.endsWith('.tsx') && !file.split('/').pop()?.startsWith('_'))
     .map((file) => file.replace(/\.tsx$/, ''))
     .sort();
-  // The web's pages (apps/web/src/i18n/metadata.ts), the front door (`index`), and the kit, the parts and the scenes, for development only; and the
-  // timing probe's, which puts a long life on the phone in a build made with EXPO_PUBLIC_PERF=1 and goes home in any other. And the address Google
-  // sends the player back to (`auth`), should Android hand it to the router.
-  expect(routes).toEqual(['auth', 'challenge', 'collection', 'dev', 'index', 'kit', 'legal', 'new', 'perf', 'play', 'player', 'rankings', 'records', 'room', 'scene']);
+  // The web's pages (apps/web/src/i18n/metadata.ts), the front door (`index`) among them, under the language of the address (`/es/play`), as the
+  // Next web's `[locale]`; the bare address, which leads to the front door of a language; the phone's own links mapped to them (`+native-intent`).
+  // And the kit, the parts and the scenes, for development only; and the timing probe's, which puts a long life on the phone in a build made with
+  // EXPO_PUBLIC_PERF=1 and goes home in any other. And the address Google sends the player back to (`auth`), should Android hand it to the router.
+  expect(routes).toEqual([
+    '+native-intent',
+    '[locale]/challenge',
+    '[locale]/collection',
+    '[locale]/index',
+    '[locale]/legal',
+    '[locale]/new',
+    '[locale]/play',
+    '[locale]/player',
+    '[locale]/rankings',
+    '[locale]/records',
+    '[locale]/room',
+    'auth',
+    'dev',
+    'index',
+    'kit',
+    'perf',
+    'scene',
+  ]);
+});
+
+test('a page of the game is drawn in one of its languages only: any other first part of the address is the router\'s page of nothing, as the Next web\'s `notFound()`', () => {
+  params.locale = 'de';
+  const { container } = renderGame(<RecordsRoute />, memoryServices());
+  expect(container.querySelector('[data-unmatched]')).not.toBeNull();
+  expect(screen.queryByRole('heading', { name: 'Records' })).toBeNull();
+});
+
+test('the bare address leads to the front door of the phone\'s language, the query it carries with it', () => {
+  // Outside the pages of a language: the address has none.
+  delete params.locale;
+  const { container } = renderGame(<IndexRoute />, memoryServices(), 'es');
+  expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/es');
+  cleanup();
+  params.code = 'c0de';
+  const again = renderGame(<IndexRoute />, memoryServices(), 'ru');
+  expect(again.container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/ru?code=c0de');
 });
 
 test('the timing probe\'s route goes home in a build without the flag, and puts nothing on the phone', async () => {
@@ -130,4 +173,11 @@ test('the rankings are their own screen, opened on the ranking the link names: a
   params.tab = 'nowhere';
   renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
   expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
+  cleanup();
+  // And the web's own link to the friends, `/{l}/rankings#friends` (the front door's, and a phone's `theratrace://rankings#friends`): the hash, as
+  // the router hands it (`#`).
+  delete params.tab;
+  params['#'] = 'friends';
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  await waitFor(() => expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true'));
 });

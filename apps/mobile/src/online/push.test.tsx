@@ -10,7 +10,7 @@ import { notices, pathname, tapOn } from '../testing/fakes';
 import { closeEverySheet, sheetOpened, sheetsShut } from '../ui/back';
 import { Play } from '../game/screens/Play';
 import { Sheet } from '../ui/overlay';
-import { memoryServices, renderGame, router } from '../testing/render';
+import { memoryServices, params, renderGame, router } from '../testing/render';
 import { pageOf, phonePush } from './push';
 import type { PushNote, PushNoted } from './push';
 
@@ -77,23 +77,23 @@ function community(over: Partial<Community> = {}) {
 
 describe('the link a tap opens', () => {
   it.each([
-    ['theratrace://room?code=K7Q2XM', '/room?code=K7Q2XM'],
-    ['theratrace://room', '/room'],
-    ['theratrace://challenge', '/challenge'],
-    ['theratrace://play', '/play'],
-    ['theratrace://rankings?tab=friends', '/rankings?tab=friends'],
-    ['theratrace://rankings?tab=challenge', '/rankings?tab=challenge'],
+    ['theratrace://room?code=K7Q2XM', { page: 'room', query: { code: 'K7Q2XM' } }],
+    ['theratrace://room', { page: 'room', query: {} }],
+    ['theratrace://challenge', { page: 'challenge', query: {} }],
+    ['theratrace://play', { page: 'play', query: {} }],
+    ['theratrace://rankings?tab=friends', { page: 'rankings', query: { tab: 'friends' } }],
+    ['theratrace://rankings?tab=challenge', { page: 'rankings', query: { tab: 'challenge' } }],
     // What the screen does not read is left behind.
-    ['theratrace://room?code=K7Q2XM&next=https://evil.example', '/room?code=K7Q2XM'],
-    ['theratrace://room/?code=K7Q2XM', '/room?code=K7Q2XM'],
+    ['theratrace://room?code=K7Q2XM&next=https://evil.example', { page: 'room', query: { code: 'K7Q2XM' } }],
+    ['theratrace://room/?code=K7Q2XM', { page: 'room', query: { code: 'K7Q2XM' } }],
     // Each name once: the first as written.
-    ['theratrace://room?code=K7Q2XM&code=AAAAAA', '/room?code=K7Q2XM'],
-    ['theratrace://rankings?tab=friends&tab=week', '/rankings?tab=friends'],
+    ['theratrace://room?code=K7Q2XM&code=AAAAAA', { page: 'room', query: { code: 'K7Q2XM' } }],
+    ['theratrace://rankings?tab=friends&tab=week', { page: 'rankings', query: { tab: 'friends' } }],
     // A name the screen does not read is no way in, however it is spelled.
-    ['theratrace://room?constructor=x', '/room'],
-    ['theratrace://room?__proto__=x&hasOwnProperty=y', '/room'],
+    ['theratrace://room?constructor=x', { page: 'room', query: {} }],
+    ['theratrace://room?__proto__=x&hasOwnProperty=y', { page: 'room', query: {} }],
   ])('opens %s as %s', (url, path) => {
-    expect(pageOf(url)).toBe(path);
+    expect(pageOf(url)).toEqual(path);
   });
 
   it.each([
@@ -150,7 +150,7 @@ describe('the link a tap opens', () => {
       const { url } = noticeOf('en', about, 'app');
       expect(pageOf(url), `${about.kind}: ${url}`).not.toBeNull();
     }
-    expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toBe('/rankings?tab=friends');
+    expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toEqual({ page: 'rankings', query: { tab: 'friends' } });
   });
 });
 
@@ -159,7 +159,7 @@ describe('a tap on a notice', () => {
     notices.last = tapOn('theratrace://room?code=K7Q2XM');
     const push = phonePush(memoryNote(), { platform: 'ios' });
     renderGame(<Preferences />, { ...memoryServices(), push });
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room?code=K7Q2XM'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/room?code=K7Q2XM'));
     // Had, it is cleared: a reload of the app does not open it again.
     expect(notices.cleared).toBe(1);
     expect(notices.last).toBeNull();
@@ -179,9 +179,19 @@ describe('a tap on a notice', () => {
     renderGame(<Preferences />, { ...memoryServices(), push });
     await settle();
     act(() => notices.tap(tapOn('theratrace://rankings?tab=friends', 'notice-2')));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/rankings?tab=friends'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/rankings?tab=friends'));
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-3')));
-    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith('/challenge'));
+    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith('/en/challenge'));
+  });
+
+  it('opens it in the language of the address the player is on: the screens in the stack are that language\'s pages', async () => {
+    params.locale = 'es';
+    pathname.now = '/es/records';
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), push }, 'ru');
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    act(() => notices.tap(tapOn('theratrace://rankings?tab=friends', 'notice-2')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/es/rankings?tab=friends'));
   });
 
   it('ignores a link that is not one of the app\'s screens, at a cold start as while it runs', async () => {
@@ -243,7 +253,7 @@ describe('a tap on a notice', () => {
     let sheetWhenOpened: boolean | null = null;
     router.push.mockImplementation(() => void (sheetWhenOpened = screen.queryByRole('heading', { name: 'Something open' }) !== null));
     act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/room'));
     expect(sheetWhenOpened).toBe(false);
     // Closed for good: nothing comes back after.
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -261,7 +271,7 @@ describe('a tap on a notice', () => {
     await screen.findByRole('heading', { name: 'Cash' });
     await waitFor(() => expect(notices.taps.size).toBe(1));
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/challenge'));
     expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
     // Back on the life: nothing was left open to come back over it, and the profile opens as ever, its balance line closed.
@@ -302,7 +312,7 @@ describe('a tap on a notice', () => {
     // The game starting again holds every sheet shut, as it does once the player has said yes.
     const forStart = closeEverySheet();
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-2')));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/challenge'));
     act(() => forStart());
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(screen.queryByRole('heading', { name: 'Sign out?' })).toBeNull();
@@ -328,16 +338,16 @@ describe('a tap on a notice', () => {
     await settle();
     expect(router.push).not.toHaveBeenCalled();
     act(() => gone());
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/challenge'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/challenge'));
   });
 
   it('opens the screen in front anew in its place, never a second copy over it', async () => {
-    pathname.now = '/room';
+    pathname.now = '/en/room';
     const push = phonePush(memoryNote(), { platform: 'ios' });
     renderGame(<Preferences />, { ...memoryServices(), push });
     await waitFor(() => expect(notices.taps.size).toBe(1));
     act(() => notices.tap(tapOn('theratrace://room?code=K7Q2XM', 'notice-2')));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/room?code=K7Q2XM'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/room?code=K7Q2XM'));
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -351,7 +361,7 @@ describe('a tap on a notice', () => {
     act(() => notices.tap(tapOn('theratrace://room', 'notice-2')));
     await waitFor(() => expect(router.push).toHaveBeenCalledTimes(1));
     act(() => notices.tap(tapOn('theratrace://challenge', 'notice-3')));
-    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith('/challenge'));
+    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith('/en/challenge'));
     expect(sheetsShut()).toBe(false);
   });
 });

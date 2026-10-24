@@ -5,7 +5,6 @@ import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { LOCALES } from '@ratrace/i18n';
 import type { Locale } from '@ratrace/i18n';
-import { useRouter } from 'expo-router';
 import type { CloudSaving } from '@ratrace/online/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -27,6 +26,7 @@ import { COLORS, TOUCH } from '../../ui/theme';
 import { useAccount, useAccountSaving, useCommunity, useGame, useGuide, usePush, useSaving, useSettings, useWords } from '../context';
 import { useOwnT } from '../ownWords';
 import { useT } from '../words';
+import { useGo } from '../pages';
 
 /** The languages the game speaks, each under its own name. */
 const LANGUAGES: Record<Locale, string> = { en: 'English', es: 'Español', ru: 'Русский' };
@@ -563,7 +563,7 @@ export function Standing({ shown }: { shown: GameView }) {
 export function SettingsSheet({ open, onClose, shown }: { open: boolean; onClose(): void; shown: GameView }) {
   const t = useT('settings');
   const common = useT('common');
-  const router = useRouter();
+  const go = useGo();
   return (
     <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
       <View style={{ gap: 12 }}>
@@ -581,7 +581,7 @@ export function SettingsSheet({ open, onClose, shown }: { open: boolean; onClose
             style={{ minHeight: 48, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             onPress={() => {
               onClose();
-              void sheetsGone().then(() => router.dismissTo('/'));
+              void sheetsGone().then(() => go.home());
             }}
           >
             <PixelText size={17} tone="ink-900">{'←'}</PixelText>

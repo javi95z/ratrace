@@ -63,7 +63,7 @@ describe('the records', () => {
     expect(screen.getByRole('heading', { name: 'Records' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Personal bests' })).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
-    expect(router.dismissTo).toHaveBeenCalledWith('/');
+    expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
   it('says it is reading the device until the lives are read', async () => {

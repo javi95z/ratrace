@@ -14,6 +14,7 @@ import { readSprite } from '../../ui/spriteImages';
 import { PixelText, ReadText } from '../../ui/text';
 import { typefaceOf } from '../../ui/typefaces';
 import { usePictureShare, useSettings, useT, useTrack } from '../context';
+import { hrefOf } from '../pages';
 import { SITE_URL } from '../site';
 
 /*
@@ -183,7 +184,7 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
   const share = usePictureShare();
   const { locale } = useSettings();
   // The picture travels with a way into the game, in the language it was played in.
-  const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });
+  const invite = t('invite', { url: new URL(hrefOf('', { locale }), SITE_URL).href });
   const [open, setOpen] = useState(opened);
   // The picture being handed over or saved: one at a time, Share or Save, as both write the one file of the cache's `share/` folder (game/sharing.ts),
   // which the other would take away under it. A second press of either meanwhile does nothing.
