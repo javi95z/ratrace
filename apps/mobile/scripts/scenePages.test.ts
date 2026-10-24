@@ -85,7 +85,7 @@ test('the Hud has open, in a scene, the sheet the scene names: the web\'s page p
   const hud = read('../../web/src/game/screens/Hud.tsx');
   expect(hud).toContain('<div data-hud-cash className="contents">');
   expect(hud).toContain('<div className="grid grid-cols-3 gap-1.5">');
-  expect([...hud.matchAll(/className="block min-h-11/g)]).toHaveLength(1);
+  expect([...hud.matchAll(/className=\{?[`"]block min-h-11/g)]).toHaveLength(1);
   expect([...hud.matchAll(/className="mt-1 inline-flex"/g)]).toHaveLength(1);
   // The strip of a crisis, under the figures of the compact Hud, is the crisis's own bar.
   expect(hud).toContain('<CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact />');

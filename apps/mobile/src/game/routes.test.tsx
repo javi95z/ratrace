@@ -63,7 +63,7 @@ test('a page of the game is drawn in one of its languages only: any other first 
   params.locale = 'de';
   const { container } = renderGame(<RecordsRoute />, memoryServices());
   expect(container.querySelector('[data-unmatched]')).not.toBeNull();
-  expect(screen.queryByRole('heading', { name: 'Records' })).toBeNull();
+  expect(screen.queryByRole('heading', { name: 'History' })).toBeNull();
 });
 
 test('the bare address leads to the front door of the phone\'s language, the query and hash it carries with it', () => {
@@ -90,7 +90,7 @@ test('the timing probe\'s route goes home in a build without the flag, and puts 
 
 test('the records and the collection are their own screens', async () => {
   renderGame(<RecordsRoute />, memoryServices());
-  expect(screen.getByRole('heading', { name: 'Records' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy();
   cleanup();
   renderGame(<CollectionRoute />, memoryServices());
   expect(screen.getByRole('heading', { name: 'Collection' })).toBeTruthy();

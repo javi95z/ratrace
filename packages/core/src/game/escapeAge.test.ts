@@ -76,7 +76,7 @@ async function caughtAgain() {
   const store = new MemoryStore();
   await store.saveProfile({ ...newProfile(), unlocked: Object.fromEntries(lives.map((life) => [life.id, { at: 0, gameId: 'caught' }])) });
   let n = 0;
-  const sessions = new LocalSessions(store, content, lives, { newId: () => `caught-${(n += 1)}`, newSeed: () => 'lost-engineer-indexer-1'.padEnd(64, '0'), now: () => 0 });
+  const sessions = new LocalSessions(store, content, lives, { newId: () => `caught-${(n += 1)}`, newSeed: () => 'lost-engineer-indexer-86'.padEnd(64, '0'), now: () => 0 });
   const session = await sessions.start('engineer');
   const bot = bots.find((one) => one.id === 'indexer')!;
   for (;;) {

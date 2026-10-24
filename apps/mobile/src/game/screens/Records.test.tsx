@@ -60,7 +60,7 @@ describe('the records', () => {
   it('says there is nothing yet before a first life is finished', async () => {
     renderGame(<Records />, memoryServices());
     expect(await screen.findByText('No life finished yet. Your first one will appear here.')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Records' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Personal bests' })).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Back' }));
     expect(router.dismissTo).toHaveBeenCalledWith('/en');
@@ -273,7 +273,7 @@ describe('the records', () => {
     const services = memoryServices();
     await services.store.addRun(run('a', { escapedAtRound: 14 }));
     renderGame(<Records />, services, 'es');
-    expect(await screen.findByRole('heading', { name: 'Récords' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Historial' })).toBeTruthy();
     expect(await screen.findByRole('heading', { name: 'Tus mejores marcas' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Vidas pasadas' })).toBeTruthy();
     // The nurse holds every best, and is the one past life.

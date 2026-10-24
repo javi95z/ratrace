@@ -11,7 +11,7 @@ import { KvStore } from '../kvStore';
  * For the timing probe's build only (`EXPO_PUBLIC_PERF=1`: app/perf.tsx requires this file behind the flag, and a build without it has none of it):
  * a life far into its course put where the phone keeps its life in progress, as a phone that had played it would have saved it, for the game to
  * take up. The life is a scene's (packages/core/src/testing/scenes.ts), played by its bot through the round store to its round and stage: the long
- * life that ends is `moment-escape`'s, the engineer of the first fixed seed at the finances of her fifteenth round, which the saver leaves the rat
+ * life that ends is `moment-escape`'s, the engineer of screen-seed-335 at the finances of her fifteenth round, which the saver leaves the rat
  * race with. Only the life is put: the profile, its settings and what it has unlocked stay the phone's own.
  */
 export async function putSceneLife(name: string, toLastRound = false): Promise<void> {
@@ -52,9 +52,9 @@ export async function putSceneRuns(name: string, copies: number): Promise<void> 
 /**
  * A life whose next round both takes it out of the rat race and earns a legendary badge (`escaped_before_40`): the influencer of this seed, played by
  * the saver to the finances of her eighth round (age 36), where playing the round as it stands, with no orders (as a player presses it), leaves the
- * rat race at 38. For the device check of two sheets at once (the moment of leaving, and the legendary badge's). Found by playing every life with every bot from a few seeds; held by this file's test.
+ * rat race at 38, with a first million (a moment of its own). For the device check of two sheets at once (the moment of leaving, and the legendary badge's). Found by playing every life with every bot from a few seeds; held by this file's test.
  */
-export const EARLY_ESCAPE = { life: 'influencer', bot: 'saver', seed: 'escape-influencer-saver-4'.padEnd(64, '0'), round: 7 } as const;
+export const EARLY_ESCAPE = { life: 'influencer', bot: 'saver', seed: 'escape-influencer-saver-56'.padEnd(64, '0'), round: 7 } as const;
 
 /** That life, played on a store of its own (every life open to it) to its round, at the finances: the store, and its session. */
 export async function earlyEscape(): Promise<{ store: MemoryStore; session: NonNullable<Awaited<ReturnType<LocalSessions['resume']>>['session']> }> {

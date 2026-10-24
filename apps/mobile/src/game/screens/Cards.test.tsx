@@ -404,7 +404,7 @@ describe('a card that is not swiped', () => {
     const services = memoryServices();
     const session = await services.sessions.start('engineer');
     await session.answerCard(0);
-    // The engineer's second card, the office lottery: three choices.
+    // The engineer's second card, the betting app: three choices.
     renderGame(
       <>
         <CardStage />
@@ -679,7 +679,7 @@ describe('what a card did', () => {
   }
 
   it('says how likely what came up was, when there were dice', async () => {
-    // The engineer's second card, the office lottery, with a ticket bought: the dice say how it went.
+    // The engineer's second card, the betting app, with a small bet placed: the dice say how it went.
     const services = memoryServices();
     const session = await services.sessions.start('engineer');
     await session.answerCard(0);
@@ -688,7 +688,7 @@ describe('what a card did', () => {
     fireEvent.click(choices()[1]);
     await screen.findByRole('heading', { name: 'What happened' });
     const card = screen.getByRole('article');
-    const written = text.cards.luck_lottery.options[1];
+    const written = text.cards.luck_betting_app.options[1];
     expect(written.outcomes.filter((line) => within(card).queryByText(line) !== null)).toHaveLength(1);
     expect(within(card).getByText('chance of this being what came up')).toBeTruthy();
     expect(within(card).getByText(/^\d+(\.\d+)?\s?%$/)).toBeTruthy();
@@ -711,10 +711,10 @@ describe('what a card did', () => {
   });
 
   it('tells what the cash came to when a card took more than there was: the credit card\'s line', async () => {
-    // The engineer of screen-seed-2: the dentist's bill, the third card of the first round, is more than the cash left.
+    // The engineer of screen-seed-30: the dentist's bill, the third card of the first round, is more than the cash left.
     let ids = 0;
     const store = new MemoryStore();
-    const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => 'screen-seed-2', now: () => 1_000 + ids });
+    const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => 'screen-seed-30', now: () => 1_000 + ids });
     const services: Services = { sessions, store, tapGuardMs: 0 };
     const session = await sessions.start('engineer');
     for (let i = 0; i < 2; i++) await session.answerCard(previewCard(content, session.view(), session.view().hand[i]).findIndex((preview) => preview.available));
@@ -732,13 +732,13 @@ describe('the money a card paid', () => {
   const coins = () => document.querySelectorAll('[data-testid="coin-layer"] > div');
 
   it('flies to the cash in the HUD once the result has risen; none flies from a card that paid nothing', async () => {
-    // The nurse's first card, a freelance gig taken: it pays.
-    await answer('nurse', (shown) => shown - 1);
+    // The engineer's first card, a freelance gig taken: it pays.
+    await answer('engineer', (shown) => shown - 1);
     expect(coins()).toHaveLength(0);
     await waitFor(() => expect(coins()).toHaveLength(3), { timeout: 2_000 });
     cleanup();
     // Turned down: nothing comes in.
-    await answer('nurse', () => 0);
+    await answer('engineer', () => 0);
     await act(async () => new Promise((done) => setTimeout(done, 700)));
     expect(coins()).toHaveLength(0);
   });

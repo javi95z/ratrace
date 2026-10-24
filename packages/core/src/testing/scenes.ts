@@ -194,15 +194,20 @@ type Reach = {
   seed?: string;
   /**
    * The option taken on a card, by its id, where the scene needs another answer than the saver's (the saver answers every other card as it
-   * would): on `screen-seed-15` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
+   * would): on `screen-seed-160` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
    */
   picks?: Readonly<Record<string, number>>;
   /**
    * The bot that plays the life, by its id, where it is not the saver (who never goes broke): the chaser lives as grandly as the money lasts, and
-   * on `screen-seed-4` the nurse it plays goes bankrupt in her fourth round. It plays every round and every step of the scene.
+   * on `screen-seed-5` the nurse it plays goes bankrupt in her fourth round. It plays every round and every step of the scene.
    */
   player?: string;
 } & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
+
+/** The seed of the engineer whom the saver takes out of the rat race with her fifteenth round, at 50, never bankrupt (and whose third round holds the appointment). */
+const ESCAPED = 'screen-seed-335';
+/** The seed of the nurse whom the chaser takes bankrupt with her fourth round, once, never out of the rat race. */
+const BANKRUPT = 'screen-seed-5';
 
 /** What each scene's store holds: the life to begin and how far to play it, or null for a device with no life. */
 const PLANS: Readonly<Record<string, Reach | null>> = {
@@ -215,9 +220,10 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'new-locked': null,
   'new-replace': { life: 'nurse', round: 3, stage: 'news' },
   'play-news-r1': { life: 'engineer', round: 1, stage: 'news' },
+  // The second card of the engineer's first round is the betting app: three choices, pressed.
   'play-cards-r1': { life: 'engineer', round: 1, stage: 'cards' },
-  // The second card of the engineer's third round is the appointment: a legendary card with two choices, to be swiped.
-  'play-cards-legendary': { life: 'engineer', round: 3, stage: 'cards' },
+  // On screen-seed-335 the second card of the engineer's third round is the appointment: a legendary card with two choices, to be swiped.
+  'play-cards-legendary': { life: 'engineer', round: 3, stage: 'cards', seed: 'screen-seed-335' },
   // On screen-seed-3 the second card of the first round is asking for a raise: three choices the engineer can take, and a fourth, which needs
   // negotiation, not shown.
   'play-cards-three': { life: 'engineer', round: 1, stage: 'cards', seed: 'screen-seed-3' },
@@ -249,14 +255,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
   'hud-race': { life: 'engineer', round: 1, stage: 'news' },
   'hud-status-ru': { life: 'engineer', round: 1, stage: 'news' },
-  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-15', picks: { crime_wrongly_accused: 0 } },
+  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-160', picks: { crime_wrongly_accused: 0 } },
   'hud-crisis': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'hud-crisis-details': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'amount-savings': { life: 'engineer', round: 6, stage: 'finance' },
-  // On screen-seed-74 the engineer's second round opens with MrFeast's challenge (a legendary card, once a life): taken, the badge of meeting him is legendary.
-  'celebrate-legendary': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-74', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  // On screen-seed-271 the engineer's second round opens with MrFeast's challenge (a legendary card, once a life): taken, the badge of meeting him is legendary.
+  'celebrate-legendary': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   // The same step, its legendary sheet taken in: the small cards of what it earned, in the result of the card.
-  'celebrate-earned': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-74', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  'celebrate-earned': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   'challenge-practice': null,
   legal: null,
   // The finances of play-finance-r6's sixth round, at the way of life: how the engineer works, the round's focus, how and where she lives, her
@@ -264,8 +270,8 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'finance-lifestyle': { life: 'engineer', round: 6, stage: 'finance' },
   // The same, the sheet of every city open: each city's year beside hers, the one she lives in at the top.
   'finance-move': { life: 'engineer', round: 6, stage: 'finance' },
-  // The engineer's fourth round, its second card the relocation to London (a rung up, the move paid): the city beside hers, opened from the card.
-  'play-cards-city': { life: 'engineer', round: 4, stage: 'cards' },
+  // The engineer's fourth round on screen-seed-13, its second card the relocation to London (a rung up, the move paid): the city beside hers, opened from the card.
+  'play-cards-city': { life: 'engineer', round: 4, stage: 'cards', seed: 'screen-seed-13' },
   // The work panel of the profile, for the engineer of play-finance-r6: her job and the next rung, the round's focus, her skills.
   'work-panel': { life: 'engineer', round: 6, stage: 'finance' },
   // The finances of play-finance-r6's sixth round, at the shop: what is in reach of the engineer's cash in London, shelf by shelf.
@@ -285,18 +291,18 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'balance-r6': { life: 'engineer', round: 6, stage: 'news' },
   // The same round: where the engineer stands among the rivals, the board alone on a page (in the profile it is far down its sheet).
   'rivals-r6': { life: 'engineer', round: 6, stage: 'news' },
-  // The engineer of the first fixed seed, played by the saver to the end of the life: out of the rat race with the fifteenth round, never bankrupt.
-  'end-escaped': { life: 'engineer', round: 1, stage: 'end' },
-  // The nurse of screen-seed-4, played by the chaser to the end of the life: bankrupt with her fourth round, never out of the rat race.
-  'end-bankrupt': { life: 'nurse', round: 1, stage: 'end', seed: 'screen-seed-4', player: 'chaser' },
+  // The engineer of screen-seed-335 (play-cards-legendary's), played by the saver to the end of the life: out of the rat race with the fifteenth round, never bankrupt.
+  'end-escaped': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
+  // The nurse of screen-seed-5, played by the chaser to the end of the life: bankrupt with her fourth round, never out of the rat race.
+  'end-bankrupt': { life: 'nurse', round: 1, stage: 'end', seed: BANKRUPT, player: 'chaser' },
   // end-escaped's life, the picture of it to share open over its end (the share card's sheet).
-  'end-share': { life: 'engineer', round: 1, stage: 'end' },
+  'end-share': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
   // end-escaped's life in Russian.
-  'end-ru': { life: 'engineer', round: 1, stage: 'end' },
-  // The engineer of the first fixed seed, played by the saver, leaves the rat race with the fifteenth round: its ledger, and the moment over it.
-  'moment-escape': { life: 'engineer', round: 15, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
-  // The nurse of screen-seed-4, played by the chaser, who lives as grandly as the money lasts: bankrupt with her fourth round.
-  'moment-bankrupt': { life: 'nurse', round: 4, stage: 'finance', seed: 'screen-seed-4', player: 'chaser', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  'end-ru': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
+  // end-escaped's engineer, played by the saver, leaves the rat race with the fifteenth round: its ledger, and the moment over it.
+  'moment-escape': { life: 'engineer', round: 15, stage: 'finance', seed: ESCAPED, then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  // The nurse of screen-seed-5, played by the chaser, who lives as grandly as the money lasts: bankrupt with her fourth round.
+  'moment-bankrupt': { life: 'nurse', round: 4, stage: 'finance', seed: BANKRUPT, player: 'chaser', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
   // The engineer of screen-seed-10 (hud-crisis's world): the crash opens with the fifth round, at its news.
   'moment-crisis': { life: 'engineer', round: 5, stage: 'news', seed: 'screen-seed-10' },
   // A device on which no life has been finished yet.
@@ -337,7 +343,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'challenge-attempt': null,
   'challenge-played': null,
   // end-escaped's life, for a member: where its score stands among the lives others played from the same start.
-  'end-standing': { life: 'engineer', round: 1, stage: 'end' },
+  'end-standing': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
   // The page where a life is chosen, for a member: ranked or their own.
   'new-ranked': null,
   // The games with others are the server's: a device with no life, the table the scene's (`sceneRooms`).
@@ -367,15 +373,15 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
 type Lived = { life: string; seed: string; player: string };
 
 /**
- * Three lives, each of the lives to begin with, played to their ends one after another, each holding a best: the nurse of screen-seed-4 played by
+ * Three lives, each of the lives to begin with, played to their ends one after another, each holding a best: the nurse of screen-seed-5 played by
  * the chaser (moment-bankrupt's), who buys the grandest things the money allows and goes bankrupt in her fourth round, the most status; the civil
- * servant of screen-seed-3 played by the landlord, who buys homes to let, the greatest net worth; the engineer of the first fixed seed played by the
+ * servant of screen-seed-3 played by the landlord, who buys homes to let, the greatest net worth; the engineer of screen-seed-335 played by the
  * saver (moment-escape's), out of the rat race at fifty, the best score.
  */
 const THREE_LIVES: readonly Lived[] = [
-  { life: 'nurse', seed: 'screen-seed-4', player: 'chaser' },
+  { life: 'nurse', seed: BANKRUPT, player: 'chaser' },
   { life: 'civil_servant', seed: 'screen-seed-3', player: 'landlord' },
-  { life: 'engineer', seed: 'screen-seed-1', player: 'saver' },
+  { life: 'engineer', seed: ESCAPED, player: 'saver' },
 ];
 
 /** The lives a scene's player has lived to the end before it, by the scene's name, in the order they were lived. */
@@ -574,7 +580,7 @@ async function toFinances(name: string, game: GameStore, bot: Bot): Promise<void
 }
 
 /**
- * The store of a scene: a life begun on the first fixed seed and played with the saver, through the round store the
+ * The store of a scene: a life begun on the first fixed seed (or the one the scene names) and played with the saver (or its own bot), through the round store the
  * game plays through, to the round and stage the scene names. A scene with no life is an empty device.
  */
 export async function sceneStore(name: string): Promise<MemoryStore> {

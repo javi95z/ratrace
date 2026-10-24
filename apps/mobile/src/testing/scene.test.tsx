@@ -320,7 +320,7 @@ test('the scene of the badges a step earned is their small cards under the Hud, 
 
 test('the scenes of the cards are drawn by the card stage itself, each at its card, nothing taken', async () => {
   const cards = [
-    { name: 'play-cards-r1', choices: /^Your choices: The office Christmas lottery$/, count: 3, swipe: false, tip: true },
+    { name: 'play-cards-r1', choices: /^Your choices: The betting app$/, count: 3, swipe: false, tip: true },
     { name: 'play-cards-legendary', choices: /^Your choices: The appointment$/, count: 2, swipe: true, tip: false },
     { name: 'play-cards-three', choices: /^Your choices: Ask for a raise$/, count: 3, swipe: false, tip: false },
   ];
@@ -364,9 +364,9 @@ test('the scene of a card\'s result is drawn by the result itself: the card answ
   render(<SceneView name="play-outcome-r1" />);
   expect(await screen.findByRole('heading', { name: 'What happened' }, WAIT)).toBeTruthy();
   const card = screen.getByRole('article');
-  expect(within(card).getByText('You chose: Sign up')).toBeTruthy();
-  expect(card.querySelector('[data-sprite="card.language"], [data-sprite^="card."]')).not.toBeNull();
-  expect(within(screen.getByRole('region', { name: 'What changes' })).getByText(formatFor('en').briefSigned(-60_000))).toBeTruthy();
+  expect(within(card).getByText('You chose: Take it')).toBeTruthy();
+  expect(card.querySelector('[data-sprite^="card."]')).not.toBeNull();
+  expect(within(screen.getByRole('region', { name: 'What changes' })).getByText(formatFor('en').briefSigned(250_000))).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Next card' })).toBeTruthy();
 });
 
@@ -398,9 +398,9 @@ test('the finances of a scene are drawn by Finance itself in Play: the portfolio
 test('the scene of the basket is its sheet open over the finances, beside Play as the web\'s page draws it, listing the saver\'s orders of the round', async () => {
   render(<SceneView name="finance-basket" />);
   const sheet = (await screen.findByRole('heading', { name: "This round's orders" }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
-  expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
+  expect(within(sheet).getAllByRole('listitem')).toHaveLength(3);
   expect(within(sheet).getByText(/^Save /)).toBeTruthy();
-  expect(screen.getByRole('button', { name: '2 orders' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '3 orders' })).toBeTruthy();
   // For a player who has read the guide: nothing of it under the sheet.
   expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
 });
@@ -434,7 +434,7 @@ test('the scenes of the market, property and debts are drawn by Finance on the t
   render(<SceneView name="finance-property" />);
   const property = await screen.findByRole('tabpanel', { name: 'Property' }, WAIT);
   expect(within(property).getByText('You own no property.')).toBeTruthy();
-  expect(within(property).getByLabelText('Homes in London')).toBeTruthy();
+  expect(within(property).getByLabelText('Homes in Tokyo')).toBeTruthy();
   cleanup();
 
   render(<SceneView name="finance-debt" />);
@@ -632,7 +632,8 @@ test('the scenes of the records are the records themselves: none yet, three live
   const sheet = (await screen.findByRole('heading', { name: 'Software engineer' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
   expect(sheet).not.toBeNull();
   expect(sheet.textContent).toContain('Out at 50');
-  expect(sheet.textContent).toContain('Tokyo · London');
+  // The day it ended and the one city she lived in (she never moved).
+  expect(sheet.textContent).toContain('21 Oct 2026 · TokyoOut at 50');
 });
 
 test('the scenes of the collection are the collection itself, open on its badges or on its things without a tap: what three lives earned and owned', async () => {

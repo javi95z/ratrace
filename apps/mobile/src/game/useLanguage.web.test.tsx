@@ -47,7 +47,7 @@ test('a page at /es/play draws in Spanish, whatever the cookie and the browser s
   cleanup();
   pathname.now = '/es/records';
   renderGame(<RecordsRoute />, { ...memoryServices(), language: kvLanguage });
-  expect(screen.getByRole('heading', { name: 'Récords' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Historial' })).toBeTruthy();
   // The page opened in a language is the language the site remembers, as the Next web's middleware writes it for each page.
   expect(cookie()).toBe('es');
 });

@@ -225,7 +225,7 @@ describe('the player\'s profile', () => {
     show(member, profile().community);
     expect(await screen.findByText('Sewer rat')).toBeTruthy();
     expect(screen.getByText('Rank 1 of 6')).toBeTruthy();
-    for (const [name, path] of [['Records', '/en/records'], ['Collection', '/en/collection'], ['Rankings', '/en/rankings']] as const) {
+    for (const [name, path] of [['History', '/en/records'], ['Collection', '/en/collection'], ['Rankings', '/en/rankings']] as const) {
       fireEvent.click(screen.getByRole('link', { name }));
       expect(router.push).toHaveBeenLastCalledWith(path);
     }
