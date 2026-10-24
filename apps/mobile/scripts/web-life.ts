@@ -21,8 +21,8 @@ import { PORT, raw, refuseServerInUse, root, withWebPage } from './shotDrivers';
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-life.ts [--export]
  *
  * With `--export` the app's web is not Metro's development server but the export the site will serve: made here (`expo export --platform web`, with
- * no project in its environment, as the size check makes it), into a folder of its own, and served on 8091 as a static host serves it (every route
- * the app's page, the older rules at `/rules`: `serveExport`). It is the release build: no `__DEV__`, `NODE_ENV=production`, minified, the export's
+ * no project in its environment, as the size check makes it), into a folder of its own, and served on 8091 as a static host serves it (each page
+ * its own HTML, the older rules at `/rules`: `serveExport`). It is the release build: no `__DEV__`, `NODE_ENV=production`, minified, the export's
  * own asset paths. Its pictures and steps are kept apart (`life-export-<n>-...`, `web-life-export-steps.txt`).
  *
  * 1. On the Next web, a life begun (the nurse) and played to round 3.

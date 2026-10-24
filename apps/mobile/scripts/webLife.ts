@@ -44,11 +44,13 @@ const TYPES: Readonly<Record<string, string>> = {
 };
 
 /**
- * The file of the export at `dir` that answers `pathname`, as the site will answer it: the file itself where there is one; the app's page
- * (`index.html`, the router finds the route) for any path that names no file (`/play`, `/en/room`); and nothing (404) for a file that is not there,
- * so that a missing older rules file fails as it does on the site instead of being answered with the page. Never a file outside `dir`.
+ * The file of the export at `dir` that answers `pathname`, as the site will answer it (a static host with clean addresses): the file itself where
+ * there is one; a page's own HTML (`/en/play` is `en/play.html`, `/en` is `en/index.html`, the static export's naming); and nothing (404) for a
+ * file that is not there, so that a missing older rules file fails as it does on the site instead of being answered with a page. Any other address
+ * (`/de/play`) is the router's page of nothing (`+not-found.html`, with a 404) where the export has one, else the app's page (`index.html`, an export
+ * of one page for every route, where the router finds the route). Never a file outside `dir`.
  */
-export function fileFor(dir: string, pathname: string): { path: string; type: string } | null {
+export function fileFor(dir: string, pathname: string): { path: string; type: string; status?: number } | null {
   let decoded: string;
   try {
     decoded = decodeURIComponent(pathname);
@@ -57,12 +59,15 @@ export function fileFor(dir: string, pathname: string): { path: string; type: st
   }
   const path = resolve(dir, `.${decoded.startsWith('/') ? decoded : `/${decoded}`}`);
   if (relative(dir, path).startsWith('..')) return null;
-  const page = { path: join(dir, 'index.html'), type: TYPES['.html'] };
+  const html = (file: string) => ({ path: file, type: TYPES['.html'] });
   const found = existsSync(path) ? statSync(path) : null;
   if (found?.isFile()) return { path, type: TYPES[extname(path).toLowerCase()] ?? 'application/octet-stream' };
-  if (found?.isDirectory() && existsSync(join(path, 'index.html'))) return { path: join(path, 'index.html'), type: TYPES['.html'] };
+  if (found?.isDirectory() && existsSync(join(path, 'index.html'))) return html(join(path, 'index.html'));
   // A path that names a file (it has an ending) and finds none is not a route of the app's.
-  return /\.[A-Za-z0-9]+$/.test(decoded) ? null : page;
+  if (/\.[A-Za-z0-9]+$/.test(decoded)) return null;
+  if (existsSync(`${path}.html`) && statSync(`${path}.html`).isFile()) return html(`${path}.html`);
+  const nothing = join(dir, '+not-found.html');
+  return existsSync(nothing) ? { ...html(nothing), status: 404 } : html(join(dir, 'index.html'));
 }
 
 /** Serves the export at `dir` on `port` of this machine (`fileFor`), as the site will; the server, once it listens. Port 0 is any free port. */
@@ -74,7 +79,7 @@ export function serveExport(dir: string, port: number): Promise<Server> {
       response.end('not found');
       return;
     }
-    response.writeHead(200, { 'content-type': file.type, 'cache-control': 'no-store' });
+    response.writeHead(file.status ?? 200, { 'content-type': file.type, 'cache-control': 'no-store' });
     if (request.method === 'HEAD') response.end();
     else createReadStream(file.path).pipe(response);
   });

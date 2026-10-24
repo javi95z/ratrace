@@ -54,6 +54,41 @@ test('the export is served as the site will serve it: every route the app\'s pag
   }
 });
 
+test('a static export is served page by page, as a static host with clean addresses serves it: each page its own HTML, any other address the page of nothing', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
+  try {
+    mkdirSync(join(dir, 'en'));
+    writeFileSync(join(dir, 'index.html'), 'bare');
+    writeFileSync(join(dir, 'en/index.html'), 'front door');
+    writeFileSync(join(dir, 'en/play.html'), 'play');
+    writeFileSync(join(dir, '+not-found.html'), 'nothing here');
+    const html = 'text/html; charset=utf-8';
+    expect(fileFor(dir, '/')).toEqual({ path: join(dir, 'index.html'), type: html });
+    expect(fileFor(dir, '/en')).toEqual({ path: join(dir, 'en/index.html'), type: html });
+    expect(fileFor(dir, '/en/')).toEqual({ path: join(dir, 'en/index.html'), type: html });
+    expect(fileFor(dir, '/en/play')).toEqual({ path: join(dir, 'en/play.html'), type: html });
+    // An address of no page: the router's page of nothing, as the site answers it, not the bare address's page (which would lead to the front door).
+    expect(fileFor(dir, '/de/play')).toEqual({ path: join(dir, '+not-found.html'), type: html, status: 404 });
+    expect(fileFor(dir, '/en/nowhere')).toEqual({ path: join(dir, '+not-found.html'), type: html, status: 404 });
+    // Still never a file outside the export, and a file that is not there is still not a page.
+    expect(fileFor(dir, '/%2e%2e/%2e%2e/etc/hosts')).toBeNull();
+    expect(fileFor(dir, '/en/play.js')).toBeNull();
+
+    const server = await serveExport(dir, 0);
+    try {
+      const port = (server.address() as AddressInfo).port;
+      const play = await fetch(`http://127.0.0.1:${port}/en/play?x=1`);
+      expect([play.status, await play.text()]).toEqual([200, 'play']);
+      const nowhere = await fetch(`http://127.0.0.1:${port}/de/play`);
+      expect([nowhere.status, nowhere.headers.get('content-type'), await nowhere.text()]).toEqual([404, html, 'nothing here']);
+    } finally {
+      await new Promise((done) => server.close(done));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('the whole life can run on the export, and runs on the development server unless told', () => {
   expect(appWebOf([])).toBe('dev');
   expect(appWebOf(['--export'])).toBe('export');

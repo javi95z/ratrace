@@ -26,6 +26,7 @@
       ]
     },
     "web": {
+      "output": "static",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
@@ -70,6 +71,11 @@
         "projectId": "6a550ec5-0a6f-42d7-ad3c-db48820f3f73"
       }
     },
-    "owner": "javi95z"
+    "owner": "javi95z",
+    "experiments": {
+      "chunking": {
+        "mode": "granular"
+      }
+    }
   }
 }

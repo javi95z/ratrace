@@ -19,7 +19,7 @@ import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { useOwnT } from '../ownWords';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
-import { RoomCard, useRoomLive } from './Room';
+import { RoomCard, useRoomLive } from './RoomCard';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { useGo } from '../pages';

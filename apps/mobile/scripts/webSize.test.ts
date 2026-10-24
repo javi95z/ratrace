@@ -1,6 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { FORBIDDEN, JS_GZIP_BUDGET, exportEnv, judgeWebExport, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, judgeWebExport, pageFiles, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -74,6 +74,9 @@ describe('judgeWebExport', () => {
     '@formatjs/intl-displaynames',
     'react-native-webview',
     'expo-media-library',
+    // The phone's notices and Google's auth session: the web has its own (5a's final review).
+    'expo-notifications',
+    'expo-web-browser',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',
   ])('reports a source naming %s', (name) => {
     const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name}/lib/index.js`;
@@ -91,6 +94,47 @@ describe('judgeWebExport', () => {
   it('lists the older rules by their folder, not by one version', () => {
     expect(FORBIDDEN.map((entry) => entry.label)).toContain('the older rules (src/rules/v*.js)');
     expect(judgeWebExport([small], ['apps/mobile/src/rules/index.ts'])).toEqual([]);
+  });
+});
+
+describe('the pages', () => {
+  it('are named as the static export names them: the front door of a language its folder\'s index, every other page a file of its own', () => {
+    expect(pageFiles(['', 'play', 'room'], ['en', 'es'])).toEqual(['en/index.html', 'en/play.html', 'en/room.html', 'es/index.html', 'es/play.html', 'es/room.html']);
+    expect(FIRST_PAGE).toBe('en/index.html');
+  });
+
+  it('reports a page missing in a language, and not when every one is there', () => {
+    const pages = pageFiles(['', 'play'], ['en', 'es']);
+    const html = (path: string) => ({ path, bytes: Buffer.from('<html></html>') });
+    expect(judgeWebExport([small, ...pages.map(html)], [], [], pages).filter((problem) => /missing/.test(problem))).toEqual([]);
+    const without = judgeWebExport([small, html('en/index.html'), html('es/index.html'), html('es/play.html')], [], [], pages);
+    expect(without.filter((problem) => /missing/.test(problem))).toEqual([expect.stringContaining('en/play.html')]);
+  });
+});
+
+describe('the first page', () => {
+  const FONTS =
+    '<link rel="preload" href="/assets/Jersey15_400Regular.abc.ttf" as="font" crossorigin=""/><link rel="preload" href="/assets/ChakraPetch_400Regular.abc.ttf" as="font" crossorigin=""/>';
+  const firstPage = (scripts: string[], head = FONTS) => ({
+    path: FIRST_PAGE,
+    bytes: Buffer.from(`<!DOCTYPE html><html lang="en"><head>${head}</head><body>${scripts.map((src) => `<script defer="" src="/${src}"></script>`).join('')}</body></html>`),
+  });
+
+  it('may load 0.8 MB of JavaScript gzipped, the HTML with it: the chunks its HTML loads count, the others do not', () => {
+    expect(FIRST_PAGE_GZIP_BUDGET).toBe(800 * 1024);
+    const big = noise(Math.floor(FIRST_PAGE_GZIP_BUDGET * 0.6));
+    const a = { path: `${APP}a.js`, bytes: big };
+    const b = { path: `${APP}b.js`, bytes: big };
+    // Both loaded by the first page: over.
+    const over = judgeWebExport([a, b, firstPage([a.path, b.path])], []);
+    expect(over).toEqual([expect.stringMatching(/first page .* MB gzip/)]);
+    // Only one loaded by it (the other a later page's): under. The whole of the app's JavaScript is the other budget's.
+    expect(judgeWebExport([a, b, firstPage([a.path])], [])).toEqual([]);
+  });
+
+  it('fetches its typefaces ahead, the pixel one and the reading one, as the Next web\'s next/font does', () => {
+    expect(judgeWebExport([small, firstPage([small.path])], [])).toEqual([]);
+    expect(judgeWebExport([small, firstPage([small.path], '')], [])).toEqual([expect.stringMatching(/Jersey15_400Regular.*ChakraPetch_400Regular|typefaces/)]);
   });
 });
 

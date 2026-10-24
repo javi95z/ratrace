@@ -1,0 +1,77 @@
+import { DEFAULT_LOCALE, isLocale } from '@ratrace/i18n';
+import { useServerDocumentContext } from 'expo-router/html';
+import type { ReactNode } from 'react';
+
+/*
+ * The document of every page of the web export (expo-router's template for `web.output: "static"`: drawn on the build's machine only, never in the
+ * browser nor on the phone). It is the Next web's layout (apps/web/src/app/[locale]/layout.tsx) and page (globals.css): the page in the language of
+ * its address, the viewport that reaches under the notch, the colour of the browser's bar, a dark page with nothing to select. What the export puts
+ * in every page (its scripts and their preloads, the hydration flag, the head a page asks for) comes through expo-router's document context, written
+ * where Expo's own template writes it. The typefaces are expo-font's to write, after this is drawn: an @font-face and a `preload` for each the game
+ * loads (`useGameFonts`), the first page's Jersey 15 and Chakra Petch among them, as next/font preloads the Next web's (expo-font preloads the
+ * Cyrillic and slanted faces too, which next/font does not; it has no way to say otherwise).
+ */
+
+/** The page's styles, as the Next web's: react-native-web's root reset (the app fills the page, the page never scrolls), then the game's page. */
+const PAGE_STYLES = `
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+      /* The page is a game's, as the Next web's (apps/web/src/app/globals.css \`:root\`, \`html\`, \`body\`, \`:focus-visible\`). */
+      :root {
+        color-scheme: dark;
+      }
+      html {
+        background: #0b1022;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        background: #141b33;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      :focus-visible {
+        outline: 3px solid #ffe9a8;
+        outline-offset: 3px;
+      }
+`;
+
+/** The document a page is drawn in: `params` are its route's (`locale` the first part of its address), `children` the app's root. */
+export default function Document({ children, params }: { children: ReactNode; params?: Record<string, string | string[] | undefined>; pathname?: string }) {
+  const asked = params?.locale;
+  const lang = isLocale(asked) ? asked : DEFAULT_LOCALE;
+  const { htmlAttributes, headNodes, bodyAttributes, bodyNodes } = useServerDocumentContext();
+  return (
+    <html {...htmlAttributes} lang={lang}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        {/* As the Next web's `viewport`: the page reaches under the notch and the home bar, and the game clears the safe areas. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#141b33" />
+        <style id="ratrace-page" dangerouslySetInnerHTML={{ __html: PAGE_STYLES }} />
+        {headNodes}
+      </head>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
+    </html>
+  );
+}

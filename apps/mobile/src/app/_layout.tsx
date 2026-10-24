@@ -1,9 +1,9 @@
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GameProvider } from '../game/context';
 import { useGameFonts } from '../ui/fonts';
+import { GestureRoot } from '../ui/GestureRoot';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
 import { Page } from '../ui/Page';
 import { SafeArea } from '../ui/SafeArea';
@@ -25,7 +25,7 @@ export default function RootLayout() {
   if (!fonts) return null;
   // One gesture root round everything, so a drag can be read anywhere (phase 2's card swipe).
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onTouchStart={perfTouchStarted} onTouchEnd={perfTouched}>
+    <GestureRoot style={{ flex: 1 }} onTouchStart={perfTouchStarted} onTouchEnd={perfTouched}>
       {/* The timing probe's frames (a build made with EXPO_PUBLIC_PERF=1 only: nothing in any other, ui/perf.ts). */}
       <PerfFrames />
       {/* The safe areas, measured where the router does not (the web: ui/SafeArea.web.tsx); nothing more on the phone. */}
@@ -39,6 +39,6 @@ export default function RootLayout() {
           </Page>
         </GameProvider>
       </SafeArea>
-    </GestureHandlerRootView>
+    </GestureRoot>
   );
 }

@@ -309,7 +309,9 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     // The room's clocks by the game's own clock (`now`, the phone's): a scene's, held still, holds a lobby's count and a round's time still with it.
     now: now ?? (() => Date.now()),
     schedule,
-    page: phonePage,
+    // None where the page is drawn with no browser (the web export's HTML, made on the build's machine), as the Next web's: the browser's own
+    // game, made as it takes the page over, listens to it.
+    page: typeof window === 'undefined' ? undefined : phonePage,
     onSaveError: (error) => console.warn('could not save the life in the room:', error),
   });
   return {
@@ -594,7 +596,8 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
   }, [made, game, holdProfile, holdRuns]);
 
   // The game opened and its first screen on the phone's screen (the UI thread at its pace again): what waited for it is told, once a start.
-  const opened = useSyncExternalStore(game.subscribe, () => game.getState().status !== 'booting');
+  // Not yet where the page is drawn on the server (the web export's HTML): the game opens in the browser.
+  const opened = useSyncExternalStore(game.subscribe, () => game.getState().status !== 'booting', () => false);
   useEffect(() => (opened && made.firstDrawn ? whenShown(made.firstDrawn) : undefined), [opened, made]);
 
   // Someone signing in on this phone brings the language of their account with them.

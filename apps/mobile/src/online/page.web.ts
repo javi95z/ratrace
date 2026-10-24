@@ -22,10 +22,14 @@ export const phonePage: Page = {
   now: () => Date.now(),
 };
 
-/** Whether the browser has a connection now, and every change of it, as the Next web's `useRanking` reads them. */
+/**
+ * Whether the browser has a connection now, and every change of it, as the Next web's `useRanking` reads them. A page drawn with no browser (the
+ * export's HTML, made on the build's machine) is taken to have one, and has nothing to listen to: the browser's own game listens once it takes over.
+ */
 export const phoneConnection = {
-  connected: (): boolean => navigator.onLine,
+  connected: (): boolean => (typeof navigator === 'undefined' ? true : navigator.onLine),
   subscribe(listener: () => void): () => void {
+    if (typeof window === 'undefined') return () => undefined;
     window.addEventListener('online', listener);
     window.addEventListener('offline', listener);
     return () => {

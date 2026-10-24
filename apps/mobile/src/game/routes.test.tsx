@@ -36,7 +36,9 @@ test('the routes are the web\'s pages under each language, and the phone\'s own 
   // Next web's `[locale]`; the bare address, which leads to the front door of a language; the phone's own links mapped to them (`+native-intent`).
   // And the kit, the parts and the scenes, for development only; and the timing probe's, which puts a long life on the phone in a build made with
   // EXPO_PUBLIC_PERF=1 and goes home in any other. And the address Google sends the player back to (`auth`), should Android hand it to the router.
+  // And the document of every page of the web export (`+html`, drawn on the build's machine only).
   expect(routes).toEqual([
+    '+html',
     '+native-intent',
     '[locale]/challenge',
     '[locale]/collection',

@@ -69,7 +69,8 @@ export const expoRouter = {
   useLocalSearchParams: () => params,
   // The address's own parameters and its query, as one: the language of the page (`/[locale]/…`) among them.
   useGlobalSearchParams: () => {
-    useSyncExternalStore(hearMoves, () => moves.count);
+    // As the router's own, it has an answer for a page drawn on the server (the web export's HTML): the address it was drawn for.
+    useSyncExternalStore(hearMoves, () => moves.count, () => moves.count);
     return params;
   },
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),

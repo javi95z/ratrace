@@ -118,6 +118,9 @@ const stale = (entry: Entry): boolean => entry.failedAt !== undefined && Date.no
  * waited `RETRY_FAILED_MS` (the failure is still told only once).
  */
 function entryOf(id: string, source: ImageSourcePropType): Entry {
+  // A page drawn with no browser (the export's HTML, made on the build's machine) reads nothing: its sprites are still to come, as on a first visit,
+  // and the browser reads them once it takes the page over.
+  if (typeof window === 'undefined') return { state: LOADING, listeners: new Set() };
   const known = cache.get(id);
   if (known && !stale(known)) return known;
   const entry: Entry = { state: LOADING, listeners: new Set() };
