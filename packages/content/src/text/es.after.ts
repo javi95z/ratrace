@@ -343,4 +343,6 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   life_concert: ['Lo ves en vídeos al día siguiente.', 'Cantas todas. Vale cada euro.', 'Acabas en el after con el batería.'],
   luck_police_auction: ['Te vas con un catálogo y ninguna puja.', null, null],
   house_protected_flat: ['Otro de la lista se queda con él.', 'Las llaves de tu primera casa, a un precio que no volverás a ver.'],
+  career_startup_advisor: ['Tus fines de semana siguen siendo tuyos.', null],
+  house_upstairs_leak: [null, null],
 };

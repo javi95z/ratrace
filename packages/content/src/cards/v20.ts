@@ -237,4 +237,14 @@ export const v20Cards: CardDef[] = [
     {},
     { effects: { property: { typeId: 'flat', pricePct: 60, downPct: 10, rented: false } } },
   ]),
+  // A startup asks for advice at weekends, paid in shares: almost always nothing, now and then a lot.
+  card('career_startup_advisor', 'career', { once: true, when: { minFinanceSkill: 2, minRound: 3 } }, [
+    {},
+    { effects: { focus: 1 }, outcomes: [{ weight: 70, effects: {} }, { weight: 22, effects: { cash: usd(8_000) } }, { weight: 8, effects: { cash: usd(80_000), status: 2 } }] },
+  ]),
+  // The neighbour upstairs floods the home, and their insurer is slow to pay.
+  card('house_upstairs_leak', 'housing', { once: true, when: { ownsHome: true } }, [
+    { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cash: usd(-1_500), skills: { health: -1 } } }] },
+    { effects: { cash: usd(-4_500) }, outcomes: [{ weight: 70, effects: { cash: usd(4_500) } }, { weight: 30, effects: {} }] },
+  ]),
 ];

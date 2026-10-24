@@ -396,7 +396,7 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-37', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-38', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.celeb_bellfort', 'card.celeb_ortiga'] },
-  // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 40 to 46 are drawn; 47 holds stand-ins until it has six.
+  // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 40 to 47 are drawn.
   { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
   { file: 'cards/cards-41', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['barn_car', 'mlm', 'squatters', 'solar', 'village_house', 'company_ipo'].map((id) => `card.${id}`) },
   { file: 'cards/cards-42', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['metro_works', 'strike', 'school_reunion', 'child_streamer', 'linkedin_post', 'podcast'].map((id) => `card.${id}`) },
@@ -404,8 +404,7 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-44', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['back_home', 'midlife', 'grandchild', 'black_card', 'child_piggy', 'lift_levy'].map((id) => `card.${id}`) },
   { file: 'cards/cards-45', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['street_contest', 'xmas_dinner', 'sabbatical', 'credit_stolen', 'office_pool', 'cooking_show'].map((id) => `card.${id}`) },
   { file: 'cards/cards-46', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['stag_party', 'viral_bad', 'influencer_review', 'smartwatch', 'festival_rental', 'school_treasurer'].map((id) => `card.${id}`) },
-  // Four of six, until two more cards join them.
-  { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat', 'startup_advisor', 'upstairs_leak'].map((id) => `card.${id}`) },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

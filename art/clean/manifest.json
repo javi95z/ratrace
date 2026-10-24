@@ -4476,6 +4476,16 @@
       "width": 288,
       "height": 120
     },
+    "card.startup_advisor": {
+      "file": "cards/card.startup_advisor.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.upstairs_leak": {
+      "file": "cards/card.upstairs_leak.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

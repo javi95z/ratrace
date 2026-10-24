@@ -1116,4 +1116,12 @@ export const cards: Record<string, CardText> = {
     'Give it up',
     'Buy it',
   ]),
+  career_startup_advisor: c('Adviser for shares', 'A startup wants financial advice at weekends. They cannot pay you: they offer shares.', [
+    'Say no',
+    ['Take the shares', 'The startup folds. The shares are worth nothing.', 'A big company buys it. Something comes your way.', 'It becomes one of the big ones. So do your shares.'],
+  ]),
+  house_upstairs_leak: c('The neighbour upstairs floods you', 'A pipe bursts upstairs and your ceiling drips. Their insurer says it will pay. Some day.', [
+    ['Wait for their insurer', 'The insurer pays and the work is done.', 'Months of damp. In the end, you pay for part of the work.'],
+    ['Pay for the work yourself first', 'The insurer pays you back in full.', 'The insurer finds a clause. You pay.'],
+  ]),
 };

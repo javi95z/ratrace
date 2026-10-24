@@ -1,6 +1,6 @@
 # v20 prompt pack: four new cards
 
-Content 1.48 adds new cards. `cards-40` to `cards-46` are drawn; `cards-47` shows stand-ins until it has six.
+Content 1.48 adds new cards. `cards-40` to `cards-47` are drawn.
 
 Save as `art/raw/cards/cards-40.png` — `card.retreat`, `card.trendy_area`, `card.boss_leaves`, `card.tax_letter`
 
@@ -98,7 +98,17 @@ Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each p
 6. The parents' group: a school hall after hours, parents on small chairs, the player at a table with a cash box, receipts and a laptop.
 ```
 
-Save as `art/raw/cards/cards-47.png` once four more cards join it — `card.drone_crash`, `card.concert` (stand-ins for now).
+Save as `art/raw/cards/cards-47.png` — `card.drone_crash`, `card.concert`, `card.police_auction`, `card.protected_flat`, `card.startup_advisor`, `card.upstairs_leak`
+
+```text
+Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
+1. A drone on your terrace: a city apartment terrace at dusk with a crashed drone among broken plant pots, its embarrassed owner at the door holding an envelope.
+2. Your favourite band: a packed concert from the front row, stage lights and confetti, the player singing with arms up.
+3. The police auction: a warehouse with seized cars, watches in a glass case and a jet ski, an auctioneer at a lectern, the player raising a numbered paddle.
+4. A protected flat: a modest new apartment block, the player receiving keys from an official at a desk with a stamped paper, a big smile.
+5. Adviser for shares: a tiny startup office in a garage at the weekend, young founders around a whiteboard, the player explaining a chart.
+6. The neighbour upstairs floods you: a ceiling with a spreading damp stain and dripping water into buckets, the player on a ladder looking up, a neighbour apologising from the doorway.
+```
 
 Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. The sprites keep their names.
 
@@ -111,3 +121,4 @@ Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. Th
 | `cards/cards-44.png` | Back home, midlife, grandchild, black card, piggy bank, lift | 288×120 |
 | `cards/cards-45.png` | Street contest, Christmas dinner, sabbatical, credit taken, office pool, cooking show | 288×120 |
 | `cards/cards-46.png` | Stag party, viral, influencer, smartwatch, festival, parents' group | 288×120 |
+| `cards/cards-47.png` | Drone, concert, police auction, protected flat, startup adviser, leak | 288×120 |

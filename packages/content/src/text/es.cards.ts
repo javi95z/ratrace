@@ -1116,4 +1116,12 @@ export const cards: Record<string, CardText> = {
     'Renunciar',
     'Comprarlo',
   ]),
+  career_startup_advisor: c('Asesor a cambio de acciones', 'Una startup te pide consejo financiero los fines de semana. No pueden pagarte: te ofrecen acciones.', [
+    'Decir que no',
+    ['Aceptar las acciones', 'La startup cierra. Las acciones no valen nada.', 'Una empresa grande la compra. Te toca algo.', 'Se convierte en una de las grandes. Tus acciones también.'],
+  ]),
+  house_upstairs_leak: c('El vecino de arriba te inunda', 'Se rompe una tubería en el piso de arriba y tu techo gotea. Su seguro dice que pagará. Algún día.', [
+    ['Esperar a que pague su seguro', 'El seguro paga y la obra se hace.', 'Meses de humedad. Al final, parte de la obra la pagas tú.'],
+    ['Adelantar la obra tú', 'El seguro te lo devuelve todo.', 'El seguro encuentra una cláusula. Pagas tú.'],
+  ]),
 };

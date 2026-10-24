@@ -355,4 +355,6 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   life_concert: ['Концерт можно посмотреть в роликах на следующий день.', 'Все песни подпеты. Каждый рубль того стоил.', 'Вечер заканчивается на афтепати с барабанщиком.'],
   luck_police_auction: ['На руках каталог и ни одной ставки.', null, null],
   house_protected_flat: ['Квартира достаётся следующему в списке.', 'Ключи от первого собственного жилья по цене, которой больше не будет.'],
+  career_startup_advisor: ['Выходные остаются твоими.', null],
+  house_upstairs_leak: [null, null],
 };
