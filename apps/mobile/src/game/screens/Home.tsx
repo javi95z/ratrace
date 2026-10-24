@@ -23,6 +23,7 @@ import { RoomCard, useRoomLive } from './RoomCard';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { useGo } from '../pages';
+import { useWarmPages } from '../warmPages';
 
 /** The letter spacing of a pixel button set in the page's 15: 0.03 of it. */
 const BUTTON_SPACING = 15 * 0.03;
@@ -49,6 +50,8 @@ export function Home() {
   const challenge = useGame((s) => s.challenge);
   const saving = useSaving();
   const go = useGo();
+  // New and Continue lead to /new and /play: on the web their code starts loading once the door is idle (warmPages.web.ts).
+  useWarmPages();
   const open = status === 'playing' && lifeId !== null && round !== null && cityId !== null;
   const inProgress = open && !atEnd;
   // Whoever has played before knows the game: the rat and its line make way for what they came for.

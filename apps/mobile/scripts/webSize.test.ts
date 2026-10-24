@@ -1,6 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, judgeWebExport, pageFiles, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FIRST_PAGE_GZIP_TARGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -120,16 +120,41 @@ describe('the first page', () => {
     bytes: Buffer.from(`<!DOCTYPE html><html lang="en"><head>${head}</head><body>${scripts.map((src) => `<script defer="" src="/${src}"></script>`).join('')}</body></html>`),
   });
 
-  it('may load 0.8 MB of JavaScript gzipped, the HTML with it: the chunks its HTML loads count, the others do not', () => {
-    expect(FIRST_PAGE_GZIP_BUDGET).toBe(800 * 1024);
+  it('may load 1 MiB gzipped, the HTML with it (the ruling\'s gate; 0.8 MB the target): the chunks its HTML loads count, the others do not', () => {
+    expect(FIRST_PAGE_GZIP_BUDGET).toBe(1024 * 1024);
+    expect(FIRST_PAGE_GZIP_TARGET).toBe(800 * 1024);
     const big = noise(Math.floor(FIRST_PAGE_GZIP_BUDGET * 0.6));
     const a = { path: `${APP}a.js`, bytes: big };
     const b = { path: `${APP}b.js`, bytes: big };
     // Both loaded by the first page: over.
     const over = judgeWebExport([a, b, firstPage([a.path, b.path])], []);
-    expect(over).toEqual([expect.stringMatching(/first page .* MB gzip/)]);
+    expect(over).toEqual([expect.stringMatching(/first page .* MiB gzip, over the 1\.00 MiB/)]);
     // Only one loaded by it (the other a later page's): under. The whole of the app's JavaScript is the other budget's.
     expect(judgeWebExport([a, b, firstPage([a.path])], [])).toEqual([]);
+  });
+
+  it('is weighed once, the same for the gate and the printout: its HTML and its scripts, each counted once', () => {
+    const a = { path: `${APP}a.js`, bytes: noise(1000) };
+    const page = firstPage([a.path, a.path, `${APP}gone.js`]);
+    const first = firstPageOf([a, page]);
+    expect(first?.scripts.map((file) => file.path)).toEqual([a.path]);
+    expect(first?.weight).toBe(gzipSync(page.bytes).length + gzipSync(a.bytes).length);
+    expect(firstPageOf([a])).toBeNull();
+  });
+
+  it('counts what the first draw fetches after its HTML too (a lazy chunk), as a browser asked for it on a first visit', () => {
+    const a = { path: `${APP}a.js`, bytes: noise(Math.floor(FIRST_PAGE_GZIP_BUDGET * 0.6)) };
+    const lazy = { path: `${APP}lazy.js`, bytes: noise(Math.floor(FIRST_PAGE_GZIP_BUDGET * 0.6)) };
+    const files = [a, lazy, firstPage([a.path])];
+    // The HTML alone is under the gate; with the chunk its first draw asked for (by its address, as the browser asks), over.
+    expect(judgeFirstVisit(files, [`/${a.path}`])).toEqual([]);
+    expect(judgeFirstVisit(files, [`/${a.path}`, `/${lazy.path}`])).toEqual([expect.stringMatching(/first visit .* 2 scripts .* MiB gzip, over the 1\.00 MiB/)]);
+    expect(firstPageOf(files, [`/${lazy.path}`])?.scripts.map((file) => file.path)).toEqual([a.path, lazy.path]);
+  });
+
+  it('says its sizes in MiB, as they are counted', () => {
+    expect(mib(1024 * 1024)).toBe('1.00 MiB');
+    expect(mib(800 * 1024)).toBe('0.78 MiB');
   });
 
   it('fetches its typefaces ahead, the pixel one and the reading one, as the Next web\'s next/font does', () => {

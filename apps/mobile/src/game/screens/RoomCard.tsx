@@ -27,7 +27,6 @@ export function useNameOf() {
   return useCallback((member: Pick<RoomMember, 'name' | 'bot' | 'userId'>) => memberName(t, member), [t]);
 }
 
-
 /**
  * The whole seconds left until `at` (by the server's clock, `skew` ahead of the phone's), read as the screen is drawn; drawn again once a second, as
  * the count changes, and never more (the web draws it four times a second). Null without `at`. Read by the game's clock (`useClock`), the one the
@@ -78,13 +77,11 @@ export function useSecondsLeft(shown = true): number | null {
   return left === null ? null : Math.min(seconds, left);
 }
 
-
 /** A member's place: one more than everyone still in with a higher score, so that a tie shares it. */
 export function rankOf(members: readonly RoomMember[], member: RoomMember): number {
   const score = member.standing?.score ?? Number.NEGATIVE_INFINITY;
   return 1 + members.filter((other) => !other.left && (other.standing?.score ?? Number.NEGATIVE_INFINITY) > score).length;
 }
-
 
 /** True while the player is in a game that is not over: waiting to start, or in play, whoever it waits for. */
 export function useRoomLive(): boolean {

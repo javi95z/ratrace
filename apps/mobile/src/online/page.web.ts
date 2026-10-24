@@ -6,8 +6,8 @@ import type { Page } from '@ratrace/online/follow';
  * reads it (`navigator.onLine`, the window's `online` and `offline`).
  */
 
-/** What the browser tells of the page. */
-export const phonePage: Page = {
+/** What the browser tells of the page, the Next web's word for word. */
+const browserPage: Page = {
   onOnline: (listener) => {
     window.addEventListener('online', listener);
     return () => window.removeEventListener('online', listener);
@@ -21,6 +21,16 @@ export const phonePage: Page = {
   },
   now: () => Date.now(),
 };
+
+/** What a page drawn with no browser is told (the export's HTML, made on the build's machine): nothing ever comes back to it, nor is shown again. */
+const serverPage: Page = {
+  onOnline: () => () => undefined,
+  onShown: () => () => undefined,
+  now: () => Date.now(),
+};
+
+/** What the browser tells of the page; nothing, where the page is drawn with no browser. */
+export const phonePage: Page = typeof window === 'undefined' ? serverPage : browserPage;
 
 /**
  * Whether the browser has a connection now, and every change of it, as the Next web's `useRanking` reads them. A page drawn with no browser (the

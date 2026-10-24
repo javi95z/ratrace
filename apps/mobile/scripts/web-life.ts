@@ -1,14 +1,15 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { bundlesIn } from './rules';
 import { APP_WEB, APP_WEB_PORT } from './sceneShots';
 import { appWebOf, onThisMachine, projectNamed, serveExport } from './webLife';
-import { exportEnv } from './webSize';
+import { exportEnv, FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstPageOf, judgeFirstVisit, mib } from './webSize';
 import type { Page } from './shotDrivers';
 import { PORT, raw, refuseServerInUse, root, withWebPage } from './shotDrivers';
 
@@ -57,6 +58,64 @@ interface LifePage extends Page {
   on(event: 'request', listener: (request: { url(): string }) => void): void;
   evaluate<T, A>(fn: (arg: A) => T, arg: A): Promise<Awaited<T>>;
   evaluate<T>(fn: () => T): Promise<Awaited<T>>;
+  context(): { browser(): { newContext(options: object): Promise<FreshContext> } | null };
+}
+
+/** What is used of a context of its own, for a first visit: a page in it, every host but this machine kept from it. */
+interface FreshContext {
+  route(match: (url: URL) => boolean, handler: (route: { abort(): Promise<void> }) => unknown): Promise<void>;
+  addInitScript(script: { content: string }): Promise<void>;
+  newPage(): Promise<{
+    on(event: 'request', listener: (request: { url(): string }) => void): void;
+    goto(url: string, options: object): Promise<unknown>;
+    waitForTimeout(ms: number): Promise<void>;
+    waitForLoadState(state: 'networkidle'): Promise<void>;
+    evaluate<T>(fn: () => T): Promise<Awaited<T>>;
+  }>;
+  close(): Promise<void>;
+}
+
+/**
+ * A first visit to the export's front door, in a context of its own with nothing saved in it, as a new visitor comes: every script it fetched to be
+ * drawn (its address), what the HTML names and what its first draw imports after it, until the page was still; and apart, the scripts it then
+ * fetched once idle (the pages the front door warms, `game/warmPages.web.ts`: held until the first draw is weighed, then let go).
+ */
+async function firstVisitScripts(page: LifePage): Promise<{ drawn: string[]; warmed: string[] }> {
+  const browser = page.context().browser();
+  if (browser === null) throw new Error('no browser to make a first visit in');
+  const context = await browser.newContext({ viewport: { width: 393, height: 852 } });
+  try {
+    await context.route((url) => !onThisMachine(url.href), (route) => route.abort());
+    // What waits for an idle moment waits until the first draw is weighed.
+    // (Written as text: a function would be given to the page as the build rewrote it, with names of the build's own the page does not have.)
+    await context.addInitScript({
+      content: 'window.__heldIdle = []; window.requestIdleCallback = (run) => window.__heldIdle.push(run); window.cancelIdleCallback = () => undefined;',
+    });
+    const fresh = await context.newPage();
+    const scripts: string[] = [];
+    fresh.on('request', (request) => {
+      const url = new URL(request.url());
+      if (url.port === String(APP_WEB_PORT) && url.pathname.endsWith('.js')) scripts.push(url.pathname);
+    });
+    await fresh.goto(`http://localhost:${APP_WEB_PORT}/en`, { waitUntil: 'networkidle' });
+    // What a first draw imports once it is drawn: a moment more, still.
+    await fresh.waitForTimeout(1500);
+    const drawn = [...scripts];
+    await fresh.evaluate(() => {
+      for (const run of (window as unknown as { __heldIdle: Array<() => void> }).__heldIdle.splice(0)) run();
+    });
+    await fresh.waitForTimeout(500);
+    await fresh.waitForLoadState('networkidle');
+    return { drawn, warmed: scripts.slice(drawn.length) };
+  } finally {
+    await context.close();
+  }
+}
+
+/** The files of the export at `dir` a first visit weighs: its first page's HTML, and the scripts at the addresses given. */
+function firstVisitFiles(dir: string, scripts: readonly string[]): { path: string; bytes: Buffer }[] {
+  const paths = [FIRST_PAGE, ...scripts.map((address) => address.replace(/^\//, ''))];
+  return [...new Set(paths)].filter((path) => existsSync(join(dir, path))).map((path) => ({ path, bytes: readFileSync(join(dir, path)) }));
 }
 
 /** What the Next web keeps of a player in its origin: each IndexedDB store's records with their keys, and the localStorage keys of the inventory. */
@@ -275,7 +334,7 @@ async function main() {
   mkdirSync(out, { recursive: true });
   const exported = target === 'export' ? await servedExport() : null;
   try {
-    await playLife();
+    await playLife(exported?.dir ?? null);
   } finally {
     if (exported) {
       await new Promise((done) => exported.server.close(done));
@@ -284,7 +343,7 @@ async function main() {
   }
 }
 
-async function playLife() {
+async function playLife(exportDir: string | null) {
   const problems: string[] = [];
   await withWebPage(`http://localhost:${PORT}/en`, async (shaped) => {
     const page = shaped as LifePage;
@@ -322,6 +381,21 @@ async function playLife() {
     if (saved === undefined) throw new Error('the Next web kept no life in progress');
     steps.push(`   the life in progress: ${saved.gameId}, round ${saved.state.round + 1}`);
     console.log(steps.at(-1));
+
+    if (exportDir !== null) {
+      // A new visitor's first page, on the export the site will serve: its HTML and every script it fetched, those its first draw imports after the
+      // HTML among them, held to the first page's gate (webSize.ts).
+      const { drawn: scripts, warmed } = await firstVisitScripts(page);
+      const files = firstVisitFiles(exportDir, [...scripts, ...warmed]);
+      const named = firstPageOf(files)?.scripts.length ?? 0;
+      const weighed = firstPageOf(files, scripts);
+      const warm = firstVisitFiles(exportDir, warmed).filter((file) => file.path !== FIRST_PAGE);
+      problems.push(...judgeFirstVisit(files, scripts));
+      steps.push(
+        `   a first visit to /en on the export: ${weighed?.scripts.length ?? 0} scripts (${named} named by its HTML, ${(weighed?.scripts.length ?? 0) - named} fetched after it), ${mib(weighed?.weight ?? 0)} gzip with its HTML (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); then, idle, /new and /play warmed: ${warm.length} scripts, ${mib(warm.reduce((total, file) => total + gzipSync(file.bytes).length, 0))} gzip`,
+      );
+      console.log(steps.at(-1));
+    }
 
     // 3. Written into the app's web's origin before its first load: a page of that origin that is not the app (answered here, never served).
     await page.route(`http://localhost:${APP_WEB_PORT}/seed`, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>seed</title>' }));

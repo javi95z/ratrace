@@ -26,7 +26,9 @@ describe('the page', () => {
     const start = web.indexOf('export const browserPage: Page = {');
     const browserPage = web.slice(start, web.indexOf('\n};\n', start) + 4);
     expect(start).toBeGreaterThan(0);
-    expect(read('./page.web.ts')).toContain(browserPage.replace('export const browserPage: Page', 'export const phonePage: Page'));
+    expect(read('./page.web.ts')).toContain(browserPage.replace('export const browserPage: Page', 'const browserPage: Page'));
+    // And it is the page the game is told of, in a browser (a page drawn with no browser is told nothing: game/serverRender.web.test.tsx).
+    expect(read('./page.web.ts')).toContain("export const phonePage: Page = typeof window === 'undefined' ? serverPage : browserPage;");
   });
 
   it('says the connection is back when the window does, and the page shown when it is made visible again', () => {

@@ -96,4 +96,6 @@ test('the whole life can run on the export, and runs on the development server u
   // The export is made here, with no project in its environment (the size check's own), and served on the app's web's port.
   expect(script).toContain('exportEnv(process.env)');
   expect(script).toContain('serveExport(');
+  // And a new visitor's first page on it is weighed with what its first draw fetches after the HTML, and held to the first page's gate.
+  expect(script).toContain('problems.push(...judgeFirstVisit(files, scripts));');
 });

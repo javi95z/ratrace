@@ -20,6 +20,7 @@ vi.mock('../sprites/sources', () => ({
 const { default: HomeRoute } = await import('../app/[locale]/index');
 const { forgetTheGame, GameProvider } = await import('./context');
 const { phoneTrack } = await import('../online/track');
+const { forgetThePhone } = await import('../online/index.web');
 
 /*
  * The web export is HTML first (`web.output: "static"`): each page is drawn on the build's machine, where there is no window, no document and no
@@ -43,8 +44,23 @@ const textOf = (html: string): string =>
 
 afterEach(() => {
   forgetTheGame();
+  forgetThePhone();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
+
+/** Draws the front door in `locale` as the export draws it, and gives back what a reader of the page reads. */
+function frontDoor(locale: 'en' | 'es' | 'ru'): string {
+  params.locale = locale;
+  pathname.now = `/${locale}`;
+  return textOf(
+    renderToString(
+      <GameProvider>
+        <HomeRoute />
+      </GameProvider>,
+    ),
+  );
+}
 
 describe('the front door drawn on the server', () => {
   it('has no browser to reach for', () => {
@@ -77,5 +93,23 @@ describe('the front door drawn on the server', () => {
     const account = { subscribe: () => () => undefined };
     const kept = { getItem: () => null, setItem: () => undefined };
     expect(() => phoneTrack(account, kept, { release: true, platform: 'web' })).not.toThrow();
+  });
+});
+
+describe('the front door drawn on the server of a build with a project', () => {
+  /*
+   * The export the site serves is built with its project's settings (EXPO_PUBLIC_SUPABASE_*), in production. Drawn on the build's machine, the game is
+   * offline all the same: no client is made, nothing is asked of the cloud or of the browser's storage, no error is watched. A project of nobody's
+   * here, on a closed port of this machine: never the live one.
+   */
+  it.each([['development'], ['production']])('draws it with nothing thrown and nothing asked of the network (%s)', async (mode) => {
+    vi.stubEnv('EXPO_PUBLIC_SUPABASE_URL', 'http://127.0.0.1:9');
+    vi.stubEnv('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_fake_local_only');
+    vi.stubEnv('NODE_ENV', mode);
+    const asked = vi.spyOn(globalThis, 'fetch');
+    const read = frontDoor('es');
+    expect(read).toContain((messagesFor('es').meta as { description: string }).description);
+    await new Promise((settled) => setTimeout(settled, 50));
+    expect(asked).not.toHaveBeenCalled();
   });
 });

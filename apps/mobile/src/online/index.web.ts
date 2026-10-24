@@ -65,7 +65,7 @@ export function forgetThePhone(): void {
 
 /**
  * The cloud of this browser, around the device's store, made once for each load of the page (the game's context holds it, `shared`). With no Supabase
- * project in the build's settings there is none: the store is the device's own, and the game is exactly what it is without a network. With
+ * project in the build's settings, or no browser (the export's HTML drawn on the build's machine), there is none: the store is the device's own, and the game is exactly what it is without a network. With
  * `livesAfter`, the account's lives in progress are handed to the mirror only once it resolves (the game's first screen drawn, `held.ts`), as on the
  * phone.
  */
@@ -73,7 +73,9 @@ export function phoneOnline(device: PlayerStore, livesAfter?: () => Promise<void
   // Named in full, because the build writes these values into the page only where it sees them so (Expo's `EXPO_PUBLIC_*`).
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return offline(device);
+  // A page drawn with no browser (the export's HTML, made on the build's machine) is offline whatever the build's project: no client is made and
+  // nothing is asked of the cloud there. The browser's own game, made as it takes the page over, is the one that signs in.
+  if (!url || !key || typeof window === 'undefined') return offline(device);
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.EXPO_PUBLIC_SUPABASE_REGION || undefined;
   // The site key of the guard at the door of guest sign-in. Named, a guest is made only with its word; left out, there is no guard.

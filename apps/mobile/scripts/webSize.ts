@@ -9,8 +9,9 @@ import { bundlesIn } from './rules';
 
 /**
  * The size check of the app's web export (`pnpm --filter @ratrace/mobile web:size`): it exports the web into a temporary folder, with source maps,
- * and finds what the light web must not carry: a `.wasm` file, JavaScript over 1.35 MB gzipped, a first page (`/en`) whose HTML and the chunks it
- * loads weigh over 0.8 MB gzipped or that does not fetch its typefaces ahead, a page missing in a language, and any of the modules that only the
+ * and finds what the light web must not carry: a `.wasm` file, JavaScript over 1350 KiB gzipped, a first page (`/en`) whose HTML and the chunks it
+ * loads weigh over 1 MiB gzipped (`FIRST_PAGE_GZIP_BUDGET`; what its first draw fetches after it is weighed by `web-life.ts --export`,
+ * `judgeFirstVisit`) or that does not fetch its typefaces ahead, a page missing in a language, and any of the modules that only the
  * phone needs (read from the maps' sources, since a bundle's size says nothing of what is in it). It prints the totals and exits 1 on a problem,
  * and on an export that fails.
  */
@@ -21,14 +22,56 @@ export const JS_GZIP_BUDGET = 1_350 * 1024;
 
 /**
  * The first page a visitor is given (`/en`, the static export's `en/index.html`): its HTML and the JavaScript it loads, gzipped, may not weigh more
- * than this. Each page loads its own code (expo-router's async routes, the granular chunks of app.json's `experiments.chunking`): the first page
- * carries what the front door draws, not the game's other pages.
+ * than this, 1 MiB (the controller's ruling on phase 5b's Task 2: the web's first page stood at 0.95 MiB once each page loaded its own code, through
+ * expo-router's async routes and the granular chunks of app.json's `experiments.chunking`). The first page carries what the front door draws, not
+ * the game's other pages.
  */
-export const FIRST_PAGE_GZIP_BUDGET = 800 * 1024;
+export const FIRST_PAGE_GZIP_BUDGET = 1024 * 1024;
+/**
+ * Where the first page is to come down to, 0.8 MB (the plan's own figure, the Next web's 0.7 MB and a little): not checked yet. Phase 5b's Task 10 is
+ * to bring it there (the words of the page's language only, the sprites as the site's files, the sound loaded when it is first heard), then make it
+ * the gate.
+ */
+export const FIRST_PAGE_GZIP_TARGET = 800 * 1024;
 export const FIRST_PAGE = 'en/index.html';
 
 /** The typefaces the first page draws in, which its HTML fetches ahead (expo-font's `preload` for each the server drew with), as next/font does. */
 const FIRST_TYPEFACES = ['Jersey15_400Regular', 'ChakraPetch_400Regular'];
+
+/** A size in bytes as the checks count it, in MiB (1024 × 1024 bytes), with two decimals. */
+export const mib = (bytes: number): string => `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
+
+/** A file of the export, by its path inside it. */
+export interface ExportFile {
+  path: string;
+  bytes: Buffer;
+}
+
+/**
+ * The first page's weight (`FIRST_PAGE`'s HTML and every script it loads, gzipped, each counted once), or null in an export without it. Its scripts
+ * are those its HTML names (`<script src>`), then any other the browser was seen to fetch on a first visit (`requested`, addresses as the browser
+ * asked for them: a chunk the first draw imports, which the HTML does not name).
+ */
+export function firstPageOf(files: readonly ExportFile[], requested: readonly string[] = []): { scripts: ExportFile[]; weight: number } | null {
+  const byPath = new Map(files.map((file) => [file.path, file]));
+  const first = byPath.get(FIRST_PAGE);
+  if (!first) return null;
+  const named = [...first.bytes.toString('utf8').matchAll(/<script\b[^>]*\bsrc="\/?([^"]+)"/g)].map((found) => found[1]);
+  const asked = requested.map((address) => new URL(address, 'http://localhost').pathname.replace(/^\//, ''));
+  const scripts = [...new Set([...named, ...asked])].map((path) => byPath.get(path)).filter((file) => file !== undefined);
+  return { scripts, weight: [first, ...scripts].reduce((total, file) => total + gzipSync(file.bytes).length, 0) };
+}
+
+/**
+ * What is wrong with a first visit to the first page (nothing when it is fine): its weight with every script the browser fetched for it, those its
+ * first draw imports after the HTML among them (`requested`, as a browser run on the served export saw them: `web-life.ts --export`).
+ */
+export function judgeFirstVisit(files: readonly ExportFile[], requested: readonly string[]): string[] {
+  const first = firstPageOf(files, requested);
+  if (first === null) return [`the export has no first page (${FIRST_PAGE})`];
+  if (first.weight <= FIRST_PAGE_GZIP_BUDGET) return [];
+  return [`a first visit to ${FIRST_PAGE} (its HTML and the ${first.scripts.length} scripts the browser fetched for it) is ${mib(first.weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`];
+}
 
 /**
  * The HTML files of every page in every language, as the static export names them: a language's front door (`''`) its folder's `index.html`
@@ -77,7 +120,7 @@ const RULES_FOLDER = 'rules/';
  * folder is a problem: a life begun under a version whose file is not there would wait forever. The first page, where the export has it, is held
  * to its own budget: its HTML and the scripts it loads.
  */
-export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources: string[], rules: readonly string[] = [], pages: readonly string[] = []): string[] {
+export function judgeWebExport(files: ExportFile[], sources: string[], rules: readonly string[] = [], pages: readonly string[] = []): string[] {
   const problems: string[] = [];
   const byPath = new Map(files.map((file) => [file.path, file]));
   const absent = pages.filter((page) => !byPath.has(page));
@@ -85,10 +128,9 @@ export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources
   const first = byPath.get(FIRST_PAGE);
   if (first) {
     const html = first.bytes.toString('utf8');
-    const loaded = [...html.matchAll(/<script\b[^>]*\bsrc="\/?([^"]+)"/g)].map((found) => byPath.get(found[1])).filter((file) => file !== undefined);
-    const weight = [first, ...loaded].reduce((total, file) => total + gzipSync(file.bytes).length, 0);
+    const { scripts, weight } = firstPageOf(files) ?? { scripts: [], weight: 0 };
     if (weight > FIRST_PAGE_GZIP_BUDGET) {
-      problems.push(`the first page (${FIRST_PAGE} and the ${loaded.length} scripts it loads) is ${(weight / 1024 / 1024).toFixed(2)} MB gzip, over the ${(FIRST_PAGE_GZIP_BUDGET / 1024 / 1024).toFixed(2)} MB it is given`);
+      problems.push(`the first page (${FIRST_PAGE} and the ${scripts.length} scripts it loads) is ${mib(weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`);
     }
     const ahead = [...html.matchAll(/<link\b[^>]*\brel="preload"[^>]*>/g)].map((found) => found[0]).filter((link) => /\bas="font"/.test(link));
     const unfetched = FIRST_TYPEFACES.filter((face) => !ahead.some((link) => link.includes(face)));
@@ -105,7 +147,7 @@ export function judgeWebExport(files: { path: string; bytes: Buffer }[], sources
   const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
   const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
   if (gzipped > JS_GZIP_BUDGET) {
-    problems.push(`the JavaScript is ${(gzipped / 1024 / 1024).toFixed(2)} MB gzip, over the ${(JS_GZIP_BUDGET / 1024 / 1024).toFixed(2)} MB the web is given`);
+    problems.push(`the JavaScript is ${mib(gzipped)} gzip, over the ${mib(JS_GZIP_BUDGET)} the web is given`);
   }
   for (const { label, matches } of FORBIDDEN) {
     const found = sources.filter(matches);
@@ -175,14 +217,12 @@ function main(): void {
     const gzipped = js.reduce((total, file) => total + gzipSync(file.bytes).length, 0);
     const wasm = files.filter((file) => file.path.endsWith('.wasm')).length;
     console.log(
-      `web export: ${files.length} files, ${js.length} app JS files ${(raw / 1024 / 1024).toFixed(2)} MB (${(gzipped / 1024 / 1024).toFixed(2)} MB gzip, budget ${(JS_GZIP_BUDGET / 1024 / 1024).toFixed(2)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
+      `web export: ${files.length} files, ${js.length} app JS files ${mib(raw)} (${mib(gzipped)} gzip, budget ${mib(JS_GZIP_BUDGET)}), ${wasm} wasm, ${files.filter((file) => file.path.startsWith(RULES_FOLDER)).length}/${rules.length} older rules, ${sources.length} sources`,
     );
     const pages = pageFiles(routedPages(), LOCALES);
-    const first = files.find((file) => file.path === FIRST_PAGE);
-    const firstScripts = first ? [...first.bytes.toString('utf8').matchAll(/<script\b[^>]*\bsrc="\/?([^"]+)"/g)].map((found) => files.find((file) => file.path === found[1])).filter((file) => file !== undefined) : [];
-    const firstWeight = first ? [first, ...firstScripts].reduce((total, file) => total + gzipSync(file.bytes).length, 0) : 0;
+    const first = firstPageOf(files);
     console.log(
-      `first page (${FIRST_PAGE}): ${firstScripts.length} scripts, ${(firstWeight / 1024 / 1024).toFixed(2)} MB gzip with its HTML (budget ${(FIRST_PAGE_GZIP_BUDGET / 1024 / 1024).toFixed(2)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
+      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts, ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}, target ${mib(FIRST_PAGE_GZIP_TARGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
     );
     const problems = judgeWebExport(files, sources, rules, pages);
     for (const problem of problems) console.error(`problem: ${problem}`);
