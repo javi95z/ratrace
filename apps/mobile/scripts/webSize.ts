@@ -41,6 +41,26 @@ const AHEAD: Readonly<Record<string, readonly string[]>> = {
   latin: ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold'],
   ru: ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold', 'Oswald_500Medium', 'Exo2_400Regular', 'Exo2_600SemiBold'],
 };
+/**
+ * The typefaces the game draws, by family, as `ui/fontSources.ts` loads them (a test holds the two to each other: that file requires .ttf files, which
+ * a script cannot): the six of the web's stacks and the four slanted reading faces. The export carries these and no other weight of their families,
+ * which the worker would precache on every visit for nothing.
+ */
+export const GAME_FACES: readonly string[] = [
+  'Jersey15_400Regular',
+  'ChakraPetch_400Regular',
+  'ChakraPetch_600SemiBold',
+  'Oswald_500Medium',
+  'Exo2_400Regular',
+  'Exo2_600SemiBold',
+  'ChakraPetch_400Regular_Slant',
+  'ChakraPetch_600SemiBold_Slant',
+  'Exo2_400Regular_Slant',
+  'Exo2_600SemiBold_Slant',
+];
+/** The family of an export's TrueType file: its name before the hash Expo gives it (`Oswald_500Medium.<hash>.ttf`). */
+const faceOf = (path: string): string => /([A-Za-z0-9_]+)\.[0-9a-f]+\.ttf$/.exec(path)?.[1] ?? path.slice(path.lastIndexOf('/') + 1);
+
 /** The front door of each language whose typefaces are held to `AHEAD`. */
 const FRONT_DOORS: readonly { page: string; faces: readonly string[] }[] = [
   { page: FIRST_PAGE, faces: AHEAD.latin },
@@ -271,6 +291,11 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
   for (const file of files) {
     if (file.path.endsWith('.wasm')) problems.push(`a WebAssembly file is in the export: ${file.path}`);
   }
+  const faces = files.filter((file) => file.path.endsWith('.ttf')).map((file) => faceOf(file.path));
+  const undrawn = [...new Set(faces.filter((face) => !GAME_FACES.includes(face)))].sort();
+  if (undrawn.length > 0) problems.push(`the export carries ${undrawn.length} typefaces the game never draws (a family imported from its package's index, which names every weight): ${undrawn.join(', ')}`);
+  const lacking = faces.length === 0 ? [] : GAME_FACES.filter((face) => !faces.includes(face));
+  if (lacking.length > 0) problems.push(`the export lacks typefaces the game draws: ${lacking.join(', ')}`);
   const served = new Set(files.filter((file) => file.path.startsWith(RULES_FOLDER)).map((file) => file.path.slice(RULES_FOLDER.length)));
   const missing = rules.filter((name) => !served.has(name));
   if (missing.length > 0) {

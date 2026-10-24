@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, GAME_FACES, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -18,6 +19,24 @@ const APP = '_expo/static/js/web/';
 const small = { path: '_expo/static/js/web/entry-abc.js', bytes: Buffer.from('console.log(1)') };
 
 describe('judgeWebExport', () => {
+  it('holds the export\'s typefaces to those the game draws: every face it loads, and no weight of their families it never draws', () => {
+    // The faces the game loads, as `ui/fontSources.ts` names them (a test cannot require its .ttf files, so they are read from its text).
+    const sources = readFileSync(new URL('../src/ui/fontSources.ts', import.meta.url), 'utf8');
+    const loaded = /export const FONT_SOURCES = \{([^}]*)\}/.exec(sources)?.[1].split(',').map((name) => name.trim()).filter(Boolean);
+    expect([...GAME_FACES].sort()).toEqual([...(loaded ?? [])].sort());
+    // Each family's package names every weight in its index: imported from there, the export carries them all, and the worker precaches them.
+    expect(sources).not.toMatch(/from '@expo-google-fonts\/[a-z0-9-]+';/);
+    const ttf = (face: string, at = 'assets/__node_modules/.pnpm/x/node_modules/@expo-google-fonts/x/400Regular') => ({ path: `${at}/${face}.0123456789abcdef0123456789abcdef.ttf`, bytes: Buffer.from('ttf') });
+    const all = GAME_FACES.map((face) => ttf(face));
+    expect(judgeWebExport([small, ...all], [])).toEqual([]);
+    const extra = judgeWebExport([small, ...all, ttf('Exo2_900Black_Italic'), ttf('Oswald_200ExtraLight')], []);
+    expect(extra).toHaveLength(1);
+    expect(extra[0]).toMatch(/Exo2_900Black_Italic, Oswald_200ExtraLight/);
+    const short = judgeWebExport([small, ...all.filter((file) => !file.path.includes('Exo2_600SemiBold_Slant'))], []);
+    expect(short).toHaveLength(1);
+    expect(short[0]).toMatch(/Exo2_600SemiBold_Slant/);
+  });
+
   it('finds nothing wrong with a small clean export', () => {
     expect(judgeWebExport([small, { path: 'index.html', bytes: Buffer.from('<html></html>') }], ['node_modules/react/index.js', 'apps/mobile/src/ui/Sprite.tsx'])).toEqual([]);
   });
