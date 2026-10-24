@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import PlayRoute from '../app/[locale]/play';
 import RecordsRoute from '../app/[locale]/records';
@@ -9,6 +9,7 @@ import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { pathname, routeMoved } from '../testing/fakes';
 import { speaking } from '../testing/memoryServices';
 import { device, memoryServices, params, renderGame, router } from '../testing/render';
+import { Sheet } from '../ui/overlay';
 import { Language } from '../ui/text';
 import { GameProvider, useSettings } from './context';
 import { LanguagePick } from './screens/Settings';
@@ -19,23 +20,38 @@ import { LanguagePick } from './screens/Settings';
  */
 
 /** The words of a language held back from the page until the test lets them in (`held`), as a chunk not fetched yet; every other language is in. */
-const words = vi.hoisted(() => ({ held: null as string | null, release: () => undefined as void }));
+const words = vi.hoisted(() => ({ held: null as string | null, failing: false, waiting: null as Promise<void> | null, release: () => undefined as void }));
 vi.mock('./languageWords', async (original) => {
   const real = await original<typeof import('./languageWords')>();
   return {
     ...real,
     languageReady: (locale: 'en' | 'es' | 'ru') => locale !== words.held && real.languageReady(locale),
     loadLanguageWords: (locale: 'en' | 'es' | 'ru') =>
-      locale === words.held
-        ? new Promise<void>((resolve) => {
+      locale === words.held && words.failing
+        ? Promise.reject(new Error('offline: the chunk cannot be had'))
+        : locale === words.held
+        ? // One load for a language, however often it is asked for, as the real one's.
+          (words.waiting ??= new Promise<void>((resolve) => {
             words.release = () => {
               words.held = null;
+              words.waiting = null;
               resolve();
             };
-          })
+          }))
         : real.loadLanguageWords(locale),
   };
 });
+
+/**
+ * The documents the page opens (`openDocument`), each with whether a sheet was still open over the page as it left: a test's browser goes nowhere, so
+ * the page stays drawn after.
+ */
+const opened = vi.hoisted(() => [] as Array<{ address: string; how: 'push' | 'replace'; sheetOpen: boolean }>);
+vi.mock('./openDocument', () => ({
+  openDocument: (address: string, how: 'push' | 'replace') => opened.push({ address, how, sheetOpen: document.querySelector('[role="dialog"]') !== null }),
+}));
+/** The addresses opened by a push, as a link the browser follows. */
+const pushed = () => opened.filter((one) => one.how === 'push').map((one) => one.address);
 
 const cookie = () => document.cookie.split('; ').find((part) => part.startsWith('NEXT_LOCALE='))?.slice('NEXT_LOCALE='.length) ?? null;
 
@@ -47,6 +63,9 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   words.held = null;
+  words.failing = false;
+  words.waiting = null;
+  opened.length = 0;
 });
 
 /** The language the page is drawn in, as the kit's text reads it. */
@@ -120,7 +139,7 @@ test('a language chosen, then a page opened before its words arrive: the cookie 
   expect(cookie()).toBe('es');
   // The words come in: the choice opens its page, and the page the player ends on is the one that keeps its language.
   await act(async () => words.release());
-  expect(router.push).toHaveBeenCalledWith('/ru/records');
+  await waitFor(() => expect(pushed()).toEqual(['/ru/records']));
   params.locale = 'ru';
   pathname.now = '/ru/records';
   view.rerender(page('ru'));
@@ -142,23 +161,57 @@ test('outside the pages of a language, the language is the cookie\'s, else the b
   expect(screen.getByTestId('speaks').textContent).toBe('en');
 });
 
-test('a language chosen in the settings opens the same page in it, and the cookie keeps it', () => {
+test('a language chosen in the settings opens the same page in it, as a new document Back leads from, and the cookie keeps it', async () => {
   params.locale = 'en';
   pathname.now = '/en/rankings';
   renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
-  expect(router.push).toHaveBeenCalledWith('/es/rankings');
+  await waitFor(() => expect(opened).toEqual([{ address: '/es/rankings', how: 'push', sheetOpen: false }]));
   expect(cookie()).toBe('es');
-  router.push.mockClear();
-  // The language of the address (still English here: the router stands in) opens nothing.
-  act(() => fireEvent.click(screen.getByRole('radio', { name: 'English' })));
+  // Not a screen of the router's stacked over this one: the page in English goes with its document.
   expect(router.push).not.toHaveBeenCalled();
+  expect(router.replace).not.toHaveBeenCalled();
+  opened.length = 0;
+  // The language of the address (still English here: the test's browser goes nowhere) opens nothing.
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'English' })));
+  await act(async () => undefined);
+  expect(opened).toEqual([]);
   cleanup();
   // The front door in Russian is /ru.
   pathname.now = '/en';
   renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
-  expect(router.push).toHaveBeenCalledWith('/ru');
+  await waitFor(() => expect(pushed()).toEqual(['/ru']));
+});
+
+test('a language chosen from a sheet closes the sheet first, as the player would, and opens its page once the sheet is gone', async () => {
+  params.locale = 'en';
+  pathname.now = '/en';
+  const closed = vi.fn();
+  function SettingsSheet() {
+    const [open, setOpen] = useState(true);
+    return (
+      <Sheet
+        open={open}
+        onClose={() => {
+          closed();
+          setOpen(false);
+        }}
+        title="Settings"
+        closeLabel="Close"
+      >
+        <LanguagePick />
+      </Sheet>
+    );
+  }
+  renderGame(<SettingsSheet />, { ...memoryServices(), language: kvLanguage });
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
+  await waitFor(() => expect(pushed()).toEqual(['/es']));
+  expect(closed).toHaveBeenCalledTimes(1);
+  // Gone before the page left: no sheet of the old page over the new, nor its entry of the history for Back to land on.
+  expect(opened[0].sheetOpen).toBe(false);
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
 
 test('a language whose words are not in yet opens its page once they are: the page in front stays as it is until then', async () => {
@@ -167,11 +220,42 @@ test('a language whose words are not in yet opens its page once they are: the pa
   words.held = 'ru';
   renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
-  expect(router.push).not.toHaveBeenCalled();
+  await act(async () => undefined);
+  expect(opened).toEqual([]);
   // The choice is kept for the next visit at once, whatever comes of its words.
   expect(cookie()).toBe('ru');
   await act(async () => words.release());
-  expect(router.push).toHaveBeenCalledWith('/ru/rankings');
+  await waitFor(() => expect(pushed()).toEqual(['/ru/rankings']));
+});
+
+test('the same language picked twice before its words are in opens its page once', async () => {
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  words.held = 'ru';
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  await act(async () => words.release());
+  await waitFor(() => expect(pushed()).toEqual(['/ru/rankings']));
+  await act(async () => new Promise((settled) => setTimeout(settled, 20)));
+  expect(pushed()).toEqual(['/ru/rankings']);
+});
+
+test('a language whose words cannot be had opens nothing, and can be asked for again', async () => {
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  words.held = 'ru';
+  words.failing = true;
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
+  // Offline, its chunk not fetched before: the page stays in English.
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  await act(async () => new Promise((settled) => setTimeout(settled, 20)));
+  expect(opened).toEqual([]);
+  // Asked for again once it can be had: opened.
+  words.failing = false;
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  await act(async () => words.release());
+  await waitFor(() => expect(pushed()).toEqual(['/ru/rankings']));
 });
 
 test('of two languages picked one after the other, the last is the one opened, whichever\'s words come in first', async () => {
@@ -181,14 +265,24 @@ test('of two languages picked one after the other, the last is the one opened, w
   renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
-  expect(router.push).toHaveBeenCalledWith('/es/rankings');
+  await waitFor(() => expect(pushed()).toEqual(['/es/rankings']));
   await act(async () => words.release());
-  expect(router.push).not.toHaveBeenCalledWith('/ru/rankings');
-  expect(router.push).toHaveBeenCalledTimes(1);
+  await act(async () => new Promise((settled) => setTimeout(settled, 20)));
+  expect(pushed()).toEqual(['/es/rankings']);
   expect(cookie()).toBe('es');
 });
 
-test('the language\'s setter keeps its identity from page to page, and nothing that reads the settings is drawn again as the player moves', () => {
+test('the page\'s lang is the language it speaks, where that changes in place', () => {
+  // A page with no language in its address (a development route) speaks the one chosen, and says so.
+  pathname.now = '/scene';
+  document.documentElement.lang = 'en';
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
+  expect(document.documentElement.lang).toBe('es');
+  expect(opened).toEqual([]);
+});
+
+test('the language\'s setter keeps its identity from page to page, and nothing that reads the settings is drawn again as the player moves', async () => {
   params.locale = 'en';
   pathname.now = '/en/records';
   const held: Array<(next: 'en' | 'es' | 'ru') => void> = [];
@@ -210,7 +304,7 @@ test('the language\'s setter keeps its identity from page to page, and nothing t
   expect(new Set(held).size).toBe(1);
   // And it still opens the page the player is on now, in the language chosen.
   act(() => held[0]('ru'));
-  expect(router.push).toHaveBeenCalledWith('/ru/collection');
+  await waitFor(() => expect(pushed()).toEqual(['/ru/collection']));
 });
 
 /** A member signing in on a browser that last showed a guest, whose account keeps `language`, told when `answer` is called. */
@@ -251,9 +345,10 @@ test('the account\'s language, answered after the player has moved on, puts the 
     member.answer();
     await Promise.resolve();
   });
-  await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/es/room?code=ABC123#x'));
-  // In place of the page: Back does not lead to the language the account left.
+  await waitFor(() => expect(opened).toEqual([{ address: '/es/room?code=ABC123#x', how: 'replace', sheetOpen: false }]));
+  // In place of the page, as the Next web's `location.replace`: Back does not lead to the language the account left.
   expect(router.push).not.toHaveBeenCalled();
+  expect(router.replace).not.toHaveBeenCalled();
   expect(window.history.length).toBe(pages);
   expect(cookie()).toBe('es');
   expect(localStorage.getItem('ratrace.lastAccount')).toBe('member-1');
