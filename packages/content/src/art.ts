@@ -215,6 +215,8 @@ export const cardArt: Record<string, string> = {
   fam_school_treasurer: scene('school_treasurer'),
   luck_drone_crash: scene('drone_crash'),
   life_concert: scene('concert'),
+  luck_police_auction: scene('police_auction'),
+  house_protected_flat: scene('protected_flat'),
   tax_audit: scene('inspector'),
   tax_undeclared: scene('cash_envelope'),
   tax_residency: scene('city_arrival'),

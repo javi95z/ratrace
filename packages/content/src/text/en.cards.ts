@@ -1107,4 +1107,13 @@ export const cards: Record<string, CardText> = {
     'Pay the resale price',
     'Front row, and the party after',
   ]),
+  luck_police_auction: c('The police auction', 'The police are auctioning what they seized: cars, watches, even a jet ski.', [
+    'Look and do not bid',
+    ['Bid on a car', 'You sell it on at a profit within a month.', 'It was a wreck. You sell it for parts.'],
+    ['Bid on a luxury watch', 'Genuine. And on your wrist.', 'Fake. You sell it on as one.'],
+  ]),
+  house_protected_flat: c('You win a protected flat', 'You have been drawn in the protected housing lottery: a flat at well below the market price.', [
+    'Give it up',
+    'Buy it',
+  ]),
 };

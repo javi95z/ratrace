@@ -225,4 +225,16 @@ export const v20Cards: CardDef[] = [
     { effects: { cash: usd(-900), status: 1 } },
     { effects: { cash: usd(-2_500), status: 2, skills: { network: 1 } } },
   ]),
+  // The police auction off what they seized: a car that may be a bargain or scrap, a watch that may be real.
+  card('luck_police_auction', 'luck', { once: true, when: { minRound: 2 } }, [
+    {},
+    { effects: { cash: usd(-6_000) }, outcomes: [{ weight: 60, effects: { cash: usd(9_500) } }, { weight: 40, effects: { cash: usd(2_000) } }] },
+    { effects: { cash: usd(-4_000) }, outcomes: [{ weight: 50, effects: { status: 3 } }, { weight: 50, effects: { cash: usd(600) } }] },
+  ]),
+  // Drawn in the protected housing lottery, renting and short of money: a flat at a protected price.
+  // Singapore has its own ballot.
+  card('house_protected_flat', 'housing', { once: true, when: { ownsHome: false, maxNetWorth: usd(60_000), minRound: 2, notCities: ['singapore'] } }, [
+    {},
+    { effects: { property: { typeId: 'flat', pricePct: 60, downPct: 10, rented: false } } },
+  ]),
 ];

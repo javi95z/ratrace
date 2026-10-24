@@ -404,8 +404,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-44', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['back_home', 'midlife', 'grandchild', 'black_card', 'child_piggy', 'lift_levy'].map((id) => `card.${id}`) },
   { file: 'cards/cards-45', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['street_contest', 'xmas_dinner', 'sabbatical', 'credit_stolen', 'office_pool', 'cooking_show'].map((id) => `card.${id}`) },
   { file: 'cards/cards-46', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['stag_party', 'viral_bad', 'influencer_review', 'smartwatch', 'festival_rental', 'school_treasurer'].map((id) => `card.${id}`) },
-  // Two of six, until four more cards join them.
-  { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['drone_crash', 'concert'].map((id) => `card.${id}`) },
+  // Four of six, until two more cards join them.
+  { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat'].map((id) => `card.${id}`) },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

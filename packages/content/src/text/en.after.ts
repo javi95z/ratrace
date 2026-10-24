@@ -353,4 +353,6 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   fam_school_treasurer: ['Another parent keeps the accounts. They look at you oddly at the gate.', 'Spreadsheets, receipts, and thirty families who know you.', 'The party is a hit. The whole school knows your name.'],
   luck_drone_crash: ['The owner thanks you. And owes you one.', 'An envelope and a handshake.', null],
   life_concert: ['You watch it in videos the next day.', 'You sing every song. Worth every penny.', 'You end up at the after-party with the drummer.'],
+  luck_police_auction: ['You leave with a catalogue and no bids.', null, null],
+  house_protected_flat: ['The next on the list takes it.', 'The keys to your first home, at a price you will not see again.'],
 };

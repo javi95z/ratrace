@@ -4466,6 +4466,16 @@
       "width": 288,
       "height": 120
     },
+    "card.police_auction": {
+      "file": "cards/card.police_auction.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.protected_flat": {
+      "file": "cards/card.protected_flat.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

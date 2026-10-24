@@ -341,4 +341,6 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   fam_school_treasurer: ['Otro padre lleva las cuentas. Te mira raro en la puerta.', 'Hojas de cálculo, recibos y treinta familias que te conocen.', 'La fiesta sale redonda. Todo el colegio sabe tu nombre.'],
   luck_drone_crash: ['El dueño te da las gracias. Y te debe una.', 'Un sobre y un apretón de manos.', null],
   life_concert: ['Lo ves en vídeos al día siguiente.', 'Cantas todas. Vale cada euro.', 'Acabas en el after con el batería.'],
+  luck_police_auction: ['Te vas con un catálogo y ninguna puja.', null, null],
+  house_protected_flat: ['Otro de la lista se queda con él.', 'Las llaves de tu primera casa, a un precio que no volverás a ver.'],
 };

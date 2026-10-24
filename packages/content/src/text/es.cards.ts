@@ -1107,4 +1107,13 @@ export const cards: Record<string, CardText> = {
     'Pagar la reventa',
     'Pista, primera fila y fiesta después',
   ]),
+  luck_police_auction: c('La subasta de la policía', 'La policía subasta lo que ha requisado: coches, relojes, hasta un jet ski.', [
+    'Mirar y no pujar',
+    ['Pujar por un coche', 'Lo revendes con beneficio en un mes.', 'Era un cacharro. Lo vendes por piezas.'],
+    ['Pujar por un reloj de lujo', 'Auténtico. Y en tu muñeca.', 'Falso. Lo revendes como falso.'],
+  ]),
+  house_protected_flat: c('Te toca un piso protegido', 'Te ha tocado el sorteo de vivienda protegida: un piso a un precio muy por debajo del de mercado.', [
+    'Renunciar',
+    'Comprarlo',
+  ]),
 };

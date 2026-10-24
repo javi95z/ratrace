@@ -1574,6 +1574,11 @@
     "w": 288,
     "h": 120
   },
+  "card.police_auction": {
+    "src": "cards/card.police_auction.png",
+    "w": 288,
+    "h": 120
+  },
   "card.prenup": {
     "src": "cards/card.prenup.png",
     "w": 288,
@@ -1586,6 +1591,11 @@
   },
   "card.private_sale": {
     "src": "cards/card.private_sale.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.protected_flat": {
+    "src": "cards/card.protected_flat.png",
     "w": 288,
     "h": 120
   },

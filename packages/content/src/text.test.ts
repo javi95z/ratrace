@@ -329,7 +329,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(237 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
+    expect(wanted.length).toBe(239 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
     // Every kind of property plain (26); as each of the ten cities draws its eleven homes and four kinds to let (15 * 10),
     // the block of the eight that sell one (8), and each city's own kind (10). Time with the family and a rest, a sign each: the 2.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
