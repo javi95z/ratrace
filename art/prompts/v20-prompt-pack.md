@@ -1,6 +1,6 @@
 # v20 prompt pack: four new cards
 
-Content 1.48 adds new cards. `cards-40` is drawn. The rest show stand-ins cut from older scenes until drawn, six to a sheet.
+Content 1.48 adds new cards. `cards-40` to `cards-46` are drawn; `cards-47` shows stand-ins until it has six.
 
 Save as `art/raw/cards/cards-40.png` — `card.retreat`, `card.trendy_area`, `card.boss_leaves`, `card.tax_letter`
 

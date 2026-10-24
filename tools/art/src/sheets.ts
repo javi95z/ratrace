@@ -396,7 +396,7 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-37', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-38', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.celeb_bellfort', 'card.celeb_ortiga'] },
-  // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 41 to 47 are stand-ins cut from older scenes until drawn.
+  // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 40 to 46 are drawn; 47 holds stand-ins until it has six.
   { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
   { file: 'cards/cards-41', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['barn_car', 'mlm', 'squatters', 'solar', 'village_house', 'company_ipo'].map((id) => `card.${id}`) },
   { file: 'cards/cards-42', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['metro_works', 'strike', 'school_reunion', 'child_streamer', 'linkedin_post', 'podcast'].map((id) => `card.${id}`) },
