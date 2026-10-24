@@ -52,9 +52,9 @@ const scrollOf = (inset: Insets): ViewStyle => ({ flex: 1, marginLeft: inset.lef
  * The column a page's scroll holds (`Screen`'s, a `ListScreen`'s): the 448 column with its gutter, `SCREEN_TOP` over its first child, and at its foot
  * room for a frame's drop and, with no bar under it to clear it, the home indicator.
  */
-const columnOf = (inset: Insets, { barred = false }: { barred?: boolean } = {}): ViewStyle[] => [
+const columnOf = (inset: Insets, { barred = false, width = SHELL_WIDTH }: { barred?: boolean; width?: number } = {}): ViewStyle[] => [
   COLUMN,
-  { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom },
+  { maxWidth: width, paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom },
 ];
 
 /**
@@ -111,6 +111,8 @@ export function scrollToShow(offset: number, viewport: number, y: number, height
  * of the scroll once they reach it (see `StickyScreen`, which uses it), and `onScroll` hears how far the page has
  * scrolled, in points. `scrollY` is how far, written on the UI thread as the page scrolls (a Reanimated scroll handler), for what moves with
  * the scroll to be moved there too, with no word to React (`StickyScreen`): a page given one tells nothing to `onScroll`, and its scroller reads it.
+ * `width` is how wide its column may be: the 448 of a phone's (the web's `max-w-md`) unless the page asks for more (`WIDE_COLUMN`, the web's
+ * `max-w-2xl`; the end of a life at desk width, its `lg:max-w-5xl`).
  */
 export function Screen({
   children,
@@ -121,8 +123,10 @@ export function Screen({
   onScroll,
   scroller,
   scrollY,
+  width,
 }: {
   children: ReactNode;
+  width?: number;
   contentStyle?: ViewStyle;
   fixed?: ReactNode;
   bar?: ReactNode;
@@ -164,7 +168,7 @@ export function Screen({
       onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
       scrollEventThrottle={16}
       style={scrollOf(inset)}
-      contentContainerStyle={[...columnOf(inset, { barred }), contentStyle]}
+      contentContainerStyle={[...columnOf(inset, { barred, width }), contentStyle]}
     >
       {children}
     </Animated.ScrollView>
@@ -184,7 +188,7 @@ export function Screen({
       onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
       scrollEventThrottle={follows ? 16 : undefined}
       style={scrollOf(inset)}
-      contentContainerStyle={[...columnOf(inset, { barred }), contentStyle]}
+      contentContainerStyle={[...columnOf(inset, { barred, width }), contentStyle]}
     >
       {children}
     </ScrollView>
@@ -224,7 +228,7 @@ export const LIST_WINDOW = { initialNumToRender: 8, maxToRenderPerBatch: 6, wind
  * drawn again for a datum made anew that says the same. (The list's renderer is the same function for as long as the page is drawn, and the list
  * memoises it, `strictMode`.) `role` and `label` name the list for a screen reader. `onWidth` hears the width of the column inside its gutter (what
  * the web's container queries measure), once it is laid out and each time it changes. `foot` is what stands under its rows (the web's page after
- * its list: the friends' panel under the ranking among friends), drawn as the list's footer.
+ * its list: the friends' panel under the ranking among friends), drawn as the list's footer. `width` is how wide its column may be, as `Screen`'s.
  */
 export function ListScreen<T>({
   head,
@@ -237,7 +241,9 @@ export function ListScreen<T>({
   role,
   label,
   onWidth,
+  width = SHELL_WIDTH,
 }: {
+  width?: number;
   head: ReactElement;
   foot?: ReactElement;
   data: readonly T[];
@@ -258,8 +264,8 @@ export function ListScreen<T>({
   const keyExtractor = useCallback((row: T) => latest.current.keyOf(row), []);
   const measured = onWidth !== undefined;
   const onLayout = useCallback(
-    (event: { nativeEvent: { layout: { width: number } } }) => latest.current.onWidth?.(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER),
-    [],
+    (event: { nativeEvent: { layout: { width: number } } }) => latest.current.onWidth?.(Math.min(event.nativeEvent.layout.width, width) - 2 * GUTTER),
+    [width],
   );
   return keyboardRoom(
     <FlatList
@@ -276,7 +282,7 @@ export function ListScreen<T>({
       aria-label={label}
       onLayout={measured ? onLayout : undefined}
       style={scrollOf(inset)}
-      contentContainerStyle={[...columnOf(inset), contentStyle]}
+      contentContainerStyle={[...columnOf(inset, { width }), contentStyle]}
     />,
   );
 }

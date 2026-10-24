@@ -20,6 +20,7 @@ import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
+import { useIsWide } from '../../ui/desk';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
@@ -1154,6 +1155,7 @@ function DebtTab() {
   const { content, fmt } = words;
   const { shown, p, world } = useRound();
   const addOrder = useGame((s) => s.addOrder);
+  const wide = useIsWide();
   const [repaying, setRepaying] = useState<Debt | null>(null);
   const [borrowing, setBorrowing] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
@@ -1167,7 +1169,8 @@ function DebtTab() {
         {p.debts.length === 0 ? <ReadText size={14} tone="ink-300">{t('none')}</ReadText> : <Row left={t('total')} right={fmt.money(total)} />}
         {p.debts.map((debt) => (
           <View key={debt.id} style={{ borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingVertical: 8 }}>
-            {/* On a phone the way to pay it off is under the name (the web's `sm:hidden` one), so the name has the row: it is cut to its line, as the web cuts it. */}
+            {/* On a phone the way to pay it off is under the name (the web's `sm:hidden` one), so the name has the row: it is cut to its line, as the web cuts it.
+                From the web's `sm` up there is room for it beside what is owed (its `max-sm:hidden` one). */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Bare style={{ width: 32, height: 32 }}>
                 <Sprite id={debtArt(debt)} />
@@ -1176,6 +1179,11 @@ function DebtTab() {
                 <ReadText numberOfLines={1}>{debtLabel(words, debt, p.properties)}</ReadText>
               </View>
               <PixelText>{fmt.money(debt.principal)}</PixelText>
+              {wide && debt.peer === undefined ? (
+                <Button variant="secondary" onPress={() => setRepaying(debt)} disabled={p.cash <= 0}>
+                  {t('repay')}
+                </Button>
+              ) : null}
             </View>
             {/* Under the name, so a long one is not cut short: what it costs and what is left, and the way to pay it off. */}
             <View style={{ marginTop: 4, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, paddingLeft: 44 }}>
@@ -1189,7 +1197,7 @@ function DebtTab() {
                 <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
               </View>
               {/* A loan from another player is paid by its term: there is nothing to pay off early. */}
-              {debt.peer === undefined ? (
+              {!wide && debt.peer === undefined ? (
                 <Button variant="secondary" onPress={() => setRepaying(debt)} disabled={p.cash <= 0}>
                   {t('repay')}
                 </Button>

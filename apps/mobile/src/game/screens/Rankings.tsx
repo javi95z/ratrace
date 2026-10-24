@@ -12,6 +12,7 @@ import { Bare, Button, Figure, KeyFigure, Notice, Panel, PanelPart, pressDown, r
 import { Loading } from '../../ui/Loading';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { ListScreen } from '../../ui/Page';
+import { WIDE_COLUMN } from '../../ui/desk';
 import { PerfDrawn } from '../../ui/perf';
 import { Picker } from '../../ui/Picker';
 import { RatAvatar } from '../../ui/RatAvatar';
@@ -735,6 +736,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
     <View style={{ flex: 1 }}>
       <PerfDrawn name={lines.length > 0 ? 'rankings: lines' : 'rankings'} />
       <ListScreen
+        width={WIDE_COLUMN}
         head={head}
         foot={panelFoot}
         data={lines}

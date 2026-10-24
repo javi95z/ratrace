@@ -9,6 +9,7 @@ import { Tag, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { ListScreen } from '../../ui/Page';
+import { useIsWide, WIDE_COLUMN } from '../../ui/desk';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useRuns, useT, useWords } from '../context';
@@ -19,10 +20,11 @@ import { RoomHistory } from './RoomHistory';
 import { RunDetail } from './RunDetail';
 
 /** A personal best: what it is, the life that holds it (or none yet), and its figure (the web's `bevel … bg-night-700 px-3 py-2`). */
-function Best({ label, holder, figure }: { label: string; holder: string; figure: string }) {
+function Best({ label, holder, figure, half = false }: { label: string; holder: string; figure: string; half?: boolean }) {
   return (
-    <View role="listitem">
-      <Framed kind="bevel" style={{ backgroundColor: COLORS['night-700'], flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
+    // Two to a row (`half`), each as tall as the taller of the two, as the web's grid lays them.
+    <View role="listitem" style={half ? { flex: 1, minWidth: 0 } : undefined}>
+      <Framed kind="bevel" style={{ flexGrow: half ? 1 : 0, backgroundColor: COLORS['night-700'], flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
         <View style={{ minWidth: 0, flexShrink: 1 }}>
           <ReadText size={13} tone="ink-200">{label}</ReadText>
           <ReadText size={12} tone="ink-300" numberOfLines={1}>{holder}</ReadText>
@@ -112,9 +114,17 @@ export function Records({ opened, game }: { opened?: string; game?: string } = {
     [alone, lifeName, fmt],
   );
 
+  // From the web's `sm` up the bests stand two to a row (`grid-cols-1 sm:grid-cols-2`).
+  const wide = useIsWide();
   const best = (label: string, run: FinishedRun | null, figure: (run: FinishedRun) => string) => (
-    <Best label={label} holder={run ? lifeName(run) : t('none')} figure={run ? figure(run) : '—'} />
+    <Best key={label} label={label} holder={run ? lifeName(run) : t('none')} figure={run ? figure(run) : '—'} half={wide} />
   );
+  const bests = [
+    best(t('bestScore'), records.bestScore, (run) => fmt.number(run.score)),
+    best(t('richest'), records.richest, (run) => fmt.money(run.netWorth)),
+    best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: escapeAge(content, run.escapedAtRound ?? 0) })),
+    best(t('mostStatus'), records.mostStatus, (run) => fmt.number(run.status)),
+  ];
 
   const head = (
     <View style={{ gap: 16 }}>
@@ -138,10 +148,13 @@ export function Records({ opened, game }: { opened?: string; game?: string } = {
         <View role="region" aria-label={t('bests')}>
           <Heading>{t('bests')}</Heading>
           <View role="list" style={{ gap: 8 }}>
-            {best(t('bestScore'), records.bestScore, (run) => fmt.number(run.score))}
-            {best(t('richest'), records.richest, (run) => fmt.money(run.netWorth))}
-            {best(t('youngestEscape'), records.youngestEscape, (run) => t('age', { age: escapeAge(content, run.escapedAtRound ?? 0) }))}
-            {best(t('mostStatus'), records.mostStatus, (run) => fmt.number(run.status))}
+            {wide
+              ? [0, 2].map((at) => (
+                  <View key={at} style={{ flexDirection: 'row', gap: 8 }}>
+                    {bests.slice(at, at + 2)}
+                  </View>
+                ))
+              : bests}
           </View>
           <View style={{ marginTop: 8, flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4 }}>
             <ReadText size={13} tone="ink-200">{t('lives', { count: records.lives })}</ReadText>
@@ -162,6 +175,7 @@ export function Records({ opened, game }: { opened?: string; game?: string } = {
     <>
       <PerfDrawn name="records" />
       <ListScreen
+        width={WIDE_COLUMN}
         head={head}
         data={lines}
         keyOf={keyOf}

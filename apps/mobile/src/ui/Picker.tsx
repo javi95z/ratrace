@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
+import { useIsWide } from './desk';
 import { Framed } from './Frame';
 import { GOLD } from './frames';
 import { pressDown, usePress } from './kit';
@@ -43,14 +44,15 @@ const PORTRAIT = { w: 64, h: 64 };
 /** What stands beside an option: its face, or its icon. */
 const mark = (option: { icon?: string; face?: string }): ReactNode => (option.face ? <Face id={option.face} /> : option.icon ? <Sprite id={option.icon} /> : null);
 
-function Option<T>({ option, selected, onPick }: { option: PickerOption<T>; selected: boolean; onPick: () => void }) {
+function Option<T>({ option, selected, onPick, half = false }: { option: PickerOption<T>; selected: boolean; onPick: () => void; half?: boolean }) {
   const press = usePress({ onPress: onPick });
   return (
-    <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} aria-checked={selected} onPress={press}>
+    <Pressable style={half ? { flex: 1, minWidth: 0 } : undefined} accessibilityRole="radio" accessibilityState={{ checked: selected }} aria-checked={selected} onPress={press}>
       <Framed
         kind={selected ? 'bevel' : 'frame'}
         tone={selected ? GOLD : {}}
         style={{
+          flexGrow: half ? 1 : 0,
           backgroundColor: COLORS[selected ? 'night-600' : 'night-700'],
           minHeight: TOUCH,
           flexDirection: 'row',
@@ -78,6 +80,22 @@ export function Picker<T extends string | null>({ label, value, options, onChang
   const [open, setOpen] = useState(false);
   const chosen = options.find((option) => option.value === value) ?? options[0];
   const show = usePress({ onPress: () => setOpen(true) });
+  // From the web's `sm` up the options stand two to a row (`grid-cols-1 sm:grid-cols-2`), each pair as tall as its taller.
+  const wide = useIsWide();
+  const each = (option: PickerOption<T>) => (
+    <Option
+      key={String(option.value)}
+      option={option}
+      selected={option.value === value}
+      half={wide}
+      onPick={() => {
+        onChange(option.value);
+        setOpen(false);
+      }}
+    />
+  );
+  const rows: Array<ReadonlyArray<PickerOption<T>>> = [];
+  for (let at = 0; at < options.length; at += 2) rows.push(options.slice(at, at + 2));
   return (
     <View style={{ gap: 4 }}>
       <ReadText size={13} tone="ink-200">{label}</ReadText>
@@ -101,17 +119,15 @@ export function Picker<T extends string | null>({ label, value, options, onChang
       {open ? (
         <Sheet open onClose={() => setOpen(false)} title={label} closeLabel={closeLabel}>
           <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ gap: 6 }}>
-            {options.map((option) => (
-              <Option
-                key={String(option.value)}
-                option={option}
-                selected={option.value === value}
-                onPick={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-              />
-            ))}
+            {wide
+              ? rows.map((row) => (
+                  <View key={String(row[0].value)} style={{ flexDirection: 'row', gap: 6 }}>
+                    {row.map(each)}
+                    {/* A last one alone keeps to its half, as in the web's grid. */}
+                    {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+                  </View>
+                ))
+              : options.map(each)}
           </View>
         </Sheet>
       ) : null}

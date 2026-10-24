@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { WIDE_COLUMN } from '../../ui/desk';
 import { Screen } from '../../ui/Page';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { LEGAL_EMAIL, LEGAL_NAME } from '../site';
@@ -27,7 +28,7 @@ export function Legal() {
   const owner = [LEGAL_NAME ? web('owner', { name: LEGAL_NAME }) : null, LEGAL_EMAIL ? web('contact', { email: LEGAL_EMAIL }) : null].filter(Boolean).join(' ');
 
   return (
-    <Screen contentStyle={{ gap: 16, paddingBottom: 40 }}>
+    <Screen width={WIDE_COLUMN} contentStyle={{ gap: 16, paddingBottom: 40 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackLink />
         <View accessibilityRole="header" style={{ flexShrink: 1 }}>

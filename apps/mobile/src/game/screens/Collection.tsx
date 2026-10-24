@@ -8,6 +8,7 @@ import { GOLD } from '../../ui/frames';
 import { Bare, Segmented, SrOnly } from '../../ui/kit';
 import { Tabs } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
+import { WIDE_COLUMN } from '../../ui/desk';
 import { ListScreen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -23,7 +24,8 @@ type Tab = 'items' | 'badges';
 /**
  * How many to a row, by the width of the page's column inside its gutter: the web's container queries on its `main` (`@container`), which measure
  * the same width. Three rarities to a row, five from 460 (`grid-cols-3 @min-[460px]:grid-cols-5`); two things, four from 560; one badge, two
- * from 560. A phone's column is at most 448, 424 inside its gutter: never as wide as these, so a phone always has the first of each.
+ * from 560. A phone's column is at most 448, 424 inside its gutter: never as wide as these, so a phone always has the first of each. A browser's is
+ * the web's `max-w-2xl` (`WIDE_COLUMN`, 672, 648 inside), as wide as the window lets it be.
  */
 export function columnsAt(width: number): { rarities: number; things: number; badges: number } {
   return { rarities: width >= 460 ? 5 : 3, things: width >= 560 ? 4 : 2, badges: width >= 560 ? 2 : 1 };
@@ -231,6 +233,7 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
     <>
       <PerfDrawn name={`collection: ${tab}`} />
       <ListScreen
+        width={WIDE_COLUMN}
         head={head}
         data={tab === 'items' ? things : shownBadges}
         keyOf={keyOf}

@@ -20,6 +20,7 @@ import { Sheet, Toast, useSheetsShowing } from '../../ui/overlay';
 import { Screen } from '../../ui/Page';
 import { PERF, PerfDrawn } from '../../ui/perf';
 import { RatAvatar } from '../../ui/RatAvatar';
+import { useIsWide } from '../../ui/desk';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
@@ -298,6 +299,8 @@ function BarButton({ ready, total, place, playing, seconds, seats, onPress }: { 
   const time = left === null ? '—' : clock(left);
   const low = left !== null && left <= 20;
   const share = left === null || seconds <= 0 ? 0 : Math.max(0, Math.min(1, left / seconds));
+  // How many have played, said beside the rats where there is room for it (the web's `max-sm:hidden`).
+  const wide = useIsWide();
   return (
     <Raised label={t('bar', { time, ready, total })} bg="night-700" place={{ flex: 1, minWidth: 0 }} style={{ minHeight: 0 }} onPress={onPress}>
       <View style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
@@ -305,6 +308,11 @@ function BarButton({ ready, total, place, playing, seconds, seats, onPress }: { 
           <PixelText size={22} tone={low ? 'wine-300' : 'gold-500'} style={{ fontVariant: ['tabular-nums'] }}>{time}</PixelText>
         </View>
         {seats}
+        {wide ? (
+          <View aria-hidden style={{ flexShrink: 0 }}>
+            <ReadText size={12} tone="ink-300">{t('playedShort', { ready, total })}</ReadText>
+          </View>
+        ) : null}
         {place !== null ? (
           <View aria-hidden style={{ flexShrink: 0 }}>
             <PixelText size={16} tone="cream">{t('placeShort', { place })}</PixelText>
