@@ -249,6 +249,30 @@ bar, the stage, the bottom action bar, Finance sub-tabs sticking below the HUD) 
    room of another version of the app, the notices refused), a sign on a Russian page set otherwise
    than Chrome's fallback (the ← of the end, 5.33 pt), whole-pixel `onLayout` everywhere but the
    rat's choices, and the minors the phase's reviews parked.
+   **5b done, 2026-10-25** (report: `docs/superpowers/reports/2026-10-24-phase-5b-web-platform.md`). The app's web is a
+   website as the Next web is, checked on this machine as Vercel will serve it, not deployed: the language in the URL
+   (`/{en,es,ru}/<page>`, the Next web's addresses, queries and hashes), `/` led to `/{l}` by `NEXT_LOCALE`, then
+   `Accept-Language`, then `en` (Routing Middleware, `apps/mobile/middleware.ts`, answering as the Next web's proxy on the
+   same requests), each page its own HTML with the Next web's head, the sitemap, robots, manifest, icons and share image,
+   the Next web's service worker (its caches, offline page and notices, VAPID web push), the install offer, Vercel Web
+   Analytics and the eight events, the desk layout and the keyboard, and code split by page: the first visit 0.74 MiB
+   gzip (the gate 800 KiB). `apps/mobile/vercel.json` builds it with `pnpm web:build` (`scripts/webBuild.ts`: the export,
+   its pages, pieces and worker, and web:size's and the site's checks failing the build) into `dist`. Checked here: a life
+   begun on the Next web and finished on the built site, the site offline after one visit, every page taken over with no
+   hydration error and Google's way back to `/en?code=` on the fake project, scenes at phone and desk widths, and
+   `vercel build` (no account) for the routes Vercel makes of the configuration.
+
+   **5c needs from the user**: a Vercel project for the app's web (Root Directory `apps/mobile`, framework "Other", Node
+   22, the build and output from `vercel.json`; the branch it builds, `expo` for a preview, is the user's call, as is
+   an `ignoreCommand` like the Next web's, which builds `main` only), its environment as the Next web's `NEXT_PUBLIC_*`
+   are: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_REGION`,
+   `EXPO_PUBLIC_TURNSTILE_SITE_KEY`, `EXPO_PUBLIC_VAPID_PUBLIC_KEY`, `EXPO_PUBLIC_LEGAL_NAME`/`_EMAIL`, and
+   `EXPO_PUBLIC_SITE_URL` (the address its pages name as theirs: the preview's own for a preview, the live address for the
+   swap; the build checks every page's canonical against it), Vercel's system variables exposed (the commit,
+   `VERCEL_GIT_COMMIT_SHA`), Web Analytics on, and the preview's origin allowed by Supabase Auth's redirect list and by
+   Turnstile's domains. Then the preview, looked at beside the live web, and the swap (the live domain moved to the new
+   project) with the user's go-ahead; the Next web retired from `dev` after a quiet week.
+
 6. **iPhone.** Sign in with Apple if required, App Store review, release.
 
 ## Calls made by the designer (not asked of the user; the user may overrule)
