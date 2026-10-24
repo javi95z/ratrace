@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { expect, test } from 'vitest';
-import { appWebOf, fileFor, onThisMachine, projectNamed, projectsInSite, serveExport, siteOf } from './webLife';
+import { appWebOf, fakeEnv, fileFor, onThisMachine, projectNamed, projectsInSite, serveExport, siteOf } from './webLife';
 
 test('the whole life runs offline: a page given a project is found, and only this machine is asked', () => {
   expect(projectNamed({ EXPO_PUBLIC_PROJECT_ROOT: '/apps/mobile' })).toBeNull();
@@ -201,4 +201,12 @@ test('a run is told the site it serves, already built, and refuses one that woul
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('the site built for the fake project names it, and no live setting: the address and key of this machine\'s, given to the build by name', () => {
+  const env = fakeEnv({ EXPO_PUBLIC_SUPABASE_URL: 'https://abcdefghij.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live', EXPO_PUBLIC_TURNSTILE_SITE_KEY: '0x4AAA', PATH: '/bin' });
+  expect(env).toMatchObject({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_local_only', EXPO_PUBLIC_TURNSTILE_SITE_KEY: '', PATH: '/bin' });
+  const script = readFileSync(new URL('./web-signin.ts', import.meta.url), 'utf8');
+  expect(script).toContain('buildSite(dir, fakeEnv(process.env))');
+  expect(script).toContain('refuseServerInUse(');
 });

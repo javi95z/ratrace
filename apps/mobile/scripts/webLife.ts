@@ -3,6 +3,8 @@ import { createServer, type Server } from 'node:http';
 import { extname, join, relative, resolve } from 'node:path';
 import { createGzip } from 'node:zlib';
 import middleware, { config as middlewareConfig } from '../middleware';
+import { FAKE_CLOUD_PORT, FAKE_KEY } from './fakeCloud';
+import { exportEnv } from './webSize';
 
 /*
  * What `web-life.ts` checks of a run apart from the browser, so it can be tested without starting one (the script runs as it is imported).
@@ -48,6 +50,16 @@ export function projectsInSite(dir: string): string[] {
   if (existsSync(join(dir, '_expo'))) look(join(dir, '_expo'));
   return [...found].sort();
 }
+
+/**
+ * The build's environment for the fake project of this machine (`scripts/fakeCloud.ts`, `web-signin.ts`): no live setting (`exportEnv`), and the
+ * fake project's address and key, given to the build by name, never the live project's.
+ */
+export const fakeEnv = (env: Record<string, string | undefined>): Record<string, string | undefined> => ({
+  ...exportEnv(env),
+  EXPO_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${FAKE_CLOUD_PORT}`,
+  EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: FAKE_KEY,
+});
 
 /** What a file of the export is served as, by its ending: what a static host (Vercel) says of each. */
 const TYPES: Readonly<Record<string, string>> = {
