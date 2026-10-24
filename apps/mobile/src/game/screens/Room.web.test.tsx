@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+// @vitest-environment-options { "url": "https://ratrace-git-preview.vercel.app/en/room" }
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { roomServer } from '../../../../web/src/testing/roomServer';
@@ -10,6 +11,7 @@ import { Room } from './Room';
 /*
  * The room's way out on the web export: the Next web shows Share only where the browser has a share sheet, and a public game's Invite copies the link
  * (with the toast) where it has none. jsdom has neither a share sheet nor, by default, a clipboard: each test gives the navigator what its browser has.
+ * The link is the page's own address with the code, as the Next web's: the page here is a preview's, so a preview invites to itself.
  */
 
 vi.setConfig({ testTimeout: 120_000 });
@@ -57,7 +59,7 @@ describe('a private game on a browser with no share sheet', () => {
     fireEvent.click(within(code).getByRole('button', { name: 'Copy link' }));
     expect(await screen.findByText('Link copied.')).toBeTruthy();
     const shown = within(code).getByText(/^[A-Z0-9]{6}$/).textContent;
-    expect(board.text).toBe(`https://ratrace-plum.vercel.app/en/room?code=${shown}`);
+    expect(board.text).toBe(`https://ratrace-git-preview.vercel.app/en/room?code=${shown}`);
     expect(counted).toContainEqual({ name: 'share', what: 'invite' });
     expect(clipboard.text).toBeNull();
   });
@@ -75,7 +77,7 @@ describe('a private game on a browser with a share sheet', () => {
     expect(share.mock.calls[0][0]).toEqual({
       title: 'Multiplayer',
       text: expect.stringContaining(shown as string),
-      url: `https://ratrace-plum.vercel.app/en/room?code=${shown}`,
+      url: `https://ratrace-git-preview.vercel.app/en/room?code=${shown}`,
     });
     await waitFor(() => expect(counted).toContainEqual({ name: 'share', what: 'invite' }));
     expect(board.text).toBeNull();
@@ -94,7 +96,7 @@ describe('a public game', () => {
     const { services, counted } = inRooms();
     fireEvent.click(within(await clock(services)).getByRole('button', { name: 'Invite someone' }));
     expect(await screen.findByText('Link copied.')).toBeTruthy();
-    expect(board.text).toMatch(/^https:\/\/ratrace-plum\.vercel\.app\/en\/room\?code=[A-Z0-9]{6}$/);
+    expect(board.text).toMatch(/^https:\/\/ratrace-git-preview\.vercel\.app\/en\/room\?code=[A-Z0-9]{6}$/);
     expect(counted).toContainEqual({ name: 'share', what: 'invite' });
   });
 
@@ -103,7 +105,7 @@ describe('a public game', () => {
     const { services } = inRooms();
     fireEvent.click(within(await clock(services)).getByRole('button', { name: 'Invite someone' }));
     await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
-    expect(share.mock.calls[0][0].url).toMatch(/^https:\/\/ratrace-plum\.vercel\.app\/en\/room\?code=[A-Z0-9]{6}$/);
+    expect(share.mock.calls[0][0].url).toMatch(/^https:\/\/ratrace-git-preview\.vercel\.app\/en\/room\?code=[A-Z0-9]{6}$/);
     expect(board.text).toBeNull();
     expect(screen.queryByText('Link copied.')).toBeNull();
   });

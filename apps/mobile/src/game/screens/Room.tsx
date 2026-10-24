@@ -30,7 +30,7 @@ import { lifeRows } from '../lives';
 import { RoomPaper } from '../roomStory';
 import { useRoomSlice } from '../roomSlice';
 import { canShareLink, shareLink } from '../sharing';
-import { SITE_URL } from '../site';
+import { roomLink } from '../roomLink';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { LifeBrief, LifeSummary } from './LifeSummary';
@@ -1236,9 +1236,6 @@ function LeaveSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   );
 }
 
-/** The link to a room, the web's own (`/<locale>/room?code=`): it opens the web's game, wherever it is opened. The app's own room opens by `theratrace://room?code=`. */
-const linkTo = (locale: string, code: string): string => `${SITE_URL.origin}/${locale}/room?code=${code}`;
-
 /** How long a public lobby has to start by itself, counted down: a leaf of its own, so that only the clock is drawn again each second. */
 function StartsIn() {
   const t = useT('room');
@@ -1289,7 +1286,7 @@ function Lobby({ room }: { room: RoomState }) {
   const here = room.members.filter((member) => !member.left);
   const me = here.find((member) => member.me);
   const enough = here.length >= MIN_MEMBERS;
-  const url = linkTo(locale, room.code);
+  const url = roomLink(locale, room.code);
   const members = t('members', { count: here.length, max: MAX_MEMBERS });
   // The phone always has a share sheet; a browser may not (the web shows Share only where it has one, and the public Invite copies the link without).
   const canShare = canShareLink();
