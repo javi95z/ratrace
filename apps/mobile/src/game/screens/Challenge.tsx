@@ -2,7 +2,7 @@ import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitA
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
@@ -23,15 +23,19 @@ import { BackLink } from './BackLink';
 import { ElsewhereSheet } from './NewLife';
 import { useGo } from '../pages';
 
+/** Nothing to listen to, for `useSyncExternalStore`: the week, once read, is not read again. */
+const UNCHANGING = () => () => undefined;
+
 /**
  * This week's challenge, by the clock the game reads the date by (the phone's own, unless a scene holds it at one day). The server keeps its own,
- * and the two agree but for a moment at midnight on Sunday.
+ * and the two agree but for a moment at midnight on Sunday. None in the web export's HTML, which is drawn on the build's day and in its time zone
+ * (the server's answer), nor in the browser's first draw of it, which must be the same page: the browser's own week comes right after.
  */
 export function useThisWeek(): Challenge | null {
   const now = useClock();
   // Read once: the same challenge for as long as the screen is open, and the same object, so that what depends on it is not asked again.
   const [week] = useState(() => challengeOf(weekOf(now()), lives));
-  return week;
+  return useSyncExternalStore(UNCHANGING, () => week, () => null);
 }
 
 /** A rule of a challenge in a line, and in a sentence that says what it forbids. */
@@ -140,7 +144,25 @@ export function WeeklyChallenge() {
   // Asked each time the page is shown (it stays drawn under the rankings opened from it).
   const ask = useMemo(() => (week === null || community === null ? null : () => community.challengeEntry(week.week)), [week, community]);
   const entry = useAskedWhenShown(ask, null, keptEntry);
-  if (week === null) return null;
+  const head = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <BackLink />
+      <View accessibilityRole="header" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+        <Sprite id={CHALLENGE_ART.icon} />
+        <PixelText size={24} tone="gold-500">{t('title')}</PixelText>
+      </View>
+    </View>
+  );
+  // Before the week is known (the web export's HTML, and the browser's first draw of it): the page's frame, with the word for loading.
+  if (week === null) {
+    return (
+      <Screen contentStyle={{ gap: 12, paddingBottom: 32 }}>
+        {head}
+        <Banner />
+        <Loading>{common('loading')}</Loading>
+      </Screen>
+    );
+  }
   const rule = ruleText(week.rule);
   const lifeName = text.lives[week.lifeId]?.name ?? week.lifeId;
   // An attempt is the server's to play: it needs someone signed in and a connection. One a day: today's, once had, is not offered; where the account
@@ -194,13 +216,7 @@ export function WeeklyChallenge() {
 
   return (
     <Screen contentStyle={{ gap: 12, paddingBottom: 32 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <BackLink />
-        <View accessibilityRole="header" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
-          <Sprite id={CHALLENGE_ART.icon} />
-          <PixelText size={24} tone="gold-500">{t('title')}</PixelText>
-        </View>
-      </View>
+      {head}
 
       <Banner />
 

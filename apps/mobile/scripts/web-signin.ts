@@ -19,7 +19,9 @@ import { fakeEnv, serveExport } from './webLife';
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/web-signin.ts
  *
  * 1. Every page in English, a few in the other languages, at a phone's width and a desk's: each drawn from its HTML and taken over by the app with
- *    nothing said (no hydration error, React's #418, #423 or #425, nor any other), and the guest made on the fake project.
+ *    nothing said (no hydration error, React's #418, #423 or #425, nor any other), and the guest made on the fake project. Then again at a phone's
+ *    width in a western time zone (America/Los_Angeles), the browser's clock days later than the build's: the HTML holds nothing of the build's
+ *    day or zone that the browser would draw otherwise (the week's challenge, the day it ends).
  * 2. Google, as a player keeps the guest with it: the front door's "Sign in with Google", the fake project's Google page, a new Google account; the
  *    browser comes back to /en?code=… through the site (its middleware, its rewrite) and the router; the code exchanged, the account kept ("Linked to
  *    Google" on the front door, a member on the fake project) and the address cleaned (no `code` left in it).
@@ -42,7 +44,16 @@ interface SigninPage extends Page {
   on(event: 'framenavigated', listener: (frame: { url(): string; parentFrame(): unknown }) => void): void;
   on(event: 'response', listener: (response: { url(): string; status(): number }) => void): void;
   context(): { close(): Promise<void> };
+  clock: { setFixedTime(time: number): Promise<unknown>; setSystemTime(time: number | Date): Promise<void> };
 }
+
+/** Where the pages are opened: a phone's width and a desk's, in this machine's time zone and on its day; then a phone elsewhere, later. */
+const VISITS: readonly { viewport: { width: number; height: number }; timezoneId?: string; laterDays?: number }[] = [
+  { viewport: { width: 393, height: 852 } },
+  { viewport: { width: 1280, height: 800 } },
+  // Past the end of the build's week, and on the other side of the Atlantic: another week's challenge, another day for its last.
+  { viewport: { width: 393, height: 852 }, timezoneId: 'America/Los_Angeles', laterDays: 9 },
+];
 
 const en = MESSAGES.en;
 const at = (path: string) => `http://localhost:${APP_WEB_PORT}${path}`;
@@ -99,10 +110,12 @@ async function main() {
     server = await serveExport(dir, APP_WEB_PORT);
     browser = await launchChrome();
 
-    // 1. Every page drawn from its HTML and taken over with nothing said, at a phone's width and a desk's.
-    for (const viewport of [{ width: 393, height: 852 }, { width: 1280, height: 800 }]) {
-      const context = await guardedContext(browser, { viewport }, (url) => kept.add(new URL(url).host));
+    // 1. Every page drawn from its HTML and taken over with nothing said, at a phone's width and a desk's, and elsewhere later.
+    for (const { viewport, timezoneId, laterDays } of VISITS) {
+      const context = await guardedContext(browser, timezoneId === undefined ? { viewport } : { viewport, timezoneId }, (url) => kept.add(new URL(url).host));
       const page = (await context.newPage()) as unknown as SigninPage;
+      if (laterDays !== undefined) await page.clock.setSystemTime(Date.now() + laterDays * 86_400_000);
+      const where = `${viewport.width} by ${viewport.height}${timezoneId === undefined ? '' : `, in ${timezoneId}`}${laterDays === undefined ? '' : `, ${laterDays} days later`}`;
       const said: string[] = [];
       page.on('pageerror', (error) => said.push(`${new URL(page.url()).pathname}: ${error.message}`));
       page.on('console', (message) => {
@@ -116,7 +129,7 @@ async function main() {
       }
       const hydration = said.filter((line) => HYDRATION.test(line));
       problems.push(...said);
-      await step(page, `1. ${viewport.width} by ${viewport.height}: ${PAGES_SEEN.length} pages drawn from their HTML and taken over, ${hydration.length === 0 ? 'no hydration error' : `${hydration.length} hydration errors`}, ${said.length} errors said in all`, `pages-${viewport.width}`);
+      await step(page, `1. ${where}: ${PAGES_SEEN.length} pages drawn from their HTML and taken over, ${hydration.length === 0 ? 'no hydration error' : `${hydration.length} hydration errors`}, ${said.length} errors said in all`, `pages-${viewport.width}${timezoneId === undefined ? '' : '-elsewhere'}`);
       await page.context().close();
     }
     if (cloud.counts.guests === 0) problems.push('no guest was made on the fake project: the site did not reach it');
