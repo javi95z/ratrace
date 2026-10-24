@@ -105,6 +105,49 @@ function codeUnder(dir: string): string[] {
 /** All the code the app runs or bundles: its own (the rules' bundles among it), the core's, and the packages it carries. */
 const shipped = [SRC, CORE, ...CARRIED].flatMap(codeUnder);
 
+/** The names a file exports: its declarations (values and types), `export { a, b as c }` and what it passes on with `export { a } from`. */
+function exportsIn(source: string): Set<string> {
+  const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+  const declared = [...code.matchAll(/\bexport\s+(?:declare\s+)?(?:default\s+)?(?:async\s+)?(?:abstract\s+)?(?:function\*?|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]);
+  const listed = [...code.matchAll(/\bexport\s+(?:type\s+)?\{([^}]*)\}/g)].flatMap((m) =>
+    m[1].split(',').map((one) => one.trim().replace(/^type\s+/, '').split(/\s+as\s+/).pop() ?? '').filter(Boolean),
+  );
+  const defaulted = /\bexport\s+default\b/.test(code) ? ['default'] : [];
+  return new Set([...declared, ...listed, ...defaulted]);
+}
+
+/** The names an import takes, as `importsIn` gives them: `{ a, b as c, type T }`, a default (`default`), a `require`'s `{ a, b: c }`. None for `*`. */
+function namesTaken(names: string): string[] {
+  const braced = names.match(/\{([^}]*)\}/);
+  const inside = braced
+    ? braced[1].split(',').map((one) => one.trim().replace(/^type\s+/, '').split(/\s+as\s+|\s*:\s*/)[0].trim()).filter(Boolean)
+    : [];
+  const before = (braced ? names.slice(0, braced.index) : names).replace(/,\s*$/, '').trim();
+  const defaulted = before !== '' && before !== '*' && !before.startsWith('*') ? ['default'] : [];
+  return [...defaulted, ...inside];
+}
+
+/**
+ * What the shared files (every one that is not a `.web` twin) take from a module that has a web twin, and the twin does not export: on the web Metro
+ * reads the twin, and a name it lacks is `undefined` there, with no build error (the type checker reads only the phone's file). `files` maps each
+ * file's path to its source.
+ */
+function twinGaps(files: ReadonlyMap<string, string>): string[] {
+  const placeOfFile = (path: string) => `@/${rel(path).replace(/\.(tsx?)$/, '')}`;
+  const twins = new Map<string, Set<string>>();
+  for (const [path, source] of files) if (/\.web\.tsx?$/.test(path)) twins.set(placeOfFile(path).replace(/\.web$/, ''), exportsIn(source));
+  const gaps: string[] = [];
+  for (const [path, source] of files) {
+    if (/\.web\.tsx?$/.test(path)) continue;
+    for (const { names, from } of importsIn(path, source)) {
+      const twin = twins.get(from);
+      if (!twin) continue;
+      for (const name of namesTaken(names)) if (!twin.has(name)) gaps.push(`${rel(path)} takes ${name} from ${from}, which its web twin does not export`);
+    }
+  }
+  return gaps;
+}
+
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
     const screen = join(SRC, 'game/screens/Anything.tsx');
@@ -354,6 +397,23 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(push).not.toMatch(/require\(\s*['"]expo-notifications/);
     expect(importsOf(join(SRC, 'online/push.ts')).map((i) => i.from)).not.toContain('@/kvStore');
     expect(readFileSync(join(SRC, 'game/context.tsx'), 'utf8')).toContain('phonePush(kvPush)');
+  });
+
+  it('keeps every web twin whole: each name a shared file takes from a module with a `.web` twin is exported by the twin too', () => {
+    const sources = new Map(mine.map((path) => [path, readFileSync(path, 'utf8')] as const));
+    expect([...sources.keys()].filter((path) => /\.web\.tsx?$/.test(path)).length).toBeGreaterThan(30);
+    expect(twinGaps(sources)).toEqual([]);
+    // How it is told: a shared screen taking a name its twin lacks (a value or a type, by any way of importing it), and not a twin taking from a twin.
+    const made = new Map([
+      [join(SRC, 'ui/Thing.tsx'), 'export const a = 1;\nexport function lost() {}\nexport type Kind = 1;'],
+      [join(SRC, 'ui/Thing.web.tsx'), "export const a = 2;\nconst b = 3;\nexport { b as kept };\nexport default a;\n// export function lost() {}"],
+      [join(SRC, 'game/screens/Uses.tsx'), "import Thing, { a, type Kind, kept } from '../../ui/Thing';\nconst { lost } = require('../../ui/Thing');"],
+      [join(SRC, 'ui/Other.web.tsx'), "import { lost } from './Thing';"],
+    ]);
+    expect(twinGaps(made)).toEqual([
+      'game/screens/Uses.tsx takes Kind from @/ui/Thing, which its web twin does not export',
+      'game/screens/Uses.tsx takes lost from @/ui/Thing, which its web twin does not export',
+    ]);
   });
 
   it('gives a small thing that is pressed its 44 points in its own box (the kit\'s `reach`), never by a `hitSlop`: React Native looks for no touch past a parent\'s edge', () => {
