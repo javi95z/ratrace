@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { APP_WEB_STILL_SHOTS, appWebAnswering, blocked, changedBox, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing } from './shotDrivers';
+import { APP_WEB_STILL_SHOTS, appWebAnswering, blocked, changedBox, changedWithin, guardedContext, QUIET_FOCUS, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stopAfter, stoppedWithin, TEXT_BOXES, whileServing, WORKER_REQUESTS_ROUTED } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -62,6 +62,23 @@ test('the context is made with a rule that aborts every request to the project, 
   await socket.handler({ close: async () => void (closed += 1) });
   expect(closed).toBe(1);
   await made.newPage();
+});
+
+test('the offline check alone lets the site\'s worker run, under the same rules, and its own requests under them too', async () => {
+  const { asked, browser } = fakeBrowser();
+  await guardedContext(browser, {}, () => undefined, 'allow');
+  expect(asked.options).toMatchObject({ serviceWorkers: 'allow' });
+  expect(asked.routes).toHaveLength(1);
+  expect(asked.sockets).toHaveLength(1);
+  expect(WORKER_REQUESTS_ROUTED).toBe('PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS');
+  expect(read('./shotDrivers.ts')).toContain('process.env[WORKER_REQUESTS_ROUTED] = \'1\';');
+  // The one script that allows it makes its export with no project, writes the worker into it as the build does, and serves it on this machine.
+  const offline = read('./web-offline.ts');
+  expect([...read('./shotDrivers.ts').matchAll(/'allow'\)/g), ...read('./sceneShots.ts').matchAll(/'allow'\)/g)]).toHaveLength(0);
+  expect(offline).toContain("(url) => kept.add(new URL(url).host), 'allow');");
+  expect(offline).toContain('exportEnv(process.env)');
+  expect(offline).toContain('writeServiceWorker(dir)');
+  expect(offline).toContain('refuseServerInUse(up, APP_WEB_PORT)');
 });
 
 test('a server already answering on the port is not used: it may be the player\'s own, with the project\'s address in its environment', () => {

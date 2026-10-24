@@ -77,9 +77,16 @@ export function fileFor(dir: string, pathname: string): { path: string; type: st
  */
 const COMPRESSED = /^(text\/|application\/json|image\/svg|font\/(ttf|otf))/;
 
+/** What the site's host says of how long a file of it may be kept (Vercel's for a static file): kept, and asked again before it is used. */
+const HOST_CACHING = 'public, max-age=0, must-revalidate';
+
+/** The headers the worker is sent with, the Next web's (`apps/web/next.config.ts`): never kept by the browser, and allowed the whole site. */
+export const WORKER_HEADERS = { 'cache-control': 'no-cache, no-store, must-revalidate', 'service-worker-allowed': '/' } as const;
+
 /**
  * Serves the export at `dir` on `port` of this machine (`fileFor`), as the site will: compressed where the host compresses (`COMPRESSED`), for a
- * browser that takes gzip. The server, once it listens. Port 0 is any free port.
+ * browser that takes gzip; each file with the host's caching (`HOST_CACHING`), so the service worker may keep it, and the worker with its own
+ * headers (`WORKER_HEADERS`). The server, once it listens. Port 0 is any free port.
  */
 export function serveExport(dir: string, port: number): Promise<Server> {
   const server = createServer((request, response) => {
@@ -90,7 +97,8 @@ export function serveExport(dir: string, port: number): Promise<Server> {
       return;
     }
     const gzip = COMPRESSED.test(file.type) && /\bgzip\b/.test(String(request.headers['accept-encoding'] ?? ''));
-    response.writeHead(file.status ?? 200, { 'content-type': file.type, 'cache-control': 'no-store', ...(gzip ? { 'content-encoding': 'gzip', vary: 'Accept-Encoding' } : null) });
+    const caching = file.path === resolve(dir, 'sw.js') ? WORKER_HEADERS : { 'cache-control': HOST_CACHING };
+    response.writeHead(file.status ?? 200, { 'content-type': file.type, ...caching, ...(gzip ? { 'content-encoding': 'gzip', vary: 'Accept-Encoding' } : null) });
     if (request.method === 'HEAD') response.end();
     else if (gzip) createReadStream(file.path).pipe(createGzip()).pipe(response);
     else createReadStream(file.path).pipe(response);

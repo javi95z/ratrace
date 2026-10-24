@@ -144,3 +144,28 @@ test('the export is sent compressed, as the site\'s host sends it, to a browser 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('the worker is sent as the Next web sends it, never kept by the browser, and the rest as the site\'s host sends its files', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ratrace-export-'));
+  try {
+    mkdirSync(join(dir, 'en'));
+    writeFileSync(join(dir, 'sw.js'), "self.addEventListener('fetch', () => undefined);");
+    writeFileSync(join(dir, 'en/index.html'), '<!doctype html><title>en</title>');
+    const server = await serveExport(dir, 0);
+    try {
+      const port = (server.address() as AddressInfo).port;
+      const worker = await fetch(`http://127.0.0.1:${port}/sw.js`);
+      // apps/web/next.config.ts's headers for /sw.js, verbatim.
+      expect([worker.status, worker.headers.get('content-type'), worker.headers.get('cache-control'), worker.headers.get('service-worker-allowed')]).toEqual([
+        200, 'text/javascript; charset=utf-8', 'no-cache, no-store, must-revalidate', '/',
+      ]);
+      // A page is the host's ordinary answer (Vercel's for a static file): the worker may keep it.
+      const page = await fetch(`http://127.0.0.1:${port}/en`);
+      expect([page.headers.get('cache-control'), page.headers.get('service-worker-allowed')]).toEqual(['public, max-age=0, must-revalidate', null]);
+    } finally {
+      await new Promise((done) => server.close(done));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

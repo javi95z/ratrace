@@ -71,9 +71,12 @@ export function blocked(href: string): boolean {
 /**
  * A browser context with every request, and every socket, to anything but this machine aborted: laid before any page of it
  * is opened, and service workers blocked, which could answer round a rule. `told` hears each address that was kept off.
+ * `workers: 'allow'` lets the site's own worker run (the offline check, `web-offline.ts`): it answers only for this machine's
+ * pages and leaves every other host to the network, where the rule is; and the browser is started with the worker's own
+ * requests put under the rules too (`WORKER_REQUESTS_ROUTED`).
  */
-export async function guardedContext(browser: Browser, options: object, told: (url: string) => void = () => undefined): Promise<Context> {
-  const context = await browser.newContext({ ...options, serviceWorkers: 'block' });
+export async function guardedContext(browser: Browser, options: object, told: (url: string) => void = () => undefined, workers: 'block' | 'allow' = 'block'): Promise<Context> {
+  const context = await browser.newContext({ ...options, serviceWorkers: workers });
   await context.route(
     (url) => blocked(url.href),
     async (route) => {
@@ -318,8 +321,12 @@ export function stopAfter(child: ChildProcess, stop: (child: ChildProcess) => vo
   }
 }
 
+/** Playwright's switch that puts what a service worker itself fetches under the context's rules (Chromium), set before the browser starts. */
+export const WORKER_REQUESTS_ROUTED = 'PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS';
+
 /** The Chrome already on this machine, as the web's e2e tests use: nothing is downloaded. */
-async function launchChrome(): Promise<Browser> {
+export async function launchChrome(): Promise<Browser> {
+  process.env[WORKER_REQUESTS_ROUTED] = '1';
   const { chromium } = fromWeb('@playwright/test') as { chromium: Chromium };
   return chromium.launch({ channel: 'chrome' });
 }

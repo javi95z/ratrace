@@ -2,6 +2,7 @@ import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
+import { useServiceWorker } from '../pwa/register';
 import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
@@ -19,6 +20,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
  */
 export default function RootLayout() {
   const fonts = useGameFonts();
+  // The site's worker, so the web opens offline (the web: pwa/register.web.ts); nothing on the phone.
+  useServiceWorker();
   useEffect(() => {
     if (fonts) void SplashScreen.hideAsync().catch(() => undefined);
   }, [fonts]);
