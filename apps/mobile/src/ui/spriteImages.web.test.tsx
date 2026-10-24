@@ -83,6 +83,60 @@ test('a file that cannot be loaded fails, told once; an id with no file never lo
   expect((again.container.querySelector('p') as HTMLElement).dataset.state).toBe('failed');
 });
 
+test('a file that failed is asked for again on a later mount once a short wait has passed, as the Next web\'s <img> asks on its next mount; never in a loop', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  let now = 1_000_000;
+  vi.spyOn(Date, 'now').mockImplementation(() => now);
+  let calls = 0;
+  const load = vi.fn(async (source: unknown) => (++calls === 1 ? null : picture((source as { uri: string }).uri)));
+  loadSpritesWith(load as never);
+  let renders = 0;
+  function Counted({ id }: { id: string }) {
+    renders += 1;
+    return <Probe id={id} />;
+  }
+  const first = render(<Counted id="anim.coin.3" />);
+  await settle();
+  expect((first.container.querySelector('p') as HTMLElement).dataset.state).toBe('failed');
+  // Drawn again and again while failed: the placeholder, and no new read before the wait.
+  for (let i = 0; i < 5; i += 1) first.rerender(<Counted id="anim.coin.3" />);
+  await settle();
+  expect((first.container.querySelector('p') as HTMLElement).dataset.state).toBe('failed');
+  first.unmount();
+  const soon = render(<Probe id="anim.coin.3" />);
+  await settle();
+  expect((soon.container.querySelector('p') as HTMLElement).dataset.state).toBe('failed');
+  expect(load).toHaveBeenCalledTimes(1);
+  soon.unmount();
+  // After the wait, the next screen that draws it asks the browser again, and draws the sprite.
+  now += 5_000;
+  const later = render(<Probe id="anim.coin.3" />);
+  await settle();
+  expect((later.container.querySelector('p') as HTMLElement).dataset.state).toBe('/sprites/anim.coin.3.png');
+  expect(load).toHaveBeenCalledTimes(2);
+  expect(renders).toBeLessThan(20);
+});
+
+test('a layer of several sprites that failed is asked for again on a later mount too', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  let now = 2_000_000;
+  vi.spyOn(Date, 'now').mockImplementation(() => now);
+  let calls = 0;
+  loadSpritesWith(async (source) => (++calls === 1 ? null : picture((source as { uri: string }).uri)));
+  function Many() {
+    const [one] = useSpriteImages(['anim.coin.4']);
+    return <p data-state={one.failed ? 'failed' : one.image ? one.image.uri : 'loading'} />;
+  }
+  const first = render(<Many />);
+  await settle();
+  expect((first.container.querySelector('p') as HTMLElement).dataset.state).toBe('failed');
+  first.unmount();
+  now += 5_000;
+  const later = render(<Many />);
+  await settle();
+  expect((later.container.querySelector('p') as HTMLElement).dataset.state).toBe('/sprites/anim.coin.4.png');
+});
+
 test('several sprites at once: the same list while none changes', async () => {
   const seen: unknown[] = [];
   function Many() {

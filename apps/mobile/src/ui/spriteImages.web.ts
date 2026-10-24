@@ -68,7 +68,16 @@ const FAILED: SpriteImage = { image: null, failed: true };
 interface Entry {
   state: SpriteImage;
   listeners: Set<() => void>;
+  /** When its read failed (`Date.now()`), for a failure asked again later. */
+  failedAt?: number;
 }
+
+/**
+ * How long a failed file stays failed before the next place that draws it asks the browser again. The Next web's `<img>` keeps its failure only while
+ * it is mounted, so the next screen asks again; here the failure is shared, so it is forgotten once this has passed and the sprite is asked for again
+ * (a later mount, the next screen). The wait keeps a file that keeps failing from being asked for on every drawing.
+ */
+export const RETRY_FAILED_MS = 3000;
 
 /**
  * What the decoded pictures may take on the phone. The browser keeps the web's, and the cache here holds an address and a size for each sprite, so
@@ -101,10 +110,16 @@ export function loadSpritesWith(next: LoadSprite): void {
   toldOfReads();
 }
 
-/** The entry of a sprite that has a file, its read begun the first time it is asked for. */
+/** A failed entry whose wait has passed: the next to ask for its sprite reads the file again. */
+const stale = (entry: Entry): boolean => entry.failedAt !== undefined && Date.now() - entry.failedAt >= RETRY_FAILED_MS;
+
+/**
+ * The entry of a sprite that has a file, its read begun the first time it is asked for, and begun again when it is asked for after a failure has
+ * waited `RETRY_FAILED_MS` (the failure is still told only once).
+ */
 function entryOf(id: string, source: ImageSourcePropType): Entry {
   const known = cache.get(id);
-  if (known) return known;
+  if (known && !stale(known)) return known;
   const entry: Entry = { state: LOADING, listeners: new Set() };
   cache.set(id, entry);
   reading.add(entry);
@@ -116,6 +131,7 @@ function entryOf(id: string, source: ImageSourcePropType): Entry {
   };
   const fail = () => {
     reportMissing(id, 'did not load');
+    entry.failedAt = Date.now();
     settle(FAILED);
   };
   // A read refused and a file that does not load end the same way: the checkerboard, told once.
@@ -195,12 +211,13 @@ export function useSpriteImages(ids: readonly (string | null | undefined)[]): re
 
 /**
  * Begins loading sprites a screen will draw soon (the rat editor's other tabs), so that the browser has them when it draws them: a sprite already
- * asked for is left as it is.
+ * asked for is left as it is (but a failure whose wait has passed).
  */
 export function readAhead(ids: readonly string[]): void {
   for (const id of ids) {
     const source = sourceOf(id);
-    if (source !== undefined && !cache.has(id)) entryOf(id, source);
+    const known = cache.get(id);
+    if (source !== undefined && (!known || stale(known))) entryOf(id, source);
   }
 }
 
