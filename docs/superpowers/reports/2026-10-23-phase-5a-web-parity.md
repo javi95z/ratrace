@@ -297,3 +297,20 @@ provider was already in the bundle.)
   release-only senders seen sending): that comes before 5b's preview.
 - **Next.js's dev server** stopped now and then to recommend an upgrade of Next.js (a security notice of its own, in `.kit-shots/web-server.log`);
   the shots' driver starts it again, as it was built to. Nothing was upgraded: that is the user's call, on `dev`.
+
+## Phase 5b Task P: content 1.48, the front door and the round's sticky figures
+
+The app's web shot again beside the Next web after Task P (content 1.48 and the web's new front door and round header, ported; the scenes begun on
+other seeds are listed in the phase 2 report's section of the same name). The fix of `play-outcome-r1` (the changes' line, `useInlineRow`) holds on
+the app's web too: its views are flex boxes, not the browser's inline block.
+
+- The Next web's lit lamps of the way-out bar bleed their sliver into the first dark lamp (profile-r6's class), 30 pixels, where the engineer's
+  sixth round fills the bar to a lamp's edge: `play-finance-r6`, `play-news-r6`, `finance-market`, `-property`, `-lifestyle`, `-shop`, `-taxes`,
+  `room-loans`, `room-playing`, and the career bar of `work-panel`.
+- `end-bankrupt`: the legendary badge's line under its confetti, measured 1.33 pt from the letters left uncovered.
+- Pictures at a fraction of a point (rankings-friends' class), where the new layout puts them: the member's rat on the profile's link at the
+  unframed foot (`home-member`, 5), the rats of the room's bar and seats (`room-lobby-friends` 19, `room-lobby-public` 9 and 21 over two shoots,
+  `room-end` 20, `room-playing` and `room-loans` 21 besides the lamps), the torn page (`play-pageturn` 376), a pixel at the foot of the member's
+  profile (`player-member`, `player-friend-code` 31).
+- Three scenes were "never still" in the first run (`play-cards-legendary`, `play-guide-r1`, `collection-badges`) with the machine busy shooting;
+  shot again alone they were still: `play-guide-r1` within its record, the other two clean.

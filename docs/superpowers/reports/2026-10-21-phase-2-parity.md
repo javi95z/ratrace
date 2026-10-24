@@ -1867,3 +1867,42 @@ commit (the session read, supabase-js's request and its JSON, the commit of 50 l
   the phone's grid were a device pixel low, a lift of one would have cancelled it. Its cause is not found, which phase 2's rule ("accepted only with a
   measured cause") does not allow: the three records go to the user (below). Reverted; the records say so.
 - Part A's fix 4 named a trigger of the blank rat, not its cause, and part B's mechanism is not it either: the cause is still not established (above, corrected after the review).
+
+## Phase 5b Task P: content 1.48, the front door and the round's sticky figures
+
+`origin/dev` brought content 1.48 (new cards, a personal card resting twelve rounds) and three changes of the web's screens; Task P ported them
+(`Home`, `Settings`' `HomeAccount`, `RoomCard`, the Hud in three parts) and shot every scene again, on the web and in Expo Go (one full run, then
+the scenes the fix below touched).
+
+**Scenes begun on other seeds.** Content 1.48 deals other cards from the same seeds, so each scene that names a card or a turn of a life is begun
+on a seed that still holds it (found by playing the fixed seeds with the scene's bot): the appointment of `play-cards-legendary` and the escape at
+50 of `end-*`, `moment-escape` and the records' engineer on `screen-seed-335`; the bankruptcy of `end-bankrupt`, `moment-bankrupt` and the records'
+nurse on `screen-seed-5`; prison on `screen-seed-160`; MrFeast on `screen-seed-271`; the relocation to London on `screen-seed-13`. `play-cards-r1`
+stays on the first fixed seed, whose second card is now the betting app (three choices, pressed). The scenes on the first fixed seed past its first
+round (the finances of the sixth round, the profile, the work panel) show another life of the engineer: she stays in Tokyo.
+
+**What differed, and was fixed.** `play-outcome-r1` (the freelance gig now, which paid: one row of three tags) had 10761 shape pixels: the web holds
+a card's changes in an `inline-block` span, so the row of tags stands on the line of a reading 15 in 21.75 (its baseline the first tag's, a point
+down, the strut's descent under it), 2.75 pt taller than the row alone; with the two rows of the old scene the second row filled it. The phone's box
+of the changes is now as tall as that line (`useInlineRow` in `ui/kit.tsx`, `Cards.test` "the line the changes of a card stand in", RED before):
+clean.
+
+**The residuals accepted** (records in `ACCEPTED`):
+
+- The way-out bar of the engineer's sixth round is filled to a lamp's edge: the web's lit lamp bleeds its device-pixel sliver into the first dark
+  one (profile-r6's class), 30 pixels, in `play-finance-r6`, `play-news-r6`, `finance-market`, `-property`, `-shop`, `-lifestyle`, `-taxes`,
+  `room-loans`, and on the career bar of `work-panel`.
+- The tops of the letters of a line under the bar of the next step peek over its edge a device pixel apart (finance-taxes' class), where the new
+  life puts a line there: `finance-market`, `finance-tabs-ru-360`, `finance-lifestyle` (whose hint, half under the bar, is measured 4.33 pt from
+  what shows of its two lines), `room-resolved`.
+- `finance-taxes`: the inflation's line cut short a space apart: Chrome keeps the space before its ellipsis ("2 years …"), iOS drops it.
+- `end-bankrupt`: the nurse of `screen-seed-5` earns a legendary badge; its line keeps the confetti over both ends (end-standing's class), and is
+  measured 1.67 pt from the letters the confetti leaves. `end-standing` 169 (one pixel more of the same confetti); `end-escaped` one pixel of a glyph
+  at the foot.
+- `room-playing` 2129: with the way out under the figures, the paper stands at another fraction of a point and more of its rules and masthead are a
+  device pixel apart (its class: play-guide-r1's and play-news-r1's).
+- `legal` (the phone's own page): its baseline is 79002 since the phone's notice says what the online app keeps (04dc0138); not this task's change.
+
+**The new layout, seen.** The front door without the last life's link and with the foot unframed, `home-member` with the profile and the settings
+full width under the account, the room card plain "Multiplayer" with no game over shown; and in a round the figures alone in the sticky block, the
+way-out bar 8 under them (the block's `pb-2`) scrolling with the page, the crisis strip 8 under the bar: all clean or within their records.

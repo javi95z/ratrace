@@ -214,10 +214,10 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Task 9: play, round by round, from the news',
   },
   'play-news-r6': {
-    shape: 1443,
+    shape: 1473,
     oneSided: 0,
-    reason: 'The masthead as in play-news-r1 (the bar\'s label, two device pixels higher before, stands within the point since batch pass 1).',
-    report: 'Task 9: play, round by round, from the news',
+    reason: 'The masthead as in play-news-r1 (the bar\'s label, two device pixels higher before, stands within the point since batch pass 1), and 30 pixels of the way-out bar\'s lamp bleeding on the web (profile-r6\'s class) since content 1.48.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'play-guide-r1': {
     shape: 3453,
@@ -253,9 +253,53 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
   },
   'finance-taxes': {
     shape: 31,
+    lines: { 'Your $93,814 in cash buys 6.3% less than': 3 },
     oneSided: 0,
-    reason: 'The tops of the letters of a line the bar of the next step covers (covered at its middle, so not measured as text) peek over the bar\'s edge a device pixel apart.',
-    report: 'Batch pass 1: every scene shot, compared and judged',
+    reason: 'The tops of the letters of a line the bar of the next step covers (covered at its middle, so not measured as text) peek over the bar\'s edge a device pixel apart; since content 1.48, 30 pixels of the way-out bar\'s lamp bleeding on the web (profile-r6\'s class), and the inflation\'s line cut short a space apart: Chrome keeps the space before its ellipsis ("2 years …"), iOS drops it ("2 years…").',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'play-finance-r6': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The way-out bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-market': {
+    shape: 43,
+    oneSided: 0,
+    reason: 'The way-out bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge (30 pixels), and the tops of the letters of a line under the bar of the next step, as in finance-taxes.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-property': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The way-out bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-shop': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The way-out bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-lifestyle': {
+    shape: 105,
+    lines: { '30% chance of +4% pay. Yes or no, not ag': 13 / 3 },
+    oneSided: 0,
+    reason: 'The way-out bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge (30 pixels), and the hint of the raise\'s switch at the foot of the screen: its second line is under the bar of the next step, the tops of its letters peek over the bar\'s edge (finance-taxes\' class), and the line is measured from what shows of both.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-tabs-ru-360': {
+    shape: 15,
+    oneSided: 0,
+    reason: 'The tops of the letters of a line under the bar of the next step peek over its edge a device pixel apart, as in finance-taxes, where the life of content 1.48 puts a line there.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'work-panel': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The career bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (profile-r6\'s class), where the life of content 1.48 fills it to a lamp\'s edge.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'finance-business': {
     shape: 35,
@@ -271,9 +315,16 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
   },
   'end-bankrupt': {
     shape: 5,
+    lines: { 'A legendary badge: Truly innocent!': 5 / 3 },
     oneSided: 0,
-    reason: 'Five pixels of a gold edge on the last row of the screen compared (839.67 pt), where the web\'s is antialiased at a fractional place and the phone\'s on a device pixel.',
-    report: 'Batch pass 1: every scene shot, compared and judged',
+    reason: 'Five pixels of a gold edge on the last row of the screen compared (839.67 pt), where the web\'s is antialiased at a fractional place and the phone\'s on a device pixel; and, since the nurse of screen-seed-5 (content 1.48) earns a legendary badge, its line with the confetti still over both its ends (end-standing\'s class): the line is measured from the letters the confetti leaves.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'end-escaped': {
+    shape: 1,
+    oneSided: 0,
+    reason: 'One pixel at the edge of a glyph at the foot of the screen, which the text check\'s windows did not cover (home-continue\'s class), in the life of screen-seed-335.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'end-share': {
     // 5084 and 5085 in batch pass 1's runs and again in batch pass 2's (four runs): the web's own picture is not the same from one shot to the next
@@ -363,7 +414,8 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'end-standing': {
-    shape: 168,
+    // 169 since content 1.48 (end-escaped's life on screen-seed-335): a pixel more of the same confetti.
+    shape: 169,
     oneSided: 0,
     reason: 'The rare badge\'s confetti either side of its line at the foot of the screen, cut a device pixel apart: where the score\'s standing puts that line, it falls at a fraction of a point (end-ru\'s class).',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
@@ -394,21 +446,21 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-playing': {
-    shape: 1551,
+    shape: 2129,
     oneSided: 0,
-    reason: 'Everything under the guide\'s note a device pixel lower (play-guide-r1\'s: the web paints the note\'s foot at a whole CSS pixel, the phone at a device pixel), and the paper\'s masthead (play-news-r1\'s).',
+    reason: 'Everything under the guide\'s note a device pixel lower (play-guide-r1\'s: the web paints the note\'s foot at a whole CSS pixel, the phone at a device pixel), and the paper\'s masthead (play-news-r1\'s); since the way out scrolls under the figures (Task P), the paper stands where it falls at another fraction of a point, and more of its rules and masthead are a device pixel apart.',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-loans': {
-    shape: 20,
+    shape: 34,
     oneSided: 0,
-    reason: 'The rats of the room\'s bar, each 128-pixel picture drawn into its small box nearest-neighbour by the browser and by Skia, which keep a few other rows and columns of it.',
+    reason: 'The rats of the room\'s bar, each 128-pixel picture drawn into its small box nearest-neighbour by the browser and by Skia, which keep a few other rows and columns of it; and, since content 1.48, 30 pixels of the way-out bar\'s lamp bleeding on the web (profile-r6\'s class).',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-resolved': {
-    shape: 2,
+    shape: 345,
     oneSided: 0,
-    reason: 'Two pixels of a rat of the room\'s bar, drawn small nearest-neighbour by each its own way, as in room-loans.',
+    reason: 'Two pixels of a rat of the room\'s bar, drawn small nearest-neighbour by each its own way, as in room-loans; and, since the way out scrolls under the figures (Task P), the tops of the letters of the ledger\'s line under the bar of the next step peek over the bar\'s edge a device pixel apart (finance-taxes\' class).',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'room-end': {
@@ -439,7 +491,8 @@ export interface PageBaseline {
 
 export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
   legal: {
-    shape: 39721,
+    // 79002 since the phone's notice says what the online app keeps (04dc0138): its sections are longer, and stand where their own text puts them.
+    shape: 79002,
     drift: 0.1,
     reason: 'The phone\'s notice has other sections and other lengths than the web\'s, so every box under the first heading stands where its own text puts it: the shape is that of the text.',
     report: 'Task 6: the front door, its settings, the week\'s challenge and the legal notice',
@@ -459,10 +512,65 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'play-news-r6': {
-    shape: 1,
+    shape: 30,
     oneSided: 0,
-    reason: 'One pixel of the city\'s picture in the Hud, as in play-news-r1.',
-    report: 'Residuals of the app\'s web: pictures at a fraction of a point',
+    reason: 'One pixel of the city\'s picture in the Hud, as in play-news-r1 (none in Task P\'s shots); since content 1.48, the way-out bar\'s lamps of profile-r6\'s class (30).',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'play-finance-r6': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-market': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-property': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-lifestyle': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-shop': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'finance-taxes': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the way-out bar bleed a device-pixel sliver of their light into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills the bar to a lamp\'s edge; the app\'s web draws none.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'work-panel': {
+    shape: 30,
+    oneSided: 0,
+    reason: 'The Next web\'s lit lamps of the career bar bleed a sliver into the first dark lamp (profile-r6\'s class), where the life of content 1.48 fills it to a lamp\'s edge.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'end-bankrupt': {
+    shape: 0,
+    lines: { 'A legendary badge: Truly innocent!': 4 / 3 },
+    oneSided: 0,
+    reason: 'The nurse of screen-seed-5 (content 1.48) earns a legendary badge: its line has the confetti still over both its ends, and is measured from the letters the confetti leaves, which the two pages\' confetti (each held at the end of its run) cover alike to a fraction of a point.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
+  },
+  'home-member': {
+    shape: 5,
+    oneSided: 0,
+    reason: 'Five pixels of the member\'s rat on the profile\'s link, drawn small nearest-neighbour at a fraction of a point (rankings-friends\' class), where the foot with no frame round it (Task P) puts it.',
+    report: 'Phase 5b Task P: content 1.48, the front door and the round\'s sticky figures',
   },
   'play-resolve-r6': {
     shape: 3,
@@ -496,22 +604,23 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
   },
   'room-lobby-friends': {
     // 5 and 10 over three shots of the Next web's page (its own rats are drawn a few pixels otherwise from one shot to the next, the app's web's
-    // the same): the record is the most measured and as much again.
-    shape: 10 + 5,
+    // the same): the record is the most measured and as much again. Task P's two shoots measured 19 twice: 19 and as much again as before.
+    shape: 19 + 5,
     oneSided: 0,
     reason: 'The rats of the seats, as in rankings-friends; the Next web\'s own shots of them differ by a few pixels from one shot to the next (5 and 10 measured).',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-lobby-public': {
-    shape: 14,
+    // 9 and 21 over Task P's two shoots, as room-lobby-friends' rats vary from one shot of the Next web's page to the next.
+    shape: 21,
     oneSided: 0,
     reason: 'The rats of the seats, as in rankings-friends.',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-loans': {
-    shape: 17,
+    shape: 51,
     oneSided: 0,
-    reason: 'The rats of the room\'s bar, as in rankings-friends.',
+    reason: 'The rats of the room\'s bar, as in rankings-friends (21 in Task P\'s shots), and, since content 1.48, the way-out bar\'s lamps of profile-r6\'s class (30).',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-resolved': {
@@ -521,7 +630,8 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-end': {
-    shape: 17,
+    // 20 in Task P's shots: three more pixels of the same rats.
+    shape: 20,
     oneSided: 0,
     reason: 'The rats of the room\'s order, as in rankings-friends.',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
@@ -539,13 +649,14 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'room-playing': {
-    shape: 9,
+    shape: 51,
     oneSided: 0,
-    reason: 'A pixel of the city\'s picture, and eight of the rats of the room\'s bar, as in room-resolved. (The paper\'s rows under the room\'s slot: as in play-guide-r1, mended.)',
+    reason: 'A pixel of the city\'s picture, and the rats of the room\'s bar, as in room-resolved (21 in Task P\'s shots); since content 1.48, the way-out bar\'s lamps of profile-r6\'s class (30). (The paper\'s rows under the room\'s slot: as in play-guide-r1, mended.)',
     report: 'Residuals of the app\'s web: pictures at a fraction of a point',
   },
   'play-pageturn': {
-    shape: 365,
+    // 376 in Task P's shots, on the life of content 1.48: eleven more pixels of the torn page's edges.
+    shape: 376,
     oneSided: 0,
     reason: 'The torn page of the calendar, turned and held at one moment on both sides, has its edges antialiased a device pixel apart (phase 2\'s exception), and the city\'s pixels of play-news-r1.',
     report: 'Residuals of the app\'s web: the Next web\'s own',
@@ -557,13 +668,15 @@ export const ACCEPTED_APP_WEB: Readonly<Record<string, Accepted>> = {
     report: 'Residuals of the app\'s web: the Next web\'s own',
   },
   'player-member': {
-    shape: 30,
+    // 31 in Task P's shots: one more pixel, at the foot of the screen (the lives of content 1.48 on the member's profile).
+    shape: 31,
     oneSided: 0,
     reason: 'The lamps\' sliver of profile-r6, on the member\'s career bar.',
     report: 'Residuals of the app\'s web: the Next web\'s own',
   },
   'player-friend-code': {
-    shape: 30,
+    // 31 in Task P's shots, as player-member.
+    shape: 31,
     oneSided: 0,
     reason: 'The lamps\' sliver of profile-r6.',
     report: 'Residuals of the app\'s web: the Next web\'s own',

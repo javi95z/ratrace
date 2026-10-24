@@ -150,7 +150,9 @@ test('a scene of a screen ported but not shot yet is unjudged until a batch pass
     expect(isJudged(SCENES.find((scene) => scene.name === name)!), name).toBe(true);
   }
   // The records that rested on what changed are gone: the glow's absence, the phone's words for the net worth, the savings cut short beside buttons of 17.
-  for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6', 'finance-tabs-ru-360']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
+  for (const name of ['celebrate-earned', 'celebrate-legendary', 'balance-r6']) expect(Object.keys(ACCEPTED), name).not.toContain(name);
+  // (finance-tabs-ru-360's record of the savings cut short is gone too: the one it has since Task P is the letters under the bar of the next step.)
+  expect(ACCEPTED['finance-tabs-ru-360'].reason).toMatch(/^The tops of the letters of a line under the bar of the next step/);
   for (const name of PENDING_SHOTS) expect(hasPhoneWords(name), name).toBe(false);
   // What such a scene says, should a later task register one before the next batch pass: that, and no numbers.
   const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
@@ -405,6 +407,15 @@ describe('what is accepted of a scene, and no more', () => {
       'room-loans',
       'room-playing',
       'room-resolved',
+      // Phase 5b's Task P: the lives of content 1.48, and the way out under the figures.
+      'end-escaped',
+      'finance-lifestyle',
+      'finance-market',
+      'finance-property',
+      'finance-shop',
+      'finance-tabs-ru-360',
+      'play-finance-r6',
+      'work-panel',
     ].sort());
     for (const [name, record] of Object.entries(ACCEPTED)) {
       expect(SCENES.map((scene) => scene.name), name).toContain(name);
@@ -436,6 +447,11 @@ describe('what is accepted of a scene, and no more', () => {
       'challenge-attempt': { 'See the challenge ranking': 4 / 3 },
       'challenge-played': { 'See the challenge ranking': 4 / 3 },
       'new-ranked': { '🎲 At random': 2 },
+      // Phase 5b's Task P, the lives of content 1.48: a badge's line under its confetti, a hint half under the bar of the next step, and a line cut
+      // short where Chrome keeps the space before its ellipsis and iOS drops it.
+      'end-bankrupt': { 'A legendary badge: Truly innocent!': 5 / 3 },
+      'finance-lifestyle': { '30% chance of +4% pay. Yes or no, not ag': 13 / 3 },
+      'finance-taxes': { 'Your $93,814 in cash buys 6.3% less than': 3 },
     });
   });
 
