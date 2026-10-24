@@ -67,15 +67,6 @@ export function useFontsSettled([loaded, error]: readonly [boolean, Error | null
   return loaded || error !== null;
 }
 
-/** Loads the game's fonts. True once they all are, or once they failed to. */
-export function useGameFonts(): boolean {
-  // Required here, not imported at the top: the .ttf files and expo-font are for the app, and a test of the
-  // runs below must not need either.
-  const { useFonts } = require('expo-font') as typeof import('expo-font');
-  const { FONT_SOURCES } = require('./fontSources') as typeof import('./fontSources');
-  return useFontsSettled(useFonts(FONT_SOURCES));
-}
-
 export interface Run {
   text: string;
   /** The font that draws it, as the tables here know it (coverage, metrics, small-letter height). */

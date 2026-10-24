@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { useContext } from 'react';
-import { afterEach, beforeEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import PlayRoute from '../app/[locale]/play';
 import RecordsRoute from '../app/[locale]/records';
 import { kvLanguage } from '../kvStore';
@@ -17,6 +17,25 @@ import { LanguagePick } from './screens/Settings';
  * leads. A language chosen in the settings is the same page in that language, the cookie written for the next visit.
  */
 
+/** The words of a language held back from the page until the test lets them in (`held`), as a chunk not fetched yet; every other language is in. */
+const words = vi.hoisted(() => ({ held: null as string | null, release: () => undefined as void }));
+vi.mock('./languageWords', async (original) => {
+  const real = await original<typeof import('./languageWords')>();
+  return {
+    ...real,
+    languageReady: (locale: 'en' | 'es' | 'ru') => locale !== words.held && real.languageReady(locale),
+    loadLanguageWords: (locale: 'en' | 'es' | 'ru') =>
+      locale === words.held
+        ? new Promise<void>((resolve) => {
+            words.release = () => {
+              words.held = null;
+              resolve();
+            };
+          })
+        : real.loadLanguageWords(locale),
+  };
+});
+
 const cookie = () => document.cookie.split('; ').find((part) => part.startsWith('NEXT_LOCALE='))?.slice('NEXT_LOCALE='.length) ?? null;
 
 beforeEach(() => {
@@ -24,7 +43,10 @@ beforeEach(() => {
   localStorage.clear();
   window.history.replaceState(null, '', '/');
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  words.held = null;
+});
 
 /** The language the page is drawn in, as the kit's text reads it. */
 function Speaks() {
@@ -84,6 +106,19 @@ test('a language chosen in the settings opens the same page in it, and the cooki
   renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
   act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
   expect(router.push).toHaveBeenCalledWith('/ru');
+});
+
+test('a language whose words are not in yet opens its page once they are: the page in front stays as it is until then', async () => {
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  words.held = 'ru';
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage });
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Русский' })));
+  expect(router.push).not.toHaveBeenCalled();
+  // The choice is kept for the next visit at once, whatever comes of its words.
+  expect(cookie()).toBe('ru');
+  await act(async () => words.release());
+  expect(router.push).toHaveBeenCalledWith('/ru/rankings');
 });
 
 test('the language\'s setter keeps its identity from page to page, and nothing that reads the settings is drawn again as the player moves', () => {

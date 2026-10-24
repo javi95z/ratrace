@@ -65,4 +65,10 @@ resetAlso(openSheetsAgain);
 const { letHeldTurnsGo } = await import('../ui/back');
 resetAlso(letHeldTurnsGo);
 
+// Every language's words in before a test speaks one: the web loads each when its page first speaks it (game/languageWords.web.ts), which a test
+// does not wait for; the phone has them all already.
+const { loadLanguageWords } = await import('../game/languageWords');
+const { LOCALES } = await import('@ratrace/i18n/locales');
+await Promise.all(LOCALES.map(loadLanguageWords));
+
 afterEach(resetFakes);

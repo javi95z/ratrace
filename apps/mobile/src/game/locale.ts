@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isLocale, type Locale } from '@ratrace/i18n';
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@ratrace/i18n/locales';
 import { getLocales } from 'expo-localization';
 
 /**

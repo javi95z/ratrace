@@ -1,6 +1,7 @@
-import { isLocale, type Locale } from '@ratrace/i18n';
+import { isLocale, type Locale } from '@ratrace/i18n/locales';
 import { usePathname, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { languageReady, loadLanguageWords } from './languageWords';
 import { deviceLanguages, localeOf, type GameLanguage, type LanguageKeep } from './locale';
 import { hrefOf, pageAt, useLocaleParam } from './pages';
 
@@ -9,7 +10,8 @@ import { hrefOf, pageAt, useLocaleParam } from './pages';
  * web's `[locale]`; the cookie (`keep`, NEXT_LOCALE) is written again for each page opened in one, as the Next web's middleware writes it, and only
  * chooses where an address with no language leads (the bare `/`, a development route): the cookie's, else the browser's, else English.
  *
- * Choosing a language opens the same page in it (the Next web's `Link locale={code}`), the cookie written for the next visit. Following an account's
+ * Choosing a language opens the same page in it (the Next web's `Link locale={code}`), the cookie written for the next visit, once its words are in (each
+ * language is a chunk of its own: `languageWords.web.ts`), so the page in front stays as it is until the next can speak. Following an account's
  * language as someone signs in puts the same page in it in place of this one, its query and hash kept, as the Next web's `online/language.ts` does
  * (`location.replace`): Back does not lead to the language the account left. Both keep their identity from page to page (the address is read when they
  * are called), so nothing that holds them starts again, nor is drawn again, as the player moves.
@@ -29,21 +31,35 @@ export function useLanguage(keep: LanguageKeep): GameLanguage {
   const choose = useCallback(
     (next: Locale) => {
       keep.write(next);
-      setChosen(next);
-      const page = pageAt(now.current.path);
-      if (next !== now.current.locale && page !== null) router.push(hrefOf(page, { locale: next }));
+      onceSpoken(next, () => {
+        setChosen(next);
+        const page = pageAt(now.current.path);
+        if (next !== now.current.locale && page !== null) router.push(hrefOf(page, { locale: next }));
+      });
     },
     [keep, router],
   );
   const follow = useCallback(
     (next: Locale) => {
       keep.write(next);
-      setChosen(next);
-      // The page in the browser's address bar when the account's answer comes, whichever the player has moved to since.
-      const page = pageAt(window.location.pathname);
-      if (next !== now.current.locale && page !== null) router.replace(`${hrefOf(page, { locale: next })}${window.location.search}${window.location.hash}`);
+      onceSpoken(next, () => {
+        setChosen(next);
+        // The page in the browser's address bar when the account's answer comes (and the words of its language are in), whichever the player has
+        // moved to since.
+        const page = pageAt(window.location.pathname);
+        if (next !== now.current.locale && page !== null) router.replace(`${hrefOf(page, { locale: next })}${window.location.search}${window.location.hash}`);
+      });
     },
     [keep, router],
   );
   return useMemo(() => ({ locale, choose, follow }), [locale, choose, follow]);
+}
+
+/**
+ * Runs `then` once a language's words are in: at once where they are, else when its chunk is (nothing, where it cannot be had: the page stays in the
+ * language it speaks, rather than open one it cannot draw).
+ */
+function onceSpoken(locale: Locale, then: () => void): void {
+  if (languageReady(locale)) then();
+  else loadLanguageWords(locale).then(then, () => undefined);
 }

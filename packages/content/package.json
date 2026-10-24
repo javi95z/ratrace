@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./text/*": "./src/text/*.ts"
   },
   "dependencies": {
     "@ratrace/engine": "workspace:*"

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isLocale, LOCALES } from '@ratrace/i18n';
+import { DEFAULT_LOCALE, isLocale, LOCALES } from '@ratrace/i18n/locales';
 import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';

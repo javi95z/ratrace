@@ -1,4 +1,4 @@
-import { isLocale } from '@ratrace/i18n';
+import { isLocale } from '@ratrace/i18n/locales';
 import { Unmatched, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 

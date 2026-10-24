@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isLocale } from '@ratrace/i18n';
+import { DEFAULT_LOCALE, isLocale } from '@ratrace/i18n/locales';
 import { useServerDocumentContext } from 'expo-router/html';
 import type { ReactNode } from 'react';
 
@@ -7,9 +7,9 @@ import type { ReactNode } from 'react';
  * browser nor on the phone). It is the Next web's layout (apps/web/src/app/[locale]/layout.tsx) and page (globals.css): the page in the language of
  * its address, the viewport that reaches under the notch, the colour of the browser's bar, a dark page with nothing to select. What the export puts
  * in every page (its scripts and their preloads, the hydration flag, the head a page asks for) comes through expo-router's document context, written
- * where Expo's own template writes it. The typefaces are expo-font's to write, after this is drawn: an @font-face and a `preload` for each the game
- * loads (`useGameFonts`), the first page's Jersey 15 and Chakra Petch among them, as next/font preloads the Next web's (expo-font preloads the
- * Cyrillic and slanted faces too, which next/font does not; it has no way to say otherwise).
+ * where Expo's own template writes it. The typefaces are expo-font's to write, after this is drawn: an @font-face and a `preload` for each the page
+ * draws first (`ui/gameFonts.web.ts`: Jersey 15 and Chakra Petch, and on a Russian page Oswald and Exo 2), as next/font preloads the Next web's; the
+ * others are declared once the page is the browser's, and fetched by the text that needs them.
  */
 
 /** The page's styles, as the Next web's: react-native-web's root reset (the app fills the page, the page never scrolls), then the game's page. */

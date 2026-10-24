@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
  * scripts/sprites.ts does for the browser:
  *
  *   art/clean/<group>/<id>.png   →  assets/sprites/<group>/<id>.png   (not committed; copied on every install and before every start)
+ *                                →  public/sprites/<group>/<id>.png   (the same: the web export's, served at /sprites as the Next web serves them)
  *   art/clean/manifest.json      →  src/sprites/manifest.json         (committed; a test fails when it is stale)
  *                                →  src/sprites/sources.ts            (committed: one static require per id, as Metro asks)
  *
@@ -14,7 +15,9 @@ import { fileURLToPath } from 'node:url';
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const art = join(here, '../../../art/clean');
-const out = join(here, '../assets/sprites');
+
+/** Where the sprites are copied, from the app's folder: Metro's assets for the phone, and the site's files for the web (`src/sprites/sources.web.ts`). */
+export const SPRITE_COPIES = ['assets/sprites', 'public/sprites'] as const;
 
 interface ArtManifest {
   sprites: Record<string, { file: string; width: number; height: number }>;
@@ -57,10 +60,13 @@ function main(): void {
   const source = JSON.parse(readFileSync(join(art, 'manifest.json'), 'utf8')) as ArtManifest;
   const manifest = buildManifest(source);
 
-  rmSync(out, { recursive: true, force: true });
-  for (const entry of Object.values(manifest)) {
-    mkdirSync(dirname(join(out, entry.src)), { recursive: true });
-    cpSync(join(art, entry.src), join(out, entry.src));
+  for (const copy of SPRITE_COPIES) {
+    const out = join(here, '..', copy);
+    rmSync(out, { recursive: true, force: true });
+    for (const entry of Object.values(manifest)) {
+      mkdirSync(dirname(join(out, entry.src)), { recursive: true });
+      cpSync(join(art, entry.src), join(out, entry.src));
+    }
   }
   mkdirSync(join(here, '../src/sprites'), { recursive: true });
   writeFileSync(join(here, '../src/sprites/manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);

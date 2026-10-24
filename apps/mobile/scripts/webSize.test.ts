@@ -1,6 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FIRST_PAGE_GZIP_TARGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
+import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeWebExport, mib, pageFiles, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -113,22 +113,24 @@ describe('the pages', () => {
 });
 
 describe('the first page', () => {
-  const FONTS =
-    '<link rel="preload" href="/assets/Jersey15_400Regular.abc.ttf" as="font" crossorigin=""/><link rel="preload" href="/assets/ChakraPetch_400Regular.abc.ttf" as="font" crossorigin=""/>';
-  const firstPage = (scripts: string[], head = FONTS) => ({
-    path: FIRST_PAGE,
+  const ahead = (faces: readonly string[]) => faces.map((face) => `<link rel="preload" href="/assets/${face}.abc.ttf" as="font" crossorigin=""/>`).join('');
+  const LATIN = ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold'];
+  const CYRILLIC = ['Oswald_500Medium', 'Exo2_400Regular', 'Exo2_600SemiBold'];
+  const FONTS = ahead(LATIN);
+  const page = (path: string, scripts: string[], head: string) => ({
+    path,
     bytes: Buffer.from(`<!DOCTYPE html><html lang="en"><head>${head}</head><body>${scripts.map((src) => `<script defer="" src="/${src}"></script>`).join('')}</body></html>`),
   });
+  const firstPage = (scripts: string[], head = FONTS) => page(FIRST_PAGE, scripts, head);
 
-  it('may load 1 MiB gzipped, the HTML with it (the ruling\'s gate; 0.8 MB the target): the chunks its HTML loads count, the others do not', () => {
-    expect(FIRST_PAGE_GZIP_BUDGET).toBe(1024 * 1024);
-    expect(FIRST_PAGE_GZIP_TARGET).toBe(800 * 1024);
+  it('may load 800 KiB gzipped, the HTML with it (the plan\'s 0.8 MB, the Next web\'s 0.7 MB and a little): the chunks its HTML loads count, the others do not', () => {
+    expect(FIRST_PAGE_GZIP_BUDGET).toBe(800 * 1024);
     const big = noise(Math.floor(FIRST_PAGE_GZIP_BUDGET * 0.6));
     const a = { path: `${APP}a.js`, bytes: big };
     const b = { path: `${APP}b.js`, bytes: big };
     // Both loaded by the first page: over.
     const over = judgeWebExport([a, b, firstPage([a.path, b.path])], []);
-    expect(over).toEqual([expect.stringMatching(/first page .* MiB gzip, over the 1\.00 MiB/)]);
+    expect(over).toEqual([expect.stringMatching(/first page .* MiB gzip, over the 0\.78 MiB/)]);
     // Only one loaded by it (the other a later page's): under. The whole of the app's JavaScript is the other budget's.
     expect(judgeWebExport([a, b, firstPage([a.path])], [])).toEqual([]);
   });
@@ -148,7 +150,7 @@ describe('the first page', () => {
     const files = [a, lazy, firstPage([a.path])];
     // The HTML alone is under the gate; with the chunk its first draw asked for (by its address, as the browser asks), over.
     expect(judgeFirstVisit(files, [`/${a.path}`])).toEqual([]);
-    expect(judgeFirstVisit(files, [`/${a.path}`, `/${lazy.path}`])).toEqual([expect.stringMatching(/first visit .* 2 scripts .* MiB gzip, over the 1\.00 MiB/)]);
+    expect(judgeFirstVisit(files, [`/${a.path}`, `/${lazy.path}`])).toEqual([expect.stringMatching(/first visit .* 2 scripts .* MiB gzip, over the 0\.78 MiB/)]);
     expect(firstPageOf(files, [`/${lazy.path}`])?.scripts.map((file) => file.path)).toEqual([a.path, lazy.path]);
   });
 
@@ -157,9 +159,32 @@ describe('the first page', () => {
     expect(mib(800 * 1024)).toBe('0.78 MiB');
   });
 
-  it('fetches its typefaces ahead, the pixel one and the reading one, as the Next web\'s next/font does', () => {
+  it('fetches its typefaces ahead, the pixel one and the reading ones, as the Next web\'s next/font does', () => {
     expect(judgeWebExport([small, firstPage([small.path])], [])).toEqual([]);
-    expect(judgeWebExport([small, firstPage([small.path], '')], [])).toEqual([expect.stringMatching(/Jersey15_400Regular.*ChakraPetch_400Regular|typefaces/)]);
+    expect(judgeWebExport([small, firstPage([small.path], '')], [])).toEqual([expect.stringMatching(/does not fetch its typefaces ahead: Jersey15_400Regular, ChakraPetch_400Regular, ChakraPetch_600SemiBold/)]);
+  });
+
+  it('fetches no other typeface ahead: the Cyrillic and the slanted ones wait for a page that draws them (next/font\'s `preload: false`)', () => {
+    const more = firstPage([small.path], ahead([...LATIN, 'Oswald_500Medium', 'ChakraPetch_400Regular_Slant']));
+    expect(judgeWebExport([small, more], [])).toEqual([expect.stringMatching(/en\/index\.html\) fetches ahead typefaces it does not draw first: Oswald_500Medium, ChakraPetch_400Regular_Slant/)]);
+  });
+
+  it('is the Russian page\'s too, with the Cyrillic faces its words are drawn in fetched ahead as well', () => {
+    const russian = (faces: readonly string[]) => page('ru/index.html', [small.path], ahead(faces));
+    expect(judgeWebExport([small, firstPage([small.path]), russian([...LATIN, ...CYRILLIC])], [])).toEqual([]);
+    expect(judgeWebExport([small, firstPage([small.path]), russian(LATIN)], [])).toEqual([
+      expect.stringMatching(/ru\/index\.html\) does not fetch its typefaces ahead: Oswald_500Medium, Exo2_400Regular, Exo2_600SemiBold/),
+    ]);
+  });
+
+  it('carries no language\'s words in the scripts its HTML loads: each language\'s are a chunk of their own, fetched for the page\'s language', () => {
+    const words = { path: `${APP}words.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/game/Home.tsx', '/packages/i18n/messages/es.json'] };
+    const text = { path: `${APP}text.js`, bytes: Buffer.from('x'), sources: ['/packages/content/src/text/ru.cards.ts'] };
+    const clean = { path: `${APP}clean.js`, bytes: Buffer.from('x'), sources: ['/packages/content/src/text/index.web.ts', '/packages/content/src/text/languages.ts'] };
+    expect(judgeWebExport([clean, words, text, firstPage([clean.path])], [])).toEqual([]);
+    expect(judgeWebExport([clean, words, text, firstPage([clean.path, words.path, text.path])], [])).toEqual([
+      expect.stringMatching(/first page .* carries words of a language: \/packages\/i18n\/messages\/es\.json, \/packages\/content\/src\/text\/ru\.cards\.ts/),
+    ]);
   });
 });
 

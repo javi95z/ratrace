@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
-import { buildManifest, sourcesFile } from './sprites';
+import { buildManifest, sourcesFile, SPRITE_COPIES } from './sprites';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
@@ -35,4 +35,11 @@ test('the sprites are copied on every install (and on EAS after its install): a 
   // (The rules of the older versions are copied at the same moments: see rules.test.ts.)
   expect(pkg.scripts.postinstall).toMatch(/^pnpm sprites\b/);
   expect(pkg.scripts['eas-build-post-install']).toMatch(/^pnpm sprites\b/);
+});
+
+test('the sprites are copied for the web export too, where the site serves them (public/sprites, as the Next web\'s), and neither copy is committed', () => {
+  expect(SPRITE_COPIES).toEqual(['assets/sprites', 'public/sprites']);
+  const ignored = read('../.gitignore').split('\n');
+  expect(ignored).toContain('/assets/sprites/');
+  expect(ignored).toContain('/public/sprites/');
 });

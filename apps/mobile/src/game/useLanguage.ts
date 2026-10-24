@@ -1,4 +1,4 @@
-import type { Locale } from '@ratrace/i18n';
+import type { Locale } from '@ratrace/i18n/locales';
 import { useCallback, useMemo, useState } from 'react';
 import { deviceLanguages, localeOf, type GameLanguage, type LanguageKeep } from './locale';
 

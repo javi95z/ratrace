@@ -1,5 +1,5 @@
-import { isLocale } from '@ratrace/i18n';
-import type { Locale } from '@ratrace/i18n';
+import { isLocale } from '@ratrace/i18n/locales';
+import type { Locale } from '@ratrace/i18n/locales';
 import type { Account, Community } from '@ratrace/online/types';
 
 /*

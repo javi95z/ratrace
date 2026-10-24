@@ -1,4 +1,4 @@
-import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import type { BasketKeep } from '@ratrace/core/game/basket';
 import type { Words } from '@ratrace/core/game/present';
 import { createRoomStore } from '@ratrace/core/game/room';
@@ -16,7 +16,7 @@ import { GameSessions } from '@ratrace/core/session/sessions';
 import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions, Settings } from '@ratrace/core/session/types';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { Locale } from '@ratrace/i18n';
+import type { Locale } from '@ratrace/i18n/locales';
 import { offlineAccount } from '@ratrace/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@ratrace/online/types';
 import { getCalendars } from 'expo-localization';
@@ -50,6 +50,7 @@ import { pageAt, useGoFromAnywhere } from './pages';
 import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
+import { useContentText } from './languageWords';
 import { WordsProvider } from './words';
 
 export { useT } from './words';
@@ -621,8 +622,10 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     },
     [made],
   );
-  // Made again only when the language changes: every screen that reads them is not drawn again with each step of the profile.
-  const words = useMemo<Words>(() => ({ content, ...textFor(locale), fmt: formatFor(locale) }), [locale]);
+  // Made again only when the language changes: every screen that reads them is not drawn again with each step of the profile. (On the web the
+  // language's words are fetched first, and the game waits for them: languageWords.web.ts.)
+  const text = useContentText(locale);
+  const words = useMemo<Words>(() => ({ content, ...text, fmt: formatFor(locale) }), [text, locale]);
   const changeProfile = useCallback(
     (change: (profile: Profile) => Profile) => {
       // Shown at once, then merged into what the device holds: the profile is never written over whole,

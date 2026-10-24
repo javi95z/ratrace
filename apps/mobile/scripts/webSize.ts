@@ -22,29 +22,40 @@ export const JS_GZIP_BUDGET = 1_350 * 1024;
 
 /**
  * The first page a visitor is given (`/en`, the static export's `en/index.html`): its HTML and the JavaScript it loads, gzipped, may not weigh more
- * than this, 1 MiB (the controller's ruling on phase 5b's Task 2: the web's first page stood at 0.95 MiB once each page loaded its own code, through
- * expo-router's async routes and the granular chunks of app.json's `experiments.chunking`). The first page carries what the front door draws, not
- * the game's other pages.
+ * than this, 800 KiB (the plan's 0.8 MB, the Next web's 0.7 MB and a little). The first page carries what the front door draws: not the game's other
+ * pages (expo-router's async routes and the granular chunks of app.json's `experiments.chunking`), not the words of a language (each its own chunk,
+ * fetched for the page's language: `game/languageWords.web.ts`), not the sprites' registry (the site's `/sprites` files) nor the sound (loaded once
+ * the page is idle).
  */
-export const FIRST_PAGE_GZIP_BUDGET = 1024 * 1024;
-/**
- * Where the first page is to come down to, 0.8 MB (the plan's own figure, the Next web's 0.7 MB and a little): not checked yet. Phase 5b's Task 10 is
- * to bring it there (the words of the page's language only, the sprites as the site's files, the sound loaded when it is first heard), then make it
- * the gate.
- */
-export const FIRST_PAGE_GZIP_TARGET = 800 * 1024;
+export const FIRST_PAGE_GZIP_BUDGET = 800 * 1024;
 export const FIRST_PAGE = 'en/index.html';
 
-/** The typefaces the first page draws in, which its HTML fetches ahead (expo-font's `preload` for each the server drew with), as next/font does. */
-const FIRST_TYPEFACES = ['Jersey15_400Regular', 'ChakraPetch_400Regular'];
+/**
+ * The typefaces a page draws in first, which its HTML fetches ahead (expo-font's `preload` for each the server drew with), as next/font does: Jersey 15
+ * and Chakra Petch on every page, and on a Russian one the Cyrillic faces its words are drawn in, Oswald and Exo 2. No other (the Cyrillic faces of a
+ * Latin page, the slanted ones): those wait for the text that needs them, as next/font's `preload: false`.
+ */
+const AHEAD: Readonly<Record<string, readonly string[]>> = {
+  latin: ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold'],
+  ru: ['Jersey15_400Regular', 'ChakraPetch_400Regular', 'ChakraPetch_600SemiBold', 'Oswald_500Medium', 'Exo2_400Regular', 'Exo2_600SemiBold'],
+};
+/** The front door of each language whose typefaces are held to `AHEAD`. */
+const FRONT_DOORS: readonly { page: string; faces: readonly string[] }[] = [
+  { page: FIRST_PAGE, faces: AHEAD.latin },
+  { page: 'ru/index.html', faces: AHEAD.ru },
+];
+
+/** The sources of the words of a language: the interface's (`@ratrace/i18n`'s messages) and the content's (`@ratrace/content`'s text of each language). */
+const WORDS = /\/packages\/i18n\/messages\/|\/packages\/content\/src\/text\/(en|es|ru)(\.[a-z]+)?\.ts$/;
 
 /** A size in bytes as the checks count it, in MiB (1024 × 1024 bytes), with two decimals. */
 export const mib = (bytes: number): string => `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
 
-/** A file of the export, by its path inside it. */
+/** A file of the export, by its path inside it, with the sources its map names where it has one (a script of the export made with source maps). */
 export interface ExportFile {
   path: string;
   bytes: Buffer;
+  sources?: readonly string[];
 }
 
 /**
@@ -125,16 +136,25 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
   const byPath = new Map(files.map((file) => [file.path, file]));
   const absent = pages.filter((page) => !byPath.has(page));
   if (absent.length > 0) problems.push(`${absent.length} of the ${pages.length} pages are missing from the export, e.g. ${absent[0]}: that address would be the page of nothing`);
-  const first = byPath.get(FIRST_PAGE);
-  if (first) {
-    const html = first.bytes.toString('utf8');
-    const { scripts, weight } = firstPageOf(files) ?? { scripts: [], weight: 0 };
-    if (weight > FIRST_PAGE_GZIP_BUDGET) {
-      problems.push(`the first page (${FIRST_PAGE} and the ${scripts.length} scripts it loads) is ${mib(weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`);
+  const first = firstPageOf(files);
+  if (first !== null) {
+    if (first.weight > FIRST_PAGE_GZIP_BUDGET) {
+      problems.push(`the first page (${FIRST_PAGE} and the ${first.scripts.length} scripts it loads) is ${mib(first.weight)} gzip, over the ${mib(FIRST_PAGE_GZIP_BUDGET)} it is given`);
     }
-    const ahead = [...html.matchAll(/<link\b[^>]*\brel="preload"[^>]*>/g)].map((found) => found[0]).filter((link) => /\bas="font"/.test(link));
-    const unfetched = FIRST_TYPEFACES.filter((face) => !ahead.some((link) => link.includes(face)));
-    if (unfetched.length > 0) problems.push(`the first page (${FIRST_PAGE}) does not fetch its typefaces ahead: ${unfetched.join(', ')}`);
+    const words = [...new Set(first.scripts.flatMap((script) => script.sources ?? []).filter((source) => WORDS.test(source)))];
+    if (words.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries words of a language: ${words.join(', ')}`);
+  }
+  for (const { page, faces } of FRONT_DOORS) {
+    const html = byPath.get(page)?.bytes.toString('utf8');
+    if (html === undefined) continue;
+    const fetched = [...html.matchAll(/<link\b[^>]*\brel="preload"[^>]*>/g)]
+      .map((found) => found[0])
+      .filter((link) => /\bas="font"/.test(link))
+      .map((link) => /\/([A-Za-z0-9_]+)\.[0-9a-f]+\.[a-z0-9]+"/.exec(link)?.[1] ?? link);
+    const unfetched = faces.filter((face) => !fetched.includes(face));
+    if (unfetched.length > 0) problems.push(`the front door (${page}) does not fetch its typefaces ahead: ${unfetched.join(', ')}`);
+    const others = fetched.filter((face) => !faces.includes(face));
+    if (others.length > 0) problems.push(`the front door (${page}) fetches ahead typefaces it does not draw first: ${others.join(', ')}`);
   }
   for (const file of files) {
     if (file.path.endsWith('.wasm')) problems.push(`a WebAssembly file is in the export: ${file.path}`);
@@ -209,8 +229,9 @@ function main(): void {
       return;
     }
     const paths = walk(out);
-    const files = paths.filter((path) => !path.endsWith('.map')).map((path) => ({ path, bytes: readFileSync(join(out, path)) }));
-    const sources = paths.filter((path) => path.endsWith('.map')).flatMap((path) => sourcesOf(JSON.parse(readFileSync(join(out, path), 'utf8')) as SourceMap));
+    const mapped = new Map(paths.filter((path) => path.endsWith('.map')).map((path) => [path, sourcesOf(JSON.parse(readFileSync(join(out, path), 'utf8')) as SourceMap)]));
+    const files = paths.filter((path) => !path.endsWith('.map')).map((path) => ({ path, bytes: readFileSync(join(out, path)), sources: mapped.get(`${path}.map`) }));
+    const sources = [...mapped.values()].flat();
     const js = files.filter((file) => file.path.startsWith(APP_JS) && file.path.endsWith('.js'));
     const rules = bundlesIn(readdirSync(join(here, '../../web/public/rules'))).map((bundle) => bundle.file);
     const raw = js.reduce((total, file) => total + file.bytes.length, 0);
@@ -222,7 +243,7 @@ function main(): void {
     const pages = pageFiles(routedPages(), LOCALES);
     const first = firstPageOf(files);
     console.log(
-      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts, ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}, target ${mib(FIRST_PAGE_GZIP_TARGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
+      `first page (${FIRST_PAGE}): ${first ? `${first.scripts.length} scripts, ${mib(first.weight)} gzip with its HTML` : 'missing'} (gate ${mib(FIRST_PAGE_GZIP_BUDGET)}); ${pages.filter((page) => files.some((file) => file.path === page)).length}/${pages.length} pages`,
     );
     const problems = judgeWebExport(files, sources, rules, pages);
     for (const problem of problems) console.error(`problem: ${problem}`);

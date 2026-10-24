@@ -1,0 +1,32 @@
+import { textFor, type ContentText, type Names } from '@ratrace/content';
+import { messagesFor, type Messages } from '@ratrace/i18n';
+import type { Locale } from '@ratrace/i18n/locales';
+import { useMemo } from 'react';
+
+/*
+ * The words of a language as the game speaks it: the interface's (`@ratrace/i18n`'s messages, read by use-intl) and the content's (cards, careers,
+ * cities, with their names filled in). The phone carries every language, so each is there the moment it is asked for. The web loads only its page's
+ * (`languageWords.web.ts`).
+ */
+
+/** The interface's words in a language. */
+export function useMessages(locale: Locale): Messages {
+  return messagesFor(locale);
+}
+
+/** The content's words in a language: its sentences, every name filled in, and its names. Made again only when the language changes. */
+export function useContentText(locale: Locale): { text: ContentText; names: Names } {
+  return useMemo(() => textFor(locale), [locale]);
+}
+
+/** Whether a language's words can be read at once: always, on the phone. */
+export function languageReady(locale: Locale): boolean {
+  void locale;
+  return true;
+}
+
+/** Loads a language's words ahead of the game speaking it: nothing to load on the phone. */
+export function loadLanguageWords(locale: Locale): Promise<void> {
+  void locale;
+  return Promise.resolve();
+}

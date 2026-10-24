@@ -2,7 +2,7 @@
 // under older rules.
 import type { RatLook } from '@ratrace/core/game/avatar';
 import { formatFor } from '@ratrace/core/lib/format';
-import { LOCALES } from '@ratrace/i18n';
+import { LOCALES } from '@ratrace/i18n/locales';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import type { ReactNode } from 'react';

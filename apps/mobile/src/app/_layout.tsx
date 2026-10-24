@@ -1,8 +1,9 @@
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
-import { useGameFonts } from '../ui/fonts';
+import { useLocaleParam } from '../game/pages';
+import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
 import { Page } from '../ui/Page';
@@ -18,7 +19,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
  * words, sound, motion) and the ground. Screens change at once, as a web page does, over the one ground.
  */
 export default function RootLayout() {
-  const fonts = useGameFonts();
+  // The page's language: the web fetches ahead only the typefaces it draws first (ui/gameFonts.web.ts); the phone loads them all.
+  const fonts = useGameFonts(useLocaleParam());
   useEffect(() => {
     if (fonts) void SplashScreen.hideAsync().catch(() => undefined);
   }, [fonts]);
@@ -30,14 +32,18 @@ export default function RootLayout() {
       <PerfFrames />
       {/* The safe areas, measured where the router does not (the web: ui/SafeArea.web.tsx); nothing more on the phone. */}
       <SafeArea>
-        <GameProvider>
-          <StatusBar style="light" />
-          <Page>
-            <ThemeProvider value={GROUND_THEME}>
-              <Stack screenOptions={SCREENS} />
-            </ThemeProvider>
-          </Page>
-        </GameProvider>
+        {/* The game waits here for its language's words where they are fetched (the web: game/languageWords.web.ts); the page the build drew stays
+            as it is meanwhile. Nothing waits on the phone. */}
+        <Suspense fallback={null}>
+          <GameProvider>
+            <StatusBar style="light" />
+            <Page>
+              <ThemeProvider value={GROUND_THEME}>
+                <Stack screenOptions={SCREENS} />
+              </ThemeProvider>
+            </Page>
+          </GameProvider>
+        </Suspense>
       </SafeArea>
     </GestureRoot>
   );
