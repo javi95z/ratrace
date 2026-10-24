@@ -861,11 +861,19 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
   };
 }
 
+/** A thing that never changes, for `useSyncExternalStore`: nothing to listen to. */
+const UNCHANGING = () => () => undefined;
+
 /**
  * Whether the phone has a way to sign in: a project to sign in to. The web has no such question (a browser always can); a line that tells a guest
- * to sign in (`challenge.needsAccount`) is not drawn on a phone that cannot: a player is never told to do what the app cannot.
+ * to sign in (`challenge.needsAccount`) is not drawn on a phone that cannot: a player is never told to do what the app cannot. The web export's
+ * HTML is drawn offline whatever its build's project (`online/index.web.ts`), so the page is taken over with nobody to sign in to, as it was drawn
+ * (the server's answer), and learns of the project right after.
  */
-export const useCanSignIn = (): boolean => useCloud().canSignIn;
+export function useCanSignIn(): boolean {
+  const { canSignIn } = useCloud();
+  return useSyncExternalStore(UNCHANGING, () => canSignIn, () => false);
+}
 
 /**
  * The other players: the rankings, the player's name, whom they follow. Null while nobody is
