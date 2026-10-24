@@ -129,3 +129,16 @@ Plan 5a's Global Constraints hold (`docs/superpowers/plans/2026-10-23-expo-phase
 - [ ] **Step 2–3:** run (FAIL), implement.
 - [ ] **Step 4: Run** the build command locally into `dist`, serve it with the middleware's logic (a small local server under test, or `vercel build` + `vercel dev` if available without an account), and run `web-life.ts` and the `appweb` shots (phone and desk widths) against it, plus one browser run on the fake project (`scripts/fakeCloud.ts`) that signs in with its Google page and lands back on `/{l}?code=…` through the router (5a ruling): the account is kept and the address cleaned. Expected: all green; sizes in the report.
 - [ ] **Step 5: Commit** (`feat(mobile): the web's hosting, ready for a preview`). Then stop: deploying a preview is the user's call (plan 5c).
+
+### Task 10: The first visit as light as the Next web's
+
+(Added 2026-10-24 by the controller's ruling after Task 2: the first page `/en` measured 994 KB gzip against the 0.8 MB target, and the page's `load` 5.2 s against the Next web's 1.2 s on a throttled connection, mostly the ten typefaces preloaded.)
+
+**Files:**
+- Modify: the export's font preloads (only the faces the first page draws — Jersey 15 and Chakra Petch — preloaded; the others loaded when a page needs them, as the Next web's `next/font` with Cyrillic faces not preloaded), the words (`packages/i18n` messages of the page's language only in the first page's code; the others loaded when the language changes), expo-audio and the sprite registry loaded on demand on the web, and whatever else the export's source maps show the front page carries without drawing it
+- Modify: `apps/mobile/scripts/webSize.ts` — the first-page gate back to 0.8 MB gzip
+
+- [ ] **Step 1: Write the failing test:** `web:size` with the 0.8 MB gate fails on today's export (record the number).
+- [ ] **Step 2: Implement** the splits, web-only in effect (the phone loads what it loads today).
+- [ ] **Step 3: Run** `web:size` (passes at ≤ 0.8 MB), `web-life.ts --export`, and the throttled measure of Task 2 (150 ms RTT, 9 Mbps, CPU ×4): first text no later than the Next web's, `load` no more than twice the Next web's. Record the numbers.
+- [ ] **Step 4: Commit** (`perf(mobile): the web's first visit carries only what its first page draws`).
