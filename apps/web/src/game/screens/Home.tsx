@@ -9,19 +9,18 @@ import { RatAvatar } from '@/ui/RatAvatar';
 import { ageAt } from '@ratrace/core/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
-import { Button, Panel } from '@/ui/kit';
+import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
-import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
+import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
   const common = useT('common');
-  const settings = useT('settings');
   const legal = useT('legal');
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
@@ -35,6 +34,7 @@ export function Home() {
   const saving = useSaving();
   // The rankings are the other players': there is a way to them only where someone is signed in to ask.
   const ranking = useRanking();
+  const member = useAccount().state.kind === 'member';
   const { offer, takeOffer, declineOffer } = useAccountSaves();
   // The life in the account the player has asked about, by its id: the question is never open for another one.
   const [asking, setAsking] = useState<string | null>(null);
@@ -48,7 +48,6 @@ export function Home() {
   const returning = inProgress || (runs !== null && runs.length > 0);
   const install = useInstallOffer();
   // A life that is over stays on the device until another begins, so its score can still be looked at.
-  const over = status === 'playing' && view !== null && view.finished;
   // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
   const week = useThisWeek();
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
@@ -120,11 +119,6 @@ export function Home() {
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             <FriendRequests />
-            {over ? (
-              <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
-                {t('lastLife')}
-              </Link>
-            ) : null}
             <div className="grid grid-cols-2 gap-3">
               <Link href="/collection" className="pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
                 <Sprite id="icon.star" />
@@ -135,11 +129,13 @@ export function Home() {
                 {t('records')}
               </Link>
               {ranking !== 'no' ? (
-                <Link href="/rankings" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+                <Link href="/rankings" className={`pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200 ${member ? '' : 'col-span-2'}`}>
                   <Sprite id="icon.status" />
                   {t('rankings')}
                 </Link>
               ) : null}
+              {/* Beside the rankings, for someone signed in: their own page among them. */}
+              <ProfileLink wide={ranking === 'no'} />
             </div>
             {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : lost === 'newer' ? 'lostNewer' : lost === 'waiting' ? 'lostWaiting' : 'lostDamaged')}</p> : null}
             {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}
@@ -147,10 +143,10 @@ export function Home() {
         )}
       </div>
 
-      {/* At the foot, as it always was: the account and the settings, also behind the gear above. */}
-      <Panel className="mt-auto w-full" label={settings('title')}>
-        <HomeSettingsPanel profile={<ProfileLink />} />
-      </Panel>
+      {/* At the foot, for a guest only: the way into Google. The account of someone signed in is in the settings, behind the gear above. */}
+      <div className="mt-auto w-full">
+        <HomeAccount />
+      </div>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
         <p role="alert" className="frame w-full bg-wine-900 px-3 py-2 text-[13px]">
@@ -224,7 +220,7 @@ function FriendRequests() {
  * The way to the player's profile, with their rat on it: there for someone signed in with Google,
  * whose profile the others see, and for nobody else.
  */
-function ProfileLink() {
+function ProfileLink({ wide = false }: { wide?: boolean }) {
   const t = useT('home');
   const { state } = useAccount();
   const community = useCommunity();
@@ -240,7 +236,7 @@ function ProfileLink() {
   }, [userId, community]);
   if (userId === null) return null;
   return (
-    <Link href="/player" className="pixel frame-raised flex min-h-11 w-full items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+    <Link href="/player" className={`pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200 ${wide ? 'col-span-2' : ''}`}>
       <RatAvatar look={ratLookOf(avatar, userId)} size="sm" />
       {t('profile')}
     </Link>

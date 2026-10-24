@@ -165,7 +165,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('link', { name: /^Weekly challenge/ })).toBeNull();
   });
 
-  it('offers a look at the life that just ended, and nothing to continue', async () => {
+  it('offers nothing of the life that just ended: its look back is in the records', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (!session.view().finished) {
@@ -173,9 +173,9 @@ describe('the front door', () => {
       await session.playRound({ orders: [] });
     }
     renderGame(<Home />, services);
-    expect((await screen.findByRole('link', { name: 'See how your last life ended' })).getAttribute('href')).toBe('/play');
+    expect(await screen.findByRole('link', { name: 'New life' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-    expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /last life/ })).toBeNull();
   });
 
   it('says so plainly when the browser is not saving, instead of promising that it is', async () => {

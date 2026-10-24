@@ -48,7 +48,6 @@
     "continueChallenge": "Reto semanal",
     "continuePractice": "Práctica del reto",
     "continueDetail": "{life} · {age} años · {city}",
-    "lastLife": "Ver cómo acabó tu última vida",
     "movedGone": "Esa vida se terminó en otra pestaña o en otro dispositivo.",
     "newLife": "Nueva vida",
     "collection": "Colección",
@@ -75,11 +74,8 @@
     "roomTurn": "Te toca · quedan {time}",
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
-    "roomDone": "Acabada",
     "lostWaiting": "Tu vida empezó con una versión anterior del juego y ahora mismo no se puede abrir. Está guardada: vuelve a intentarlo en un rato, con conexión.",
     "profile": "Tu perfil",
-    "roomResult": "Ver el resultado de tu partida",
-    "roomPlace": "Quedaste #{place} de {total}",
     "friendRequests": "{n, plural, one {# solicitud de amistad} other {# solicitudes de amistad}}"
   },
   "newLife": {
