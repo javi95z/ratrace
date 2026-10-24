@@ -66,6 +66,19 @@ describe('a life played with the keyboard', () => {
     await waitFor(() => expect(stageName()).toBe('What happened'));
   });
 
+  it('answers no card under a sheet that is open, with a digit or the arrows', async () => {
+    await playing();
+    await key({ key: 'Enter', ctrlKey: true });
+    await waitFor(() => expect(stageName()).toMatch(/^Card 1 of/));
+    fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Settings' });
+    await waitFor(() => expect(document.activeElement).toBe(sheet));
+    await key({ key: '1' }, document.body);
+    await key({ key: 'ArrowDown' }, document.body);
+    expect(stageName()).toMatch(/^Card 1 of/);
+    expect(sheet.contains(document.activeElement)).toBe(true);
+  });
+
   it('presses nothing under a sheet that is open', async () => {
     await playing();
     fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));

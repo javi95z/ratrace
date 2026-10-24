@@ -12,7 +12,7 @@ import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
 import { Panel, reach, Tag, useInlineRow, usePress } from '../../ui/kit';
-import { focusedMark, focusMarked, KeyboardHint, pressMarked, useKeyboardMode, useKeyboardScope } from '../../ui/keyboard';
+import { dialogOpen, focusedMark, focusMarked, KeyboardHint, pressMarked, useKeyboardMode, useKeyboardScope } from '../../ui/keyboard';
 import { perfStart } from '../../ui/perf';
 import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
@@ -402,25 +402,28 @@ export function CardStage() {
   // The keyboard (the web's, docs/keyboard.md): a digit picks the choice it numbers at once, a held one never the next card's too; the arrows, Home
   // and End move among the choices, Enter or Space then taking the one in focus. A card met with the keyboard puts its first choice in focus.
   const keyboard = useKeyboardMode();
+  // What can be taken now: a choice shown that is open to the player, and none while an answer is on its way (the web's `enabled`). The digits
+  // count what is shown.
+  const enabled = busy ? [] : shown.filter((index) => previews[index].available);
   useKeyboardScope(
     (event) => {
-      if (!waiting || busy || shown.length === 0 || event.altKey || event.ctrlKey || event.metaKey) return false;
+      if (!waiting || enabled.length === 0 || event.altKey || event.ctrlKey || event.metaKey || dialogOpen()) return false;
       if (event.repeat && /^[1-4]$/.test(event.key)) return true;
       if (/^[1-4]$/.test(event.key)) {
         const index = shown[Number(event.key) - 1];
-        return index !== undefined && pressMarked('card-option', index);
+        return index !== undefined && enabled.includes(index) && pressMarked('card-option', index);
       }
       const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
       if (!direction && event.key !== 'Home' && event.key !== 'End') return false;
       const active = Number(focusedMark('card-option') ?? Number.NaN);
-      const at = shown.includes(active) ? shown.indexOf(active) : 0;
-      const next = event.key === 'Home' ? shown[0] : event.key === 'End' ? shown[shown.length - 1] : shown[(at + direction + shown.length) % shown.length];
+      const at = enabled.includes(active) ? enabled.indexOf(active) : 0;
+      const next = event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled[enabled.length - 1] : enabled[(at + direction + enabled.length) % enabled.length];
       focusMarked('card-option', next);
       return true;
     },
     { active: waiting, priority: 20 },
   );
-  const first = shown[0];
+  const first = enabled[0];
   useEffect(() => {
     if (!keyboard || def === undefined || first === undefined) return;
     const frame = requestAnimationFrame(() => focusMarked('card-option', first));
