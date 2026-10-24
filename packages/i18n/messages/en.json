@@ -6,7 +6,7 @@
       "new": "Choose a life",
       "play": "Your life",
       "collection": "Collection",
-      "records": "Records",
+      "records": "History",
       "rankings": "Rankings",
       "challenge": "Weekly challenge",
       "room": "Multiplayer",
@@ -51,7 +51,7 @@
     "movedGone": "That life was ended in another tab or on another device.",
     "newLife": "New life",
     "collection": "Collection",
-    "records": "Records",
+    "records": "History",
     "language": "Language",
     "motion": "Reduce motion",
     "motionHint": "Turns off roll-ups and particles.",
@@ -1275,7 +1275,7 @@
     "rarityAll": "All"
   },
   "records": {
-    "title": "Records",
+    "title": "History",
     "bests": "Personal bests",
     "bestScore": "Best score",
     "richest": "Greatest net worth",
@@ -1940,7 +1940,7 @@
     "badges": "Badges",
     "games": "Games",
     "more": "More",
-    "toRecords": "Records",
+    "toRecords": "History",
     "toCollection": "Collection",
     "toRankings": "Rankings",
     "layers": {

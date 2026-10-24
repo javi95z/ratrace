@@ -34,7 +34,6 @@ export function Home() {
   const saving = useSaving();
   // The rankings are the other players': there is a way to them only where someone is signed in to ask.
   const ranking = useRanking();
-  const member = useAccount().state.kind === 'member';
   const { offer, takeOffer, declineOffer } = useAccountSaves();
   // The life in the account the player has asked about, by its id: the question is never open for another one.
   const [asking, setAsking] = useState<string | null>(null);
@@ -129,13 +128,11 @@ export function Home() {
                 {t('records')}
               </Link>
               {ranking !== 'no' ? (
-                <Link href="/rankings" className={`pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200 ${member ? '' : 'col-span-2'}`}>
+                <Link href="/rankings" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
                   <Sprite id="icon.status" />
                   {t('rankings')}
                 </Link>
               ) : null}
-              {/* Beside the rankings, for someone signed in: their own page among them. */}
-              <ProfileLink wide={ranking === 'no'} />
             </div>
             {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : lost === 'newer' ? 'lostNewer' : lost === 'waiting' ? 'lostWaiting' : 'lostDamaged')}</p> : null}
             {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}
@@ -143,9 +140,9 @@ export function Home() {
         )}
       </div>
 
-      {/* At the foot, for a guest only: the way into Google. The account of someone signed in is in the settings, behind the gear above. */}
+      {/* At the foot, as it always was, with no frame round it: the account, the player's profile and the settings, these also behind the gear above. */}
       <div className="mt-auto w-full">
-        <HomeAccount />
+        <HomeAccount profile={<ProfileLink />} />
       </div>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
@@ -220,7 +217,7 @@ function FriendRequests() {
  * The way to the player's profile, with their rat on it: there for someone signed in with Google,
  * whose profile the others see, and for nobody else.
  */
-function ProfileLink({ wide = false }: { wide?: boolean }) {
+function ProfileLink() {
   const t = useT('home');
   const { state } = useAccount();
   const community = useCommunity();
@@ -236,7 +233,7 @@ function ProfileLink({ wide = false }: { wide?: boolean }) {
   }, [userId, community]);
   if (userId === null) return null;
   return (
-    <Link href="/player" className={`pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200 ${wide ? 'col-span-2' : ''}`}>
+    <Link href="/player" className="pixel frame-raised flex min-h-11 w-full items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
       <RatAvatar look={ratLookOf(avatar, userId)} size="sm" />
       {t('profile')}
     </Link>

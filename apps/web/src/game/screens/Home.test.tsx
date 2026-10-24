@@ -94,7 +94,7 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices(), 'ru');
     expect((await screen.findByRole('link', { name: 'Новая жизнь' })).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Коллекция' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Рекорды' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'История' })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Настройки' })[0]).toBeTruthy();
     // Nothing of another language is left on it, but the game's own name and the names of the languages.
     expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
@@ -103,12 +103,12 @@ describe('the front door', () => {
   it('leads to the collection and to the records', async () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');
-    expect(screen.getByRole('link', { name: 'Records' }).getAttribute('href')).toBe('/records');
+    expect(screen.getByRole('link', { name: 'History' }).getAttribute('href')).toBe('/records');
   });
 
   it('leads to the rankings where someone is signed in, and shows no way to them where nobody is', async () => {
     renderGame(<Home />, memoryServices());
-    await screen.findByRole('link', { name: 'Records' });
+    await screen.findByRole('link', { name: 'History' });
     expect(screen.queryByRole('link', { name: 'Rankings' })).toBeNull();
     cleanup();
     const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
