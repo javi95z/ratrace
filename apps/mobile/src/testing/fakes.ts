@@ -1,4 +1,4 @@
-import { createContext, createElement, useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { createContext, createElement, useEffect, useState, useSyncExternalStore, type ComponentType, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 import { painted } from '../ui/testing/skia';
@@ -19,6 +19,19 @@ export const routerNow = { is: router };
  * gives them. A `Redirect` is a box that names where it goes.
  */
 export const params: Record<string, string> = {};
+/**
+ * The moves of the router, as the readers of the address in front hear them (`useGlobalSearchParams`, which expo-router draws again at every move,
+ * whichever route moved): `routeMoved()` is one. A route's own parameters (`useLocalSearchParams`) hear none of them, as a route's do not.
+ */
+const moves = { count: 0, listeners: new Set<() => void>() };
+export function routeMoved(): void {
+  moves.count += 1;
+  for (const heard of [...moves.listeners]) heard();
+}
+const hearMoves = (heard: () => void) => {
+  moves.listeners.add(heard);
+  return () => void moves.listeners.delete(heard);
+};
 /** The path of the screen in front, as the router says it (`usePathname`). */
 export const pathname = { now: '/' };
 /**
@@ -55,7 +68,10 @@ export const expoRouter = {
   usePathname: () => pathname.now,
   useLocalSearchParams: () => params,
   // The address's own parameters and its query, as one: the language of the page (`/[locale]/…`) among them.
-  useGlobalSearchParams: () => params,
+  useGlobalSearchParams: () => {
+    useSyncExternalStore(hearMoves, () => moves.count);
+    return params;
+  },
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
   // The router's page of nothing, for an address it has no page for.
   Unmatched: () => createElement('div', { 'data-unmatched': '' }),

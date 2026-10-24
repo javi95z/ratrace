@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE, isLocale, LOCALES } from '@ratrace/i18n';
-import { useGlobalSearchParams, useRouter } from 'expo-router';
+import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';
 
@@ -43,8 +43,10 @@ export function generateStaticParams(): Array<{ locale: string }> {
 }
 
 /**
- * The language of the address the player is on (`/es/play` is `es`), as the router has it: what is there, whatever it is (a page of the game checks
- * it is one of its languages), or `''` outside the pages of a language. On the web it is the language of the page; on the phone, of the stack.
+ * The language of the address the player is on (`/es/play` is `es`), as the router has it from anywhere (the game's context, round every route): what
+ * is there, whatever it is (a page of the game checks it is one of its languages), or `''` outside the pages of a language. On the web it is the
+ * language of the page; on the phone, of the stack. It changes with every move of the router, and draws its reader again with each: a page reads
+ * its own (`useGo`).
  */
 export function useLocaleParam(): string {
   const { locale } = useGlobalSearchParams<{ locale?: string | string[] }>();
@@ -61,15 +63,9 @@ export interface Go {
   home(): void;
 }
 
-/**
- * The way from page to page, in the language of the address the player is on (else of the game, outside the pages of a language): every page of a
- * stack is in one language, and so is the front door it goes home to. A page is named, never its address (`go.push('room', { query: { code } })`).
- * Where sheets may be open, close them first (`sheetsGone()`), as before any move of the router.
- */
-export function useGo(): Go {
+/** The moves, in `param`'s language if it is one of the game's, else in the language of the game (`speaking`). */
+function useGoIn(param: unknown, speaking: string): Go {
   const router = useRouter();
-  const param = useLocaleParam();
-  const speaking = useContext(Language);
   const locale = isLocale(param) ? param : speaking;
   return useMemo<Go>(
     () => ({
@@ -79,6 +75,22 @@ export function useGo(): Go {
     }),
     [router, locale],
   );
+}
+
+/**
+ * The way from page to page, for a page of the game (inside a route): in the language of its own address (else of the game, outside the pages of a
+ * language), which no move to another page changes. Every page of a stack is in one language, and so is the front door it goes home to. A page is
+ * named, never its address (`go.push('room', { query: { code } })`). Where sheets may be open, close them first (`sheetsGone()`), as before any move of
+ * the router.
+ */
+export function useGo(): Go {
+  const { locale } = useLocalSearchParams<{ locale?: string | string[] }>();
+  return useGoIn(locale, useContext(Language));
+}
+
+/** The same, from outside the routes (the game's context, round every one): in the language of the address in front, read anew at every move. */
+export function useGoFromAnywhere(): Go {
+  return useGoIn(useLocaleParam(), useContext(Language));
 }
 
 /** The phone's own pages, outside the languages: Google's way back (`theratrace://auth`), and the development routes. */

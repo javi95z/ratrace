@@ -7,7 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import { Platform } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
 import { pathname } from '../testing/fakes';
-import { appBrowser, appBuild, place, usePlace, watchErrors } from './errors';
+import { appBrowser, appBuild, place, placeOf, usePlace, watchErrors } from './errors';
 import type { Rejections, Uncaught } from './errors';
 
 /*
@@ -173,6 +173,24 @@ describe('what an error report says of the phone', () => {
       rerender();
     });
     expect(place()).toBe('/play');
+    // The pages under their language are the same places as ever: the server keeps one for each screen of the phone, whatever its language.
+    act(() => {
+      pathname.now = '/es/play';
+      rerender();
+    });
+    expect(place()).toBe('/play');
+    act(() => {
+      pathname.now = '/ru';
+      rerender();
+    });
+    expect(place()).toBe('/');
+    act(() => {
+      pathname.now = '/scene';
+      rerender();
+    });
+    expect(place()).toBe('/scene');
     unmount();
+    expect(placeOf('/en/rankings')).toBe('/rankings');
+    expect(placeOf('/english')).toBe('/english');
   });
 });

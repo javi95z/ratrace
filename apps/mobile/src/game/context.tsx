@@ -46,7 +46,7 @@ import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
 import { deviceLanguages, localeOf, type LanguageKeep } from './locale';
-import { pageAt, useGo } from './pages';
+import { pageAt, useGoFromAnywhere } from './pages';
 import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
@@ -389,8 +389,11 @@ const SHEETS_PATIENCE = 2_000;
  * place, never a second copy over it. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
  */
 function Taps({ push }: { push: Push }): null {
-  // The way to the pages as it is now: in the language of the address in front, whichever that is when the tap comes.
-  const now = useGo();
+  // The way to the pages as it is now: in the language of the address in front, whichever that is when the tap comes. A notice opens a page over the
+  // stack in front, whose pages are all of one language (the address's), so the page goes on in it; the app's own links (`+native-intent`) may come
+  // before any page is drawn, with no address to follow, and are opened in the phone's language, the player's choice (`linkLocale`). The two differ
+  // only once the player has chosen another language while the app runs, and the words on screen are the player's choice either way.
+  const now = useGoFromAnywhere();
   const go = useRef(now);
   go.current = now;
   const pathname = usePathname();
@@ -459,17 +462,11 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   // Taken away halfway (the layout above it drawn anew), the game leaves no sheet shut for whatever comes next.
   useEffect(() => openSheetsAgain, []);
-  const go = useGo();
-  // Once the game is drawn anew: the sheets may open again, and whatever the stack is, the front door, on purpose. Once for each start, whatever else
-  // draws this again.
-  const landed = useRef(0);
-  useEffect(() => {
-    if (started.count === landed.current) return;
-    landed.current = started.count;
+  // Once the game is drawn anew: the sheets may open again.
+  const reopen = useCallback(() => {
     shutForStart.current?.();
     shutForStart.current = null;
-    go.home();
-  }, [started, go]);
+  }, []);
   return (
     <>
       <Place />
@@ -477,14 +474,33 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       <Started key={started.count} made={made} settings={started.settings} restart={restart}>
         {children}
       </Started>
+      {/* After the game, as the effect of its parent was: the game drawn anew has run its own first. */}
+      <Landing count={started.count} landed={reopen} />
     </>
   );
+}
+
+/**
+ * Once the game is drawn anew (`count`, the starts so far): whatever the stack is, the front door, on purpose, once for each start, whatever else draws
+ * this again; `landed` first. A leaf of its own, as `Taps`: it reads the address in front, which changes at every move of the router, and nothing
+ * else is drawn again for it.
+ */
+function Landing({ count, landed }: { count: number; landed: () => void }): null {
+  const go = useGoFromAnywhere();
+  const seen = useRef(0);
+  useEffect(() => {
+    if (count === seen.current) return;
+    seen.current = count;
+    landed();
+    go.home();
+  }, [count, landed, go]);
+  return null;
 }
 
 function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => Promise<void>; children: ReactNode }) {
   const [game] = useState(() => made.game);
   // The phone's choice, else its own; on the web, the page's address (`useLanguage.web.ts`).
-  const [locale, setLocale] = useLanguage(made.language);
+  const { locale, choose: setLocale, follow } = useLanguage(made.language);
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
   const [profile, setProfile] = useState<Profile>(() => (startedWith ? { ...newProfile(), settings: startedWith } : newProfile()));
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
@@ -582,7 +598,7 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
   useEffect(() => (opened && made.firstDrawn ? whenShown(made.firstDrawn) : undefined), [opened, made]);
 
   // Someone signing in on this phone brings the language of their account with them.
-  useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, setLocale), [made, locale, setLocale]);
+  useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, follow), [made, locale, follow]);
 
   // The phone's notices, where they are on, follow the account and the language of the game: the next one speaks the language the game does.
   useEffect(() => made.push.follow(made.account, made.community, locale), [made, locale]);

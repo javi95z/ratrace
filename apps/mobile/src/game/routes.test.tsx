@@ -64,7 +64,7 @@ test('a page of the game is drawn in one of its languages only: any other first 
   expect(screen.queryByRole('heading', { name: 'Records' })).toBeNull();
 });
 
-test('the bare address leads to the front door of the phone\'s language, the query it carries with it', () => {
+test('the bare address leads to the front door of the phone\'s language, the query and hash it carries with it', () => {
   // Outside the pages of a language: the address has none.
   delete params.locale;
   const { container } = renderGame(<IndexRoute />, memoryServices(), 'es');
@@ -73,6 +73,11 @@ test('the bare address leads to the front door of the phone\'s language, the que
   params.code = 'c0de';
   const again = renderGame(<IndexRoute />, memoryServices(), 'ru');
   expect(again.container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/ru?code=c0de');
+  cleanup();
+  // And the hash, which the router hands as `#`.
+  params['#'] = 'x';
+  const hashed = renderGame(<IndexRoute />, memoryServices(), 'ru');
+  expect(hashed.container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/ru?code=c0de#x');
 });
 
 test('the timing probe\'s route goes home in a build without the flag, and puts nothing on the phone', async () => {

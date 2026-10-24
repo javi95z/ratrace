@@ -20,3 +20,12 @@ export interface LanguageKeep {
   read(): string | null;
   write(locale: Locale): void;
 }
+
+/** The language the game is played in, how the player chooses another, and how an account's language is followed as someone signs in (`useLanguage`). */
+export interface GameLanguage {
+  locale: Locale;
+  /** The player's choice (the settings). */
+  choose(next: Locale): void;
+  /** The language of the account that signed in (`online/language.ts`). */
+  follow(next: Locale): void;
+}

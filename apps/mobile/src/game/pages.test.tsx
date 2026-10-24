@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { redirectSystemPath } from '../app/+native-intent';
 import { device, kv, memoryServices, params, renderGame, router } from '../testing/render';
-import { hrefOf, pageAt, useGo, type Go } from './pages';
+import { routeMoved } from '../testing/fakes';
+import { hrefOf, pageAt, useGo, useLocaleParam, type Go } from './pages';
 
 afterEach(cleanup);
 
@@ -54,6 +55,33 @@ describe('the way from page to page', () => {
     // Home is the front page of that language, the screens over it dismissed (the kit's rule: `dismissTo`, never a second front page).
     act(() => go?.home());
     expect(router.dismissTo).toHaveBeenLastCalledWith('/es');
+  });
+
+  it('draws a page again for no move of the router elsewhere: a page reads its own address, while the game\'s context reads the one in front', () => {
+    params.locale = 'en';
+    const drawn = { page: 0, front: 0 };
+    function APage() {
+      useGo();
+      drawn.page += 1;
+      return null;
+    }
+    function Front() {
+      useLocaleParam();
+      drawn.front += 1;
+      return null;
+    }
+    renderGame(
+      <>
+        <APage />
+        <Front />
+      </>,
+      memoryServices(),
+    );
+    const before = { ...drawn };
+    act(() => routeMoved());
+    act(() => routeMoved());
+    expect(drawn.front).toBe(before.front + 2);
+    expect(drawn.page).toBe(before.page);
   });
 
   it('outside the pages of a language (a development route), goes in the language of the game', () => {

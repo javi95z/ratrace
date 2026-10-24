@@ -49,11 +49,17 @@ let here = '/';
 /** The path of the screen in front, for an error report: the router's, which only a component can read (`usePlace`). */
 export const place = (): string => here;
 
+/**
+ * The place of a path in the reports: the router's path without the language its pages are under (`/en/play` is `/play`, `/es` is `/`), so the server
+ * keeps one place for each screen of the phone, whatever language the app opened its pages in, as it did before the pages had one.
+ */
+export const placeOf = (path: string): string => path.replace(/^\/(?:en|es|ru)(?=\/|$)/, '') || '/';
+
 /** Keeps the path of the screen in front for the error reports. Called once, by the game's provider (game/context.tsx), round every screen. */
 export function usePlace(): void {
   const path = usePathname();
   useEffect(() => {
-    here = path;
+    here = placeOf(path);
   }, [path]);
 }
 
