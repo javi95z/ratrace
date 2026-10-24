@@ -12,6 +12,7 @@ import { browserOnline } from '../../../web/src/online/index';
 import { kvText } from '../kvStore.web';
 import { accountCloud } from '../testing/accountCloud';
 import { servers } from '../testing/cloudServers';
+import { backFromGoogle } from './browser.web';
 import { forgetThePhone, givenUpIn, phoneOnline, phonesCloud, refusedIn } from './index.web';
 
 /*
@@ -161,6 +162,49 @@ describe('the cloud of this browser', () => {
     expect(window.location.href).toBe('http://localhost:3000/en/account');
     // Straight on into it, by the Next web's road: the page leaves for Google and comes back to where it is.
     expect(signedInWithGoogle).toHaveBeenCalledWith('http://localhost:3000/en/account');
+  });
+
+  it('lands back from Google on the page with a code: the client exchanges it once, keeps the session under its own key, and cleans the address', async () => {
+    const cloud = configured();
+    // The page the guest asks from: the page leaves for Google (jsdom cannot leave, and says so) and the trip's verifier stays in the browser.
+    const left = vi.spyOn(console, 'error').mockImplementation(() => {});
+    at('/en/account?tab=1');
+    const before = phoneOnline(new MemoryStore());
+    await before.account.start('en');
+    made.push(clientOf(before));
+    expect(before.account.state()).toMatchObject({ kind: 'guest', userId: 'guest-1' });
+    expect(await before.account.keepWithGoogle(backFromGoogle())).toBe(true);
+    expect(cloud.asked).toContain('GET /auth/v1/user/identities/authorize');
+    left.mockRestore();
+    forgetThePhone();
+
+    // Google sends the browser back to the page it left, with a code: a new load of the page, the app's web drawn anew over it.
+    const back = cloud.google.back() as string;
+    expect(new URL(back).searchParams.get('code')).toBe('google-code-1');
+    at(back);
+    const after = phoneOnline(new MemoryStore());
+    await after.account.start('en');
+    made.push(clientOf(after));
+
+    // The guest's own player, now with Google: the code exchanged once, and no new guest made.
+    expect(after.account.state()).toEqual({ kind: 'member', userId: 'guest-1', email: 'ana@example.com' });
+    expect(cloud.asked.filter((one) => one === 'POST /auth/v1/token?grant_type=pkce')).toHaveLength(1);
+    expect(cloud.guests()).toBe(1);
+    // The session under supabase-js's own key, the Next web's, and the trip's verifier used up (supabase-js keeps its list of trips as it does on
+    // the Next web, the same library).
+    expect(Object.keys(localStorage).filter((key) => key.startsWith('sb-') && !key.endsWith('-code-verifier'))).toEqual([`sb-${REF}-auth-token`]);
+    expect(localStorage.getItem(`sb-${REF}-auth-token-code-verifier`)).toBeNull();
+    expect(JSON.parse(localStorage.getItem(`sb-${REF}-auth-token`) as string)).toMatchObject({ user: { id: 'guest-1', is_anonymous: false } });
+    // The address the page was on, the code taken out of it.
+    expect(window.location.href).toBe('http://localhost:3000/en/account?tab=1');
+
+    // Drawn again on the same address, nothing is exchanged twice.
+    forgetThePhone();
+    const again = phoneOnline(new MemoryStore());
+    await again.account.start('en');
+    made.push(clientOf(again));
+    expect(again.account.state()).toMatchObject({ kind: 'member', userId: 'guest-1' });
+    expect(cloud.asked.filter((one) => one === 'POST /auth/v1/token?grant_type=pkce')).toHaveLength(1);
   });
 
   it('counts through the client the account connected last, and forgets it with the app', async () => {
