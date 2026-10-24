@@ -155,7 +155,7 @@ describe('a control\'s own keys', () => {
   it('are not handed a key from a sheet it opened, which React bubbles to it out of the sheet\'s portal', async () => {
     const heard = vi.fn(() => true);
     render(
-      <View {...onKeys(heard)}>
+      <View {...(onKeys(heard) as object)}>
         <button type="button">row</button>
         <Sheet open onClose={() => {}} title="Inside" closeLabel="Close">
           <button type="button">in the sheet</button>
