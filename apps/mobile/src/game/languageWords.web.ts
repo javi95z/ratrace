@@ -45,7 +45,7 @@ function readable(load: Load): Load {
 
 /** The interface's words of each language in, by language (the content's are in `@ratrace/content`'s, `addText`). */
 const messages = new Map<Locale, Messages>();
-/** Each language asked for, until it is in: one fetch for every place that asks. A fetch that failed is forgotten, and asked again by the next. */
+/** Each language asked for: one fetch for every place that asks. A fetch that failed is kept as it failed, until it is asked for again (`loadLanguageWords`). */
 const loading = new Map<Locale, Load>();
 
 function add(locale: Locale, language: Language): void {
@@ -70,33 +70,40 @@ export function languageReady(locale: Locale): boolean {
   return messages.has(locale);
 }
 
-/** Loads a language's words (its chunk), once: what every place that asks for it waits on. */
+/** Whether a load has failed (React's `status`, as `readable` writes it). */
+const failed = (load: Load): boolean => (load as Load & { status?: string }).status === 'rejected';
+
+/**
+ * The load a page drawn in a language waits on: the one under way or done, a failed one among them. A page drawn while its language cannot be had
+ * is told so (`use` throws the failure, to the root's page of a fault, `PageFault.web.tsx`), once: were a failed load forgotten here, the page,
+ * drawn again for the next, would fetch the chunk again and again and never be told.
+ */
+function wordsLoad(locale: Locale): Load {
+  return loading.get(locale) ?? loadLanguageWords(locale);
+}
+
+/**
+ * Loads a language's words (its chunk), once: what every place that asks for it waits on. One whose fetch failed is asked again by whoever asks
+ * for it next this way (a language chosen, another try from the page of a fault); a page drawn meanwhile is told it failed (`wordsLoad`).
+ */
 export function loadLanguageWords(locale: Locale): Load {
   const known = loading.get(locale);
-  if (known) return known;
+  if (known && !failed(known)) return known;
   const load: Load = languageReady(locale)
     ? Object.assign(Promise.resolve(), { status: 'fulfilled' as const })
-    : readable(
-        CHUNKS[locale]().then(
-          (language) => add(locale, language),
-          (error: unknown) => {
-            loading.delete(locale);
-            throw error;
-          },
-        ),
-      );
+    : readable(CHUNKS[locale]().then((language) => add(locale, language)));
   loading.set(locale, load);
   return load;
 }
 
 /** The interface's words in a language, once they are in: until then the page that asks waits for them. */
 export function useMessages(locale: Locale): Messages {
-  use(loadLanguageWords(locale));
+  use(wordsLoad(locale));
   return messages.get(locale)!;
 }
 
 /** The content's words in a language, once they are in (the page waits until then): made again only when the language changes. */
 export function useContentText(locale: Locale): { text: ContentText; names: Names } {
-  use(loadLanguageWords(locale));
+  use(wordsLoad(locale));
   return useMemo(() => textFor(locale), [locale]);
 }

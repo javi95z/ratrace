@@ -8,7 +8,7 @@ import { Raised } from '../ui/kit';
 import { Language, PixelText, ReadText, SNUG } from '../ui/text';
 import { COLORS } from '../ui/theme';
 import { FAULT_KEYS, FAULT_WORDS, type FaultWords } from './faultWords';
-import { loadedMessages } from './languageWords';
+import { loadedMessages, loadLanguageWords } from './languageWords';
 import { openDocument } from './openDocument';
 import { hrefOf } from './pages';
 
@@ -17,8 +17,9 @@ import { hrefOf } from './pages';
  * every step, so the life is where it was; this offers another try, a new life, and the way home, instead of a blank page. It is expo-router's
  * `ErrorBoundary` of the root layout (`app/_layout.tsx`), drawn in the root's place: the game, its context and its words are gone with it, so it
  * stands alone. Its words are the page's language's from the game where they are in, else the HTML's (`faultWords.ts`, written by `app/+html.tsx`):
- * a language whose chunk could not be had is such a fault, and the page still speaks. Another try draws the game again, from nothing (its words
- * asked for again); a new life and home are new documents of the site, as the Next web's links leave its page.
+ * a language whose chunk could not be had is such a fault (`languageWords.web.ts` tells the page so once), and the page still speaks. Another try
+ * asks for the page's words again, then draws the game again, from nothing; a new life and home are new documents of the site, as the Next web's
+ * links leave its page.
  */
 
 /** The page's language: its address's, else its document's, else English. */
@@ -63,6 +64,11 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   useEffect(() => {
     console.error('a screen could not be drawn:', error);
   }, [error]);
+  /** Another try: the page's words asked for again first (a chunk that could not be had is fetched anew; one that is in, at once), then the game drawn. */
+  const again = async () => {
+    await loadLanguageWords(locale).catch(() => undefined);
+    await retry();
+  };
   return (
     <Language.Provider value={locale}>
       <View role="main" style={{ flex: 1, justifyContent: 'center' }}>
@@ -75,7 +81,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
               <ReadText size={14} lineHeight={14 * SNUG} style={{ marginTop: 8 }}>{words?.faultBody ?? ''}</ReadText>
             </Framed>
           </View>
-          <WayOut primary label={words?.retry ?? ''} onPress={() => void retry()} />
+          <WayOut primary label={words?.retry ?? ''} onPress={() => void again()} />
           <WayOut label={words?.newLife ?? ''} onPress={() => openDocument(hrefOf('new', { locale }), 'push')} />
           <WayOut label={words?.home ?? ''} onPress={() => openDocument(hrefOf('', { locale }), 'push')} />
         </View>
