@@ -199,6 +199,15 @@ describe('the first page', () => {
     ]);
   });
 
+  it('carries not the page of nothing in the scripts its HTML loads: it is the 404\'s own chunk, never the front door\'s', () => {
+    const nothing = { path: `${APP}nothing.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/game/screens/NotFound.web.tsx'] };
+    const clean = { path: `${APP}clean.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/game/screens/Home.tsx'] };
+    expect(judgeWebExport([clean, nothing, firstPage([clean.path])], [])).toEqual([]);
+    expect(judgeWebExport([clean, nothing, firstPage([clean.path, nothing.path])], [])).toEqual([
+      expect.stringMatching(/first page .* carries the page of nothing: \/apps\/mobile\/src\/game\/screens\/NotFound\.web\.tsx/),
+    ]);
+  });
+
   it('carries no language\'s words in the scripts its HTML loads: each language\'s are a chunk of their own, fetched for the page\'s language', () => {
     const words = { path: `${APP}words.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/game/Home.tsx', '/packages/i18n/messages/es.json'] };
     const text = { path: `${APP}text.js`, bytes: Buffer.from('x'), sources: ['/packages/content/src/text/ru.cards.ts'] };

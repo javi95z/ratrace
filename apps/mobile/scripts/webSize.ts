@@ -274,6 +274,9 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
     const named = firstPageOf(files)?.scripts ?? [];
     const words = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => WORDS.test(source)))];
     if (words.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries words of a language: ${words.join(', ')}`);
+    // Nor the page of nothing (`screens/NotFound.web.tsx`): the 404's own chunk, which a page in a language the game lacks loads only then.
+    const nothing = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => source.endsWith('/screens/NotFound.web.tsx')))];
+    if (nothing.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries the page of nothing: ${nothing.join(', ')}`);
   }
   problems.push(...judgeDoorWords(byPath));
   for (const { page, faces } of FRONT_DOORS) {

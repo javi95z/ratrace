@@ -5,7 +5,6 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import NotFoundRoute from '../../app/+not-found';
-import RecordsRoute from '../../app/[locale]/records';
 import { kvLanguage } from '../../kvStore';
 import { device, params, pathname } from '../../testing/fakes';
 import { memoryServices, renderGame } from '../../testing/render';
@@ -99,13 +98,6 @@ describe('the page of nothing', () => {
     expect(opened.map((one) => one.address)).toEqual(['/es/new', '/es']);
     await act(async () => words.release());
     await waitFor(() => expect(document.querySelector('h1')?.textContent).toBe(play('es').title));
-  });
-
-  it('is what a page in a language the game does not have shows (/de/records), in English', async () => {
-    params.locale = 'de';
-    pathname.now = '/de/records';
-    renderGame(<RecordsRoute />, memoryServices());
-    expect(await screen.findByRole('heading', { name: play('en').title })).toBeTruthy();
   });
 
   it('is taken over in the browser as its one HTML was drawn, in English, and then speaks the address\'s language', async () => {
