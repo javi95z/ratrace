@@ -6,6 +6,7 @@ import { Framed } from './Frame';
 import { focusMarked, KeyboardHint, onKeys, tabStop, useKeyboardMode } from './keyboard';
 import { CREAM, GOLD, WINE, type FrameCut, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
+import { LEVEL_2 } from './headingLevel';
 import { Language, PixelText, ReadText, TIGHT } from './text';
 import { useTap } from './tap';
 import { BODY, COLORS, TOUCH, type ColorToken } from './theme';
@@ -250,7 +251,7 @@ export function Raised({
 /** The title of a panel: a gold tab that hangs over its top edge. */
 export function TabTitle({ children }: { children: Words }) {
   return (
-    <View pointerEvents="none" accessibilityRole="header" style={{ position: 'absolute', top: -12, left: 8, right: 8, flexDirection: 'row' }}>
+    <View pointerEvents="none" accessibilityRole="header" {...LEVEL_2} style={{ position: 'absolute', top: -12, left: 8, right: 8, flexDirection: 'row' }}>
       <Framed
         kind="tab"
         style={{ backgroundColor: COLORS['gold-500'], paddingHorizontal: 8, paddingTop: 4, paddingBottom: 2, flexShrink: 1 }}

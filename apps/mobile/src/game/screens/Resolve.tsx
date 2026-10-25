@@ -16,6 +16,7 @@ import { CREAM, GOLD, type FrameTone } from '../../ui/frames';
 import { Bare, KeyFigure, Panel, Row, SrOnly } from '../../ui/kit';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
+import { LEVEL_2 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useGame, useStill, useT, useWords } from '../context';
@@ -309,7 +310,7 @@ export function Resolve() {
       <FlyingCoins from={LEDGER_FROM} to={LEDGER_TO} startMs={rolled} />
       <View>
         {/* Two years go by: the wheel turns. (The web's title is a flex row in a centred block: it stands at the left, and the ages under it in the middle.) */}
-        <View accessibilityRole="header" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View accessibilityRole="header" {...LEVEL_2} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Loop name="wheel" outfit={ratOutfit(view)} />
           <PixelText size={22} tone="gold-500" style={{ flexShrink: 1 }}>
             {t('title')}

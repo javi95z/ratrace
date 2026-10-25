@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { WIDE_COLUMN } from '../../ui/desk';
 import { Screen } from '../../ui/Page';
+import { LEVEL_2 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { LEGAL_EMAIL, LEGAL_NAME } from '../site';
 import { LEGAL_SECTION } from '../ownWords';
@@ -37,7 +38,7 @@ export function Legal() {
       </View>
       {sections.map(([title, body], at) => (
         <View key={title}>
-          <View accessibilityRole="header">
+          <View accessibilityRole="header" {...LEVEL_2}>
             <PixelText size={16}>{title}</PixelText>
           </View>
           <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG} style={{ marginTop: 4 }}>{body}</ReadText>

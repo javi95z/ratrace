@@ -11,6 +11,7 @@ import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
 import { pressDown, usePress } from './kit';
 import { PerfDrawn, perfSheet, perfTouched } from './perf';
+import { LEVEL_2 } from './headingLevel';
 import { PixelText, ReadText } from './text';
 import { COLORS, SHELL_WIDTH, TOUCH } from './theme';
 
@@ -363,7 +364,7 @@ function SheetPanel({
                   contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                    <View nativeID={titleId} accessibilityRole="header" style={{ flexShrink: 1, paddingTop: 4 }}>
+                    <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ flexShrink: 1, paddingTop: 4 }}>
                       <PixelText size={19}>{title}</PixelText>
                     </View>
                     <Pressable

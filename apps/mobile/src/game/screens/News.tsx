@@ -14,6 +14,7 @@ import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { Sprite } from '../../ui/Sprite';
+import { LEVEL_2 } from '../../ui/headingLevel';
 import { PixelText, ReadText, TIGHT } from '../../ui/text';
 import { COLORS, EXTRA, type ColorToken } from '../../ui/theme';
 import { useGame, useT, useWords } from '../context';
@@ -182,7 +183,7 @@ export function Headlines() {
             <View style={{ backgroundColor: COLORS.cream, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8 }}>
               {/* The double rule of its border: 3 of cream inside it, then a line of ink. */}
               <View pointerEvents="none" style={{ position: 'absolute', top: 3, left: 3, right: 3, bottom: 3, borderWidth: 1, borderColor: COLORS['ink-900'] }} />
-              <View accessibilityRole="header" style={{ position: 'absolute' }}>
+              <View accessibilityRole="header" {...LEVEL_2} style={{ position: 'absolute' }}>
                 <SrOnly>{t('title')}</SrOnly>
               </View>
               <View>

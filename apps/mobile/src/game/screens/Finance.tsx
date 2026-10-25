@@ -23,6 +23,7 @@ import { Sparks } from '../../ui/Sparks';
 import { useIsWide } from '../../ui/desk';
 import { dialogOpen, focusedMark, focusMarked, onKeys, stepMarked, useKeyboardScope } from '../../ui/keyboard';
 import { Sprite } from '../../ui/Sprite';
+import { LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useSettings, useT, useWords } from '../context';
@@ -82,7 +83,7 @@ const ITEM = { dataSet: { financeItem: true } } as const;
 /** A heading in a sheet (the web's `h3 pixel text-[14px] uppercase tracking-wider text-ink-200`). */
 function SheetHeading({ children, below = 0 }: { children: string; below?: number }) {
   return (
-    <View accessibilityRole="header" style={{ marginBottom: below }}>
+    <View accessibilityRole="header" {...LEVEL_3} style={{ marginBottom: below }}>
       <PixelText size={14} tone="ink-200" style={{ textTransform: 'uppercase', letterSpacing: 14 * 0.05 }}>{children}</PixelText>
     </View>
   );

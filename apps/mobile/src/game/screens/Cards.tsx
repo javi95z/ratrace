@@ -18,6 +18,7 @@ import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
+import { LEVEL_2, LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useGame, useStill, useT, useWords } from '../context';
@@ -329,7 +330,7 @@ function Card({ def }: { def: CardDef }) {
         </View>
         {rarity === 'legendary' ? <Sparks colours={['gold-500', 'teal-300', 'cream', 'wine-300']} count={16} reach={150} size={4} delayMs={450} held={held?.spark} /> : null}
         <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
-          <View accessibilityRole="header">
+          <View accessibilityRole="header" {...LEVEL_2}>
             <PixelText size={19} tone="ink-900">{written.title}</PixelText>
           </View>
           <ReadText size={14} lineHeight={14 * SNUG} tone="ink-700" style={{ marginTop: 4 }}>{written.body}</ReadText>
@@ -527,7 +528,7 @@ function Answered({ event }: { event: Extract<GameEvent, { kind: 'card' }> }) {
             <Sprite id={cardArt[event.cardId] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
           </View>
           <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
-            <View accessibilityRole="header">
+            <View accessibilityRole="header" {...LEVEL_3}>
               <PixelText size={19} tone="ink-900">{written.title}</PixelText>
             </View>
             <PixelText size={13} tone="ink-500" style={{ marginTop: 2, letterSpacing: 13 * 0.05, textTransform: 'uppercase' }}>{t('chose', { label: option.label })}</PixelText>
@@ -598,7 +599,7 @@ export function Outcome() {
   return (
     <View style={{ gap: 12 }}>
       {paid ? <FlyingCoins from={PAID_FROM} to="cash" startMs={COINS_AFTER_MS} /> : null}
-      <View accessibilityRole="header">
+      <View accessibilityRole="header" {...LEVEL_2}>
         <PixelText size={20} tone="gold-500" style={{ textAlign: 'center' }}>
           {t('results')}
         </PixelText>
