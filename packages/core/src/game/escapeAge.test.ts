@@ -91,21 +91,21 @@ describe('the age a life was caught again by the rat race at', () => {
     const { session, played } = await caughtAgain();
     const view = session.view();
     expect(played).toContainEqual({ kind: 'escapeLost' });
-    // Round 16 played: the game stands at 17, and the story writes both turns of the way out with the round it stands at once each is played.
-    expect(view.round).toBe(17);
+    // Round 17 played: the game stands at 18, and the story writes both turns of the way out with the round it stands at once each is played.
+    expect(view.round).toBe(18);
     expect(view.player.escapedAtRound).toBeNull();
     const story = session.story();
-    expect(story.filter((m) => m.kind === 'escaped' || m.kind === 'escapeLost')).toEqual([{ round: 16, kind: 'escaped' }, { round: 17, kind: 'escapeLost' }]);
+    expect(story.filter((m) => m.kind === 'escaped' || m.kind === 'escapeLost')).toEqual([{ round: 15, kind: 'escaped' }, { round: 18, kind: 'escapeLost' }]);
     const back = story.find((m) => m.kind === 'escapeLost')!;
-    expect(milestoneRound(back)).toBe(16);
-    expect(milestoneAge(content, back)).toBe(54);
-    expect(milestoneAge(content, story.find((m) => m.kind === 'escaped')!)).toBe(52);
+    expect(milestoneRound(back)).toBe(17);
+    expect(milestoneAge(content, back)).toBe(56);
+    expect(milestoneAge(content, story.find((m) => m.kind === 'escaped')!)).toBe(50);
 
     const life = lives.find((one) => one.id === 'engineer')!;
     const [, middle] = epilogue({ words: { content, ...textFor('en'), fmt: formatFor('en') }, t: tale, life, view, story, score: 0, bankruptcies: 0 });
-    expect(middle).toContain('At 52 you left the rat race');
-    expect(middle).toContain('At 54 the rat race caught you again.');
-    expect(middle).not.toContain('At 56 the rat race caught you again.');
+    expect(middle).toContain('At 50 you left the rat race');
+    expect(middle).toContain('At 56 the rat race caught you again.');
+    expect(middle).not.toContain('At 58 the rat race caught you again.');
   }, 60_000);
 
   it('is told before what the same round brought once it was played', () => {
