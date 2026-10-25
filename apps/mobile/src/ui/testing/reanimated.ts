@@ -24,10 +24,12 @@ export const rea = ({
 export async function reanimatedFake() {
   const { useRef, useReducer, useEffect } = await import('react');
   const { View, ScrollView } = await import('react-native');
-  type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[] };
+  type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[]; done?: (finished: boolean) => void };
   const emit = () => rea.listeners.forEach((l) => l());
   return {
-    default: { View, ScrollView },
+    // An animated component is the component itself: its animated style is a plain style here.
+    default: { View, ScrollView, createAnimatedComponent: <C,>(component: C) => component },
+    createAnimatedComponent: <C,>(component: C) => component,
     useSharedValue: <T,>(init: T) => {
       const box = useRef<{ raw: unknown; timer?: ReturnType<typeof setTimeout>; sv: { value: unknown } } | null>(null);
       if (!box.current) {
@@ -42,6 +44,7 @@ export async function reanimatedFake() {
               b.timer = setTimeout(() => {
                 b.raw = a.to;
                 emit();
+                a.done?.(true);
               }, (a.delay ?? 0) + a.duration);
             } else {
               b.raw = v;
@@ -103,7 +106,8 @@ export async function reanimatedFake() {
       },
     }),
     // an eased timing keeps the curve it was told (`Easing.bezier`), to be read
-    withTiming: (to: number, cfg: { duration: number; easing?: { curve?: readonly number[] } }): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration, ...(cfg.easing?.curve ? { curve: cfg.easing.curve } : null) }),
+    // and is told it has finished when it lands (`done`), as the library's callback is
+    withTiming: (to: number, cfg: { duration: number; easing?: { curve?: readonly number[] } }, done?: (finished: boolean) => void): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration, ...(cfg.easing?.curve ? { curve: cfg.easing.curve } : null), done }),
     withRepeat: (inner: Anim, reps: number): Anim => ({ ...inner, kind: 'repeat', reps }),
     // a spring has no duration of its own: here it lands after a nominal one, with what it was told kept to be read
     withSpring: (to: number, spring: SpringConfig = {}): Anim => ({ __anim: true, kind: 'spring', to, duration: SPRING_MS, spring }),

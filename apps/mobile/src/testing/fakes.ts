@@ -512,13 +512,3 @@ export function resetFakes(): void {
   expoDevice.isDevice = true;
   delete (expoConstants.default as { executionEnvironment?: string }).executionEnvironment;
 }
-
-/**
- * The gesture handler, whose native side cannot be loaded here: a gesture is its configuration, handed back as it was given (a test that drives
- * one takes its callbacks from it), and a detector draws what it holds. The slider's own test drives its pan with a stand-in of its own.
- */
-export const gestureHandler = {
-  usePanGesture: <T,>(config: T): T => config,
-  GestureDetector: ({ children }: { children: ReactNode }) => children,
-  GestureHandlerRootView: ({ children }: { children: ReactNode }) => children,
-};

@@ -22,17 +22,17 @@ import type { Services } from '../context';
 import { CardStage, HeldShine, SWIPE, tiltOf } from './Cards';
 import { Play } from './Play';
 
-// The gesture handler's native side cannot be loaded here: a stand-in that keeps each pan the card is given, for the test to drive as a finger would.
+// The gesture handler's native side cannot be loaded here: the kit's stand-in, keeping each pan the card is given (the one dragged sideways; a sheet's
+// go up and down) for the test to drive as a finger would.
 type PanEvent = { translationX: number; velocityX?: number; canceled?: boolean };
 type Pan = { enabled?: boolean; activeOffsetX?: [number, number]; failOffsetY?: [number, number]; onUpdate(event: PanEvent): void; onDeactivate(event: PanEvent): void };
 const pans = vi.hoisted(() => [] as Pan[]);
-vi.mock('react-native-gesture-handler', () => ({
+vi.mock('react-native-gesture-handler', async () => ({
+  ...(await (await import('../../ui/testing/gestures')).gestureFake()),
   usePanGesture: (config: Pan) => {
-    pans.push(config);
+    if (config.activeOffsetX) pans.push(config);
     return config;
   },
-  GestureDetector: ({ children }: { children: ReactNode }) => children,
-  GestureHandlerRootView: ({ children }: { children: ReactNode }) => children,
 }));
 
 beforeEach(() => {

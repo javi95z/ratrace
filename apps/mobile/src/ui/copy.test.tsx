@@ -17,6 +17,8 @@ vi.mock('expo-clipboard', () => ({
 vi.mock('./Sprite', () => ({ Sprite: () => null }));
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it (the toast rises).
 vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
+// The gesture handler's native side does not load here: its stand-in.
+vi.mock('react-native-gesture-handler', async () => (await import('./testing/gestures')).gestureFake());
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 
 const { copy } = await import('./copy');
