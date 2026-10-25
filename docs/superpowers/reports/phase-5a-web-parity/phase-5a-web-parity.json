@@ -16,7 +16,7 @@
   {"scene":"play-outcome-r1","locale":"en","verdict":"clean","rawPercent":10.5,"beyondPercent":0.011,"loose":27,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":0,"oneSided":0,"worstPt":0.33},
   {"scene":"play-resolve-r6","locale":"en","verdict":"clean","rawPercent":6.01,"beyondPercent":0.013,"loose":77,"shape":0,"shapeBlended":0,"textLines":42,"unmeasured":2,"oneSided":0,"worstPt":0.33},
   {"scene":"play-news-r6","locale":"en","verdict":"accepted","rawPercent":4.25,"beyondPercent":0.022,"loose":297,"shape":30,"shapeBlended":0,"textLines":41,"unmeasured":3,"oneSided":0,"worstPt":0.33},
-  {"scene":"play-guide-r1","locale":"en","verdict":"accepted","rawPercent":4.19,"beyondPercent":0.011,"loose":26,"shape":4,"shapeBlended":0,"textLines":42,"unmeasured":4,"oneSided":0,"worstPt":0.33},
+  {"scene":"play-guide-r1","locale":"en","verdict":"accepted","rawPercent":4.15,"beyondPercent":0.011,"loose":26,"shape":4,"shapeBlended":0,"textLines":42,"unmeasured":4,"oneSided":0,"worstPt":0.33},
   {"scene":"play-fault","locale":"en","verdict":"clean","rawPercent":15.55,"beyondPercent":0,"loose":0,"shape":0,"shapeBlended":0,"textLines":6,"unmeasured":0,"oneSided":0,"worstPt":0},
   {"scene":"play-pageturn","locale":"en","verdict":"accepted","rawPercent":4.3,"beyondPercent":0.039,"loose":426,"shape":376,"shapeBlended":325,"textLines":52,"unmeasured":8,"oneSided":0,"worstPt":0.33},
   {"scene":"finance-basket","locale":"en","verdict":"clean","rawPercent":0.04,"beyondPercent":0.004,"loose":0,"shape":0,"shapeBlended":0,"textLines":58,"unmeasured":49,"oneSided":0,"worstPt":0},
