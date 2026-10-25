@@ -25,7 +25,14 @@
     },
     "production": {
       "extends": "base",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease --max-workers=2 -Dorg.gradle.jvmargs=-Xmx4g"
+      },
+      "env": {
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a,arm64-v8a"
+      }
     }
   },
   "submit": {
