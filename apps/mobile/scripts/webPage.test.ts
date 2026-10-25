@@ -57,6 +57,12 @@ test('the page holds the app where expo-router draws it, full height, the body n
   expect(page).toMatch(/#root \{\s*display: flex;\s*height: 100%;\s*flex: 1;/);
 });
 
+test('installed on the home screen, the page is the whole screen\'s height, not the screen less the status bar that iOS gives it as 100%', () => {
+  // Measured on an installed page of iOS 26 (iPhone 16 Pro, 874 high): 100% and 100dvh 812, the page drawn from the top of the screen (under the
+  // status bar, viewport-fit=cover), so the bar at its foot sat 62 above the screen's foot and the page could be moved by those 62. 100lvh is 874.
+  expect(page).toMatch(/@media \(display-mode: standalone\) \{\s*html,\s*body,\s*#root \{\s*height: 100lvh;\s*\}\s*\}/);
+});
+
 test('the page is a game\'s, as the Next web\'s body says (globals.css): its text smoothed the same, nothing to select, no tap flash, no rubber band, no text grown by the phone, a dark page', () => {
   const body = globals.slice(globals.indexOf('\nbody {'), globals.indexOf('}', globals.indexOf('\nbody {')));
   const html = globals.slice(globals.indexOf('\nhtml {'), globals.indexOf('}', globals.indexOf('\nhtml {')));

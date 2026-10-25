@@ -42,11 +42,13 @@ export default function RootLayout() {
       <PerfFrames />
       {/* The web's count of visits, with no query in the address (pwa/visits.web.tsx); nothing on the phone. */}
       <Visits />
-      {/* The safe areas, measured where the router does not (the web: ui/SafeArea.web.tsx); nothing more on the phone. */}
-      <SafeArea>
-        {/* The game waits here for its language's words where they are fetched (the web: game/languageWords.web.ts); the page the build drew stays
-            as it is meanwhile. Nothing waits on the phone. */}
-        <Suspense fallback={null}>
+      {/* The game waits here for its language's words where they are fetched (the web: game/languageWords.web.ts); the page the build drew stays
+          as it is meanwhile. Nothing waits on the phone. */}
+      <Suspense fallback={null}>
+        {/* The safe areas, measured where the router does not (the web: ui/SafeArea.web.tsx); nothing more on the phone. Inside the wait, so they
+            change only once the page the build drew has been taken over: measured outside it, the page was taken over with them already, and its
+            HTML, drawn with none, was left under the status bar. */}
+        <SafeArea>
           <GameProvider>
             <StatusBar style="light" />
             {/* The web's offer to install the game (pwa/install.web.tsx), inside the game to count the install; nothing on the phone. */}
@@ -61,8 +63,8 @@ export default function RootLayout() {
               </Page>
             </InstallProvider>
           </GameProvider>
-        </Suspense>
-      </SafeArea>
+        </SafeArea>
+      </Suspense>
     </GestureRoot>
   );
 }

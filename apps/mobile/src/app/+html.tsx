@@ -35,6 +35,15 @@ const PAGE_STYLES = `
         height: 100%;
         flex: 1;
       }
+      /* Installed on an iPhone, 100% is the screen less the status bar while the page is drawn from the top of the screen: the bar at the foot
+         would sit that far above it. The large viewport is the whole screen there, and the window grows to it. */
+      @media (display-mode: standalone) {
+        html,
+        body,
+        #root {
+          height: 100lvh;
+        }
+      }
       /* The page is a game's, as the Next web's (apps/web/src/app/globals.css \`:root\`, \`html\`, \`body\`, \`:focus-visible\`). */
       :root {
         color-scheme: dark;
