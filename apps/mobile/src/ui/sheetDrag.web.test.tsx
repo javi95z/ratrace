@@ -31,6 +31,8 @@ afterEach(() => {
 });
 
 const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
+/** A sheet comes up from the foot of the screen as it opens; never measured here, it stands in its place a moment after (`MEASURE_BACKSTOP_MS`). */
+const cameUp = () => wait(100);
 
 type Kind = 'touch' | 'mouse' | 'pen';
 /**
@@ -89,8 +91,9 @@ describe('a sheet dragged on the web', () => {
     restore = browserAt(393);
   });
 
-  it('has a grabber, out of the reader\'s reach, and a grip a finger never scrolls the page from', () => {
+  it('has a grabber, out of the reader\'s reach, and a grip a finger never scrolls the page from', async () => {
     render(<Owned />);
+    await cameUp();
     expect(screen.getByTestId('sheet-grabber').getAttribute('aria-hidden')).toBe('true');
     const marked = grip().closest('[data-sheet-grip]') as HTMLElement;
     expect(marked).not.toBeNull();
@@ -100,6 +103,7 @@ describe('a sheet dragged on the web', () => {
   it('follows the pointer down from the grip, and closes on a quick flick, as its Close does', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     pointer('pointerdown', grip(), 100, 1000);
     pointer('pointermove', grip(), 110, 1010);
     // No jump as the drag is taken: it moves from where it stood, then with the pointer.
@@ -115,6 +119,7 @@ describe('a sheet dragged on the web', () => {
   it('springs back when let go slowly short of closing, and asks nothing', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     dragOn(grip(), 100, 160, 900);
     expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
     await wait(1000);
@@ -125,6 +130,7 @@ describe('a sheet dragged on the web', () => {
   it('comes back when its owner does not close it', async () => {
     const onClose = vi.fn();
     render(<Owned refuse onClose={onClose} />);
+    await cameUp();
     dragOn(grip(), 100, 300, 60);
     await wait(300);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -136,6 +142,7 @@ describe('a sheet dragged on the web', () => {
   it('is dragged down from its body at the top of its scroll, but not up from it, nor down once it is scrolled', async () => {
     const onClose = vi.fn();
     render(<Owned refuse onClose={onClose} />);
+    await cameUp();
     // What was played before the drags: the sheet's rise.
     rea.assigned.length = 0;
     // Up from the body is its scroll's.
@@ -156,6 +163,7 @@ describe('a sheet dragged on the web', () => {
 
   it('leaves a press that does not move a click, and eats the click a drag ends on', async () => {
     render(<Owned refuse />);
+    await cameUp();
     pointer('pointerdown', body(), 100, 1000);
     pointer('pointermove', body(), 104, 1010);
     pointer('pointerup', body(), 104, 1020);
@@ -170,8 +178,9 @@ describe('a sheet dragged on the web', () => {
     expect(body().textContent).toBe('pressed 2');
   });
 
-  it('is not dragged sideways: that is a slider\'s, or a strip of tabs\'', () => {
+  it('is not dragged sideways: that is a slider\'s, or a strip of tabs\'', async () => {
     render(<Owned />);
+    await cameUp();
     pointer('pointerdown', grip(), 100, 1000, 100);
     pointer('pointermove', grip(), 104, 1010, 160);
     pointer('pointermove', grip(), 200, 1020, 160);
@@ -182,6 +191,7 @@ describe('a sheet dragged on the web', () => {
   it('loses no press: one let go outside the panel ends there, and a pointer passing over it with no button down drags nothing', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     const backdrop = screen.getByTestId('sheet-backdrop');
     // A mouse pressed on the grabber, led off the panel at once, let go over the dimmed page.
     pointer('pointerdown', grip(), 100, 1000, 100, 'mouse');
@@ -206,6 +216,7 @@ describe('a sheet dragged on the web', () => {
     const settle = (ms: number) => act(() => new Promise((done) => setTimeout(done, ms)));
     const onClose = vi.fn();
     renderGame(<AmountSheet title="Save" max={100_000} start={10_000} onClose={onClose} onConfirm={() => true} />, memoryServices());
+    await settle(100);
     const slider = await screen.findByRole('slider');
     expect(slider.getAttribute('data-sheet-nodrag')).toBe('true');
     dragOn(slider, 100, 400, 60);
@@ -218,13 +229,15 @@ describe('a sheet dragged on the web', () => {
         <View testID="own-drag" {...{ dataSet: { sheetNodrag: true } }} />
       </Sheet>,
     );
+    await settle(100);
     dragOn(screen.getByTestId('own-drag'), 100, 400, 60);
     await settle(300);
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('claims a finger\'s clear move down from the top of its body, before the browser can take it for a scroll; up is the scroll\'s', () => {
+  it('claims a finger\'s clear move down from the top of its body, before the browser can take it for a scroll; up is the scroll\'s', async () => {
     render(<Owned />);
+    await cameUp();
     // A hair down is not yet a pull: nothing is kept from the browser.
     pointer('pointerdown', body(), 100, 1000);
     expect(touchMove(body(), 102).defaultPrevented).toBe(false);
@@ -242,8 +255,9 @@ describe('a sheet dragged on the web', () => {
     expect(touchMove(body(), 110).defaultPrevented).toBe(false);
   });
 
-  it('never keeps a sideways swipe from the browser (a strip of tabs in the sheet), even one that starts with a hair down', () => {
+  it('never keeps a sideways swipe from the browser (a strip of tabs in the sheet), even one that starts with a hair down', async () => {
     render(<Owned />);
+    await cameUp();
     pointer('pointerdown', body(), 100, 1000, 100);
     expect(touchMove(body(), 102, 103).defaultPrevented).toBe(false);
     expect(touchMove(body(), 104, 130).defaultPrevented).toBe(false);
@@ -256,9 +270,10 @@ describe('a sheet dragged on the web', () => {
     expect(touchMove(body(), 106, 105).defaultPrevented).toBe(false);
   });
 
-  it('listens to a finger on the panel from the sheet\'s opening (as a phone\'s browser must know before the touch), and does nothing unless a press may become a pull', () => {
+  it('listens to a finger on the panel from the sheet\'s opening (as a phone\'s browser must know before the touch), and does nothing unless a press may become a pull', async () => {
     const adding = vi.spyOn(window, 'addEventListener');
     render(<Owned />);
+    await cameUp();
     pointer('pointerdown', body(), 100, 1000);
     // Nothing is added on the window for it: the panel's own listener, there since the sheet opened, answers.
     expect(adding.mock.calls.filter(([type]) => type === 'touchmove')).toEqual([]);
@@ -272,6 +287,7 @@ describe('a sheet dragged on the web', () => {
   it('lets a new press replace one whose release never came: a finger lifted where the page was not told blocks nothing', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     pointer('pointerdown', body(), 100, 1000, 100, 'touch', 1, 1);
     // Its release is never seen; the next finger is another pointer.
     pointer('pointerdown', grip(), 100, 2000, 100, 'touch', 1, 2);
@@ -284,6 +300,7 @@ describe('a sheet dragged on the web', () => {
   it('closes on a flick only once it has gone FLICK_TRAVEL: a quick twitch past the slop goes back', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     dragOn(grip(), 100, 120, 10, 'mouse');
     await wait(400);
     expect(onClose).not.toHaveBeenCalled();
@@ -292,6 +309,7 @@ describe('a sheet dragged on the web', () => {
   it('is pulled from its body by a finger or a pen, never by a mouse (which selects the text there); a mouse pulls its grip', async () => {
     const onClose = vi.fn();
     render(<Owned onClose={onClose} />);
+    await cameUp();
     dragOn(body(), 100, 400, 60, 'mouse');
     await wait(300);
     expect(onClose).not.toHaveBeenCalled();
@@ -300,10 +318,11 @@ describe('a sheet dragged on the web', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('is not dragged in the middle of a desk\'s screen, where it is a dialog: no grabber there', () => {
+  it('is not dragged in the middle of a desk\'s screen, where it is a dialog: no grabber there', async () => {
     restore?.();
     restore = browserAt(1280);
     render(<Owned />);
+    await cameUp();
     expect(screen.queryByTestId('sheet-grabber')).toBeNull();
     dragOn(grip(), 100, 400, 60);
     expect(pullStyle().transform).toBe('translateY(0px)');

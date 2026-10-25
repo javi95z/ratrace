@@ -14,8 +14,12 @@ export const FLICK = 900;
 export const FLICK_TRAVEL = 24;
 /** How far a panel pulled up past its rest can go, however far the finger does: a little give, never a gap. */
 export const RUBBER = 24;
-/** The longest a sheet takes to slide away once it is let go to close; a quick flick takes the finger's own pace. */
+/** The longest a sheet takes to slide away once it is let go to close; a quick flick takes the finger's own pace. Closed by a press, it takes this. */
 export const SLIDE_MS = 200;
+/** How long a sheet takes to come up from the foot of the screen as it opens: the slide away, the other way, slowing as it lands. */
+export const ENTER_MS = 240;
+/** How far past its own height a sheet stands when it has gone (or before it has come): its frame and shadow clear the foot of the screen. */
+export const OFF = 24;
 /** The shortest slide away, so that it is seen at all. */
 const SLIDE_MIN_MS = 60;
 

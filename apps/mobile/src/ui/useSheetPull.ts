@@ -3,7 +3,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useReducedMotion } from './animations';
-import { GRAB, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
+import { ENTER_MS, GRAB, OFF, SLIDE_MS, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
 import type { SheetHold } from './sheetHold';
 
 /** A sheet being pulled: what the gestures tell it (the phone's on its UI thread, the web's from the page's pointer events), and what it draws. */
@@ -34,11 +34,23 @@ export interface SheetPull {
  * as the moments do), the panel comes back with that render, never waiting off the screen. While it waits for that answer (`leaving`) it takes no
  * drag, and its backdrop, its Close and Android's Back ask nothing more (`isLeaving`): a tap on a page that seems gone is not a second answer. A sheet
  * `locked` (one that cannot be closed now) is never asked: it gives a little either way and goes back.
+ *
+ * A sheet that `enters` comes up from the foot of the screen as it opens, the dimmed page with it: the slide away, the other way (`ENTER_MS`). Until
+ * its panel is measured it stands a whole `screen` below its rest, the page not dimmed yet, so nothing of it is seen in its place first. Closed by a
+ * press (its Close, its backdrop, Back, its owner), it slides away as a drag sends it (`slideAway`).
  */
-export function useSheetPull({ open, onClose, locked = false }: { open: boolean; onClose(): void; locked?: boolean }) {
+/** How long a sheet that comes up waits to be measured before it stands in its place without coming up (a frame or two is the usual wait). */
+const MEASURE_BACKSTOP_MS = 80;
+
+export function useSheetPull({ open, onClose, locked = false, enters = false, screen = 0 }: { open: boolean; onClose(): void; locked?: boolean; enters?: boolean; screen?: number }) {
   const still = useReducedMotion();
-  const pull = useSharedValue(0);
-  const height = useSharedValue(0);
+  // Whether it comes up as it opens, decided once, as it is first drawn.
+  const [entering] = useState(() => enters && open && !still && screen > 0);
+  const pull = useSharedValue(entering ? screen + OFF : 0);
+  const height = useSharedValue(entering ? screen : 0);
+  const measured = useRef(false);
+  // Sent away by a drag (its owner asked by `ask`): it has slid off already, and a close that follows has nothing left to slide.
+  const draggedAway = useRef(false);
   const from = useSharedValue(0);
   const leaving = useSharedValue(false);
   const quiet = useSharedValue(still);
@@ -63,6 +75,7 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
   const waiting = useRef(false);
   const ask = useCallback(() => {
     if (!opened.current) return;
+    draggedAway.current = true;
     waiting.current = true;
     setAsks((n) => n + 1);
     closing.current();
@@ -71,6 +84,7 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
     if (!waiting.current) return;
     waiting.current = false;
     if (!open) return;
+    draggedAway.current = false;
     leaving.value = false;
     pull.value = still ? 0 : withSpring(0, backSpring(0));
   }, [asks, open, still, leaving, pull]);
@@ -108,7 +122,7 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
         scheduleOnRN(ask);
         return;
       }
-      const gone = height.value + 24;
+      const gone = height.value + OFF;
       pull.value = withTiming(gone, { duration: slideMs(gone - at, velocity), easing: Easing.linear }, (done) => {
         if (done) scheduleOnRN(ask);
       });
@@ -134,10 +148,48 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
   );
 
   const isLeaving = useCallback(() => leaving.value, [leaving]);
-  const measure = useCallback((event: LayoutChangeEvent) => void (height.value = event.nativeEvent.layout.height), [height]);
+  const measure = useCallback(
+    (event: LayoutChangeEvent) => {
+      const measuredHeight = event.nativeEvent.layout.height;
+      height.value = measuredHeight;
+      if (measured.current) return;
+      measured.current = true;
+      if (!entering || dragging.value) return;
+      // Measured, it comes up from just below the foot of the screen, slowing as it lands.
+      pull.value = measuredHeight + OFF;
+      pull.value = withTiming(0, { duration: ENTER_MS, easing: Easing.bezier(0, 0, 0.2, 1) });
+    },
+    [entering, height, pull, dragging],
+  );
+  // Never measured (a page laid out by nobody, a browser in the background) it would wait below the screen for ever: in a moment it is in its place.
+  useEffect(() => {
+    if (!entering) return;
+    const timer = setTimeout(() => {
+      if (measured.current) return;
+      measured.current = true;
+      height.value = 0;
+      pull.value = 0;
+    }, MEASURE_BACKSTOP_MS);
+    return () => clearTimeout(timer);
+  }, [entering, height, pull]);
+  /**
+   * Whether a close by a press can slide it away: it moves, it has been measured, and no drag has sent it off already. Read as its owner closes it,
+   * to keep its Modal shown while it goes.
+   */
+  const canSlideAway = useCallback(() => !still && measured.current && !draggedAway.current, [still]);
+  /** Slides it away to the foot of the screen, as a drag lets it go, gathering speed; `gone` is told once it has gone (or was stopped). */
+  const slideAway = useCallback(
+    (gone: () => void) => {
+      leaving.value = true;
+      dragging.value = false;
+      cancelAnimation(pull);
+      pull.value = withTiming(height.value + OFF, { duration: SLIDE_MS, easing: Easing.bezier(0.4, 0, 1, 1) }, () => scheduleOnRN(gone));
+    },
+    [leaving, dragging, pull, height],
+  );
   const panelStyle = useAnimatedStyle(() => ({ transform: [{ translateY: pull.value }] }));
   const dimStyle = useAnimatedStyle(() => ({ opacity: dimOf(pull.value, height.value) }));
   // One drag for the sheet's life: the pans are given it once, not made again with every render of the sheet.
   const drag = useMemo<SheetPull>(() => ({ begin, move, end, cancel, held: isHeld }), [begin, move, end, cancel, isHeld]);
-  return { drag, hold, measure, panelStyle, dimStyle, isLeaving };
+  return { drag, hold, measure, panelStyle, dimStyle, isLeaving, canSlideAway, slideAway };
 }

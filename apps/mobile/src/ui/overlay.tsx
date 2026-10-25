@@ -7,6 +7,7 @@ import { useIsDesk } from './desk';
 import { focusMarked, onKeys, tabStop } from './keyboard';
 import { holdSheet, SheetBackdrop, sheetModalProps, sheetPanelProps, sheetRootProps } from './sheetDialog';
 import { SheetGrip, SheetScroll, useDragSurface } from './sheetDrag';
+import { SLIDE_MS } from './sheetPull';
 import { useSheetPull } from './useSheetPull';
 import { SheetHoldProvider } from './sheetHold';
 import { GestureRoot } from './GestureRoot';
@@ -290,7 +291,26 @@ function SheetPanel({
   // Dragged down, it closes as its Close does (`onClose`, which its owner may refuse: then it comes back). A sheet in the middle of a wide screen is a
   // dialog, not a sheet risen from the foot: it is not dragged, and has no grabber.
   const draggable = !desk;
-  const pull = useSheetPull({ open, onClose, locked });
+  // A sheet comes up from the foot of the screen and slides back down to it, however it is closed; a dialog in the middle of a wide screen rises.
+  const pull = useSheetPull({ open, onClose, locked, enters: !desk, screen: height });
+  // Closed by a press or by its owner, its Modal stays shown while it slides away (`sliding`), and is hidden once it has gone. Decided as it closes, in
+  // the render that closes it, so the Modal is never hidden for a frame first.
+  const [sliding, setSliding] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    setSliding(!open && !desk && pull.canSlideAway());
+  }
+  const visible = open || sliding;
+  const slideAway = pull.slideAway;
+  useEffect(() => {
+    if (!sliding) return;
+    const gone = () => setSliding(false);
+    slideAway(gone);
+    // Should its slide never say it has landed (a page in the background, where no frame is drawn), it goes all the same.
+    const backstop = setTimeout(gone, SLIDE_MS + 400);
+    return () => clearTimeout(backstop);
+  }, [sliding, slideAway]);
   // What closes it by a press (its backdrop, its Close, Android's Back) asks nothing while a drag's question waits for its owner's answer.
   const isLeaving = pull.isLeaving;
   const pressedClose = useCallback(() => {
@@ -339,16 +359,19 @@ function SheetPanel({
   useEffect(() => {
     if (open) return;
     perfSheet('closing', me, named.current);
+  }, [open, me]);
+  useEffect(() => {
+    if (visible) return;
     if (Platform.OS !== 'ios') {
       dismissed();
       return;
     }
     const timer = setTimeout(dismissed, asked.current ? DISMISS_BACKSTOP_MS : NEVER_SHOWN_MS);
     return () => clearTimeout(timer);
-  }, [open, dismissed, me]);
+  }, [visible, dismissed]);
 
   return (
-    <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={pressedClose} onDismiss={open ? undefined : dismissed}>
+    <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={visible} statusBarTranslucent navigationBarTranslucent onRequestClose={pressedClose} onDismiss={visible ? undefined : dismissed}>
       {/* A Modal is a window of its own, outside the screens' gesture root: the sheet's drags need one in it (Android's above all). */}
       <GestureRoot style={{ flex: 1 }}>
         {/*
@@ -358,6 +381,8 @@ function SheetPanel({
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View
             {...sheetRootProps()}
+            // Sliding away, it is gone for the player already: nothing in it is pressed or said any more.
+            {...(sliding ? { pointerEvents: 'none' as const, 'aria-hidden': true, importantForAccessibility: 'no-hide-descendants' as const } : null)}
             onTouchEnd={perfTouched}
             style={
               desk
@@ -369,7 +394,7 @@ function SheetPanel({
             <PerfDrawn name={`sheet: ${title}`} />
             <SheetBackdrop onClose={pressedClose} dim={pull.dimStyle} />
             {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
-            <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
+            <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, desk ? rise : null]}>
               <Animated.View testID="sheet-pull" onLayout={pull.measure} style={[{ flexShrink: 1, minHeight: 0 }, pull.panelStyle]}>
                 <View ref={panel} {...sheetPanelProps()} style={{ flexShrink: 1, minHeight: 0 }}>
                   <Framed

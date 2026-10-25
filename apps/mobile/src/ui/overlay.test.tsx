@@ -12,6 +12,7 @@ import { rea } from './testing/reanimated';
 import { gestures, type PanConfig } from './testing/gestures';
 import { TapProvider } from './tap';
 import { ReducedMotionProvider } from './animations';
+import { browserAt } from './testing/media';
 
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
 // it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
@@ -250,22 +251,56 @@ function Wrapper({ open }: { open: boolean }) {
   );
 }
 const modals = () => Array.from(document.querySelectorAll('[data-modal]')).map((el) => el.getAttribute('data-visible'));
-const panelStyle = () => (screen.getByText('inside').closest('[style*="opacity"]') as HTMLElement).style;
 const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
+const laidOut = (height: number) => act(() => pulled.onLayout?.({ nativeEvent: { layout: { height } } }));
+const pullStyle = () => (screen.getByTestId('sheet-pull') as HTMLElement).style;
+const backdropOpacity = () => (document.body.querySelector('[data-testid="sheet-backdrop"]') as HTMLElement).style.opacity;
 
-test('a sheet that stays mounted rises at every opening, from its first frame to its end after 280 ms', async () => {
+test('a sheet that stays mounted comes up from the foot of the screen at every opening, and slides back down to it however it is closed', async () => {
+  // A phone's screen, 800 high: jsdom has none.
+  const restore = browserAt(393, 800);
   const { rerender } = render(<Wrapper open={false} />);
   await wait(1000);
   for (let i = 0; i < 2; i++) {
+    rea.assigned.length = 0;
     rerender(<Wrapper open />);
-    expect(panelStyle().opacity).toBe('0');
-    expect(panelStyle().transform).toContain('translateY(8px)');
-    await wait(279);
-    expect(panelStyle().opacity).toBe('0');
-    await wait(2);
-    expect(panelStyle().opacity).toBe('1');
+    // Before it is measured it waits below the screen, the page not dimmed yet: nothing of it is seen in its place first.
+    const below = Number(/translateY\((-?[\d.]+)px\)/.exec(pullStyle().transform)![1]);
+    expect(below).toBeGreaterThan(800);
+    expect(backdropOpacity()).toBe('0');
+    // Measured, it comes up from just below the foot of the screen, slowing as it lands, the page dimming with it.
+    laidOut(600);
+    expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 0, duration: 240, curve: [0, 0, 0.2, 1] });
+    await wait(240);
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    expect(backdropOpacity()).toBe('1');
+    // Closed by its owner (as by its Close), its Modal stays shown while it slides away, gathering speed, out of the reader's reach and the finger's.
     rerender(<Wrapper open={false} />);
+    expect(modals()).toEqual(['true']);
+    expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 624, duration: 200, curve: [0.4, 0, 1, 1] });
+    expect(screen.queryByRole('heading', { name: 'Title' })).toBeNull();
+    await wait(200);
+    await wait(1);
+    expect(modals()).not.toContain('true');
   }
+  restore();
+});
+
+test('a sheet under reduced motion neither comes up nor slides away: it is in its place at once, and gone at once', async () => {
+  const { rerender } = render(
+    <ReducedMotionProvider value>
+      <Wrapper open />
+    </ReducedMotionProvider>,
+  );
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  laidOut(600);
+  expect(rea.assigned.some((one) => one.kind === 'timing' && one.to === 0 && one.duration === 240)).toBe(false);
+  rerender(
+    <ReducedMotionProvider value>
+      <Wrapper open={false} />
+    </ReducedMotionProvider>,
+  );
+  expect(modals()).not.toContain('true');
 });
 
 test('a toast calls onDone after 2600 ms and not before', () => {
@@ -768,9 +803,6 @@ const pans = () => {
   const body = gestures.pans.findLast((pan) => typeof pan.activeOffsetY === 'number');
   return { grip: grip!, body: body! };
 };
-const laidOut = (height: number) => act(() => pulled.onLayout?.({ nativeEvent: { layout: { height } } }));
-const pullStyle = () => (screen.getByTestId('sheet-pull') as HTMLElement).style;
-const backdropOpacity = () => (document.body.querySelector('[data-testid="sheet-backdrop"]') as HTMLElement).style.opacity;
 /** A drag on a pan: it activates `from` points down (the handler's slop), goes to `to`, and is let go there at `velocity`. */
 function drag(pan: PanConfig, to: number, velocity = 0, from = 10) {
   act(() => {
