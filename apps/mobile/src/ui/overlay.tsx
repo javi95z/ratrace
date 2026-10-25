@@ -8,6 +8,7 @@ import { focusMarked, onKeys, tabStop } from './keyboard';
 import { holdSheet, SheetBackdrop, sheetModalProps, sheetPanelProps, sheetRootProps } from './sheetDialog';
 import { SheetGrip, SheetScroll, useDragSurface } from './sheetDrag';
 import { useSheetPull } from './useSheetPull';
+import { SheetHoldProvider } from './sheetHold';
 import { GestureRoot } from './GestureRoot';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
@@ -117,7 +118,8 @@ export type InitialFocus = 'panel' | 'close' | { readonly current: unknown };
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
  * `back` is the web's history-back switch (`closeOnBack`: the browser's Back closes the sheet, an entry of the history its own) and has no effect
  * on native: Back always closes an open sheet.
- * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine.
+ * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine. It is pulled down to close, as its Close closes it, but not while
+ * it is `locked` (it cannot be closed now: an account being deleted), when it has no grabber and only gives a little to a drag.
  *
  * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
  * can tell a screen that moves on after closing its sheets when they are gone. Every opening is a panel of its own,
@@ -134,6 +136,7 @@ export function Sheet({
   back = true,
   tone,
   initialFocus = 'panel',
+  locked = false,
   children,
 }: {
   open: boolean;
@@ -144,6 +147,7 @@ export function Sheet({
   back?: boolean;
   tone?: 'gold' | 'wine';
   initialFocus?: InitialFocus;
+  locked?: boolean;
   children: ReactNode;
 }) {
   // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
@@ -202,7 +206,7 @@ export function Sheet({
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>
-      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus}>
+      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus} locked={locked}>
         {children}
       </SheetPanel>
     </SheetParent.Provider>
@@ -244,6 +248,7 @@ function SheetPanel({
   closeLabel,
   tone,
   initialFocus,
+  locked,
   children,
 }: {
   open: boolean;
@@ -254,6 +259,7 @@ function SheetPanel({
   closeLabel: string;
   tone?: 'gold' | 'wine';
   initialFocus: InitialFocus;
+  locked: boolean;
   children: ReactNode;
 }) {
   // The dialog on the web (`sheetDialog.web.tsx`): the Modal's own, named by the title; the panel takes the focus as it is shown (or its Close, or
@@ -281,11 +287,16 @@ function SheetPanel({
   const desk = useIsDesk();
   const typing = useKeyboardUp();
   const rise = useRise();
-  const close = usePress({ onPress: onClose });
   // Dragged down, it closes as its Close does (`onClose`, which its owner may refuse: then it comes back). A sheet in the middle of a wide screen is a
   // dialog, not a sheet risen from the foot: it is not dragged, and has no grabber.
   const draggable = !desk;
-  const pull = useSheetPull({ open, onClose });
+  const pull = useSheetPull({ open, onClose, locked });
+  // What closes it by a press (its backdrop, its Close, Android's Back) asks nothing while a drag's question waits for its owner's answer.
+  const isLeaving = pull.isLeaving;
+  const pressedClose = useCallback(() => {
+    if (!isLeaving()) onClose();
+  }, [isLeaving, onClose]);
+  const close = usePress({ onPress: pressedClose });
   useDragSurface(panel, pull.drag, draggable && open);
 
   // On top while it is open, the last opened over the others: the toasts are drawn in it.
@@ -337,7 +348,7 @@ function SheetPanel({
   }, [open, dismissed, me]);
 
   return (
-    <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
+    <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={pressedClose} onDismiss={open ? undefined : dismissed}>
       {/* A Modal is a window of its own, outside the screens' gesture root: the sheet's drags need one in it (Android's above all). */}
       <GestureRoot style={{ flex: 1 }}>
         {/*
@@ -356,7 +367,7 @@ function SheetPanel({
           >
             {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
             <PerfDrawn name={`sheet: ${title}`} />
-            <SheetBackdrop onClose={onClose} dim={pull.dimStyle} />
+            <SheetBackdrop onClose={pressedClose} dim={pull.dimStyle} />
             {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
             <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
               <Animated.View testID="sheet-pull" onLayout={pull.measure} style={[{ flexShrink: 1, minHeight: 0 }, pull.panelStyle]}>
@@ -369,7 +380,7 @@ function SheetPanel({
                     {/* The grip stands over what scrolls: the grabber and the title row are always there to drag the sheet down by, and to close it. */}
                     <SheetGrip drag={pull.drag} enabled={draggable}>
                       <View style={{ paddingTop: 16, paddingHorizontal: 16 }}>
-                        {draggable ? <Grabber /> : null}
+                        {draggable && !locked ? <Grabber /> : null}
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                           <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ flexShrink: 1, paddingTop: 4 }}>
                             <PixelText size={19}>{title}</PixelText>
@@ -396,7 +407,7 @@ function SheetPanel({
                       // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
                       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
                     >
-                      {children}
+                      <SheetHoldProvider value={pull.hold}>{children}</SheetHoldProvider>
                     </SheetScroll>
                   </Framed>
                 </View>

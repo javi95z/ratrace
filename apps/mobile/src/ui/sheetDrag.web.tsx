@@ -54,12 +54,24 @@ export function speedOf(trail: ReadonlyArray<{ t: number; y: number }>, now: num
   return ((last.y - first.y) / (last.t - first.t)) * 1000;
 }
 
-/** A field's own presses (a caret placed, a word chosen) are never a drag of the sheet. */
-const FIELD = 'input, textarea, select, [contenteditable="true"]';
+/**
+ * What a press is never a drag of the sheet from: a field (a caret placed, a word chosen), and a control that drags itself, a slider (its role) or
+ * whatever the kit marks so (`data-sheet-nodrag`).
+ */
+const NO_DRAG = 'input, textarea, select, [contenteditable="true"], [role="slider"], [data-sheet-nodrag]';
 
-/** Follows the presses on a sheet's panel, and makes the ones that become drags down (or a grip's, up) the sheet's pull. Returns what stops it. */
+/**
+ * Follows the presses on a sheet's panel, and makes the ones that become drags down (or a grip's, up) the sheet's pull. Returns what stops it.
+ *
+ * A press is followed on the whole window from the moment it lands until it is let go, so that a pointer led off the panel (a mouse has no hold on
+ * what it pressed) is never lost, and a move with no button down ends it. The body is pulled by a finger or a pen, never a mouse, whose drag there
+ * selects text. A finger on the body at its top that goes down is claimed with its first move (`touchmove` kept from scrolling), before a phone's
+ * browser takes it for a scroll of its own; one that goes up is the scroll's, and the press is let go. That listener, which a phone's browser waits
+ * for before it scrolls, is there only while a press may become a drag.
+ */
 export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void {
-  type Press = { id: number; x: number; y: number; grip: boolean; dragging: boolean; trail: Array<{ t: number; y: number }> };
+  type Press = { id: number; x: number; y: number; grip: boolean; dragging: boolean; claimed: boolean; trail: Array<{ t: number; y: number }> };
+  const view = box.ownerDocument.defaultView ?? window;
   let press: Press | null = null;
   let eatClick = false;
   let selecting = '';
@@ -67,34 +79,35 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
   const down = (event: PointerEvent) => {
     if (press || !event.isPrimary || event.button !== 0) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (!target || target.closest(FIELD)) return;
+    if (!target || target.closest(NO_DRAG)) return;
     const grip = target.closest('[data-sheet-grip]') !== null;
     if (!grip) {
+      if (event.pointerType === 'mouse') return;
       const scroll = target.closest('[data-sheet-scroll]');
       if (scroll && scroll.scrollTop > 0) return;
     }
-    press = { id: event.pointerId, x: event.clientX, y: event.clientY, grip, dragging: false, trail: [] };
+    press = { id: event.pointerId, x: event.clientX, y: event.clientY, grip, dragging: false, claimed: false, trail: [] };
+    listen();
   };
   const move = (event: PointerEvent) => {
     if (!press || event.pointerId !== press.id) return;
+    // No button down: its release was never seen (let go where nothing told the page).
+    if (event.buttons === 0) return finish(event, false);
     const dx = event.clientX - press.x;
     const dy = event.clientY - press.y;
     if (!press.dragging) {
       if (Math.abs(dx) < GRAB && Math.abs(dy) < GRAB) return;
       // Sideways is a slider's or a strip of tabs'; up from the body is its scroll.
-      if (Math.abs(dx) >= Math.abs(dy) || (!press.grip && dy < 0)) {
-        press = null;
-        return;
-      }
+      if (Math.abs(dx) >= Math.abs(dy) || (!press.grip && dy < 0)) return letGo();
       press.dragging = true;
       try {
         box.setPointerCapture(event.pointerId);
       } catch {
-        // A pointer the browser has already let go of: its moves still come to the panel while they are over it.
+        // A pointer the browser has already let go of: its moves still come to the window.
       }
       selecting = box.style.userSelect;
       box.style.userSelect = 'none';
-      window.getSelection()?.removeAllRanges();
+      view.getSelection()?.removeAllRanges();
       pull().begin(dy);
     }
     const now = event.timeStamp;
@@ -105,7 +118,7 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
   const finish = (event: PointerEvent, lifted: boolean) => {
     if (!press || event.pointerId !== press.id) return;
     const was = press;
-    press = null;
+    letGo();
     if (!was.dragging) return;
     box.style.userSelect = selecting;
     if (box.hasPointerCapture?.(event.pointerId)) box.releasePointerCapture(event.pointerId);
@@ -118,9 +131,20 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
   };
   const up = (event: PointerEvent) => finish(event, true);
   const cancel = (event: PointerEvent) => finish(event, false);
-  // A finger dragging the sheet does not scroll the page under it, nor the body (which is at its top): its moves are the drag's.
+  // A finger's moves while it may become a drag: dragging, none scrolls the page or the body; on the body at its top, the first going down is claimed
+  // for the sheet, the first going up (or sideways) left to the scroll.
   const touchMove = (event: TouchEvent) => {
-    if (press?.dragging && event.cancelable) event.preventDefault();
+    if (!press) return;
+    if (!press.dragging && !press.grip && !press.claimed) {
+      const touch = event.touches[0];
+      if (!touch) return;
+      const dx = touch.clientX - press.x;
+      const dy = touch.clientY - press.y;
+      if (dy === 0 && dx === 0) return;
+      if (dy <= 0 || Math.abs(dx) > dy) return letGo();
+      press.claimed = true;
+    }
+    if (event.cancelable) event.preventDefault();
   };
   const click = (event: MouseEvent) => {
     if (!eatClick) return;
@@ -129,18 +153,26 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
     event.stopPropagation();
   };
 
+  function listen() {
+    view.addEventListener('pointermove', move);
+    view.addEventListener('pointerup', up);
+    view.addEventListener('pointercancel', cancel);
+    view.addEventListener('touchmove', touchMove, { passive: false });
+  }
+  /** The press is over (let go, taken by the browser, or left to the scroll): nothing more is listened to until the next. */
+  function letGo() {
+    press = null;
+    view.removeEventListener('pointermove', move);
+    view.removeEventListener('pointerup', up);
+    view.removeEventListener('pointercancel', cancel);
+    view.removeEventListener('touchmove', touchMove);
+  }
+
   box.addEventListener('pointerdown', down);
-  box.addEventListener('pointermove', move);
-  box.addEventListener('pointerup', up);
-  box.addEventListener('pointercancel', cancel);
-  box.addEventListener('touchmove', touchMove, { passive: false });
   box.addEventListener('click', click, true);
   return () => {
+    letGo();
     box.removeEventListener('pointerdown', down);
-    box.removeEventListener('pointermove', move);
-    box.removeEventListener('pointerup', up);
-    box.removeEventListener('pointercancel', cancel);
-    box.removeEventListener('touchmove', touchMove);
     box.removeEventListener('click', click, true);
   };
 }

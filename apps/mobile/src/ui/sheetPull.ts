@@ -8,8 +8,10 @@
 export const GRAB = 10;
 /** Let go past this share of its height, the sheet closes (about a third, as a phone's own sheets). */
 export const CLOSE_SHARE = 1 / 3;
-/** A flick: let go moving down at least this fast (points a second), the sheet closes from wherever it is below its rest. */
+/** A flick: let go moving down at least this fast (points a second), the sheet closes, once it has travelled `FLICK_TRAVEL`. */
 export const FLICK = 900;
+/** How far a flick must have taken the panel to close it: a quick twitch past the slop (a mouse's, a finger's) is not a close. */
+export const FLICK_TRAVEL = 24;
 /** How far a panel pulled up past its rest can go, however far the finger does: a little give, never a gap. */
 export const RUBBER = 24;
 /** The longest a sheet takes to slide away once it is let go to close; a quick flick takes the finger's own pace. */
@@ -17,12 +19,15 @@ export const SLIDE_MS = 200;
 /** The shortest slide away, so that it is seen at all. */
 const SLIDE_MIN_MS = 60;
 
-/** Where the panel stands, `translation` points from its rest: down, with the finger; up, with half of it at first and never past `RUBBER`. */
-export function pulledTo(translation: number): number {
+/**
+ * Where the panel stands, `translation` points from its rest: down, with the finger; up, with half of it at first and never past `RUBBER`. A sheet
+ * `locked` (one that cannot be closed now: an account being deleted) gives the same little either way.
+ */
+export function pulledTo(translation: number, locked = false): number {
   'worklet';
-  if (translation >= 0) return translation;
-  const up = -translation;
-  return -(RUBBER * up) / (up + 2 * RUBBER);
+  if (translation >= 0 && !locked) return translation;
+  const far = Math.abs(translation);
+  return (Math.sign(translation) * RUBBER * far) / (far + 2 * RUBBER);
 }
 
 /**
@@ -32,7 +37,7 @@ export function pulledTo(translation: number): number {
 export function letGo(at: number, velocity: number, height: number): 'close' | 'back' {
   'worklet';
   if (at <= 0) return 'back';
-  if (velocity >= FLICK) return 'close';
+  if (velocity >= FLICK) return at >= FLICK_TRAVEL ? 'close' : 'back';
   if (velocity <= -FLICK) return 'back';
   return height > 0 && at > height * CLOSE_SHARE ? 'close' : 'back';
 }
@@ -49,4 +54,19 @@ export function slideMs(left: number, velocity: number): number {
   'worklet';
   if (velocity <= 0) return SLIDE_MS;
   return Math.round(Math.min(SLIDE_MS, Math.max(SLIDE_MIN_MS, (left / velocity) * 1000)));
+}
+
+/**
+ * The spring a sheet let go of short of closing goes back on: quick and only just damped, as a phone's own sheet settles, without a bounce past its
+ * rest worth seeing.
+ */
+export const BACK_SPRING = { stiffness: 380, damping: 36, mass: 1 };
+
+/**
+ * The spring back for a panel let go moving at `velocity`: it keeps a downward speed (the panel turns and comes back), never an upward one, and never
+ * passes its rest, which would show the dimmed page under a panel standing on the foot of the screen.
+ */
+export function backSpring(velocity: number) {
+  'worklet';
+  return { ...BACK_SPRING, velocity: Math.max(0, velocity), overshootClamping: true };
 }

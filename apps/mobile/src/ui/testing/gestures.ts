@@ -11,7 +11,8 @@ export type PanConfig = Record<string, unknown> & {
   onDeactivate?: (event: PanEvent) => void;
 };
 
-export const gestures = { pans: [] as PanConfig[] };
+/** The pans made, and the handlers a callback told to fail (`GestureStateManager.fail`). */
+export const gestures = { pans: [] as PanConfig[], failed: [] as number[] };
 
 export async function gestureFake() {
   const { createElement } = await import('react');
@@ -21,6 +22,11 @@ export async function gestureFake() {
     usePanGesture: (config: PanConfig) => {
       gestures.pans.push(config);
       return config;
+    },
+    GestureStateManager: {
+      fail: (tag: number) => void gestures.failed.push(tag),
+      activate: () => undefined,
+      deactivate: () => undefined,
     },
     GestureDetector: ({ children }: Holder) => children,
     GestureHandlerRootView: ({ children }: Holder) => children,

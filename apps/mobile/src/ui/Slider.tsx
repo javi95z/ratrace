@@ -4,6 +4,7 @@ import { View, type HostInstance, type LayoutChangeEvent } from 'react-native';
 import { Framed } from './Frame';
 import { acceleratedRangeKey, onKeys, tabStop } from './keyboard';
 import { COLORS, TOUCH } from './theme';
+import { useSheetHold } from './sheetHold';
 
 /** The handle: the web's `.range::-webkit-slider-thumb`, 20 x 28. The track is 8 high. */
 export const THUMB = { w: 20, h: 28 } as const;
@@ -56,12 +57,15 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
   // Where the touch began, and whether it has become a drag: a touch that never does and ends where it began is a tap.
   const began = useRef<{ y: number } | null>(null);
   const dragging = useRef(false);
+  // In a sheet, a press of the slider is the slider's: the sheet is not dragged from it.
+  const hold = useSheetHold();
   const pan = usePanGesture({
     activeOffsetX: [-ACTIVATE, ACTIVATE],
     failOffsetY: [-CANCEL, CANCEL],
     runOnJS: true,
     enabled: max > min,
     onBegin: (event) => {
+      hold.press();
       began.current = { y: event.y };
       dragging.current = false;
     },
@@ -70,6 +74,7 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
       place(event.x);
     },
     onFinalize: (event) => {
+      hold.release();
       const from = began.current;
       began.current = null;
       // A drag has set the value as it went. A touch that went up or down failed the pan: it was a scroll, not an amount.
@@ -97,6 +102,7 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
         ref={ref}
         {...keys}
         {...tabStop(max > min)}
+        {...{ dataSet: { sheetNodrag: true } }}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={label}

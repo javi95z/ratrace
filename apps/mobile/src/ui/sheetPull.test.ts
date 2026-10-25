@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { CLOSE_SHARE, FLICK, RUBBER, SLIDE_MS, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
+import { BACK_SPRING, CLOSE_SHARE, FLICK, FLICK_TRAVEL, RUBBER, SLIDE_MS, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
 
 test('pulled down, the panel follows the finger point for point', () => {
   expect(pulledTo(0)).toBe(0);
@@ -58,4 +58,27 @@ test('the slide away keeps the finger\'s speed when it was quick, and is short e
   expect(slideMs(10_000, 100)).toBe(SLIDE_MS);
   // Never so short it is not seen.
   expect(slideMs(5, 9000)).toBeGreaterThanOrEqual(60);
+});
+
+test('a flick closes only once the panel has travelled FLICK_TRAVEL: a twitch of the mouse or the finger past the slop is not a close', () => {
+  expect(FLICK_TRAVEL).toBeGreaterThanOrEqual(20);
+  expect(letGo(FLICK_TRAVEL - 1, FLICK * 3, 600)).toBe('back');
+  expect(letGo(FLICK_TRAVEL, FLICK, 600)).toBe('close');
+  expect(letGo(12, FLICK * 3, 0)).toBe('back');
+});
+
+test('a locked sheet (one that cannot be closed now) gives a little either way and never more than RUBBER', () => {
+  expect(pulledTo(0, true)).toBe(0);
+  expect(pulledTo(2, true)).toBeCloseTo(1, 1);
+  expect(pulledTo(400, true)).toBeGreaterThan(0);
+  expect(pulledTo(400, true)).toBeLessThan(RUBBER);
+  expect(pulledTo(-400, true)).toBeLessThan(0);
+  expect(pulledTo(-400, true)).toBeGreaterThan(-RUBBER);
+  // Unlocked, down is the finger's own.
+  expect(pulledTo(400, false)).toBe(400);
+});
+
+test('the spring back never carries an upward flick past the rest: no gap is ever shown under a panel standing on the foot of the screen', () => {
+  expect(backSpring(-5000)).toEqual({ ...BACK_SPRING, velocity: 0, overshootClamping: true });
+  expect(backSpring(800)).toEqual({ ...BACK_SPRING, velocity: 800, overshootClamping: true });
 });

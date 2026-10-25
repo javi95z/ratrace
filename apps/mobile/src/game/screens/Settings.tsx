@@ -481,7 +481,7 @@ function DeleteSheet({ open, onClose, deleteAccount }: { open: boolean; onClose(
     void deleteAccount().then(settled, () => settled(false));
   };
   return (
-    <Sheet open={open} onClose={leave} title={t('deleteTitle')} closeLabel={common('close')}>
+    <Sheet open={open} onClose={leave} locked={deleting} title={t('deleteTitle')} closeLabel={common('close')}>
       <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('deleteAbout')}</ReadText>
       {failed ? (
         <View accessible role="alert" accessibilityLiveRegion="assertive" style={{ marginTop: 8 }}>

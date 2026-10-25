@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { letHeldTurnsGo } from './back';
 import { Sheet } from './overlay';
 import { speedOf } from './sheetDrag.web';
-import { REFUSED_MS } from './useSheetPull';
+import { View } from 'react-native';
+import { memoryServices, renderGame } from '../testing/render';
+import { AmountSheet } from '../game/screens/AmountSheet';
 import { browserAt } from './testing/media';
 import { rea } from './testing/reanimated';
 
@@ -30,20 +32,32 @@ afterEach(() => {
 
 const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
 
-/** A pointer event as a browser gives it (jsdom has no PointerEvent of its own), at `y` on the page, `t` milliseconds into the drag. */
-function pointer(type: string, target: Element, y: number, t: number, x = 100) {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 });
-  Object.defineProperties(event, { pointerId: { value: 1 }, isPrimary: { value: true }, timeStamp: { value: t } });
+type Kind = 'touch' | 'mouse' | 'pen';
+/**
+ * A pointer event as a browser gives it (jsdom has no PointerEvent of its own), at `y` on the page, `t` milliseconds into the drag: a finger's unless
+ * said, its button down but as it is lifted (`buttons`).
+ */
+function pointer(type: string, target: Element, y: number, t: number, x = 100, kind: Kind = 'touch', buttons = type === 'pointerup' ? 0 : 1) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons });
+  Object.defineProperties(event, { pointerId: { value: 1 }, isPrimary: { value: true }, timeStamp: { value: t }, pointerType: { value: kind } });
+  act(() => void target.dispatchEvent(event));
+  return event;
+}
+
+/** A finger's own move, as the browser asks the page whether it may scroll with it (`preventDefault` keeps it from scrolling). */
+function touchMove(target: Element, y: number, x = 100) {
+  const event = new Event('touchmove', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'touches', { value: [{ clientX: x, clientY: y }] });
   act(() => void target.dispatchEvent(event));
   return event;
 }
 
 /** A drag from `target`, from `from` to `to` on the page over `ms` milliseconds, in steps, let go there. */
-function dragOn(target: Element, from: number, to: number, ms: number) {
-  pointer('pointerdown', target, from, 1000);
+function dragOn(target: Element, from: number, to: number, ms: number, kind: Kind = 'touch') {
+  pointer('pointerdown', target, from, 1000, 100, kind);
   const steps = 6;
-  for (let i = 1; i <= steps; i++) pointer('pointermove', target, from + ((to - from) * i) / steps, 1000 + (ms * i) / steps);
-  pointer('pointerup', target, to, 1000 + ms);
+  for (let i = 1; i <= steps; i++) pointer('pointermove', target, from + ((to - from) * i) / steps, 1000 + (ms * i) / steps, 100, kind);
+  pointer('pointerup', target, to, 1000 + ms, 100, kind);
 }
 
 function Owned({ refuse = false, onClose = () => {} }: { refuse?: boolean; onClose?: () => void }) {
@@ -114,7 +128,7 @@ describe('a sheet dragged on the web', () => {
     dragOn(grip(), 100, 300, 60);
     await wait(300);
     expect(onClose).toHaveBeenCalledTimes(1);
-    await wait(REFUSED_MS + 400);
+    await wait(400);
     expect(screen.getByText('Details')).toBeTruthy();
     expect(pullStyle().transform).toBe('translateY(0px)');
   });
@@ -163,6 +177,100 @@ describe('a sheet dragged on the web', () => {
     pointer('pointermove', grip(), 200, 1020, 160);
     expect(pullStyle().transform).toBe('translateY(0px)');
     pointer('pointerup', grip(), 200, 1030, 160);
+  });
+
+  it('loses no press: one let go outside the panel ends there, and a pointer passing over it with no button down drags nothing', async () => {
+    const onClose = vi.fn();
+    render(<Owned onClose={onClose} />);
+    const backdrop = screen.getByTestId('sheet-backdrop');
+    // A mouse pressed on the grabber, led off the panel at once, let go over the dimmed page.
+    pointer('pointerdown', grip(), 100, 1000, 100, 'mouse');
+    pointer('pointermove', backdrop, 96, 1010, 160, 'mouse');
+    pointer('pointerup', backdrop, 96, 1020, 160, 'mouse');
+    // The mouse passes over the panel, no button down: nothing follows it.
+    pointer('pointermove', grip(), 300, 1100, 100, 'mouse', 0);
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    // A press whose release was never seen is dropped by the next move with no button down.
+    pointer('pointerdown', grip(), 100, 2000, 100, 'mouse');
+    pointer('pointermove', grip(), 300, 2010, 100, 'mouse', 0);
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    // And the next press is a drag again.
+    dragOn(grip(), 100, 300, 60, 'mouse');
+    await wait(300);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('is never dragged from a control that drags itself: an amount\'s slider, or what the kit marks `data-sheet-nodrag`', async () => {
+    // The game's own pieces settle on the page's clock.
+    vi.useRealTimers();
+    const settle = (ms: number) => act(() => new Promise((done) => setTimeout(done, ms)));
+    const onClose = vi.fn();
+    renderGame(<AmountSheet title="Save" max={100_000} start={10_000} onClose={onClose} onConfirm={() => true} />, memoryServices());
+    const slider = await screen.findByRole('slider');
+    expect(slider.getAttribute('data-sheet-nodrag')).toBe('true');
+    dragOn(slider, 100, 400, 60);
+    await settle(300);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    cleanup();
+    render(
+      <Sheet open onClose={onClose} title="Details" closeLabel="Close">
+        <View testID="own-drag" {...{ dataSet: { sheetNodrag: true } }} />
+      </Sheet>,
+    );
+    dragOn(screen.getByTestId('own-drag'), 100, 400, 60);
+    await settle(300);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('claims a finger\'s move down from the top of its body at once, before the browser can take it for a scroll; up is the scroll\'s', () => {
+    render(<Owned />);
+    pointer('pointerdown', body(), 100, 1000);
+    expect(touchMove(body(), 102).defaultPrevented).toBe(true);
+    pointer('pointerup', body(), 102, 1010);
+    // Up: the scroll's, and the press is let go.
+    pointer('pointerdown', body(), 100, 2000);
+    expect(touchMove(body(), 97).defaultPrevented).toBe(false);
+    pointer('pointermove', body(), 160, 2010);
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    pointer('pointerup', body(), 160, 2020);
+    // Scrolled, a finger going down is the scroll's.
+    (body().closest('[data-sheet-scroll]') as HTMLElement).scrollTop = 30;
+    pointer('pointerdown', body(), 100, 3000);
+    expect(touchMove(body(), 104).defaultPrevented).toBe(false);
+  });
+
+  it('listens to a finger\'s moves without letting the browser scroll on only for as long as a press may become a drag', () => {
+    const adding = vi.spyOn(window, 'addEventListener');
+    const removing = vi.spyOn(window, 'removeEventListener');
+    render(<Owned />);
+    const blocking = () => adding.mock.calls.filter(([type, , options]) => type === 'touchmove' && (options as AddEventListenerOptions | undefined)?.passive === false).length;
+    expect(blocking()).toBe(0);
+    pointer('pointerdown', body(), 100, 1000);
+    expect(blocking()).toBe(1);
+    pointer('pointerup', body(), 100, 1010);
+    expect(removing.mock.calls.filter(([type]) => type === 'touchmove')).toHaveLength(1);
+    adding.mockRestore();
+    removing.mockRestore();
+  });
+
+  it('closes on a flick only once it has gone FLICK_TRAVEL: a quick twitch past the slop goes back', async () => {
+    const onClose = vi.fn();
+    render(<Owned onClose={onClose} />);
+    dragOn(grip(), 100, 120, 10, 'mouse');
+    await wait(400);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('is pulled from its body by a finger or a pen, never by a mouse (which selects the text there); a mouse pulls its grip', async () => {
+    const onClose = vi.fn();
+    render(<Owned onClose={onClose} />);
+    dragOn(body(), 100, 400, 60, 'mouse');
+    await wait(300);
+    expect(onClose).not.toHaveBeenCalled();
+    dragOn(body(), 100, 400, 60, 'pen');
+    await wait(300);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('is not dragged in the middle of a desk\'s screen, where it is a dialog: no grabber there', () => {

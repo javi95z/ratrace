@@ -1,22 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useReducedMotion } from './animations';
-import { GRAB, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
-
-/**
- * The spring a sheet let go of short of closing goes back on: quick and only just damped, as a phone's own sheet settles, without a bounce past its
- * rest worth seeing.
- */
-export const BACK_SPRING = { stiffness: 380, damping: 36, mass: 1 };
-
-/**
- * How long a sheet slid away waits for its owner to close it before it takes the answer for a no and comes back. The owner is asked as the close
- * button asks (`onClose`), and one that closes does so with its next render, well within this; one that refuses (an account being deleted,
- * `DeleteSheet`) says nothing, so its silence is the refusal.
- */
-export const REFUSED_MS = 250;
+import { GRAB, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
+import type { SheetHold } from './sheetHold';
 
 /** A sheet being pulled: what the gestures tell it (the phone's on its UI thread, the web's from the page's pointer events), and what it draws. */
 export interface SheetPull {
@@ -32,75 +20,83 @@ export interface SheetPull {
   end(translation: number, velocity: number): void;
   /** The drag was taken from the sheet (the phone's cancel, the browser's): it goes back. */
   cancel(): void;
+  /** Whether a control of the sheet that drags itself (a slider) is pressed: then the sheet is not dragged (`useSheetHold`, ./sheetHold). */
+  held(): boolean;
 }
+
 
 /**
  * The pull of a sheet's panel, shared by the phone and the web: the panel follows the drag down (and gives a little up), the dimmed page fades with
  * it, and let go it either goes back on a spring or slides away and asks its owner to close it (`onClose`, the path the close button and the
- * backdrop take). Not closed by its owner, it comes back. Under reduced motion (the system's or the game's) nothing springs or slides: it is back at
- * once, or the owner is asked at once.
+ * backdrop take). Under reduced motion (the system's or the game's) nothing springs or slides: it is back at once, or the owner is asked at once.
+ *
+ * The owner answers with its next render: closed, the sheet's Modal is hidden; still open (it refused, or it gave the sheet's place to what comes next,
+ * as the moments do), the panel comes back with that render, never waiting off the screen. While it waits for that answer (`leaving`) it takes no
+ * drag, and its backdrop, its Close and Android's Back ask nothing more (`isLeaving`): a tap on a page that seems gone is not a second answer. A sheet
+ * `locked` (one that cannot be closed now) is never asked: it gives a little either way and goes back.
  */
-export function useSheetPull({ open, onClose }: { open: boolean; onClose(): void }) {
+export function useSheetPull({ open, onClose, locked = false }: { open: boolean; onClose(): void; locked?: boolean }) {
   const still = useReducedMotion();
   const pull = useSharedValue(0);
   const height = useSharedValue(0);
   const from = useSharedValue(0);
-  // Slid away (or asked at once), waiting for the owner's answer: no drag is taken until it comes.
   const leaving = useSharedValue(false);
   const quiet = useSharedValue(still);
+  const held = useSharedValue(locked);
+  // A control of the sheet that drags itself is pressed (`hold`); a drag of the sheet is under way (from `begin` to `end` or `cancel`).
+  const holding = useSharedValue(false);
+  const dragging = useSharedValue(false);
   useEffect(() => {
     quiet.value = still;
-  }, [still, quiet]);
+    held.value = locked;
+  }, [still, locked, quiet, held]);
 
   const closing = useRef(onClose);
-  const stillOpen = useRef(open);
-  const refused = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     closing.current = onClose;
-    stillOpen.current = open;
-    // Closed: its Modal is hidden, and whatever the panel was doing no longer matters.
-    if (!open && refused.current !== null) {
-      clearTimeout(refused.current);
-      refused.current = null;
-    }
   });
-  useEffect(() => () => void (refused.current !== null && clearTimeout(refused.current)), []);
-
+  // Asked by a drag, the owner answers in the render the asking starts (`asks`), which is where the panel comes back if it is still open.
+  const [asks, setAsks] = useState(0);
+  const waiting = useRef(false);
   const ask = useCallback(() => {
+    waiting.current = true;
+    setAsks((n) => n + 1);
     closing.current();
-    if (refused.current !== null) clearTimeout(refused.current);
-    refused.current = setTimeout(() => {
-      refused.current = null;
-      if (!stillOpen.current) return;
-      leaving.value = false;
-      pull.value = still ? 0 : withSpring(0, BACK_SPRING);
-    }, REFUSED_MS);
-  }, [still, leaving, pull]);
+  }, []);
+  useLayoutEffect(() => {
+    if (!waiting.current) return;
+    waiting.current = false;
+    if (!open) return;
+    leaving.value = false;
+    pull.value = still ? 0 : withSpring(0, backSpring(0));
+  }, [asks, open, still, leaving, pull]);
 
   const begin = useCallback(
     (translation: number) => {
       'worklet';
-      if (leaving.value) return;
+      if (leaving.value || holding.value) return;
+      dragging.value = true;
       cancelAnimation(pull);
       from.value = pull.value - Math.max(-GRAB, Math.min(GRAB, translation));
     },
-    [leaving, pull, from],
+    [leaving, holding, dragging, pull, from],
   );
   const move = useCallback(
     (translation: number) => {
       'worklet';
-      if (leaving.value) return;
-      pull.value = pulledTo(from.value + translation);
+      if (!dragging.value) return;
+      pull.value = pulledTo(from.value + translation, held.value);
     },
-    [leaving, pull, from],
+    [dragging, pull, from, held],
   );
   const end = useCallback(
     (translation: number, velocity: number) => {
       'worklet';
-      if (leaving.value) return;
-      const at = pulledTo(from.value + translation);
-      if (letGo(at, velocity, height.value) === 'back') {
-        pull.value = quiet.value ? 0 : withSpring(0, { ...BACK_SPRING, velocity });
+      if (!dragging.value) return;
+      dragging.value = false;
+      const at = pulledTo(from.value + translation, held.value);
+      if (held.value || letGo(at, velocity, height.value) === 'back') {
+        pull.value = quiet.value ? 0 : withSpring(0, backSpring(velocity));
         return;
       }
       leaving.value = true;
@@ -113,17 +109,31 @@ export function useSheetPull({ open, onClose }: { open: boolean; onClose(): void
         if (done) scheduleOnRN(ask);
       });
     },
-    [leaving, from, height, pull, quiet, ask],
+    [dragging, leaving, from, height, pull, quiet, held, ask],
   );
   const cancel = useCallback(() => {
     'worklet';
-    if (leaving.value) return;
-    pull.value = quiet.value ? 0 : withSpring(0, BACK_SPRING);
-  }, [leaving, pull, quiet]);
+    if (!dragging.value) return;
+    dragging.value = false;
+    pull.value = quiet.value ? 0 : withSpring(0, backSpring(0));
+  }, [dragging, pull, quiet]);
+  const isHeld = useCallback(() => {
+    'worklet';
+    return holding.value;
+  }, [holding]);
+  const hold = useMemo<SheetHold>(
+    () => ({
+      press: () => void (holding.value = true),
+      release: () => void (holding.value = false),
+    }),
+    [holding],
+  );
 
+  const isLeaving = useCallback(() => leaving.value, [leaving]);
   const measure = useCallback((event: LayoutChangeEvent) => void (height.value = event.nativeEvent.layout.height), [height]);
   const panelStyle = useAnimatedStyle(() => ({ transform: [{ translateY: pull.value }] }));
   const dimStyle = useAnimatedStyle(() => ({ opacity: dimOf(pull.value, height.value) }));
-  const drag: SheetPull = { begin, move, end, cancel };
-  return { drag, measure, panelStyle, dimStyle };
+  // One drag for the sheet's life: the pans are given it once, not made again with every render of the sheet.
+  const drag = useMemo<SheetPull>(() => ({ begin, move, end, cancel, held: isHeld }), [begin, move, end, cancel, isHeld]);
+  return { drag, hold, measure, panelStyle, dimStyle, isLeaving };
 }

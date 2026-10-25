@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode, type RefObject } from 'react';
 import { View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewProps } from 'react-native';
-import { GestureDetector, ScrollView, usePanGesture } from 'react-native-gesture-handler';
+import { GestureDetector, GestureStateManager, ScrollView, usePanGesture } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { GRAB } from './sheetPull';
 import type { SheetPull } from './useSheetPull';
@@ -57,6 +57,11 @@ export function SheetScroll({ drag, enabled, children, onScroll, ...props }: Scr
     activeOffsetY: GRAB,
     failOffsetY: -GRAB,
     failOffsetX: [-SIDEWAYS, SIDEWAYS],
+    // A control that drags itself (a slider) pressed: the pan gives way, to it and to the scroll.
+    onTouchesMove: (event) => {
+      'worklet';
+      if (drag.held()) GestureStateManager.fail(event.handlerTag);
+    },
     onActivate: (event) => {
       'worklet';
       drag.begin(event.translationY);
@@ -86,7 +91,7 @@ export function SheetScroll({ drag, enabled, children, onScroll, ...props }: Scr
   );
 }
 
-/** The web's: the panel's own pointer events. Nothing on the phone, whose pans are the grip's and the body's. */
+/** The web's: the panel's own pointer events. Nothing on the phone, whose pans are the grip's and the body's: here only so the twins export the same. */
 export function useDragSurface(panel: RefObject<unknown>, drag: SheetPull, enabled: boolean): void {
   void panel;
   void drag;

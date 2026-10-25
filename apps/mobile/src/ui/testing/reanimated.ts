@@ -4,7 +4,7 @@
 // (on fake timers), and `cancelAnimation` is recorded and stops it. The frames themselves are pinned in motion.test.ts.
 
 /** What a spring is told: how stiff and how damped it is, and the speed it starts at. */
-export type SpringConfig = { stiffness?: number; damping?: number; mass?: number; velocity?: number };
+export type SpringConfig = { stiffness?: number; damping?: number; mass?: number; velocity?: number; overshootClamping?: boolean };
 /** How long a spring takes to land here, where nothing is integrated. */
 export const SPRING_MS = 300;
 

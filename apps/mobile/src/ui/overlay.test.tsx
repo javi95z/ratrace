@@ -7,11 +7,11 @@ import { EXTRA, COLORS } from './theme';
 import { letHeldTurnsGo, sheetsGone } from './back';
 import { Sheet, Tabs, Toast } from './overlay';
 import { Picker } from './Picker';
+import { Slider } from './Slider';
 import { rea } from './testing/reanimated';
 import { gestures, type PanConfig } from './testing/gestures';
 import { TapProvider } from './tap';
 import { ReducedMotionProvider } from './animations';
-import { REFUSED_MS } from './useSheetPull';
 
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
 // it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
@@ -76,6 +76,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   rea.assigned.length = 0;
   gestures.pans.length = 0;
+  gestures.failed.length = 0;
   platform.OS = 'web';
 });
 afterEach(() => {
@@ -856,15 +857,18 @@ test('a quick flick down closes it from a short pull; a flick back up keeps it h
   expect(kept).not.toHaveBeenCalled();
 });
 
-test('a sheet whose owner does not close it (an account being deleted) comes back once the owner has said nothing', async () => {
+test('a sheet whose owner does not close it comes back with the render its asking starts: it never waits off the screen', async () => {
   const onClose = sheet();
   laidOut(600);
   drag(pans().grip, 400);
-  await wait(300);
+  const slide = rea.assigned.at(-1)!;
+  expect(slide).toMatchObject({ kind: 'timing', to: 624 });
+  rea.assigned.length = 0;
+  // The slide lands and the owner is asked (a moment later, on React's side): in the same moment it is on its way back.
+  await wait(slide.duration);
+  await wait(1);
   expect(onClose).toHaveBeenCalledTimes(1);
-  expect(pullStyle().transform).toBe('translateY(624px)');
-  await wait(REFUSED_MS);
-  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  expect(rea.assigned).toEqual([expect.objectContaining({ kind: 'spring', to: 0 })]);
   await wait(1000);
   expect(pullStyle().transform).toBe('translateY(0px)');
   // And it can be pulled again.
@@ -889,8 +893,71 @@ test('a sheet its owner closes is not brought back', async () => {
   rea.assigned.length = 0;
   await wait(300);
   expect(modals()).toEqual([]);
-  await wait(REFUSED_MS * 2);
+  await wait(1000);
   expect(rea.assigned.filter((one) => one.kind === 'spring')).toEqual([]);
+});
+
+test('a sheet that gives its place to what comes next (the moments, one after another) comes back with it at once', async () => {
+  function Moments() {
+    const [at, setAt] = useState(1);
+    return (
+      <Sheet open={at <= 2} onClose={() => setAt((n) => n + 1)} title={`Moment ${at}`} closeLabel="Close">
+        <span>{`moment ${at}`}</span>
+      </Sheet>
+    );
+  }
+  render(<Moments />);
+  laidOut(600);
+  drag(pans().grip, 400);
+  await wait(300);
+  expect(screen.getByText('moment 2')).toBeTruthy();
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  expect(pullStyle().transform).toBe('translateY(0px)');
+});
+
+test('while a drag\'s question waits for the owner, the backdrop, the Close and Android\'s Back ask nothing: a tap on a page that seems gone is no second answer', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  drag(pans().grip, 400);
+  // The panel is sliding away, the owner not asked yet.
+  await wait(20);
+  fireEvent.click(document.body.querySelector('[data-testid="sheet-backdrop"]') as HTMLElement);
+  fireEvent.click(screen.getByLabelText('Close'));
+  act(() => (modal.props!.onRequestClose as () => void)());
+  expect(onClose).not.toHaveBeenCalled();
+  await wait(300);
+  expect(onClose).toHaveBeenCalledTimes(1);
+  // Answered (here: refused, it is still open), they ask again.
+  fireEvent.click(document.body.querySelector('[data-testid="sheet-backdrop"]') as HTMLElement);
+  expect(onClose).toHaveBeenCalledTimes(2);
+});
+
+test('a locked sheet (an account being deleted) has no grabber, gives only a little either way, and is never asked to close by a drag', async () => {
+  const onClose = sheet({ locked: true });
+  expect(screen.queryByTestId('sheet-grabber')).toBeNull();
+  laidOut(600);
+  const { grip, body } = pans();
+  act(() => {
+    grip.onActivate?.({ translationY: 10, velocityY: 0 });
+    grip.onUpdate?.({ translationY: 400, velocityY: 0 });
+  });
+  const down = Number(/translateY\((-?[\d.]+)px\)/.exec(pullStyle().transform)![1]);
+  expect(down).toBeGreaterThan(0);
+  expect(down).toBeLessThan(24);
+  act(() => grip.onDeactivate?.({ translationY: 400, velocityY: 3000 }));
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  drag(body, 500, 3000);
+  await wait(1000);
+  expect(onClose).not.toHaveBeenCalled();
+  expect(pullStyle().transform).toBe('translateY(0px)');
+});
+
+test('the spring back never carries an upward flick past the rest', () => {
+  sheet();
+  laidOut(600);
+  drag(pans().grip, 40, -5000);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0, spring: { velocity: 0, overshootClamping: true } });
 });
 
 test('a drag the phone takes away (a cancel) springs back and asks nothing', async () => {
@@ -945,7 +1012,33 @@ test('under reduced motion nothing slides or springs: the owner is asked at once
   await wait(1);
   expect(onClose).toHaveBeenCalledTimes(1);
   // Refused, it is back at its rest at once.
-  await wait(REFUSED_MS);
+  await wait(1);
   expect(pullStyle().transform).toBe('translateY(0px)');
   expect(rea.assigned).toEqual([]);
+});
+
+test('a slider in a sheet holds it: pressed, the sheet\'s pan gives way to it (and to the scroll), and no drag moves the sheet', async () => {
+  const onClose = vi.fn();
+  render(
+    <Sheet open onClose={onClose} title="Title" closeLabel="Close">
+      <Slider value={5} min={0} max={10} step={1} onChange={() => {}} label="Amount" />
+    </Sheet>,
+  );
+  laidOut(600);
+  const slider = gestures.pans.findLast((pan) => pan.runOnJS === true) as PanConfig & { onBegin(event: { x: number; y: number }): void; onFinalize(event: { x: number; y: number }): void };
+  const { body } = pans();
+  act(() => slider.onBegin({ x: 10, y: 20 }));
+  (body.onTouchesMove as (event: { handlerTag: number }) => void)({ handlerTag: 7 });
+  expect(gestures.failed).toEqual([7]);
+  drag(body, 400, 3000);
+  await wait(400);
+  expect(onClose).not.toHaveBeenCalled();
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  // Let go, the sheet is its own again.
+  act(() => slider.onFinalize({ x: 10, y: 20 }));
+  (body.onTouchesMove as (event: { handlerTag: number }) => void)({ handlerTag: 8 });
+  expect(gestures.failed).toEqual([7]);
+  drag(body, 400, 3000);
+  await wait(400);
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
