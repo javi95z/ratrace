@@ -465,6 +465,21 @@ try {
     'the room ends after its last round with a run of its own for the life, written by the server, and the room\'s order by score');
   check(statusOf(await askRoom(a, { action: 'leave', roomId: room.id })) === 200 && roomIn(await askRoom(a, { action: 'mine' })) === null, 'a member leaves a room that is over, and is in none');
   await b.removeChannel(channel);
+
+  // ---------------------------------------------------------------- deleting an account
+  // B, who by now has a profile, a friend, lives of every kind and a room behind them, deletes their account, and nothing of theirs is left.
+  check(statusOf(await nobody.functions.invoke('delete-account', { body: { confirm: true } })) === 401, 'nobody with no account can delete one');
+  check(statusOf(await b.functions.invoke('delete-account', { body: {} })) === 400, 'an account is not deleted by a request that does not say so');
+  const deleted = await b.functions.invoke('delete-account', { body: { confirm: true } });
+  check(statusOf(deleted) === 200 && (deleted.data as { deleted?: boolean } | null)?.deleted === true, 'a player deletes their own account');
+  const leftOfB = asOwner(
+    `select (select count(*) from auth.users where id = '${idB}') + (select count(*) from public.profiles where user_id = '${idB}') + (select count(*) from public.games where user_id = '${idB}')
+      + (select count(*) from public.runs where user_id = '${idB}') + (select count(*) from public.friendships where follower = '${idB}' or followed = '${idB}')
+      + (select count(*) from public.room_players where user_id = '${idB}') + (select count(*) from private.rate_use where user_id = '${idB}') as left_of_b`,
+  )?.[0];
+  check(Number(leftOfB?.left_of_b) === 0, 'and the account goes with everything of theirs: profile, lives, runs, friends, rooms');
+  const friendsOfA = await a.functions.invoke('friends', { body: { action: 'list' } });
+  check(statusOf(friendsOfA) === 200 && !((friendsOfA.data as { friends?: Array<{ userId: string }> } | null)?.friends ?? []).some((one) => one.userId === idB), 'the other player\'s list of friends no longer names them');
 } catch (error) {
   check(false, error instanceof Error ? error.message : String(error));
 } finally {

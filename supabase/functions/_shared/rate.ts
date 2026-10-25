@@ -18,6 +18,8 @@ export const LIMITS = {
   // The errors a page met: ten kinds at most a page, a call or two each, so twenty a day is a player whose every page fails.
   // Counted by the day, so that one player can make up no more than two hundred kinds a day.
   errors: [20, 86_400],
+  // Deleting the account: one that works is the last call the player makes, and one that failed may be tried again a few times.
+  'delete-account': [5, 3600],
 } as const;
 
 export type Counted = keyof typeof LIMITS;

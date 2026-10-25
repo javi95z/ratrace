@@ -439,6 +439,10 @@ verify_jwt = true
 [functions.friends]
 verify_jwt = true
 
+# Deletes the account of the player who asks, and everything of theirs with it. Signed-in players only.
+[functions.delete-account]
+verify_jwt = true
+
 # The weekly notice: called by a job of the database with the project's secret key, never by a player.
 [functions.weekly-notice]
 verify_jwt = false
