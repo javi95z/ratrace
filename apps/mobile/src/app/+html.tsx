@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { FAULT_WORDS } from '../game/faultWords';
 import { faultWordsJson } from '../game/faultWordsHtml';
 import { FRONT_PICTURE } from '../game/frontPicture';
-import { SOURCES } from '../sprites/sources.web';
+import { sourceOf, uriOf } from '../ui/spriteImages.web';
 import { LATER_FACES, laterFaces } from '../ui/gameFonts';
 
 /*
@@ -86,8 +86,8 @@ const OWN_ADDRESS = `(function () {
  */
 function pictureAhead(lang: string, asked: unknown, pathname: string | undefined): string | null {
   if (asked !== lang || pathname?.replace(/\/$/, '') !== `/${lang}`) return null;
-  const source = SOURCES[FRONT_PICTURE] as { uri?: string } | undefined;
-  return source?.uri ?? null;
+  const source = sourceOf(FRONT_PICTURE);
+  return source === undefined ? null : uriOf(source);
 }
 
 /** The document a page is drawn in: `params` are its route's (`locale` the first part of its address), `children` the app's root. */

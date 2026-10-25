@@ -9,6 +9,8 @@ import { expect, test, vi } from 'vitest';
 const documentData: { headNodes?: ReactNode; bodyNodes?: ReactNode } = {};
 // The router's document context, as the export fills it (the real module loads the whole router, which Node cannot run here).
 vi.mock('expo-router/html', () => ({ useServerDocumentContext: () => documentData }));
+// The sprites as the export has them (Metro picks the web's twin there): the site's files at /sprites, not the phone's bundled assets.
+vi.mock('../src/sprites/sources', () => import('../src/sprites/sources.web'));
 const { default: Document } = await import('../src/app/+html');
 
 /*

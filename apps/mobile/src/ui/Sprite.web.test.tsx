@@ -91,11 +91,14 @@ test('drawn on the server, a sprite is its <img> in the HTML, and the browser ta
   page.innerHTML = html;
   document.body.append(page);
   const mismatches: unknown[] = [];
+  // React says an attribute that differs only on the console: anything said there while the page is taken over is a fault too.
+  const said = vi.spyOn(console, 'error');
   let root: ReturnType<typeof hydrateRoot> | null = null;
   await act(async () => {
     root = hydrateRoot(page, ui, { onRecoverableError: (error) => mismatches.push(error) });
   });
   expect(mismatches).toEqual([]);
+  expect(said).not.toHaveBeenCalled();
   expect(imgs(page)).toHaveLength(2);
   act(() => root?.unmount());
   page.remove();
