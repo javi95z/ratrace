@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act, render } from '@testing-library/react';
+import { View } from 'react-native';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 // The setup of the phone's tests replaces the phone's Sprite with a fake; this is the web's own.
@@ -48,18 +49,56 @@ test('a known sprite at scale 2 is an img of twice its art size, never smoothed'
   expect(PIXELATED).toEqual({ imageRendering: 'pixelated' });
 });
 
-test('the box is there while the file loads, and empty: nothing moves when it arrives', async () => {
+test('the picture is drawn at once, in its box, while the browser fetches its file: the reads under way still count it until it is in', async () => {
   let arrive: (picture: { uri: string; w: number; h: number }) => void = () => {};
   loadSpritesWith(() => new Promise((resolve) => (arrive = resolve)));
   const { container } = render(<Sprite id="anim.coin.0" scale={2} alt="a coin" />);
-  expect(imgs(container)).toHaveLength(0);
-  expect(spritesLoading()).toBe(1);
   const box = container.firstElementChild as HTMLElement;
   expect(box.style.width).toBe('96px');
   expect(box.style.height).toBe('96px');
+  // The <img> is there from the first drawing (as in the export's HTML), its address, size and name its own.
+  const [img] = imgs(container);
+  expect(img.getAttribute('src')).toBe('/sprites/anim.coin.0.png');
+  expect(img.getAttribute('width')).toBe('96');
+  expect(img.getAttribute('alt')).toBe('a coin');
+  // The box names nothing itself: the picture does.
+  expect(box.getAttribute('role')).toBeNull();
+  expect(spritesLoading()).toBe(1);
   await act(async () => arrive({ uri: '/sprites/anim.coin.0.png', w: 48, h: 48 }));
   expect(imgs(container)).toHaveLength(1);
   expect(spritesLoading()).toBe(0);
+});
+
+test('drawn on the server, a sprite is its <img> in the HTML, and the browser takes it over as it was drawn', async () => {
+  const { renderToString } = await import('react-dom/server');
+  const { hydrateRoot } = await import('react-dom/client');
+  loadSpritesWith(() => new Promise(() => {}));
+  const ui = (
+    <View>
+      <Sprite id="anim.coin.0" scale={2} alt="a coin" />
+      <Sprite id="anim.coin.1" silhouette />
+      <Sprite id="anim.coin.2">
+        <span data-testid="over" />
+      </Sprite>
+    </View>
+  );
+  const html = renderToString(ui);
+  expect(html).toMatch(/<img [^>]*src="\/sprites\/anim\.coin\.0\.png"[^>]*>/);
+  expect(html).toContain('alt="a coin"');
+  expect(html).toContain('width="96"');
+  expect(html).toContain('data-silhouette="anim.coin.1"');
+  const page = document.createElement('div');
+  page.innerHTML = html;
+  document.body.append(page);
+  const mismatches: unknown[] = [];
+  let root: ReturnType<typeof hydrateRoot> | null = null;
+  await act(async () => {
+    root = hydrateRoot(page, ui, { onRecoverableError: (error) => mismatches.push(error) });
+  });
+  expect(mismatches).toEqual([]);
+  expect(imgs(page)).toHaveLength(2);
+  act(() => root?.unmount());
+  page.remove();
 });
 
 test('a picture without a name is hidden from a screen reader', async () => {

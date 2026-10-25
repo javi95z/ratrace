@@ -24,6 +24,7 @@ import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { InstallApp, useInstallOffer } from '../../pwa/install';
 import { useGo } from '../pages';
+import { FRONT_PICTURE } from '../frontPicture';
 import { useWarmPages } from '../warmPages';
 
 /** The letter spacing of a pixel button set in the page's 15: 0.03 of it. */
@@ -102,7 +103,7 @@ export function Home() {
       {returning ? (
         <Sprite id={ratArt('wave')} fallback={{ w: 128, h: 128 }} style={{ marginBottom: -4 }} />
       ) : (
-        <Sprite id="brand.mascot" fallback={{ w: 256, h: 256 }} style={{ marginBottom: -8 }} />
+        <Sprite id={FRONT_PICTURE} fallback={{ w: 256, h: 256 }} style={{ marginBottom: -8 }} />
       )}
       <View style={{ alignItems: 'center' }}>
         <View accessibilityRole="header">

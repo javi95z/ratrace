@@ -88,6 +88,21 @@ describe('the front door drawn on the server', () => {
     expect(warned.mock.calls.flat().filter((said) => String(said).startsWith('sprite '))).toEqual([]);
   });
 
+  it('holds the mascot\'s <img> in its HTML, its address, size and name there before any script runs (the page\'s largest picture)', () => {
+    params.locale = 'en';
+    pathname.now = '/en';
+    const html = renderToString(
+      <GameProvider>
+        <HomeRoute />
+      </GameProvider>,
+    );
+    const mascot = /<img [^>]*src="\/sprites\/brand\.mascot\.png"[^>]*>/.exec(html)?.[0] ?? '';
+    expect(mascot).not.toBe('');
+    expect(mascot).toContain('width="256"');
+    expect(mascot).toContain('height="256"');
+    expect(mascot).toContain('alt=""');
+  });
+
   it('counts nothing and listens to nothing there, in a release build too', () => {
     // A release build listens to the connection for as long as the app lasts (`online/track.ts`): drawn with no browser, there is none to hear.
     const account = { subscribe: () => () => undefined };

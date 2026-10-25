@@ -120,3 +120,14 @@ test('holds the words of the page of a fault in the page\'s language, and no oth
   }
   expect(pageIn(undefined)).toContain(JSON.stringify(MESSAGES.en.play.faultTitle));
 });
+
+test('the front door fetches its largest picture ahead, the mascot (as the Next web\'s HTML does): no other page does', () => {
+  const at = (locale: string | undefined, pathname: string) =>
+    renderToStaticMarkup(createElement(Document, { params: locale === undefined ? {} : { locale }, pathname, children: createElement('div', { id: 'root' }) }));
+  // Through React's own preloads (which the export also writes for each picture its HTML draws): one link for it, high in priority.
+  const preload = '<link rel="preload" href="/sprites/brand/brand.mascot.png" as="image" fetchPriority="high"/>';
+  for (const locale of ['en', 'es', 'ru']) expect(at(locale, `/${locale}`).split(preload)).toHaveLength(2);
+  for (const [locale, pathname] of [['en', '/en/play'], ['es', '/es/new'], [undefined, '/'], [undefined, '/+not-found'], ['de', '/de']] as const) {
+    expect(at(locale, pathname)).not.toContain('as="image"');
+  }
+});

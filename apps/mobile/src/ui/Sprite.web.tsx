@@ -1,7 +1,7 @@
 import { createContext, memo, useContext, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { sourceOf, useSpriteImage, useSpriteImages, type SpriteImage } from './spriteImages.web';
+import { sourceOf, uriOf, useSpriteImage, useSpriteImages, type SpriteImage } from './spriteImages.web';
 import { CHECKER, FALLBACK, reportMissing, spriteBox, spriteOf, type Size, type SpriteScale } from './sprites';
 import { COLORS, grey as greyOf } from './theme';
 
@@ -74,34 +74,37 @@ function Picture({ uri, at, alt = '', grey = false, onBroken }: { uri: string; a
 }
 
 /**
- * One pixel-art sprite, an `<img>`. Its file is fetched once for the whole app and shared (spriteImages). A sprite that does not exist, or does not
- * load, shows the checkerboard at the fallback size and is logged once: the game is playable without art.
+ * One pixel-art sprite, an `<img>`, drawn at once with its address, size and name (in the export's HTML too, as the Next web's: the browser fetches
+ * it with the page, before any script, and the front door's mascot, its largest picture, is painted with its first text). Its file is also read once
+ * for the whole app (spriteImages), which counts it among the reads under way until it is in and tells of a file that does not load. A sprite that
+ * does not exist, or does not load, shows the checkerboard at the fallback size and is logged once: the game is playable without art.
  */
 function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, silhouette = false, grey = false, style, children }: Props): ReactNode {
   const art = useContext(ArtScale);
   const box = size ?? spriteBox(id, scale, art, fallback);
-  const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
+  const source = spriteOf(id) !== null ? sourceOf(id) : undefined;
+  const uri = source !== undefined ? uriOf(source) : null;
+  const known = uri !== null;
   if (!known) reportMissing(id, 'missing');
-  const { image, failed } = useSpriteImage(known ? id : null);
-  // A file that loaded but that the browser then could not draw: told once, and the checkerboard (the id it was seen for, so another sprite starts afresh).
+  const { failed } = useSpriteImage(known ? id : null);
+  // A file the browser could not draw: told once, and the checkerboard (the id it was seen for, so another sprite starts afresh).
   const [broken, setBroken] = useState<string | null>(null);
   const at = place ?? { x: 0, y: 0, ...box };
   const named = alt !== '' && !silhouette;
   const placeholder = !known || failed || broken === id;
-  const drawn = !placeholder && image !== null;
 
   return (
     <View
-      // The picture names itself; a box with none (still loading, or the checkerboard) is named here.
-      role={named && !drawn ? 'img' : undefined}
-      aria-label={named && !drawn ? alt : undefined}
+      // The picture names itself; the checkerboard in its place is named here.
+      role={named && placeholder ? 'img' : undefined}
+      aria-label={named && placeholder ? alt : undefined}
       aria-hidden={named ? undefined : true}
       style={[{ width: box.w, height: box.h, flexShrink: 0, overflow: 'hidden' }, style]}
     >
-      {/* While it loads the box is already there, empty, so nothing moves when it arrives. */}
+      {/* The box is its size from the start, so nothing moves when the picture arrives. */}
       {placeholder ? (
         <Checker id={id} w={box.w} h={box.h} />
-      ) : drawn && silhouette ? (
+      ) : silhouette ? (
         // The sprite is the mask, the colour is the palette's: no black that the palette does not have.
         <div
           aria-hidden
@@ -113,8 +116,8 @@ function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, 
             width: at.w,
             height: at.h,
             backgroundColor: grey ? greyOf(COLORS['night-900']) : COLORS['night-900'],
-            maskImage: `url("${image.uri}")`,
-            WebkitMaskImage: `url("${image.uri}")`,
+            maskImage: `url("${uri}")`,
+            WebkitMaskImage: `url("${uri}")`,
             maskSize: '100% 100%',
             WebkitMaskSize: '100% 100%',
             maskRepeat: 'no-repeat',
@@ -122,10 +125,10 @@ function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, 
             ...PIXELATED,
           }}
         />
-      ) : drawn ? (
+      ) : (
         <>
           <Picture
-            uri={image.uri}
+            uri={uri}
             at={at}
             alt={alt}
             grey={grey}
@@ -139,7 +142,7 @@ function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, 
               takes no touch. */}
           {children ? <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{children}</div> : null}
         </>
-      ) : null}
+      )}
     </View>
   );
 }

@@ -1,8 +1,11 @@
 import { DEFAULT_LOCALE, isLocale } from '@ratrace/i18n/locales';
 import { useServerDocumentContext } from 'expo-router/html';
+import { preload } from 'react-dom';
 import type { ReactNode } from 'react';
 import { FAULT_WORDS } from '../game/faultWords';
 import { faultWordsJson } from '../game/faultWordsHtml';
+import { FRONT_PICTURE } from '../game/frontPicture';
+import { SOURCES } from '../sprites/sources.web';
 import { LATER_FACES, laterFaces } from '../ui/gameFonts';
 
 /*
@@ -76,11 +79,25 @@ const OWN_ADDRESS = `(function () {
   if (path !== '/') history.replaceState(history.state, '', path + location.search + location.hash);
 })();`;
 
+/**
+ * The address of the picture a page fetches ahead, as the Next web's HTML does its largest: the front door's mascot (`FRONT_PICTURE`), which a first
+ * visit meets and is the page's largest paint; no other page. Its `<img>` is in the HTML too (`ui/Sprite.web.tsx`), so it is painted with the
+ * page's first text, not once the scripts have run.
+ */
+function pictureAhead(lang: string, asked: unknown, pathname: string | undefined): string | null {
+  if (asked !== lang || pathname?.replace(/\/$/, '') !== `/${lang}`) return null;
+  const source = SOURCES[FRONT_PICTURE] as { uri?: string } | undefined;
+  return source?.uri ?? null;
+}
+
 /** The document a page is drawn in: `params` are its route's (`locale` the first part of its address), `children` the app's root. */
-export default function Document({ children, params }: { children: ReactNode; params?: Record<string, string | string[] | undefined>; pathname?: string }) {
+export default function Document({ children, params, pathname }: { children: ReactNode; params?: Record<string, string | string[] | undefined>; pathname?: string }) {
   const asked = params?.locale;
   const lang = isLocale(asked) ? asked : DEFAULT_LOCALE;
   const { htmlAttributes, headNodes, bodyAttributes, bodyNodes } = useServerDocumentContext();
+  const picture = pictureAhead(lang, asked, pathname);
+  // Through React's own preloads, which also fetch ahead every picture the page's HTML draws: one link for it, first among them.
+  if (picture) preload(picture, { as: 'image', fetchPriority: 'high' });
   return (
     <html {...htmlAttributes} lang={lang}>
       <head>
