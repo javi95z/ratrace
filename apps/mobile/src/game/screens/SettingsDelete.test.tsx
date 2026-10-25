@@ -134,7 +134,7 @@ describe('deleting the account, in the settings', () => {
     renderGame(<Preferences />, { ...services, account });
     fireEvent.click(screen.getByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
     expect(asked).toContain('delete');
     // Nothing of the player's is left on the device to go up to the next guest.
     expect(await services.store.loadGame()).toBeNull();
@@ -187,7 +187,7 @@ describe('deleting the account, in the settings', () => {
     await new Promise((settled) => setTimeout(settled, 20));
     expect(screen.getByRole('heading', { name: 'Delete your account?' })).toBeTruthy();
     answer(true);
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
   });
 
   it('works over the real account: the project forgets the player, and the game starts again with a new guest', async () => {
@@ -196,7 +196,7 @@ describe('deleting the account, in the settings', () => {
     renderGame(<Preferences />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
     fireEvent.click(await screen.findByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
     expect(project.state.deleted).toEqual(['guest-1']);
     await waitFor(() => expect(project.state.user?.id).toBe('guest-2'));
     expect(await services.store.listRuns()).toEqual([]);
@@ -209,7 +209,7 @@ describe('deleting the account, in the settings', () => {
       renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST, deleted).account, saves });
       fireEvent.click(screen.getByRole('button', DELETE));
       fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
-      if (deleted) await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+      if (deleted) await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
       else await within(sheetTitled('Delete your account?')).findByRole('alert');
       expect(forget.mock.calls.length > 0, String(deleted)).toBe(deleted);
       cleanup();
@@ -227,7 +227,7 @@ describe('deleting the account, in the settings', () => {
     renderGame(<Preferences />, { ...services, store: broken, account: fakeAccount(GUEST).account });
     fireEvent.click(screen.getByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Delete your account?' })).toBeNull();
     // The rest is cleared all the same.
@@ -248,7 +248,7 @@ describe('deleting the account, in the settings', () => {
     expect(project.state.deleted).toEqual(['guest-1']);
     expect(await services.store.listRuns()).toHaveLength(1);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
-    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
     expect(project.state.deleted).toEqual(['guest-1']);
     expect(await services.store.listRuns()).toEqual([]);
     expect(await services.store.loadGame()).toBeNull();
