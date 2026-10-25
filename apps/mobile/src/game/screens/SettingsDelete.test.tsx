@@ -6,7 +6,7 @@ import { readRun } from '@ratrace/core/session/runs';
 import { newProfile } from '@ratrace/core/session/types';
 import { SupabaseAccount } from '@ratrace/online/supabase';
 import type { Account, AccountSaves, AccountState } from '@ratrace/online/types';
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { onlineOver } from '../../online';
 import { accountCloud } from '../../testing/accountCloud';
@@ -247,6 +247,8 @@ describe('deleting the account, in the settings', () => {
     // Gone on the server already, but the phone was not told: it keeps everything, and is asked again.
     expect(project.state.deleted).toEqual(['guest-1']);
     expect(await services.store.listRuns()).toHaveLength(1);
+    // The button drawn ready again is told so by an effect (react-native-web's press responder): a press before it runs is turned away.
+    await act(async () => undefined);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
     expect(project.state.deleted).toEqual(['guest-1']);
