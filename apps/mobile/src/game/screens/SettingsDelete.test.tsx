@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
+import { content, lives } from '@ratrace/content';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
 import { readRun } from '@ratrace/core/session/runs';
 import { newProfile } from '@ratrace/core/session/types';
 import { SupabaseAccount } from '@ratrace/online/supabase';
-import type { Account, AccountState } from '@ratrace/online/types';
+import type { Account, AccountSaves, AccountState } from '@ratrace/online/types';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { onlineOver } from '../../online';
 import { accountCloud } from '../../testing/accountCloud';
 import { kv, memoryServices, renderGame, router } from '../../testing/render';
+import { servicesOver } from '../context';
 import { HomeSettingsSheet, Preferences } from './Settings';
 
 /*
@@ -116,6 +121,8 @@ describe('deleting the account, in the settings', () => {
     fireEvent.click(screen.getByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     for (const goes of ['every life and record', 'your name in the rankings', 'your friends', 'your games with others', 'your notices', 'cannot be undone']) expect(sheet.textContent).toContain(goes);
+    // What another phone or browser holds is its own, until the account is deleted there too.
+    expect(sheet.textContent).toContain('Another phone or browser where you played keeps its own copy until you delete the account there too.');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Delete your account?' })).toBeNull());
     expect(asked).not.toContain('delete');
@@ -151,7 +158,8 @@ describe('deleting the account, in the settings', () => {
     fireEvent.click(screen.getByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
-    expect((await within(sheet).findByRole('alert')).textContent).toBe('Could not delete your account, and nothing was changed. Check your connection and try again.');
+    // Not the connection's fault, necessarily (a server's no, one not there yet): what is true is said, and what to do.
+    expect((await within(sheet).findByRole('alert')).textContent).toBe('Your account could not be deleted. Nothing has changed on this device. Try again later.');
     expect(await services.store.loadGame()).not.toBeNull();
     expect(await services.store.listRuns()).toHaveLength(1);
     expect(kv.has('ratrace:session:sb-ref-auth-token')).toBe(true);
@@ -173,6 +181,11 @@ describe('deleting the account, in the settings', () => {
     expect(disabled(waiting)).toBe(true);
     fireEvent.click(waiting);
     expect(asked.filter((one) => one === 'delete')).toHaveLength(1);
+    // Nor can it be left while the server answers: what it answers is said in it.
+    expect(disabled(within(sheet).getByRole('button', { name: 'Cancel' }))).toBe(true);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await new Promise((settled) => setTimeout(settled, 20));
+    expect(screen.getByRole('heading', { name: 'Delete your account?' })).toBeTruthy();
     answer(true);
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
   });
@@ -187,6 +200,90 @@ describe('deleting the account, in the settings', () => {
     expect(project.state.deleted).toEqual(['guest-1']);
     await waitFor(() => expect(project.state.user?.id).toBe('guest-2'));
     expect(await services.store.listRuns()).toEqual([]);
+  });
+
+  it('lets the mirror forget the account gone, once the server said so, and never after a deletion that did not happen', async () => {
+    for (const deleted of [false, true]) {
+      const forget = vi.fn(async () => undefined);
+      const saves: AccountSaves = { status: () => 'saved', offer: () => null, subscribe: () => () => {}, onDeviceChanged: () => () => {}, takeOffer: async () => false, declineOffer: async () => {}, forget };
+      renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST, deleted).account, saves });
+      fireEvent.click(screen.getByRole('button', DELETE));
+      fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
+      if (deleted) await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+      else await within(sheetTitled('Delete your account?')).findByRole('alert');
+      expect(forget.mock.calls.length > 0, String(deleted)).toBe(deleted);
+      cleanup();
+    }
+  });
+
+  it('lands on the front door once the server said so, whatever fails on the device after: the account is gone, never "could not delete"', async () => {
+    const services = await playerWithThings();
+    const broken = Object.assign(Object.create(Object.getPrototypeOf(services.store) as object) as MemoryStore, services.store, {
+      clearGame: async () => {
+        throw new Error('the device will not');
+      },
+    });
+    const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    renderGame(<Preferences />, { ...services, store: broken, account: fakeAccount(GUEST).account });
+    fireEvent.click(screen.getByRole('button', DELETE));
+    fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Delete your account?' })).toBeNull();
+    // The rest is cleared all the same.
+    expect(await services.store.listRuns()).toEqual([]);
+    warned.mockRestore();
+  });
+
+  it('finishes a deletion whose answer was lost: asked again, the server answers deleted, and only then is the device cleared', async () => {
+    const project = accountCloud();
+    project.state.lostAnswers = 1;
+    const services = await playerWithThings();
+    renderGame(<Preferences />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
+    fireEvent.click(await screen.findByRole('button', DELETE));
+    const sheet = sheetTitled('Delete your account?');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
+    await within(sheet).findByRole('alert');
+    // Gone on the server already, but the phone was not told: it keeps everything, and is asked again.
+    expect(project.state.deleted).toEqual(['guest-1']);
+    expect(await services.store.listRuns()).toHaveLength(1);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'));
+    expect(project.state.deleted).toEqual(['guest-1']);
+    expect(await services.store.listRuns()).toEqual([]);
+    expect(await services.store.loadGame()).toBeNull();
+  });
+
+  it('over the real account and mirror: the next guest\'s account is sent nothing of the deleted player', async () => {
+    const project = accountCloud();
+    const device = new MemoryStore();
+    const noted = () => {
+      let ids: string[] = [];
+      return { read: () => ids, write: (next: string[]) => void (ids = next) };
+    };
+    const online = onlineOver(device, {
+      connect: async () => project.cloud,
+      address: () => null,
+      clean: () => undefined,
+      page: { onOnline: () => () => {}, onShown: () => () => {}, now: () => 0 },
+      remember: noted(),
+      keepRefused: noted(),
+      newId: () => 'phone-renamed',
+    });
+    let ids = 0;
+    let clock = 1_000;
+    const deps = { newId: () => `phone-${(ids += 1)}`, newSeed: () => `seed-phone-${ids}`, now: () => (clock += 1) };
+    await new LocalSessions(device, content, lives, deps).start('nurse');
+    renderGame(<Preferences />, { ...servicesOver(online, deps), tapGuardMs: 0 });
+    // The guest's life goes up to their account, as any does.
+    await waitFor(() => expect(project.held('guest-1').games).toHaveLength(1));
+    fireEvent.click(await screen.findByRole('button', DELETE));
+    fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
+    await waitFor(() => expect(project.state.user?.id).toBe('guest-2'));
+    await new Promise((settled) => setTimeout(settled, 50));
+    expect(project.held('guest-2').games).toEqual([]);
+    expect(project.held('guest-2').runs).toEqual([]);
+    expect(await device.loadGame()).toBeNull();
   });
 
   it.each([

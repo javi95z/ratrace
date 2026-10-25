@@ -1394,10 +1394,10 @@
     "signOutUnsaved": "Aún hay cambios subiendo a tu cuenta. Espera a que se guarden para no perderlos.",
     "delete": "Borrar la cuenta",
     "deleteTitle": "¿Borrar tu cuenta?",
-    "deleteAbout": "Tu cuenta y todo lo que hay en ella se van para siempre: cada vida y cada récord, tu apodo en las clasificaciones, tus amigos, tus partidas con otros y tus avisos. No se puede deshacer, y este dispositivo empieza de nuevo.",
+    "deleteAbout": "Tu cuenta y todo lo que hay en ella se van para siempre: cada vida y cada récord, tu apodo en las clasificaciones, tus amigos, tus partidas con otros y tus avisos. No se puede deshacer, y este dispositivo empieza de nuevo. Otro teléfono o navegador donde hayas jugado guarda su propia copia hasta que borres la cuenta también allí.",
     "deleteYes": "Borrar para siempre",
     "deleting": "Borrando…",
-    "deleteFailed": "No se ha podido borrar tu cuenta, y no ha cambiado nada. Revisa tu conexión y vuelve a intentarlo."
+    "deleteFailed": "No se ha podido borrar tu cuenta. En este dispositivo no ha cambiado nada. Inténtalo de nuevo más tarde."
   },
   "work": {
     "title": "Trabajo",
@@ -2082,7 +2082,7 @@
     "rightsTitle": "Cuánto tiempo y tus derechos",
     "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google.",
     "deletionTitle": "Borrar tu cuenta",
-    "deletionBody": "En Ajustes, elige Borrar la cuenta, en esta web o en la app. Si entraste con Google, puedes hacerlo desde cualquier navegador entrando en la web. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
+    "deletionBody": "En Ajustes, elige Borrar la cuenta, en esta web o en la app. Si entraste con Google, puedes hacerlo desde cualquier navegador entrando en la web. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Otro teléfono o navegador donde hayas jugado guarda su propia copia hasta que borres la cuenta también allí. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
   },
   "phone": {
     "captcha": {
@@ -2109,7 +2109,7 @@
       "rightsTitle": "Cuánto tiempo y tus derechos",
       "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google.",
       "deletionTitle": "Borrar tu cuenta",
-      "deletionBody": "En Ajustes, elige Borrar la cuenta, en la app o en la web. Si entraste con Google, también puedes hacerlo en la web, desde cualquier ordenador o teléfono, entrando allí. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
+      "deletionBody": "En Ajustes, elige Borrar la cuenta, en la app o en la web. Si entraste con Google, también puedes hacerlo en la web, desde cualquier ordenador o teléfono, entrando allí. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Otro dispositivo donde hayas jugado guarda su propia copia hasta que borres la cuenta también allí. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
     },
     "shareFailed": "Este teléfono no ha podido crear la imagen para compartir.",
     "pictureSaved": "Imagen guardada en tus fotos.",

@@ -169,5 +169,7 @@ describe('the legal page drawn on the server', () => {
     expect(at).toBeGreaterThan(-1);
     const legal = messagesFor(locale).legal as Record<string, string>;
     expect(textOf(html.slice(at))).toContain(legal.deletionTitle);
+    // The site's own words: another phone or browser keeps its copy until the account is deleted there too.
+    expect(textOf(html.slice(at))).toContain(legal.deletionBody);
   });
 });

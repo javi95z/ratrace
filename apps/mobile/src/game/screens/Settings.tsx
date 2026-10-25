@@ -450,41 +450,38 @@ function DeleteLink({ onPress }: { onPress: () => void }) {
   );
 }
 
+/**
+ * The question, in its sheet. While the server answers, it cannot be left (Cancel, Close, the backdrop and Back do nothing): what the server answers is
+ * said in it. Deleted, the game starts again and the sheet goes with it (and is closed besides); anything else is said, and can be tried again.
+ */
 function DeleteSheet({ open, onClose, deleteAccount }: { open: boolean; onClose(): void; deleteAccount(): Promise<boolean> }) {
-  const t = useT('account');
-  const common = useT('common');
-  return (
-    <Sheet open={open} onClose={onClose} title={t('deleteTitle')} closeLabel={common('close')}>
-      <DeleteAsk onCancel={onClose} deleteAccount={deleteAccount} />
-    </Sheet>
-  );
-}
-
-/** What goes, and the one button that deletes: pressed once, it waits for the server, and a second press sends nothing. A failure is said here. */
-function DeleteAsk({ onCancel, deleteAccount }: { onCancel(): void; deleteAccount(): Promise<boolean> }) {
   const t = useT('account');
   const common = useT('common');
   const [deleting, setDeleting] = useState(false);
   const [failed, setFailed] = useState(false);
   // Two presses in one moment come before the button is drawn waiting: the second is turned away here.
   const sent = useRef(false);
+  // Opened again, the question is asked anew: a failure said before is not said again.
+  const leave = () => {
+    if (sent.current) return;
+    setFailed(false);
+    onClose();
+  };
   const send = () => {
     if (sent.current) return;
     sent.current = true;
     setDeleting(true);
     setFailed(false);
-    const again = () => {
+    const settled = (done: boolean) => {
       sent.current = false;
       setDeleting(false);
-      setFailed(true);
+      if (done) onClose();
+      else setFailed(true);
     };
-    // Deleted, the game starts again and this sheet goes with it; anything else is said, and can be tried again.
-    void deleteAccount().then((done) => {
-      if (!done) again();
-    }, again);
+    void deleteAccount().then(settled, () => settled(false));
   };
   return (
-    <>
+    <Sheet open={open} onClose={leave} title={t('deleteTitle')} closeLabel={common('close')}>
       <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('deleteAbout')}</ReadText>
       {failed ? (
         <View accessible role="alert" accessibilityLiveRegion="assertive" style={{ marginTop: 8 }}>
@@ -492,14 +489,14 @@ function DeleteAsk({ onCancel, deleteAccount }: { onCancel(): void; deleteAccoun
         </View>
       ) : null}
       <View style={{ marginTop: 16, gap: 8 }}>
-        <Button variant="secondary" wide onPress={onCancel}>
+        <Button variant="secondary" wide disabled={deleting} onPress={leave}>
           {common('cancel')}
         </Button>
         <Button variant="danger" wide disabled={deleting} onPress={send}>
           {deleting ? t('deleting') : t('deleteYes')}
         </Button>
       </View>
-    </>
+    </Sheet>
   );
 }
 

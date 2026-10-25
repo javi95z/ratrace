@@ -81,6 +81,8 @@ describe('the legal notice', () => {
     expect(section?.textContent).toContain(en.deletionTitle);
     expect(section?.textContent).toContain('In Settings, choose Delete account');
     expect(section?.textContent).toContain('write to the contact above');
+    // A copy on another device is that device's, until the account is deleted there too.
+    expect(section?.textContent).toContain('Another device where you played keeps its own copy until you delete the account there too.');
     // What stays, and why: nothing in it says who anyone is.
     expect(section?.textContent).toContain('Anonymous counts of what is played and technical errors are kept');
     expect(section?.textContent).not.toContain('hello@example.com');
