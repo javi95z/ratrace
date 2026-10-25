@@ -6,6 +6,9 @@ import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscrib
 import { useIsDesk } from './desk';
 import { focusMarked, onKeys, tabStop } from './keyboard';
 import { holdSheet, SheetBackdrop, sheetModalProps, sheetPanelProps, sheetRootProps } from './sheetDialog';
+import { SheetGrip, SheetScroll, useDragSurface } from './sheetDrag';
+import { useSheetPull } from './useSheetPull';
+import { GestureRoot } from './GestureRoot';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -279,6 +282,11 @@ function SheetPanel({
   const typing = useKeyboardUp();
   const rise = useRise();
   const close = usePress({ onPress: onClose });
+  // Dragged down, it closes as its Close does (`onClose`, which its owner may refuse: then it comes back). A sheet in the middle of a wide screen is a
+  // dialog, not a sheet risen from the foot: it is not dragged, and has no grabber.
+  const draggable = !desk;
+  const pull = useSheetPull({ open, onClose });
+  useDragSurface(panel, pull.drag, draggable && open);
 
   // On top while it is open, the last opened over the others: the toasts are drawn in it.
   const [me] = useState(() => nextId++);
@@ -330,62 +338,94 @@ function SheetPanel({
 
   return (
     <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
-      {/*
-       * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
-       * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.
-       */}
-      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <View
-          {...sheetRootProps()}
-          onTouchEnd={perfTouched}
-          style={
-            desk
-              ? { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }
-              : { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }
-          }
-        >
-          {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
-          <PerfDrawn name={`sheet: ${title}`} />
-          <SheetBackdrop onClose={onClose} />
-          {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
-          <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
-            <View ref={panel} {...sheetPanelProps()} style={{ flexShrink: 1, minHeight: 0 }}>
-              <Framed
-                kind="bevel"
-                tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
-                style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
-              >
-                <ScrollView
-                  // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
-                  keyboardShouldPersistTaps="handled"
-                  bounces={false}
-                  style={{ flexGrow: 0, flexShrink: 1 }}
-                  // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
-                  contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                    <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ flexShrink: 1, paddingTop: 4 }}>
-                      <PixelText size={19}>{title}</PixelText>
-                    </View>
-                    <Pressable
-                      ref={closeButton}
-                      accessibilityRole="button"
-                      accessibilityLabel={closeLabel}
-                      onPress={close}
-                      style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
+      {/* A Modal is a window of its own, outside the screens' gesture root: the sheet's drags need one in it (Android's above all). */}
+      <GestureRoot style={{ flex: 1 }}>
+        {/*
+         * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
+         * makes smaller for the keyboard (the page's own scroll does that for a page, Page's `KEYBOARD`), so the sheet's window leaves it its room.
+         */}
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+          <View
+            {...sheetRootProps()}
+            onTouchEnd={perfTouched}
+            style={
+              desk
+                ? { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }
+                : { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }
+            }
+          >
+            {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
+            <PerfDrawn name={`sheet: ${title}`} />
+            <SheetBackdrop onClose={onClose} dim={pull.dimStyle} />
+            {/* Shrinking where the keyboard leaves less than its 88 %: it scrolls in what is left above the keyboard, never past the top of the screen. */}
+            <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, rise]}>
+              <Animated.View testID="sheet-pull" onLayout={pull.measure} style={[{ flexShrink: 1, minHeight: 0 }, pull.panelStyle]}>
+                <View ref={panel} {...sheetPanelProps()} style={{ flexShrink: 1, minHeight: 0 }}>
+                  <Framed
+                    kind="bevel"
+                    tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
+                    style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
+                  >
+                    {/* The grip stands over what scrolls: the grabber and the title row are always there to drag the sheet down by, and to close it. */}
+                    <SheetGrip drag={pull.drag} enabled={draggable}>
+                      <View style={{ paddingTop: 16, paddingHorizontal: 16 }}>
+                        {draggable ? <Grabber /> : null}
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                          <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ flexShrink: 1, paddingTop: 4 }}>
+                            <PixelText size={19}>{title}</PixelText>
+                          </View>
+                          <Pressable
+                            ref={closeButton}
+                            accessibilityRole="button"
+                            accessibilityLabel={closeLabel}
+                            onPress={close}
+                            style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
+                          >
+                            <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
+                          </Pressable>
+                        </View>
+                      </View>
+                    </SheetGrip>
+                    <SheetScroll
+                      drag={pull.drag}
+                      enabled={draggable}
+                      // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
+                      keyboardShouldPersistTaps="handled"
+                      bounces={false}
+                      style={{ flexGrow: 0, flexShrink: 1 }}
+                      // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
+                      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
                     >
-                      <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
-                    </Pressable>
-                  </View>
-                  {children}
-                </ScrollView>
-              </Framed>
-            </View>
-          </Animated.View>
-          {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
-        </View>
-      </KeyboardAvoidingView>
+                      {children}
+                    </SheetScroll>
+                  </Framed>
+                </View>
+              </Animated.View>
+            </Animated.View>
+            {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
+          </View>
+        </KeyboardAvoidingView>
+      </GestureRoot>
     </Modal>
+  );
+}
+
+/**
+ * The grabber: a short bar of the kit's ink, square as every pixel of it, in the middle of the panel's top edge, that says the sheet can be pulled
+ * down. It is the grip's (it takes no press of its own), never focused and never said by a screen reader: the Close says the same to them.
+ */
+function Grabber() {
+  return (
+    <View
+      testID="sheet-grabber"
+      pointerEvents="none"
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+      aria-hidden
+      style={{ position: 'absolute', top: 6, left: 0, right: 0, alignItems: 'center' }}
+    >
+      <View style={{ width: 32, height: 4, backgroundColor: COLORS['ink-500'] }} />
+    </View>
   );
 }
 

@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { EXTRA } from './theme';
 
 /*
@@ -59,14 +59,17 @@ export function sheetPanelProps(): Record<string, unknown> {
   return { tabIndex: -1, dataSet: { sheetPanel: true } };
 }
 
-/** The dimmed page round the panel, which closes the sheet when it is clicked: a box with no `tabindex`, which no focus can land on, never said. */
-export function SheetBackdrop({ onClose }: { onClose(): void }) {
+/**
+ * The dimmed page round the panel, which closes the sheet when it is clicked: a box with no `tabindex`, which no focus can land on, never said. It
+ * fades as the panel is pulled down (`dim`).
+ */
+export function SheetBackdrop({ onClose, dim }: { onClose(): void; dim?: object }) {
   return (
-    <View
+    <Animated.View
       testID="sheet-backdrop"
       aria-hidden
       {...{ onClick: onClose }}
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
+      style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }, dim]}
     />
   );
 }

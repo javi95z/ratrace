@@ -1,5 +1,9 @@
 import { Pressable } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { EXTRA } from './theme';
+
+/** A pressable whose look can follow a shared value: the backdrop, which fades as its sheet is pulled down. */
+const FadingPressable = Animated.createAnimatedComponent(Pressable);
 
 /*
  * What makes an open sheet a dialog, by platform. On the phone the sheet's window is modal to the screen reader (`accessibilityViewIsModal`), its
@@ -24,15 +28,18 @@ export function sheetPanelProps(): Record<string, unknown> {
   return {};
 }
 
-/** The dimmed page round the panel, which closes the sheet when it is tapped (the Next web's `data-sheet-backdrop`). Never said by a screen reader. */
-export function SheetBackdrop({ onClose }: { onClose(): void }) {
+/**
+ * The dimmed page round the panel, which closes the sheet when it is tapped (the Next web's `data-sheet-backdrop`), and fades as the panel is pulled
+ * down (`dim`). Never said by a screen reader.
+ */
+export function SheetBackdrop({ onClose, dim }: { onClose(): void; dim?: object }) {
   return (
-    <Pressable
+    <FadingPressable
       testID="sheet-backdrop"
       accessible={false}
       importantForAccessibility="no"
       onPress={onClose}
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }}
+      style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: EXTRA.backdrop }, dim]}
     />
   );
 }

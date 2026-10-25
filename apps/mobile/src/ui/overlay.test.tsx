@@ -8,7 +8,10 @@ import { letHeldTurnsGo, sheetsGone } from './back';
 import { Sheet, Tabs, Toast } from './overlay';
 import { Picker } from './Picker';
 import { rea } from './testing/reanimated';
+import { gestures, type PanConfig } from './testing/gestures';
 import { TapProvider } from './tap';
+import { ReducedMotionProvider } from './animations';
+import { REFUSED_MS } from './useSheetPull';
 
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
 // it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
@@ -20,10 +23,18 @@ const keyboard = vi.hoisted(() => ({ dismissed: 0, listeners: new Map<string, Se
 /** The keyboard comes up or goes, as the phone tells it. */
 const keyboardSays = (event: string) => act(() => keyboard.listeners.get(event)?.forEach((listener) => listener()));
 const platform = vi.hoisted(() => ({ OS: 'web' }));
+// And how tall the panel that is pulled is laid out, which jsdom never lays out: the test says it (`laidOut`).
+const pulled = vi.hoisted(() => ({ onLayout: null as null | ((event: { nativeEvent: { layout: { height: number } } }) => void) }));
 vi.mock('react-native', async () => {
   const rn = await vi.importActual<Record<string, unknown> & { Platform: object }>('react-native-web');
+  const { createElement, forwardRef } = await vi.importActual<typeof import('react')>('react');
+  const NativeView = rn.View as React.ComponentType<Record<string, unknown>>;
   return {
     ...rn,
+    View: forwardRef<unknown, Record<string, unknown>>(function View(props, ref) {
+      if (props.testID === 'sheet-pull') pulled.onLayout = props.onLayout as typeof pulled.onLayout;
+      return createElement(NativeView, { ...props, ref });
+    }),
     Platform: { ...rn.Platform, get OS() { return platform.OS; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
     Keyboard: {
@@ -57,11 +68,14 @@ vi.mock('./Sprite', () => ({
 }));
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
 vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
+// The gesture handler's native side does not load here: its stand-in.
+vi.mock('react-native-gesture-handler', async () => (await import('./testing/gestures')).gestureFake());
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }) }));
 
 beforeEach(() => {
   vi.useFakeTimers();
   rea.assigned.length = 0;
+  gestures.pans.length = 0;
   platform.OS = 'web';
 });
 afterEach(() => {
@@ -742,4 +756,196 @@ test('a sheet drawn inside another is presented by it, at once; and one closed b
   // Nothing left waiting: a sheet opened next is shown at once.
   render(<Wrapper open />);
   expect(screen.getByText('inside')).toBeTruthy();
+});
+
+/*
+ * Pulling a sheet down. Its two pans are the gesture handler's (here the stand-in's, driven as the handler would): the grip's, which goes either way,
+ * and the body's, which only goes down and only from the top of what scrolls.
+ */
+const pans = () => {
+  const grip = gestures.pans.findLast((pan) => Array.isArray(pan.activeOffsetY));
+  const body = gestures.pans.findLast((pan) => typeof pan.activeOffsetY === 'number');
+  return { grip: grip!, body: body! };
+};
+const laidOut = (height: number) => act(() => pulled.onLayout?.({ nativeEvent: { layout: { height } } }));
+const pullStyle = () => (screen.getByTestId('sheet-pull') as HTMLElement).style;
+const backdropOpacity = () => (document.body.querySelector('[data-testid="sheet-backdrop"]') as HTMLElement).style.opacity;
+/** A drag on a pan: it activates `from` points down (the handler's slop), goes to `to`, and is let go there at `velocity`. */
+function drag(pan: PanConfig, to: number, velocity = 0, from = 10) {
+  act(() => {
+    pan.onActivate?.({ translationY: from, velocityY: 0 });
+    pan.onUpdate?.({ translationY: to, velocityY: velocity });
+  });
+  act(() => pan.onDeactivate?.({ translationY: to, velocityY: velocity }));
+}
+
+test('a sheet has a grabber at the top of its panel: a short bar of the kit\'s ink, square, never focused, never said', () => {
+  sheet();
+  const grabber = screen.getByTestId('sheet-grabber');
+  expect(grabber.getAttribute('aria-hidden')).toBe('true');
+  expect(grabber.querySelector('[tabindex]')).toBeNull();
+  expect(grabber.getAttribute('tabindex')).toBeNull();
+  const bar = grabber.firstElementChild as HTMLElement;
+  expect(bar.style.backgroundColor).toBe(rgb(COLORS['ink-500']));
+  expect(bar.style.width).toBe('32px');
+  expect(bar.style.height).toBe('4px');
+  // It stands in the panel's own top room, over the title: nothing of the panel moves for it.
+  expect(grabber.style.position).toBe('absolute');
+  expect(screen.getByLabelText('Close').contains(grabber)).toBe(false);
+});
+
+test('pulled down, the panel follows the finger and the dimmed page fades with it; up past its rest, it gives a little', () => {
+  sheet();
+  laidOut(600);
+  const { grip } = pans();
+  act(() => grip.onActivate?.({ translationY: 10, velocityY: 0 }));
+  // No jump as the drag is taken: the panel moves from where it stood.
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  act(() => grip.onUpdate?.({ translationY: 310, velocityY: 0 }));
+  expect(pullStyle().transform).toBe('translateY(300px)');
+  expect(Number(backdropOpacity())).toBeCloseTo(0.5);
+  act(() => grip.onUpdate?.({ translationY: -200, velocityY: 0 }));
+  const up = Number(/translateY\((-?[\d.]+)px\)/.exec(pullStyle().transform)![1]);
+  expect(up).toBeLessThan(0);
+  expect(up).toBeGreaterThan(-24);
+  expect(backdropOpacity()).toBe('1');
+});
+
+test('a drag the phone tells late (its touches far apart) is caught up with: the panel stays under the finger, short only of the slop', () => {
+  sheet();
+  laidOut(600);
+  const { grip } = pans();
+  act(() => grip.onActivate?.({ translationY: 60, velocityY: 0 }));
+  act(() => grip.onUpdate?.({ translationY: 60, velocityY: 0 }));
+  expect(pullStyle().transform).toBe('translateY(50px)');
+});
+
+test('let go past a third of the panel, it slides away and then asks its owner to close it, as the close button does', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  drag(pans().grip, 260);
+  expect(onClose).not.toHaveBeenCalled();
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 624 });
+  expect(rea.assigned.at(-1)!.duration).toBeLessThanOrEqual(200);
+  await wait(rea.assigned.at(-1)!.duration);
+  await wait(1);
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+test('let go short of a third, it springs back to its rest and nothing is asked', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  drag(pans().grip, 150);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  expect(onClose).not.toHaveBeenCalled();
+  expect(pullStyle().transform).toBe('translateY(0px)');
+});
+
+test('a quick flick down closes it from a short pull; a flick back up keeps it however far it was pulled', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  drag(pans().grip, 60, 1500);
+  await wait(1000);
+  expect(onClose).toHaveBeenCalledTimes(1);
+  cleanup();
+  const kept = sheet();
+  laidOut(600);
+  drag(pans().grip, 400, -1500);
+  await wait(1000);
+  expect(kept).not.toHaveBeenCalled();
+});
+
+test('a sheet whose owner does not close it (an account being deleted) comes back once the owner has said nothing', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  drag(pans().grip, 400);
+  await wait(300);
+  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(pullStyle().transform).toBe('translateY(624px)');
+  await wait(REFUSED_MS);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  // And it can be pulled again.
+  drag(pans().grip, 400);
+  await wait(300);
+  expect(onClose).toHaveBeenCalledTimes(2);
+});
+
+test('a sheet its owner closes is not brought back', async () => {
+  function Owned() {
+    const [open, setOpen] = useState(true);
+    return (
+      <Sheet open={open} onClose={() => setOpen(false)} title="Title" closeLabel="Close">
+        <span>inside</span>
+      </Sheet>
+    );
+  }
+  platform.OS = 'android';
+  render(<Owned />);
+  laidOut(600);
+  drag(pans().grip, 400);
+  rea.assigned.length = 0;
+  await wait(300);
+  expect(modals()).toEqual([]);
+  await wait(REFUSED_MS * 2);
+  expect(rea.assigned.filter((one) => one.kind === 'spring')).toEqual([]);
+});
+
+test('a drag the phone takes away (a cancel) springs back and asks nothing', async () => {
+  const onClose = sheet();
+  laidOut(600);
+  const { grip } = pans();
+  act(() => {
+    grip.onActivate?.({ translationY: 10, velocityY: 0 });
+    grip.onUpdate?.({ translationY: 500, velocityY: 0 });
+  });
+  act(() => grip.onDeactivate?.({ translationY: 500, velocityY: 0, canceled: true }));
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  expect(onClose).not.toHaveBeenCalled();
+});
+
+test('the body is dragged only down, and only while what it holds is scrolled to its top; the grip goes either way', () => {
+  sheet();
+  const { grip, body } = pans();
+  expect(grip.activeOffsetY).toEqual([-10, 10]);
+  expect(body.activeOffsetY).toBe(10);
+  expect(body.failOffsetY).toBe(-10);
+  // Sideways is a slider's.
+  expect(body.failOffsetX).toEqual([-20, 20]);
+  const enabled = body.enabled as { value: boolean };
+  expect(enabled.value).toBe(true);
+  // What scrolls is the box round the body's content (react-native-web's ScrollView: the scroller, its content's box, the content).
+  const scroller = screen.getByText('inside').parentElement!.parentElement!;
+  const scrolled = (y: number) => act(() => void fireEvent.scroll(scroller, { target: { scrollTop: y } }));
+  scrolled(120);
+  expect(enabled.value).toBe(false);
+  // Scroll events come at most one a frame (`scrollEventThrottle`).
+  act(() => void vi.advanceTimersByTime(50));
+  scrolled(0);
+  expect(enabled.value).toBe(true);
+});
+
+test('under reduced motion nothing slides or springs: the owner is asked at once, and a pull let go short is at its rest at once', async () => {
+  const onClose = vi.fn();
+  render(
+    <ReducedMotionProvider value>
+      <Sheet open onClose={onClose} title="Title" closeLabel="Close">
+        <span>inside</span>
+      </Sheet>
+    </ReducedMotionProvider>,
+  );
+  laidOut(600);
+  drag(pans().grip, 100);
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  drag(pans().grip, 400);
+  expect(rea.assigned).toEqual([]);
+  await wait(1);
+  expect(onClose).toHaveBeenCalledTimes(1);
+  // Refused, it is back at its rest at once.
+  await wait(REFUSED_MS);
+  expect(pullStyle().transform).toBe('translateY(0px)');
+  expect(rea.assigned).toEqual([]);
 });
