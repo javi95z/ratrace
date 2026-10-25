@@ -347,4 +347,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_transfer_asia: ['Otro se lleva la oficina nueva. Y las fotos del rascacielos.', 'Un piso en las alturas y un equipo por formar.'],
   life_digital_nomad: ['El portátil sigue en la misma mesa de siempre.', 'Reuniones con chanclas y la puesta de sol de fondo.'],
   career_offer_madrid: ['Les das las gracias. Madrid seguirá ahí.', 'Mejor horario, más luz y cañas al salir.'],
+  city_tokyo_lifetime: ['Sigues con tu contrato de siempre. Y sales a tu hora.', 'Un puesto seguro hasta los sesenta y cenas en la oficina.'],
+  city_zurich_savings: ['Tu dinero se queda donde estaba.', 'Diez mil dólares en una cámara acorazada que paga poco y nunca falla.'],
+  city_london_flatshare: ['Dos años pagando una habitación en la que no vive nadie.', null, 'Más tren, menos alquiler y menos planes en el centro.'],
 };

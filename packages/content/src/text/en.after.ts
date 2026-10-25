@@ -359,4 +359,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_transfer_asia: ['Someone else takes the new office. And the skyscraper photos.', 'A flat high up and a team to build.'],
   life_digital_nomad: ['The laptop stays on the same old desk.', 'Meetings in flip-flops, with the sunset behind.'],
   career_offer_madrid: ['You thank them. Madrid will still be there.', 'Better hours, more light, and a drink after work.'],
+  city_tokyo_lifetime: ['You keep your usual contract. And leave on time.', 'A safe job until sixty, and dinners at the office.'],
+  city_zurich_savings: ['Your money stays where it was.', 'Ten thousand dollars in a vault that pays little and never fails.'],
+  city_london_flatshare: ['Two years paying for a room nobody lives in.', null, 'More train, less rent, fewer evenings in town.'],
 };

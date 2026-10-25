@@ -14,6 +14,18 @@ Landscape image, 12:5 panels, 2 columns by 2 rows, 4 wide panels. Scene sheet in
 4. A letter from the tax office: the player at a kitchen table under a lamp, holding an official envelope with a stamp as a blank shape, a calculator and a stack of receipts, a cold cup of coffee, a window with night outside.
 ```
 
+Save as `art/raw/cards/cards-48.png` — `card.transfer_asia`, `card.digital_nomad`, `card.offer_madrid`, `card.tokyo_lifetime`, `card.zurich_savings`, `card.london_flatshare`
+
+```text
+Landscape image, 2:3 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
+1. The office in Asia: the player with a suitcase on a skyscraper terrace at night in Singapore, the lit Marina Bay towers and the boat-shaped hotel behind, a colleague handing over an access card.
+2. Digital nomad: the player working on a laptop in a beach hut in Thailand at sunset, flip-flops, a coconut drink, long-tail boats on the water.
+3. An offer in Madrid: the player shaking hands with a smiling manager on a sunny café terrace in a Madrid square, old balconies with flowers above.
+4. A job for life in Tokyo: a Tokyo office late at night with rows of desks still lit, the boss at the far end, the player signing a contract with a pen, neon outside.
+5. The Swiss bank's plan: a quiet wood-panelled bank office in Zurich, a banker sliding a folder across, a heavy vault door half open behind, snowy rooftops in the window.
+6. The flatshare in London: a small shared flat with an empty room and a single mattress, a flatmate leaving with a suitcase, the player holding a rent bill by the rainy window.
+```
+
 Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. Nothing in the code changes: the four sprites keep their names.
 
 ## Where each goes
@@ -122,3 +134,4 @@ Then `pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`. Th
 | `cards/cards-45.png` | Street contest, Christmas dinner, sabbatical, credit taken, office pool, cooking show | 288×120 |
 | `cards/cards-46.png` | Stag party, viral, influencer, smartwatch, festival, parents' group | 288×120 |
 | `cards/cards-47.png` | Drone, concert, police auction, protected flat, startup adviser, leak | 288×120 |
+| `cards/cards-48.png` | Office in Asia, digital nomad, Madrid offer, job for life, Swiss plan, flatshare | 288×120 |

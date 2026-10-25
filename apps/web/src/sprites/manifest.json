@@ -1359,6 +1359,11 @@
     "w": 288,
     "h": 120
   },
+  "card.london_flatshare": {
+    "src": "cards/card.london_flatshare.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lottery": {
     "src": "cards/card.lottery.png",
     "w": 288,
@@ -1859,6 +1864,11 @@
     "w": 288,
     "h": 120
   },
+  "card.tokyo_lifetime": {
+    "src": "cards/card.tokyo_lifetime.png",
+    "w": 288,
+    "h": 120
+  },
   "card.torn_photo": {
     "src": "cards/card.torn_photo.png",
     "w": 288,
@@ -1946,6 +1956,11 @@
   },
   "card.xmas_dinner": {
     "src": "cards/card.xmas_dinner.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.zurich_savings": {
+    "src": "cards/card.zurich_savings.png",
     "w": 288,
     "h": 120
   },

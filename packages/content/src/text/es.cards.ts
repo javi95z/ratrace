@@ -1136,4 +1136,17 @@ export const cards: Record<string, CardText> = {
     'No, gracias',
     'Aceptar e irte a {city:madrid}',
   ]),
+  city_tokyo_lifetime: c('Un trabajo para toda la vida', 'Tu empresa te ofrece contrato hasta la jubilación. A cambio, nadie se va a casa antes que el jefe.', [
+    'Seguir como estás',
+    'Firmar para toda la vida',
+  ]),
+  city_zurich_savings: c('El plan del banco suizo', 'El banco te ofrece un plan a diez años: interés bajo, pero blindado como una cámara acorazada.', [
+    'No, gracias',
+    'Meter 10.000 $ en el plan',
+  ]),
+  city_london_flatshare: c('El piso compartido', 'Tu compañero de piso se va y el casero no baja el alquiler. Toca pagar la habitación vacía.', [
+    'Pagar la parte de los dos un tiempo',
+    ['Buscar a otro compañero', 'Encuentras a alguien en una semana. Hasta friega los platos.', 'Nadie que no dé miedo. Pagas tú mientras tanto.'],
+    'Mudarte a las afueras',
+  ]),
 };

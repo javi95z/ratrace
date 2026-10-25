@@ -2,7 +2,7 @@ import type { CardDef } from '@ratrace/engine';
 import { card, usd, yearly } from './build';
 
 /**
- * Two cards for each of the ten cities, dealt only to someone living there: what that city is like
+ * Two or three cards for each of the ten cities, dealt only to someone living there: what that city is like
  * to live in, more than what it pays. They are rare on purpose, a third as likely as an ordinary
  * card, and each comes at most once in a life.
  */
@@ -108,5 +108,21 @@ export const cityCards: CardDef[] = [
   card('city_zurich_referendum', 'tax', { ...CITY, when: { cities: ['zurich'] } }, [
     {},
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: { cash: usd(3_000) } }, { weight: 50, effects: {} }] },
+  ]),
+  // Tokyo: a job for life, paid in hours as much as in yen.
+  card('city_tokyo_lifetime', 'career', { ...CITY, when: { cities: ['tokyo'], employed: true, minRound: 6 } }, [
+    {},
+    { effects: { salaryModPct: 6, status: 1, skills: { health: -2 } } },
+  ]),
+  // Zurich: the bank's ten-year plan, paying little and safe as a vault.
+  card('city_zurich_savings', 'investing', { ...CITY, when: { cities: ['zurich'], minNetWorth: usd(20_000) } }, [
+    {},
+    { effects: { invest: { assetId: 'treasury_long', amount: usd(10_000), bonusPct: 5 } } },
+  ]),
+  // London: a room in a shared flat, and the flatmate leaves.
+  card('city_london_flatshare', 'housing', { ...CITY, when: { cities: ['london'], ownsHome: false } }, [
+    { effects: { recurring: [yearly('flatshare_half', 'expense', 3_000, 1)] } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { recurring: [yearly('flatshare_half', 'expense', 3_000, 1)] } }] },
+    { effects: { cash: usd(2_000), status: -2 } },
   ]),
 ];

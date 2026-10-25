@@ -1136,4 +1136,17 @@ export const cards: Record<string, CardText> = {
     'No, thanks',
     'Accept and go to {city:madrid}',
   ]),
+  city_tokyo_lifetime: c('A job for life', 'Your company offers you a contract until you retire. In return, nobody goes home before the boss.', [
+    'Stay as you are',
+    'Sign for life',
+  ]),
+  city_zurich_savings: c('The Swiss bank\'s plan', 'The bank offers you a ten-year plan: a low rate, but safe as a vault.', [
+    'No, thanks',
+    'Put $10,000 into the plan',
+  ]),
+  city_london_flatshare: c('The flatshare', 'Your flatmate is leaving and the landlord will not lower the rent. Someone has to pay for the empty room.', [
+    'Pay both shares for a while',
+    ['Find a new flatmate', 'You find someone in a week. They even do the washing up.', 'Nobody who is not alarming. You pay meanwhile.'],
+    'Move out to the suburbs',
+  ]),
 };

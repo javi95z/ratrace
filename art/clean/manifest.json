@@ -4501,6 +4501,21 @@
       "width": 288,
       "height": 120
     },
+    "card.tokyo_lifetime": {
+      "file": "cards/card.tokyo_lifetime.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.zurich_savings": {
+      "file": "cards/card.zurich_savings.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.london_flatshare": {
+      "file": "cards/card.london_flatshare.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,
