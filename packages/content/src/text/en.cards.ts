@@ -503,8 +503,7 @@ export const cards: Record<string, CardText> = {
   ]),
   crisis_energy_bills: c('The bill', 'Heating, petrol and the weekly shop have all jumped at once. The envelope on the mat is thicker than usual.', [
     'Pay it',
-    'Insulate the flat and be done with it',
-    'Pay it, and put savings into gold',
+    'Tighten your belt',
   ]),
   crisis_energy_wages: c('Wages against prices', 'Prices have run two years ahead of pay. There is talk of a strike, and of who will blink first.', [
     'Wait it out',

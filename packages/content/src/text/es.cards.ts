@@ -503,8 +503,7 @@ export const cards: Record<string, CardText> = {
   ]),
   crisis_energy_bills: c('La factura', 'La calefacción, la gasolina y la compra han subido a la vez. El sobre del buzón pesa más que de costumbre.', [
     'Pagarla',
-    'Aislar el piso y olvidarte',
-    'Pagarla, y pasar ahorros a oro',
+    'Apretarte el cinturón',
   ]),
   crisis_energy_wages: c('Sueldos contra precios', 'Los precios llevan dos años por delante de los sueldos. Se habla de huelga, y de quién cederá antes.', [
     'Esperar',

@@ -191,8 +191,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   crisis_crash_layoffs: [null, 'You offer to take less. You stay.', 'While the others wait, you study.'],
   crisis_energy_bills: [
     'You pay the bill and turn the heating down two degrees.',
-    'New windows and insulated walls. The house keeps its heat.',
-    'You pay, and move what is left into gold.',
+    'A jumper indoors, the car left at home, no dinners out. Half the bill, less of a life.',
   ],
   crisis_energy_wages: ['You wait to see who blinks. It is not you.', null, 'Less heating, fewer dinners out. A little is left at the end of the month.'],
   crisis_debt_spreads: [

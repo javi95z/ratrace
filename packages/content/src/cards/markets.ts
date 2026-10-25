@@ -165,8 +165,8 @@ export const worldCards: CardDef[] = [
   ]),
   card('crisis_energy_bills', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 1 } } }, [
     { effects: { cashSalaryPct: -6 } },
-    { effects: { cash: usd(-3_000), status: 1 } },
-    { effects: { cashSalaryPct: -6, invest: { assetId: 'gold', amount: usd(4_000) } } },
+    // Half the bill, paid for in a colder house and fewer evenings out.
+    { effects: { cashSalaryPct: -3, status: -1 } },
   ]),
   card('crisis_energy_wages', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 2 } } }, [
     {},

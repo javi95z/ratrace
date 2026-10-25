@@ -183,8 +183,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   crisis_crash_layoffs: [null, 'Te ofreces a cobrar menos. Te quedas.', 'Mientras los demás esperan, tú estudias.'],
   crisis_energy_bills: [
     'Pagas la factura y bajas la calefacción dos grados.',
-    'Ventanas nuevas y paredes aisladas. La casa guarda el calor.',
-    'Pagas, y lo que queda lo pasas a oro.',
+    'Jersey en casa, el coche aparcado y nada de cenas fuera. Media factura, menos vida.',
   ],
   crisis_energy_wages: ['Esperas a ver quién cede. No eres tú.', null, 'Menos calefacción, menos cenas fuera. Sobra algo a fin de mes.'],
   crisis_debt_spreads: [
