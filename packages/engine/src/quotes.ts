@@ -331,6 +331,8 @@ export interface MoveQuote {
   there: CityYear;
   /** Rungs of the career the move would cost, until the next promotion gives them back. */
   rungsLost: number;
+  /** Percent less pay for the first round there, where the move costs no rung but is one's own. */
+  payCutPct: number;
   /** Rounds a partner would go without pay. */
   partnerIdleRounds: number;
   /** Back to the city the life began in: whether the family helps. Null for anywhere else. */
@@ -376,6 +378,7 @@ export function quoteMove(content: Content, view: GameView, cityId: string): Mov
     here: cityYear(content, p, world),
     there: cityYear(content, landed, world),
     rungsLost: landing.rungsLost,
+    payCutPct: landing.payCutPct,
     partnerIdleRounds: landing.partnerSettling - p.life.partnerSettling,
     home: cityId === p.life.homeCityId && cityId !== p.cityId ? { helped: helpedHome(content, world, cityId, p) } : null,
   };

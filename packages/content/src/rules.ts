@@ -163,6 +163,7 @@ export const life: LifeRules = {
   movePartnerPct: 50,
   moveChildPct: 25,
   moveRungsLost: 1,
+  moveSettlingPayPct: 10,
   partnerSettlingRounds: 1,
   workSkill: 1,
   studySkill: 1,

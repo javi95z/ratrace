@@ -467,6 +467,12 @@ export interface LifeRules {
   /** Rungs of the career lost by moving of one's own accord: nobody knows the newcomer yet. A transfer loses none. */
   moveRungsLost: number;
   /**
+   * Percent less pay for the round after a move of one's own that cost no rung (the bottom rung, or a
+   * language that keeps it): the time it takes to find one's feet there. Nothing for a transfer, a
+   * homecoming or someone who works from home.
+   */
+  moveSettlingPayPct: number;
+  /**
    * Coming back to the city the life began in: someone with less than `helpBelowWorth` (in the
    * dollars of the start) is helped home by family, for nothing, and saves `helpPct` of a round of
    * living there; anyone keeps their rung and their partner's work, and picks up old friends
@@ -1552,7 +1558,7 @@ export type GameEvent =
   | { kind: 'marginCall'; assetId: string; sold: Cents; repaid: Cents }
   /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
   | { kind: 'planRan'; assetId: string; amount: Cents; reason: RejectReason | null }
-  | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean }
+  | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean; /** Older rules do not say it. */ payCutPct?: number }
   /** Back in the city the life began in: what the family's help came to, and whether it was a return in triumph. */
   | { kind: 'homecoming'; gift: Cents; triumphant: boolean }
   /** A membership of the city just left ended with the move. Nothing is paid back. */

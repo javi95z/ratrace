@@ -514,7 +514,7 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
           icon: cityIcon(event.cityId),
           title: t('moved', { city: names.cities[event.cityId] }),
           // What the move cost besides its price, said once it has happened.
-          hint: [event.rungsLost > 0 ? t('movedRung') : '', event.partnerIdle ? t('movedPartner') : ''].filter(Boolean).join(' ') || undefined,
+          hint: [event.rungsLost > 0 ? t('movedRung') : '', (event.payCutPct ?? 0) > 0 ? t('movedSettling', { pct: fmt.rate((event.payCutPct ?? 0) * 100) }) : '', event.partnerIdle ? t('movedPartner') : ''].filter(Boolean).join(' ') || undefined,
         });
         break;
       case 'lapsed':

@@ -33,7 +33,7 @@ describe('moving of one\'s own accord', () => {
     // A manager with the experience of one: skill 10 holds the top rung.
     const senior = game(content, { career: { id: 'office', level: 2 }, careerSkill: 10 });
     const landed = applyRound(content, senior, move);
-    expect(moved(landed.events)).toEqual({ kind: 'moved', cityId: 'haven', rungsLost: 1, partnerIdle: false });
+    expect(moved(landed.events)).toEqual({ kind: 'moved', cityId: 'haven', rungsLost: 1, partnerIdle: false, payCutPct: 0 });
     expect(landed.state.player.cityId).toBe('haven');
     expect(landed.state.player.life.career).toEqual({ id: 'office', level: 1 });
     expect(findInvariantBreaks(content, landed.state)).toEqual([]);
@@ -92,7 +92,7 @@ describe('moving of one\'s own accord', () => {
     const taken = applyCard(content, senior, 1).state;
     expect(taken.player.life).toMatchObject({ movingTo: 'haven', movingTransfer: true });
     const landed = applyRound(content, taken, { orders: [] });
-    expect(moved(landed.events)).toEqual({ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false });
+    expect(moved(landed.events)).toEqual({ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false, payCutPct: 0 });
     expect(landed.state.player.life.career?.level).toBe(2);
     expect(landed.state.player.life).toMatchObject({ partnerSettling: 0, movingTransfer: false });
   });

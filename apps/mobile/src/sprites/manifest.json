@@ -1174,6 +1174,11 @@
     "w": 288,
     "h": 120
   },
+  "card.digital_nomad": {
+    "src": "cards/card.digital_nomad.png",
+    "w": 288,
+    "h": 120
+  },
   "card.dinner_for_two": {
     "src": "cards/card.dinner_for_two.png",
     "w": 288,
@@ -1481,6 +1486,11 @@
   },
   "card.nursery": {
     "src": "cards/card.nursery.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.offer_madrid": {
+    "src": "cards/card.offer_madrid.png",
     "w": 288,
     "h": 120
   },
@@ -1866,6 +1876,11 @@
   },
   "card.trading_guru": {
     "src": "cards/card.trading_guru.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.transfer_asia": {
+    "src": "cards/card.transfer_asia.png",
     "w": 288,
     "h": 120
   },

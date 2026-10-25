@@ -344,4 +344,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   house_protected_flat: ['Otro de la lista se queda con él.', 'Las llaves de tu primera casa, a un precio que no volverás a ver.'],
   career_startup_advisor: ['Tus fines de semana siguen siendo tuyos.', null],
   house_upstairs_leak: [null, null],
+  career_transfer_asia: ['Otro se lleva la oficina nueva. Y las fotos del rascacielos.', 'Un piso en las alturas y un equipo por formar.'],
+  life_digital_nomad: ['El portátil sigue en la misma mesa de siempre.', 'Reuniones con chanclas y la puesta de sol de fondo.'],
+  career_offer_madrid: ['Les das las gracias. Madrid seguirá ahí.', 'Mejor horario, más luz y cañas al salir.'],
 };

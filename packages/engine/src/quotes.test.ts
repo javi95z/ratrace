@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { debtServiceForRound } from './debt';
-import { applyRound, createGame, previewRound } from './game';
+import { applyCards, applyRound, createGame, previewRound } from './game';
 import { executeOrder } from './orders';
 import { quoteCareer, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
 import { statusBreakdown } from './selectors';
@@ -249,6 +249,18 @@ describe('quoteMove', () => {
       expect(move(cost - 1).reason).toBe('not-enough-cash');
     }
     expect(quoteMove(content, viewOf(game(0)), 'haven')).toMatchObject({ cost: 800_000, lapses: [], rungsLost: 0, partnerIdleRounds: 0 });
+  });
+
+  it('pays the first round less after a move of one\'s own that costs no rung, and says so before and after', () => {
+    const settling = fixtureContent();
+    settling.life = { ...settling.life, moveSettlingPayPct: 10 };
+    const start = createGame({ content: settling, start: fixtureStart() }, 'settling');
+    const state = withPlayer(settling, start, { cash: 5_000_000 }, { career: { id: 'office', level: 0 } });
+    expect(quoteMove(settling, viewOf(state), 'haven')).toMatchObject({ rungsLost: 0, payCutPct: 10 });
+    const ready = state.phase === 'cards' ? applyCards(settling, state, {}).state : state;
+    const { state: after, events } = applyRound(settling, ready, { orders: [{ type: 'moveCity', cityId: 'haven' }] });
+    expect(events.find((e) => e.kind === 'moved')).toMatchObject({ cityId: 'haven', rungsLost: 0, payCutPct: 10 });
+    expect(after.player.life.salaryBoostPct).toBe(-10);
   });
 });
 

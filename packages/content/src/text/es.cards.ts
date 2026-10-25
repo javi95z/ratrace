@@ -1124,4 +1124,16 @@ export const cards: Record<string, CardText> = {
     ['Esperar a que pague su seguro', 'El seguro paga y la obra se hace.', 'Meses de humedad. Al final, parte de la obra la pagas tú.'],
     ['Adelantar la obra tú', 'El seguro te lo devuelve todo.', 'El seguro encuentra una cláusula. Pagas tú.'],
   ]),
+  career_transfer_asia: c('La oficina de Asia', 'Tu empresa abre oficina en {city:singapore} y busca a alguien de confianza para ponerla en marcha. Se paga la mudanza.', [
+    'Quedarte donde estás',
+    'Irte a {city:singapore}',
+  ]),
+  life_digital_nomad: c('Nómada digital', 'Trabajas desde casa. Tu casa podría estar en una playa de Tailandia, con el mismo sueldo y la mitad de gastos.', [
+    'Quedarte',
+    'Irte a {city:bangkok}',
+  ]),
+  career_offer_madrid: c('Una oferta en {city:madrid}', 'Una empresa de {city:madrid} te ofrece el mismo puesto, mejor horario y un poco más de sueldo. Y terrazas.', [
+    'No, gracias',
+    'Aceptar e irte a {city:madrid}',
+  ]),
 };

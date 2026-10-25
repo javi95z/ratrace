@@ -219,6 +219,7 @@ const base: Content = {
     movePartnerPct: 0,
     moveChildPct: 0,
     moveRungsLost: 0,
+    moveSettlingPayPct: 0,
     partnerSettlingRounds: 0,
     workSkill: 1,
     studySkill: 1,

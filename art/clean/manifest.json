@@ -4486,6 +4486,21 @@
       "width": 288,
       "height": 120
     },
+    "card.transfer_asia": {
+      "file": "cards/card.transfer_asia.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.digital_nomad": {
+      "file": "cards/card.digital_nomad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.offer_madrid": {
+      "file": "cards/card.offer_madrid.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

@@ -405,6 +405,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-45', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['street_contest', 'xmas_dinner', 'sabbatical', 'credit_stolen', 'office_pool', 'cooking_show'].map((id) => `card.${id}`) },
   { file: 'cards/cards-46', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['stag_party', 'viral_bad', 'influencer_review', 'smartwatch', 'festival_rental', 'school_treasurer'].map((id) => `card.${id}`) },
   { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat', 'startup_advisor', 'upstairs_leak'].map((id) => `card.${id}`) },
+  // Three of six, stand-ins cut from older scenes until it has six and is drawn.
+  { file: 'cards/cards-48', group: 'cards', kind: 'scenes', cols: 3, rows: 1, width: 288, height: 120, ids: ['transfer_asia', 'digital_nomad', 'offer_madrid'].map((id) => `card.${id}`) },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

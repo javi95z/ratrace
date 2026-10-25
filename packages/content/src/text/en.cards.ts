@@ -1124,4 +1124,16 @@ export const cards: Record<string, CardText> = {
     ['Wait for their insurer', 'The insurer pays and the work is done.', 'Months of damp. In the end, you pay for part of the work.'],
     ['Pay for the work yourself first', 'The insurer pays you back in full.', 'The insurer finds a clause. You pay.'],
   ]),
+  career_transfer_asia: c('The office in Asia', 'Your company is opening an office in {city:singapore} and wants someone it trusts to set it up. The move is paid.', [
+    'Stay where you are',
+    'Go to {city:singapore}',
+  ]),
+  life_digital_nomad: c('Digital nomad', 'You work from home. Home could be a beach in Thailand, on the same pay and half the costs.', [
+    'Stay',
+    'Go to {city:bangkok}',
+  ]),
+  career_offer_madrid: c('An offer in {city:madrid}', 'A company in {city:madrid} offers you the same rung, better hours and a little more pay. And terraces.', [
+    'No, thanks',
+    'Accept and go to {city:madrid}',
+  ]),
 };

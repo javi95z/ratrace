@@ -319,7 +319,7 @@ describe('moving city', () => {
     expect(ledger(events, 'salary')).toBe(4_800_000);
     expect(ledger(events, 'living')).toBe(-3_600_000);
     expect(ledger(events, 'incomeTax')).toBeLessThan(0);
-    expect(events).toContainEqual({ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false });
+    expect(events).toContainEqual({ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false, payCutPct: 0 });
     expect(state.player.cityId).toBe('haven');
     expect(state.player.life.movingTo).toBeNull();
     expect(state.player.salaryAnnual).toBe(4_800_000);
@@ -360,7 +360,7 @@ describe('things that belong to a city', () => {
     expect(quoteMove(content, viewOf(joined), 'home').lapses).toEqual([]);
 
     const { state, events } = applyRound(content, joined, { orders: [{ type: 'moveCity', cityId: 'haven' }] });
-    expect(events.filter((e) => e.kind === 'moved' || e.kind === 'lapsed')).toEqual([{ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false }, { kind: 'lapsed', itemId: 'club' }]);
+    expect(events.filter((e) => e.kind === 'moved' || e.kind === 'lapsed')).toEqual([{ kind: 'moved', cityId: 'haven', rungsLost: 0, partnerIdle: false, payCutPct: 0 }, { kind: 'lapsed', itemId: 'club' }]);
     // What is owned goes along. The club stays behind, and so do its fee and its status.
     expect(state.player.life.items.map((owned) => owned.itemId)).toEqual(['watch_gold']);
     expect(state.player.life.collection).toEqual(['club', 'watch_gold']);

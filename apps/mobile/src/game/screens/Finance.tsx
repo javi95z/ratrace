@@ -1559,6 +1559,8 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
             {/* Going home: what is waiting there, said before the move is ordered. */}
             {quote.home ? said(t(quote.home.helped ? 'homeHelped' : 'homeBack'), 'teal-300') : null}
             {job && quote.rungsLost > 0 && there.level !== null ? said(t('moveRung', { title: text.careers[job.id].levels[there.level] }), 'wine-300') : null}
+            {/* A move that costs no rung still pays a little less for its first round there. Older rules know nothing of it. */}
+            {job && (quote.payCutPct ?? 0) > 0 ? said(t('moveSettling', { pct: fmt.rate((quote.payCutPct ?? 0) * 100) }), 'wine-300') : null}
             {quote.partnerIdleRounds > 0 ? said(t('movePartner', { years: quote.partnerIdleRounds * years }), 'wine-300') : null}
             {/* Said before the move is ordered: what belongs to this city does not come along. */}
             {quote.lapses.length > 0 ? said(t('moveLapses', { items: quote.lapses.map((id) => names.items[id]).join(', ') }), 'wine-300') : null}

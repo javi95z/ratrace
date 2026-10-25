@@ -247,4 +247,19 @@ export const v20Cards: CardDef[] = [
     { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cash: usd(-1_500), skills: { health: -1 } } }] },
     { effects: { cash: usd(-4_500) }, outcomes: [{ weight: 70, effects: { cash: usd(4_500) } }, { weight: 30, effects: {} }] },
   ]),
+  // A transfer to the office in Asia: the career kept, the pay a little up, a language to learn.
+  card('career_transfer_asia', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3, careers: ['finance', 'tech', 'sales', 'law'], notCities: ['singapore'] } }, [
+    {},
+    { effects: { moveCity: 'singapore', salaryModPct: 5, skills: { languages: 1 } } },
+  ]),
+  // Working from home, from anywhere: a beach in Thailand, the job with it.
+  card('life_digital_nomad', 'lifestyle', { once: true, when: { remote: true, minRound: 2, notCities: ['bangkok'] } }, [
+    {},
+    { effects: { moveCity: 'bangkok', skills: { health: 1 }, status: 1 } },
+  ]),
+  // A company in Madrid wants the player: the same rung, better hours, a little more.
+  card('career_offer_madrid', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3, notCities: ['madrid'] } }, [
+    {},
+    { effects: { moveCity: 'madrid', salaryModPct: 3, skills: { health: 1 } } },
+  ]),
 ];

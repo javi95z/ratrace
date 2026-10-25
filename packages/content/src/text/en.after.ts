@@ -356,4 +356,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   house_protected_flat: ['The next on the list takes it.', 'The keys to your first home, at a price you will not see again.'],
   career_startup_advisor: ['Your weekends stay yours.', null],
   house_upstairs_leak: [null, null],
+  career_transfer_asia: ['Someone else takes the new office. And the skyscraper photos.', 'A flat high up and a team to build.'],
+  life_digital_nomad: ['The laptop stays on the same old desk.', 'Meetings in flip-flops, with the sunset behind.'],
+  career_offer_madrid: ['You thank them. Madrid will still be there.', 'Better hours, more light, and a drink after work.'],
 };

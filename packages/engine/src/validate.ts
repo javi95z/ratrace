@@ -311,7 +311,7 @@ export function validateContent(c: Content): string[] {
     errors.push('life.rentTierHousingPct must be two numbers between 0 and 100');
   }
   if (!listOf(life.rentTierStatus, 2, isCount)) errors.push('life.rentTierStatus must be two whole, non-negative numbers');
-  for (const field of ['movePartnerPct', 'moveChildPct', 'moveRungsLost', 'partnerSettlingRounds'] as const) {
+  for (const field of ['movePartnerPct', 'moveChildPct', 'moveRungsLost', 'moveSettlingPayPct', 'partnerSettlingRounds'] as const) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
   if (!Array.isArray(life.agingLadders) || life.agingLadders.some((ladder) => !c.items.some((item) => item.ladder === ladder))) errors.push('life.agingLadders must name ladders that exist');

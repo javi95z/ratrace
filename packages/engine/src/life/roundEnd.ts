@@ -14,22 +14,25 @@ import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './ski
  * work; the rung comes back with the next promotion if the experience is there. A transfer costs
  * none of it. The order and the quote both ask here.
  */
-export function landingOf(p: PlayerState, content: Content, transfer: boolean): { level: number | null; rungsLost: number; partnerSettling: number } {
+export function landingOf(p: PlayerState, content: Content, transfer: boolean): { level: number | null; rungsLost: number; partnerSettling: number; payCutPct: number } {
   const job = p.life.career;
-  if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling, payCutPct: 0 };
   // Home again, old contacts open doors at once: no rung lost, and a partner finds work straight away.
-  if (p.cityId === p.life.homeCityId) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  if (p.cityId === p.life.homeCityId) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling, payCutPct: 0 };
   // Working from home, nobody there has to get to know them: the job stays where it was.
-  if (workModeOf(p, content) === 'remote') return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  if (workModeOf(p, content) === 'remote') return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling, payCutPct: 0 };
   // Someone who speaks the language is known for what they can do from the first day, and their partner too.
   const languages = skillLevel(p, 'languages', content);
   const rules = content.life.skills;
   const lost = languages >= rules.languagesKeepRungFrom ? 0 : content.life.moveRungsLost;
   const level = job ? Math.max(0, job.level - lost) : null;
+  const rungsLost = job && level !== null ? job.level - level : 0;
   return {
     level,
-    rungsLost: job && level !== null ? job.level - level : 0,
+    rungsLost,
     partnerSettling: p.life.partner && languages < rules.languagesPartnerFrom ? Math.max(p.life.partnerSettling, content.life.partnerSettlingRounds) : p.life.partnerSettling,
+    // A move that cost no rung still takes a round to find one's feet in: from the bottom rung, or with the language.
+    payCutPct: job && rungsLost === 0 ? (content.life.moveSettlingPayPct ?? 0) : 0,
   };
 }
 
@@ -208,6 +211,7 @@ export function ageLife(
 export function turnPage(p: PlayerState, content: Content, events: GameEvent[]): void {
   const life = p.life;
   if (life.partnerSettling > 0) life.partnerSettling -= 1;
+  let settlingPct = 0;
   if (life.movingTo !== null) {
     p.cityId = life.movingTo;
     life.movingTo = null;
@@ -215,9 +219,10 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
     life.movingTransfer = false;
     if (life.career) life.career.level = landing.level ?? life.career.level;
     life.partnerSettling = landing.partnerSettling;
+    settlingPct = landing.payCutPct;
     // Someone at the workplace has a new workplace; someone at home keeps the job they have.
     if (workModeOf(p, content) !== 'remote') life.workCityId = p.cityId;
-    events.push({ kind: 'moved', cityId: p.cityId, rungsLost: landing.rungsLost, partnerIdle: landing.partnerSettling > 0 });
+    events.push({ kind: 'moved', cityId: p.cityId, rungsLost: landing.rungsLost, partnerIdle: landing.partnerSettling > 0, payCutPct: landing.payCutPct });
     if (p.cityId === life.homeCityId && life.homecoming !== null) {
       const back = life.homecoming;
       const rules = content.life.homecoming;
@@ -242,5 +247,6 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
   for (const business of p.businesses) business.tended = false;
   // A rest taken shows in the round after: counted now, from what is still held once the old round has closed.
   life.focusBonus = focusBonusOf(p, content);
-  life.salaryBoostPct = 0;
+  // The round after a move of one's own that cost no rung is paid a little less, while the newcomer finds their feet.
+  life.salaryBoostPct = settlingPct > 0 ? -settlingPct : 0;
 }
