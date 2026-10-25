@@ -20,6 +20,16 @@ const RUNS = 'runs';
 const PROFILE = 'profile';
 const ONLY = 'only';
 
+/** Opens the Next web's database, made as it makes it the first time. */
+const openDatabase = (name: string): Promise<IDBPDatabase> =>
+  openDB(name, 1, {
+    upgrade(db) {
+      db.createObjectStore(GAME);
+      db.createObjectStore(RUNS, { keyPath: 'runId' });
+      db.createObjectStore(PROFILE);
+    },
+  });
+
 /** The Next web's database, written again here: the app does not depend on `apps/web`. Three stores: the game in progress, the finished lives, the profile. */
 class Indexed implements PlayerStore {
   private opened: Promise<IDBPDatabase> | null = null;
@@ -27,13 +37,7 @@ class Indexed implements PlayerStore {
   constructor(private readonly name: string) {}
 
   private db(): Promise<IDBPDatabase> {
-    this.opened ??= openDB(this.name, 1, {
-      upgrade(db) {
-        db.createObjectStore(GAME);
-        db.createObjectStore(RUNS, { keyPath: 'runId' });
-        db.createObjectStore(PROFILE);
-      },
-    }).catch((error: unknown) => {
+    this.opened ??= openDatabase(this.name).catch((error: unknown) => {
       // A browser that refused to open it may take it later: the next call tries again.
       this.opened = null;
       throw error;
@@ -264,11 +268,20 @@ const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
 
 /**
  * Takes out of the browser what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress,
- * the finished lives, the profile): the account's session (the client's `sb-…` keys), the round being planned, the lists of lives the account was
+ * and the profile, which keeps its settings): every finished life in the database, whether or not the list could show it, the account's session (the client's `sb-…` keys), the round being planned, the lists of lives the account was
  * to be told of, whose account it was, the phone's note of the notices, and a trip to Google noted. What is the browser's own stays: the language
  * chosen (its cookie), the offer to install the game. A browser that keeps nothing has nothing to take away.
  */
 export async function kvForget(): Promise<void> {
+  if (typeof indexedDB !== 'undefined') {
+    try {
+      const db = await openDatabase(DATABASE);
+      await db.clear(RUNS);
+      db.close();
+    } catch {
+      // A database the browser will not open: there are no lives in it to take away.
+    }
+  }
   const theirs = (key: string) => key.startsWith('sb-') || key === BASKET || key === LAST_ACCOUNT || key === PUSH || ACCOUNT_LISTS.includes(key);
   try {
     for (const key of Object.keys(localStorage)) if (theirs(key)) localStorage.removeItem(key);
@@ -281,6 +294,61 @@ export async function kvForget(): Promise<void> {
     // The same.
   }
 }
+
+/** The news that the player's account was deleted in a tab of the site, for the others: a channel between tabs, and a key of the storage they share. */
+const FORGOTTEN = 'ratrace:forgotten';
+/** This tab, for the news it tells: it starts again by itself, and does not hear its own. */
+const THIS_TAB = Math.random().toString(36).slice(2);
+
+/**
+ * Another tab of the site, or the installed game beside it, still holds the deleted player in its memory (the life on screen, the lists for the
+ * account) and would write them back, into the database shared with this one and up to the next account. The tab that deleted tells the others,
+ * and each one hearing it starts afresh from what the browser now holds (the game's context loads the page again). Told on a `BroadcastChannel`, and
+ * in the storage too for a browser with none (another tab hears it as a `storage` event); heard once however it comes, and never by the tab that
+ * told it. Never throws.
+ */
+export const kvForgotten = {
+  tell: (): void => {
+    try {
+      const channel = new BroadcastChannel(FORGOTTEN);
+      channel.postMessage({ from: THIS_TAB });
+      channel.close();
+    } catch {
+      // No channel between tabs: the storage tells them.
+    }
+    try {
+      localStorage.setItem(FORGOTTEN, `${THIS_TAB} ${Date.now()}`);
+    } catch {
+      // A browser that keeps nothing keeps no other tab's copy of the player either.
+    }
+  },
+  listen: (then: () => void): (() => void) => {
+    if (typeof window === 'undefined') return () => undefined;
+    let heard = false;
+    const once = (from: unknown) => {
+      if (heard || from === THIS_TAB) return;
+      heard = true;
+      then();
+    };
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel === 'function') {
+        channel = new BroadcastChannel(FORGOTTEN);
+        channel.onmessage = (event: MessageEvent) => once((event.data as { from?: unknown } | null)?.from);
+      }
+    } catch {
+      channel = null;
+    }
+    const stored = (event: StorageEvent) => {
+      if (event.key === FORGOTTEN && event.newValue !== null) once(event.newValue.split(' ')[0]);
+    };
+    window.addEventListener('storage', stored);
+    return () => {
+      channel?.close();
+      window.removeEventListener('storage', stored);
+    };
+  },
+};
 
 const INSTALL_OFFER = 'ratrace.installOffer';
 

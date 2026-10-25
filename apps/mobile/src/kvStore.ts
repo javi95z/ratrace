@@ -286,6 +286,18 @@ export const kvPush = {
   },
 };
 
+/**
+ * The news that the player's account was deleted, for the other copies of the game on the device (the web's other tabs, `kvStore.web.ts`). The app
+ * runs once on a phone: there is no other copy to tell, and nothing is ever heard.
+ */
+export const kvForgotten = {
+  tell: (): void => undefined,
+  listen: (then: () => void): (() => void) => {
+    void then;
+    return () => undefined;
+  },
+};
+
 /** Where the phone notes whose account it last saw signed in, under the web's key: for the language of an account to follow a sign-in. */
 const LAST_ACCOUNT = 'ratrace.lastAccount';
 
@@ -293,15 +305,18 @@ const LAST_ACCOUNT = 'ratrace.lastAccount';
 const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
 
 /**
- * Takes off the phone what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress, the
- * finished lives, the profile): the account's session, the round being planned, the lists of lives the account was to be told of, whose account it
- * was, a trip to Google noted, and the lives kept the old way. What is the phone's own stays: the language chosen, what the notices were told (a no is
- * never asked twice; `online/push.ts` turns them off), the install counted once. A key the phone will not take away now is one the next player's
- * game writes over.
+ * Takes off the phone what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress, and
+ * the profile, which keeps its settings): every finished life by its key and their index, whether or not the list could show it (one that cannot be
+ * read is the player's all the same), the lives kept the old way, the account's session, the round being planned, the lists of lives the account was
+ * to be told of, whose account it was, and a trip to Google noted. What is the phone's own stays: the language chosen, what the notices were told (a
+ * no is never asked twice; `online/push.ts` turns them off), the install counted once. A key the phone will not take away now is one the next
+ * player's game writes over. A store that held the lives reads the phone again (its index is gone).
  */
 export async function kvForget(): Promise<void> {
+  const theirs = (key: string) =>
+    key.startsWith(RUN) || key === INDEX || key === RUNS_BEFORE || key.startsWith(SESSION) || key === BASKET || key === KEEPING || key === LAST_ACCOUNT || ACCOUNT_LISTS.includes(key);
   for (const key of await Storage.getAllKeys().catch(() => [] as string[])) {
-    if (key.startsWith(SESSION) || key === BASKET || key === KEEPING || key === LAST_ACCOUNT || key === RUNS_BEFORE || ACCOUNT_LISTS.includes(key)) await Storage.removeItem(key).catch(() => undefined);
+    if (theirs(key)) await Storage.removeItem(key).catch(() => undefined);
   }
 }
 

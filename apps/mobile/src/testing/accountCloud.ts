@@ -68,7 +68,8 @@ const codeIn = (address: string, to: string): string | null => {
  * already (linking it is then refused as `taken`, and signing in with it is that player). `held(id)` is what an account holds, for a test to fill.
  */
 export function accountCloud({ signedIn = null, existing = null, email = 'ana.garcia@example.com' }: { signedIn?: CloudUser | null; existing?: string | null; email?: string } = {}) {
-  const state = { user: signedIn, guests: 0, clock: 0, deleted: [] as string[] };
+  // `lostAnswers`: how many answers of a deletion are lost on their way (the account deleted all the same, the phone not told).
+  const state = { user: signedIn, guests: 0, clock: 0, deleted: [] as string[], lostAnswers: 0 };
   const accounts = new Map<string, Held>();
   const held = (id: string): Held => {
     let one = accounts.get(id);
@@ -110,10 +111,17 @@ export function accountCloud({ signedIn = null, existing = null, email = 'ana.ga
     signInWithGoogle: (to, open) => google(to, open, () => ({ id: existing ?? 'member-1', is_anonymous: false, email })),
     signOut: async () => become(null),
     // The account deleted with everything it holds, as the project's function deletes it; the session goes with the sign-out the account asks for after.
+    // Asked again for a player already gone (an answer lost on its way), it answers deleted, as the function does.
     deleteAccount: async () => {
       if (state.user === null) return false;
-      accounts.delete(state.user.id);
-      state.deleted.push(state.user.id);
+      if (!state.deleted.includes(state.user.id)) {
+        accounts.delete(state.user.id);
+        state.deleted.push(state.user.id);
+      }
+      if (state.lostAnswers > 0) {
+        state.lostAnswers -= 1;
+        return false;
+      }
       return true;
     },
     ensureProfile: async () => undefined,

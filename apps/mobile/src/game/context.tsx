@@ -24,7 +24,7 @@ import { usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvForget, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
+import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { backFromGoogle, openForGoogle } from '../online/browser';
@@ -47,6 +47,7 @@ import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
 import { deviceLanguages, localeOf, type LanguageKeep } from './locale';
+import { reloadDocument } from './reloadDocument';
 import { pageAt, useGoFromAnywhere } from './pages';
 import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
@@ -467,6 +468,9 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   // Taken away halfway (the layout above it drawn anew), the game leaves no sheet shut for whatever comes next.
   useEffect(() => openSheetsAgain, []);
+  // The account was deleted in another tab of the site (or the installed game beside it): this one holds the player in its memory still, and would
+  // write them back. It starts afresh from what the browser now holds. (The phone runs once: it hears nothing.)
+  useEffect(() => kvForgotten.listen(reloadDocument), []);
   // Once the game is drawn anew: the sheets may open again.
   const reopen = useCallback(() => {
     shutForStart.current?.();
@@ -824,7 +828,10 @@ export function useAccount(): {
   useExistingAccount(): Promise<boolean>;
   dismissNotice(): void;
   signOut(): Promise<boolean>;
-  /** Null where the account cannot be deleted from here (no cloud behind the game). */
+  /**
+   * Null where the account offers no deletion (a test's that does not); with no project the offline account's answers false, and the settings offer
+   * none, nobody being signed in.
+   */
   deleteAccount: (() => Promise<boolean>) | null;
 } {
   const { account, store, saves, restart, push, community } = useCloud();
@@ -867,26 +874,29 @@ export function useAccount(): {
       return true;
     },
     // Deleted on the server first, and only then forgotten here: a deletion that did not happen (no network, a refusal) leaves the device as it
-    // was. Once the account is gone, nothing of the player's is left on the device to go up to the next guest (the life in progress, the finished
-    // lives, the profile, the session, the lists for the account, the notices: `kvForget`, `forget`); only the settings stay, and what is the
-    // device's own (the language). Then the game starts again as on a first visit, as it does on signing out, and a new guest with it.
+    // was. Once the account is gone, nothing of the player's is left on the device to go up to the next guest: the mirror's pass with it is stopped
+    // and waited for first (`forget`), then the life in progress, every finished life, the profile, the session, the lists for the account and the
+    // notices go (`kvForget`), and the mirror forgets again what clearing the life noted for it. Only the settings stay, and what is the device's own
+    // (the language). The other tabs of the site are told, and load afresh (`kvForgotten`). Then the game starts again as on a first visit, as it
+    // does on signing out, and a new guest with it. After the server's yes, all of it is done at best: the account is gone whatever fails here.
     deleteAccount:
       account.deleteAccount === undefined
         ? null
         : async () => {
-            const settings = (await store.loadProfile()).settings;
+            const settings = await store.loadProfile().then((profile) => profile.settings, () => newProfile().settings);
             if (!(await account.deleteAccount?.())) return false;
-            // The account is gone whatever happens on the device now: each step is tried, and the game starts again all the same.
             const step = (work: () => Promise<unknown>) => work().catch((error: unknown) => console.warn('could not forget the player here:', error));
+            await step(async () => saves.forget?.());
             await step(() => push.forget());
             await step(() => store.clearGame());
             await step(async () => {
               for (const run of await store.listRuns()) await store.removeRun(run.runId);
             });
-            await step(() => store.saveProfile({ ...newProfile(), settings }));
-            saves.forget?.();
             await step(kvForget);
-            await restart(settings);
+            await step(() => store.saveProfile({ ...newProfile(), settings }));
+            await step(async () => saves.forget?.());
+            kvForgotten.tell();
+            await step(() => restart(settings));
             return true;
           },
   };

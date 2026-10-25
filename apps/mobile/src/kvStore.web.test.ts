@@ -1,10 +1,11 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
+import { openDB } from 'idb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, SavedGame } from '@ratrace/core/session/types';
 import { LocalStore } from '../../web/src/session/indexeddb';
-import { kvBasket, kvForget, kvKeeping, kvLanguage, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
+import { kvBasket, kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
 
 /*
  * On the web the app keeps the player's things where the Next web keeps them: the same IndexedDB (`ratrace`, its three stores), the same
@@ -171,11 +172,81 @@ describe('a player who deleted their account', () => {
     expect(kvLanguage.read()).toBe('es');
   });
 
+  it('leaves no finished life in the database, even one the list could not show', async () => {
+    const next = new LocalStore();
+    await next.addRun(run('a', 10));
+    await next.addRun({ runId: 'unreadable' } as unknown as FinishedRun);
+    await kvForget();
+    const store = new KvStore();
+    expect(await store.listRuns()).toEqual([]);
+    // Read as the Next web reads its database: nothing left, not even what neither list would show.
+    expect(await (await openDB('ratrace', 1)).count('runs')).toBe(0);
+  });
+
   it('forgets in a browser that keeps nothing all the same, with nothing thrown', async () => {
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
       throw new Error('refused');
     });
     await expect(kvForget()).resolves.toBeUndefined();
     vi.restoreAllMocks();
+  });
+});
+
+describe('another tab, or the installed game, of a player who deleted their account', () => {
+  /** What another tab says, on the channel between tabs, as `tell` says it there. */
+  const fromAnotherTab = () => {
+    const channel = new BroadcastChannel('ratrace:forgotten');
+    channel.postMessage({ from: 'another-tab' });
+    channel.close();
+  };
+
+  it('hears of it from the tab that deleted it, and only once however it is told', async () => {
+    const heard = vi.fn();
+    const stop = kvForgotten.listen(heard);
+    fromAnotherTab();
+    await vi.waitFor(() => expect(heard).toHaveBeenCalledTimes(1));
+    // The storage of the browser tells the other tabs too: the same news, heard once.
+    window.dispatchEvent(new StorageEvent('storage', { key: 'ratrace:forgotten', newValue: 'another-tab 1' }));
+    expect(heard).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  it('is not heard by the tab that tells it: it starts again by itself', async () => {
+    const heard = vi.fn();
+    const stop = kvForgotten.listen(heard);
+    // Heard on the channel by every other listener of this page's origin, this tab's own among them, were it not told apart.
+    const other = vi.fn();
+    const channel = new BroadcastChannel('ratrace:forgotten');
+    channel.onmessage = other;
+    kvForgotten.tell();
+    await vi.waitFor(() => expect(other).toHaveBeenCalled());
+    await new Promise((settled) => setTimeout(settled, 20));
+    expect(heard).not.toHaveBeenCalled();
+    expect(localStorage.getItem('ratrace:forgotten')).not.toBeNull();
+    channel.close();
+    stop();
+  });
+
+  it('hears of it through the storage of the browser where there is no channel between tabs', () => {
+    vi.stubGlobal('BroadcastChannel', undefined);
+    const heard = vi.fn();
+    const stop = kvForgotten.listen(heard);
+    window.dispatchEvent(new StorageEvent('storage', { key: 'something.else', newValue: '1' }));
+    expect(heard).not.toHaveBeenCalled();
+    window.dispatchEvent(new StorageEvent('storage', { key: 'ratrace:forgotten', newValue: 'another-tab 1' }));
+    expect(heard).toHaveBeenCalledTimes(1);
+    stop();
+    // And the tab that tells writes the news there for them, with nothing thrown.
+    expect(() => kvForgotten.tell()).not.toThrow();
+    expect(localStorage.getItem('ratrace:forgotten')).not.toBeNull();
+  });
+
+  it('hears nothing once it has stopped listening', async () => {
+    const heard = vi.fn();
+    kvForgotten.listen(heard)();
+    fromAnotherTab();
+    window.dispatchEvent(new StorageEvent('storage', { key: 'ratrace:forgotten', newValue: 'another-tab 2' }));
+    await new Promise((settled) => setTimeout(settled, 20));
+    expect(heard).not.toHaveBeenCalled();
   });
 });
