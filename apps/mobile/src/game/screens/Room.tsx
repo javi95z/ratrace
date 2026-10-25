@@ -541,7 +541,8 @@ function Standings({ live = false, onPick }: { live?: boolean; onPick?: (userId:
   return (
     <View>
       <View aria-hidden style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-        <ReadText size={11} tone="ink-300" style={{ width: 64, textAlign: 'right', textTransform: 'uppercase', letterSpacing: 11 * 0.05 }}>{t('worthShort')}</ReadText>
+        {/* At least its column's width, and wider to its left where its word is longer (Spanish's): on one line, its right edge still the column's. */}
+        <ReadText size={11} tone="ink-300" numberOfLines={1} style={{ minWidth: 64, flexShrink: 0, textAlign: 'right', textTransform: 'uppercase', letterSpacing: 11 * 0.05 }}>{t('worthShort')}</ReadText>
         <ReadText size={11} tone="ink-300" style={{ width: 56, textAlign: 'right', textTransform: 'uppercase', letterSpacing: 11 * 0.05 }}>{t('score')}</ReadText>
       </View>
       <View role="list">

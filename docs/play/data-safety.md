@@ -38,9 +38,8 @@ Nada se trata solo de forma efímera (ephemeral: **No** en todos): todo se guard
 Lo que **no** se recoge: ubicación, contactos del teléfono, fotos (la app solo *añade* la imagen de una vida a la galería cuando el jugador lo pide,
 sin leer nada), audio, archivos, calendario, salud, datos financieros reales, historial web, apps instaladas, id de publicidad.
 
-> Ojo: la página legal dice quién trata los datos: Supabase, Vercel y Google. En la app, los avisos pasan además por **Expo** (su servicio de push)
-> y **Google FCM**. Antes de publicar, añadir Expo a «Who handles it» en `packages/i18n/messages/*.json` (`legal.whoBody`) y decir «la dirección de
-> avisos de tu navegador o tu teléfono» en `legal.dataBody`. Lo cambio cuando digas.
+La política de privacidad (`/en/legal`, la página legal de la web) nombra a todos los que tratan datos, también Expo y Google FCM, que llevan los
+avisos de la app del teléfono (actualizada el 2026-10-25). La app muestra su propia versión (`phone.legal`), con lo mismo dicho para el teléfono.
 
 ## Otros apartados de App content
 
@@ -49,7 +48,7 @@ sin leer nada), audio, archivos, calendario, salud, datos financieros reales, hi
 | Privacy policy | `https://ratrace-plum.vercel.app/en/legal` |
 | Ads | **No, my app does not contain ads** |
 | App access | **All functionality is available without special access** (el invitado entra solo; Google es opcional) |
-| Target audience and content | Recomendado: **13–15, 16–17, 18+** (no menores de 13: la página legal pide a los menores de 14 que avisen a sus padres antes de entrar con Google, y el juego no está hecho para niños). **Appeals to children: No.** Decisión tuya. |
+| Target audience and content | **13–15, 16–17 y 18+** (decidido: no menores de 13; la página legal pide a los menores de 14 que avisen a sus padres antes de entrar con Google, y el juego no está hecho para niños). **Appeals to children: No.** Así no entra en la política de Familias. |
 | News app | **No** |
 | Government app | **No** |
 | Financial features | **My app doesn't provide any financial features** (es un juego: el dinero es ficticio y no se compra nada) |
