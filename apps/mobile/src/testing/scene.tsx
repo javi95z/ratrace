@@ -6,8 +6,10 @@ import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud as memberCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
 import { runRoomScene, sceneGameOpened, sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
+import { LOCALES } from '@ratrace/i18n/locales';
+import type { Locale } from '@ratrace/i18n/locales';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { GameProvider, useGame, useProfile, useRooms, useT, useWords } from '../game/context';
@@ -446,8 +448,11 @@ export function SceneGame({ scene, services, screens = SCENE_SCREENS, readyPort 
  * The scene named, drawn as the app would draw it: its store built, the game opened on it as it opens the life on the
  * phone, and the scene's screen inside. Nothing at all until the store is built (it takes a moment).
  */
-export function SceneView({ name, screens = SCENE_SCREENS, readyPort }: { name: string | undefined; screens?: SceneScreens; readyPort?: number }) {
-  const scene = SCENES.find((candidate) => candidate.name === name);
+export function SceneView({ name, screens = SCENE_SCREENS, readyPort, locale }: { name: string | undefined; screens?: SceneScreens; readyPort?: number; locale?: Locale }) {
+  const scene = useMemo(() => {
+    const named = SCENES.find((candidate) => candidate.name === name);
+    return named && locale ? { ...named, locale } : named;
+  }, [name, locale]);
   const drawable = scene !== undefined && screens[screenOf(scene)] !== undefined;
   const [built, setBuilt] = useState<{ scene: Scene; services: Services } | null>(null);
   // In place before the store is built, so before the game opens and says it.
@@ -468,10 +473,12 @@ export function SceneView({ name, screens = SCENE_SCREENS, readyPort }: { name: 
 
 /**
  * The /scene route's page (app/scene.tsx loads it behind `__DEV__`, so a release build has none of it): the scene its address names, and, when it
- * is opened for a shot, the port the driver of the shots listens on for it to say it is ready (`&ready=`, scripts/shotDrivers.ts).
+ * is opened for a shot, the port the driver of the shots listens on for it to say it is ready (`&ready=`, scripts/shotDrivers.ts). `&locale=` draws
+ * it in another of the game's languages than its own (the store's pictures in each language, `scripts/playShots.ts`).
  */
 export function SceneRoute() {
-  const { name, ready } = useLocalSearchParams<{ name?: string; ready?: string }>();
+  const { name, ready, locale } = useLocalSearchParams<{ name?: string; ready?: string; locale?: string }>();
   const port = ready !== undefined && /^\d+$/.test(ready) ? Number(ready) : undefined;
-  return <SceneView name={name} readyPort={port} />;
+  const speaking = LOCALES.find((known) => known === locale);
+  return <SceneView name={name} readyPort={port} {...(speaking ? { locale: speaking } : {})} />;
 }

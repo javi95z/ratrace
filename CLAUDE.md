@@ -49,6 +49,8 @@ pnpm --filter @ratrace/mobile exec tsx scripts/perf.ts --launches=5   # the prob
 pnpm --filter @ratrace/mobile exec tsx scripts/fakeCloud.ts [--friends=200,50,50]   # a fake project on 127.0.0.1:54399 (guests, Google's page, tables, rooms and ranked on the web's in-memory servers, Realtime): never the live one
 EXPO_NO_METRO_LAZY=1 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54399 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_fake_local_only npx expo start --port 8090
 # ^ the app online on the fake project (or a release build with the same env); lazy bundling loses supabase-js's chunk in development (index.cjs vs index.mjs)
+pnpm --filter @ratrace/mobile play:graphics   # Google Play's icon and feature graphic into docs/play/graphics (the listing and data safety drafts: docs/play/*.md)
+pnpm --filter @ratrace/web exec tsx ../mobile/scripts/playShots.ts [--only=en]   # Play's phone pictures, 1080x1920, in each language (the app's web on 8091 in development; scenes drawn in another language with `&locale=`)
 pnpm --filter @ratrace/mobile icons   # the app's icons (assets/icon.png, the adaptive icon's front) drawn from art/clean/brand/brand.app_icon.png; committed
 cd apps/mobile && eas build --profile development --platform android   # a build on EAS (eas.json: development, preview = an APK, production)
 # ^ EAS project @javi95z/theratrace (id in app.json); Firebase project theratrace-68012 (google-services.json, client config only; the FCM V1 key lives in EAS, never the repo)

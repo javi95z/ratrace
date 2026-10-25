@@ -9,6 +9,15 @@
         "source ~/.nvm/nvm.sh && nvm use >/dev/null && pnpm --filter @ratrace/web dev"
       ],
       "port": 3010
+    },
+    {
+      "name": "ratrace-appweb",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use >/dev/null && cd apps/mobile && EXPO_NO_METRO_LAZY=1 npx expo start --web --port 8091"
+      ],
+      "port": 8091
     }
   ]
 }
