@@ -1042,3 +1042,32 @@ test('a slider in a sheet holds it: pressed, the sheet\'s pan gives way to it (a
   await wait(400);
   expect(onClose).toHaveBeenCalledTimes(1);
 });
+
+test('a sheet closed some other way while it slides away (the browser\'s Back) is not asked again: its owner is told once', async () => {
+  const onClose = vi.fn();
+  let closeNow = () => {};
+  function Owned() {
+    const [open, setOpen] = useState(true);
+    closeNow = () => setOpen(false);
+    return (
+      <Sheet
+        open={open}
+        onClose={() => {
+          onClose();
+          setOpen(false);
+        }}
+        title="Title"
+        closeLabel="Close"
+      >
+        <span>inside</span>
+      </Sheet>
+    );
+  }
+  render(<Owned />);
+  laidOut(600);
+  drag(pans().grip, 400);
+  await wait(20);
+  act(() => closeNow());
+  await wait(1000);
+  expect(onClose).not.toHaveBeenCalled();
+});

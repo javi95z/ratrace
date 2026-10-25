@@ -37,9 +37,9 @@ type Kind = 'touch' | 'mouse' | 'pen';
  * A pointer event as a browser gives it (jsdom has no PointerEvent of its own), at `y` on the page, `t` milliseconds into the drag: a finger's unless
  * said, its button down but as it is lifted (`buttons`).
  */
-function pointer(type: string, target: Element, y: number, t: number, x = 100, kind: Kind = 'touch', buttons = type === 'pointerup' ? 0 : 1) {
+function pointer(type: string, target: Element, y: number, t: number, x = 100, kind: Kind = 'touch', buttons = type === 'pointerup' ? 0 : 1, id = 1) {
   const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons });
-  Object.defineProperties(event, { pointerId: { value: 1 }, isPrimary: { value: true }, timeStamp: { value: t }, pointerType: { value: kind } });
+  Object.defineProperties(event, { pointerId: { value: id }, isPrimary: { value: true }, timeStamp: { value: t }, pointerType: { value: kind } });
   act(() => void target.dispatchEvent(event));
   return event;
 }
@@ -223,35 +223,62 @@ describe('a sheet dragged on the web', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('claims a finger\'s move down from the top of its body at once, before the browser can take it for a scroll; up is the scroll\'s', () => {
+  it('claims a finger\'s clear move down from the top of its body, before the browser can take it for a scroll; up is the scroll\'s', () => {
     render(<Owned />);
+    // A hair down is not yet a pull: nothing is kept from the browser.
     pointer('pointerdown', body(), 100, 1000);
-    expect(touchMove(body(), 102).defaultPrevented).toBe(true);
-    pointer('pointerup', body(), 102, 1010);
+    expect(touchMove(body(), 102).defaultPrevented).toBe(false);
+    expect(touchMove(body(), 105, 101).defaultPrevented).toBe(true);
+    pointer('pointerup', body(), 105, 1010);
     // Up: the scroll's, and the press is let go.
     pointer('pointerdown', body(), 100, 2000);
-    expect(touchMove(body(), 97).defaultPrevented).toBe(false);
+    expect(touchMove(body(), 95).defaultPrevented).toBe(false);
     pointer('pointermove', body(), 160, 2010);
     expect(pullStyle().transform).toBe('translateY(0px)');
     pointer('pointerup', body(), 160, 2020);
     // Scrolled, a finger going down is the scroll's.
     (body().closest('[data-sheet-scroll]') as HTMLElement).scrollTop = 30;
     pointer('pointerdown', body(), 100, 3000);
-    expect(touchMove(body(), 104).defaultPrevented).toBe(false);
+    expect(touchMove(body(), 110).defaultPrevented).toBe(false);
   });
 
-  it('listens to a finger\'s moves without letting the browser scroll on only for as long as a press may become a drag', () => {
-    const adding = vi.spyOn(window, 'addEventListener');
-    const removing = vi.spyOn(window, 'removeEventListener');
+  it('never keeps a sideways swipe from the browser (a strip of tabs in the sheet), even one that starts with a hair down', () => {
     render(<Owned />);
-    const blocking = () => adding.mock.calls.filter(([type, , options]) => type === 'touchmove' && (options as AddEventListenerOptions | undefined)?.passive === false).length;
-    expect(blocking()).toBe(0);
+    pointer('pointerdown', body(), 100, 1000, 100);
+    expect(touchMove(body(), 102, 103).defaultPrevented).toBe(false);
+    expect(touchMove(body(), 104, 130).defaultPrevented).toBe(false);
+    expect(touchMove(body(), 106, 160).defaultPrevented).toBe(false);
+    pointer('pointermove', body(), 106, 1010, 160);
+    expect(pullStyle().transform).toBe('translateY(0px)');
+    // Down, but as much sideways: not clearly a pull.
+    pointer('pointerup', body(), 106, 1020, 160);
+    pointer('pointerdown', body(), 100, 2000, 100);
+    expect(touchMove(body(), 106, 105).defaultPrevented).toBe(false);
+  });
+
+  it('listens to a finger on the panel from the sheet\'s opening (as a phone\'s browser must know before the touch), and does nothing unless a press may become a pull', () => {
+    const adding = vi.spyOn(window, 'addEventListener');
+    render(<Owned />);
     pointer('pointerdown', body(), 100, 1000);
-    expect(blocking()).toBe(1);
+    // Nothing is added on the window for it: the panel's own listener, there since the sheet opened, answers.
+    expect(adding.mock.calls.filter(([type]) => type === 'touchmove')).toEqual([]);
     pointer('pointerup', body(), 100, 1010);
-    expect(removing.mock.calls.filter(([type]) => type === 'touchmove')).toHaveLength(1);
     adding.mockRestore();
-    removing.mockRestore();
+    // With no press, a finger's move on the panel is the browser's.
+    expect(touchMove(body(), 150).defaultPrevented).toBe(false);
+    expect(touchMove(grip(), 150).defaultPrevented).toBe(false);
+  });
+
+  it('lets a new press replace one whose release never came: a finger lifted where the page was not told blocks nothing', async () => {
+    const onClose = vi.fn();
+    render(<Owned onClose={onClose} />);
+    pointer('pointerdown', body(), 100, 1000, 100, 'touch', 1, 1);
+    // Its release is never seen; the next finger is another pointer.
+    pointer('pointerdown', grip(), 100, 2000, 100, 'touch', 1, 2);
+    for (let i = 1; i <= 6; i++) pointer('pointermove', grip(), 100 + i * 40, 2000 + i * 10, 100, 'touch', 1, 2);
+    pointer('pointerup', grip(), 340, 2060, 100, 'touch', 0, 2);
+    await wait(300);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('closes on a flick only once it has gone FLICK_TRAVEL: a quick twitch past the slop goes back', async () => {

@@ -13,6 +13,9 @@ import type { SheetPull } from './useSheetPull';
 
 /** How far back the speed of a pointer let go is read, in milliseconds: a drag that stopped before it was lifted was let go still. */
 const SPEED_MS = 100;
+/** A finger on the body is claimed for a pull once it has gone this far down, and clearly down (`CLAIM_SLANT` times its sideways). */
+const CLAIM = 4;
+const CLAIM_SLANT = 1.5;
 
 /** The grip: the grabber and the title row. A finger on it never scrolls the page (`touch-action: none`), so its pointer events are the drag's. */
 export function SheetGrip({ children }: { drag: SheetPull; enabled: boolean; children: ReactNode }) {
@@ -65,9 +68,10 @@ const NO_DRAG = 'input, textarea, select, [contenteditable="true"], [role="slide
  *
  * A press is followed on the whole window from the moment it lands until it is let go, so that a pointer led off the panel (a mouse has no hold on
  * what it pressed) is never lost, and a move with no button down ends it. The body is pulled by a finger or a pen, never a mouse, whose drag there
- * selects text. A finger on the body at its top that goes down is claimed with its first move (`touchmove` kept from scrolling), before a phone's
- * browser takes it for a scroll of its own; one that goes up is the scroll's, and the press is let go. That listener, which a phone's browser waits
- * for before it scrolls, is there only while a press may become a drag.
+ * selects text. A finger on the body at its top is claimed once it goes clearly down (`CLAIM`, `touchmove` kept from scrolling), before a phone's
+ * browser takes it for a scroll of its own; one that goes up or sideways (a strip of tabs in the sheet) is the browser's, and the press is let go.
+ * That listener is the panel's from the sheet's opening, so that a phone's browser knows of it before a touch lands (Chrome asks only the listeners
+ * there then whether it may scroll), and it does nothing unless a press may become a pull. A new press replaces one whose release never came.
  */
 export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void {
   type Press = { id: number; x: number; y: number; grip: boolean; dragging: boolean; claimed: boolean; trail: Array<{ t: number; y: number }> };
@@ -77,7 +81,13 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
   let selecting = '';
 
   const down = (event: PointerEvent) => {
-    if (press || !event.isPrimary || event.button !== 0) return;
+    if (!event.isPrimary || event.button !== 0) return;
+    if (press) {
+      if (event.pointerId === press.id) return;
+      // A primary pointer again: the last one was let go where nothing told the page.
+      if (press.dragging) pull().cancel();
+      letGo();
+    }
     const target = event.target instanceof Element ? event.target : null;
     if (!target || target.closest(NO_DRAG)) return;
     const grip = target.closest('[data-sheet-grip]') !== null;
@@ -136,12 +146,14 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
   const touchMove = (event: TouchEvent) => {
     if (!press) return;
     if (!press.dragging && !press.grip && !press.claimed) {
+      // A second finger (a pinch) is never a pull.
+      if (event.touches.length !== 1) return letGo();
       const touch = event.touches[0];
-      if (!touch) return;
-      const dx = touch.clientX - press.x;
+      const dx = Math.abs(touch.clientX - press.x);
       const dy = touch.clientY - press.y;
-      if (dy === 0 && dx === 0) return;
-      if (dy <= 0 || Math.abs(dx) > dy) return letGo();
+      // Up, or as much sideways as down: the browser's, for good. A hair either way: not yet anyone's.
+      if (dy <= -CLAIM || (dx >= CLAIM && dy <= CLAIM_SLANT * dx)) return letGo();
+      if (dy < CLAIM || dy <= CLAIM_SLANT * dx) return;
       press.claimed = true;
     }
     if (event.cancelable) event.preventDefault();
@@ -157,7 +169,6 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
     view.addEventListener('pointermove', move);
     view.addEventListener('pointerup', up);
     view.addEventListener('pointercancel', cancel);
-    view.addEventListener('touchmove', touchMove, { passive: false });
   }
   /** The press is over (let go, taken by the browser, or left to the scroll): nothing more is listened to until the next. */
   function letGo() {
@@ -165,14 +176,15 @@ export function followDrags(box: HTMLElement, pull: () => SheetPull): () => void
     view.removeEventListener('pointermove', move);
     view.removeEventListener('pointerup', up);
     view.removeEventListener('pointercancel', cancel);
-    view.removeEventListener('touchmove', touchMove);
   }
 
   box.addEventListener('pointerdown', down);
+  box.addEventListener('touchmove', touchMove, { passive: false });
   box.addEventListener('click', click, true);
   return () => {
     letGo();
     box.removeEventListener('pointerdown', down);
+    box.removeEventListener('touchmove', touchMove);
     box.removeEventListener('click', click, true);
   };
 }

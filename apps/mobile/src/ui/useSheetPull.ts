@@ -42,23 +42,27 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
   const from = useSharedValue(0);
   const leaving = useSharedValue(false);
   const quiet = useSharedValue(still);
-  const held = useSharedValue(locked);
+  const lockedNow = useSharedValue(locked);
   // A control of the sheet that drags itself is pressed (`hold`); a drag of the sheet is under way (from `begin` to `end` or `cancel`).
   const holding = useSharedValue(false);
   const dragging = useSharedValue(false);
   useEffect(() => {
     quiet.value = still;
-    held.value = locked;
-  }, [still, locked, quiet, held]);
+    lockedNow.value = locked;
+  }, [still, locked, quiet, lockedNow]);
 
   const closing = useRef(onClose);
-  useEffect(() => {
+  // Whether it is still open as the slide lands: closed meanwhile some other way (the browser's Back), its owner has had its answer already.
+  const opened = useRef(open);
+  useLayoutEffect(() => {
     closing.current = onClose;
+    opened.current = open;
   });
   // Asked by a drag, the owner answers in the render the asking starts (`asks`), which is where the panel comes back if it is still open.
   const [asks, setAsks] = useState(0);
   const waiting = useRef(false);
   const ask = useCallback(() => {
+    if (!opened.current) return;
     waiting.current = true;
     setAsks((n) => n + 1);
     closing.current();
@@ -85,17 +89,17 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
     (translation: number) => {
       'worklet';
       if (!dragging.value) return;
-      pull.value = pulledTo(from.value + translation, held.value);
+      pull.value = pulledTo(from.value + translation, lockedNow.value);
     },
-    [dragging, pull, from, held],
+    [dragging, pull, from, lockedNow],
   );
   const end = useCallback(
     (translation: number, velocity: number) => {
       'worklet';
       if (!dragging.value) return;
       dragging.value = false;
-      const at = pulledTo(from.value + translation, held.value);
-      if (held.value || letGo(at, velocity, height.value) === 'back') {
+      const at = pulledTo(from.value + translation, lockedNow.value);
+      if (lockedNow.value || letGo(at, velocity, height.value) === 'back') {
         pull.value = quiet.value ? 0 : withSpring(0, backSpring(velocity));
         return;
       }
@@ -109,7 +113,7 @@ export function useSheetPull({ open, onClose, locked = false }: { open: boolean;
         if (done) scheduleOnRN(ask);
       });
     },
-    [dragging, leaving, from, height, pull, quiet, held, ask],
+    [dragging, leaving, from, height, pull, quiet, lockedNow, ask],
   );
   const cancel = useCallback(() => {
     'worklet';
