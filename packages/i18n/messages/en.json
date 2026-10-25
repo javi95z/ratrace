@@ -1391,7 +1391,13 @@
     "signOut": "Sign out",
     "signOutTitle": "Sign out?",
     "signOutAbout": "Your lives and progress stay in your account, but leave this device. Sign in with Google again to bring them back.",
-    "signOutUnsaved": "Some changes are still on their way to your account. Wait for them to be saved so you do not lose them."
+    "signOutUnsaved": "Some changes are still on their way to your account. Wait for them to be saved so you do not lose them.",
+    "delete": "Delete account",
+    "deleteTitle": "Delete your account?",
+    "deleteAbout": "Your account and everything in it go for good: every life and record, your name in the rankings, your friends, your games with others and your notices. This cannot be undone, and this device starts again as new.",
+    "deleteYes": "Delete forever",
+    "deleting": "Deleting…",
+    "deleteFailed": "Could not delete your account, and nothing was changed. Check your connection and try again."
   },
   "work": {
     "title": "Work",
@@ -2074,7 +2080,9 @@
     "deviceTitle": "Cookies and your device",
     "deviceBody": "We use no tracking cookies. The game keeps your life and settings in the browser, because without that it cannot be played.",
     "rightsTitle": "How long, and your rights",
-    "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google."
+    "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google.",
+    "deletionTitle": "Deleting your account",
+    "deletionBody": "In Settings, choose Delete account, on this site or in the app. If you signed in with Google, you can do it from any browser by signing in on the site. Or write to the contact above. Your account goes with everything in it: lives, records, nickname, rat, friends, games and notices. Anonymous counts of what is played and technical errors are kept, because they say nothing of who you are."
   },
   "phone": {
     "captcha": {
@@ -2099,7 +2107,9 @@
       "deviceTitle": "Your phone",
       "deviceBody": "We use no cookies or trackers, and there are no ads. The game keeps your life and settings in the app's storage, because without that it cannot be played; deleting the app removes them from this phone, not from your account.",
       "rightsTitle": "How long, and your rights",
-      "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google."
+      "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google.",
+      "deletionTitle": "Deleting your account",
+      "deletionBody": "In Settings, choose Delete account, in the app or on the site. If you signed in with Google, you can also do it on the site, from any computer or phone, by signing in there. Or write to the contact above. Your account goes with everything in it: lives, records, nickname, rat, friends, games and notices. Anonymous counts of what is played and technical errors are kept, because they say nothing of who you are."
     },
     "shareFailed": "This phone could not make the picture to share.",
     "pictureSaved": "Saved to your photos.",

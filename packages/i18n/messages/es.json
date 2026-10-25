@@ -1391,7 +1391,13 @@
     "signOut": "Cerrar sesión",
     "signOutTitle": "¿Cerrar sesión?",
     "signOutAbout": "Tus vidas y tu progreso siguen en tu cuenta, pero se quitan de este dispositivo. Para recuperarlos, vuelve a entrar con Google.",
-    "signOutUnsaved": "Aún hay cambios subiendo a tu cuenta. Espera a que se guarden para no perderlos."
+    "signOutUnsaved": "Aún hay cambios subiendo a tu cuenta. Espera a que se guarden para no perderlos.",
+    "delete": "Borrar la cuenta",
+    "deleteTitle": "¿Borrar tu cuenta?",
+    "deleteAbout": "Tu cuenta y todo lo que hay en ella se van para siempre: cada vida y cada récord, tu apodo en las clasificaciones, tus amigos, tus partidas con otros y tus avisos. No se puede deshacer, y este dispositivo empieza de nuevo.",
+    "deleteYes": "Borrar para siempre",
+    "deleting": "Borrando…",
+    "deleteFailed": "No se ha podido borrar tu cuenta, y no ha cambiado nada. Revisa tu conexión y vuelve a intentarlo."
   },
   "work": {
     "title": "Trabajo",
@@ -2074,7 +2080,9 @@
     "deviceTitle": "Cookies y tu dispositivo",
     "deviceBody": "No usamos cookies de seguimiento. El juego guarda tu vida y tus ajustes en el navegador, porque sin eso no se puede jugar.",
     "rightsTitle": "Cuánto tiempo y tus derechos",
-    "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google."
+    "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google.",
+    "deletionTitle": "Borrar tu cuenta",
+    "deletionBody": "En Ajustes, elige Borrar la cuenta, en esta web o en la app. Si entraste con Google, puedes hacerlo desde cualquier navegador entrando en la web. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
   },
   "phone": {
     "captcha": {
@@ -2099,7 +2107,9 @@
       "deviceTitle": "Tu teléfono",
       "deviceBody": "No usamos cookies ni rastreadores, y no hay publicidad. El juego guarda tu vida y tus ajustes en el almacenamiento de la aplicación, porque sin eso no se puede jugar; al borrar la aplicación se borran de este teléfono, no de tu cuenta.",
       "rightsTitle": "Cuánto tiempo y tus derechos",
-      "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google."
+      "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google.",
+      "deletionTitle": "Borrar tu cuenta",
+      "deletionBody": "En Ajustes, elige Borrar la cuenta, en la app o en la web. Si entraste con Google, también puedes hacerlo en la web, desde cualquier ordenador o teléfono, entrando allí. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
     },
     "shareFailed": "Este teléfono no ha podido crear la imagen para compartir.",
     "pictureSaved": "Imagen guardada en tus fotos.",

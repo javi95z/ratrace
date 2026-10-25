@@ -421,6 +421,88 @@ function SignOutAsk({ onCancel }: { onCancel(): void }) {
   );
 }
 
+/**
+ * Deleting the account: last in the settings, and quiet (Google Play asks that a player can delete their account in the app; the legal page says so,
+ * `#delete`). Offered only where there is an account to delete, a guest's or a member's. Asked first, in a sheet that says plainly what goes and
+ * that it cannot be undone; once the server says the account is gone the device forgets the player and the game starts again on the front door
+ * (`useAccount().deleteAccount`). The sheet stays while a deletion is under way, the account gone offline under it, until the game starts again.
+ */
+function DeleteAccount() {
+  const { state, deleteAccount } = useAccount();
+  const [asking, setAsking] = useState(false);
+  if (deleteAccount === null || (state.kind === 'offline' && !asking)) return null;
+  return (
+    <>
+      <DeleteLink onPress={() => setAsking(true)} />
+      <DeleteSheet open={asking} onClose={() => setAsking(false)} deleteAccount={deleteAccount} />
+    </>
+  );
+}
+
+/** The way to delete the account, small and plain like the way out of it, in the danger tone. */
+function DeleteLink({ onPress }: { onPress: () => void }) {
+  const t = useT('account');
+  const press = usePress({ onPress });
+  return (
+    <Pressable accessibilityRole="button" onPress={press} style={({ pressed }) => ({ ...pressDown(pressed), minHeight: TOUCH, alignSelf: 'flex-start', justifyContent: 'center' })}>
+      <LinkText size={13} offset={4} tone="wine-300">{t('delete')}</LinkText>
+    </Pressable>
+  );
+}
+
+function DeleteSheet({ open, onClose, deleteAccount }: { open: boolean; onClose(): void; deleteAccount(): Promise<boolean> }) {
+  const t = useT('account');
+  const common = useT('common');
+  return (
+    <Sheet open={open} onClose={onClose} title={t('deleteTitle')} closeLabel={common('close')}>
+      <DeleteAsk onCancel={onClose} deleteAccount={deleteAccount} />
+    </Sheet>
+  );
+}
+
+/** What goes, and the one button that deletes: pressed once, it waits for the server, and a second press sends nothing. A failure is said here. */
+function DeleteAsk({ onCancel, deleteAccount }: { onCancel(): void; deleteAccount(): Promise<boolean> }) {
+  const t = useT('account');
+  const common = useT('common');
+  const [deleting, setDeleting] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // Two presses in one moment come before the button is drawn waiting: the second is turned away here.
+  const sent = useRef(false);
+  const send = () => {
+    if (sent.current) return;
+    sent.current = true;
+    setDeleting(true);
+    setFailed(false);
+    const again = () => {
+      sent.current = false;
+      setDeleting(false);
+      setFailed(true);
+    };
+    // Deleted, the game starts again and this sheet goes with it; anything else is said, and can be tried again.
+    void deleteAccount().then((done) => {
+      if (!done) again();
+    }, again);
+  };
+  return (
+    <>
+      <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('deleteAbout')}</ReadText>
+      {failed ? (
+        <View accessible role="alert" accessibilityLiveRegion="assertive" style={{ marginTop: 8 }}>
+          <ReadText size={13} tone="wine-300" lineHeight={13 * SNUG}>{t('deleteFailed')}</ReadText>
+        </View>
+      ) : null}
+      <View style={{ marginTop: 16, gap: 8 }}>
+        <Button variant="secondary" wide onPress={onCancel}>
+          {common('cancel')}
+        </Button>
+        <Button variant="danger" wide disabled={deleting} onPress={send}>
+          {deleting ? t('deleting') : t('deleteYes')}
+        </Button>
+      </View>
+    </>
+  );
+}
+
 /** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */
 export function Preferences() {
   return (
@@ -430,6 +512,7 @@ export function Preferences() {
       {/* The keys, on the web (game/KeyboardHelp.tsx); nothing on the phone. */}
       <KeyboardGuide />
       <AccountBlock signOut />
+      <DeleteAccount />
     </View>
   );
 }
@@ -464,6 +547,7 @@ function HomeSettings() {
       {account.kind === 'offline' ? <ReadText size={13} tone="ink-300">{home('savedHere')}</ReadText> : null}
       <LanguagePick />
       <Switches />
+      <DeleteAccount />
       <Version />
     </View>
   );

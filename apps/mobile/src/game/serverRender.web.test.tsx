@@ -19,6 +19,7 @@ vi.mock('../sprites/sources', () => ({
 
 const { default: HomeRoute } = await import('../app/[locale]/index');
 const { default: NotFoundRoute } = await import('../app/+not-found');
+const { default: LegalRoute } = await import('../app/[locale]/legal');
 const { forgetTheGame, GameProvider } = await import('./context');
 const { phoneTrack } = await import('../online/track');
 const { forgetThePhone } = await import('../online/index.web');
@@ -148,5 +149,25 @@ describe('the page of nothing drawn on the server', () => {
     );
     const { play, notFound } = messagesFor('en') as unknown as Record<'play' | 'notFound', Record<string, string>>;
     for (const words of [notFound.title, notFound.body, play.newLife, play.home]) expect(read).toContain(words);
+  });
+});
+
+describe('the legal page drawn on the server', () => {
+  /**
+   * The page Google Play is given for deleting an account is the site's `/en/legal#delete`: the section is in the page's HTML under that id, so a
+   * browser goes to it as the page loads, before any script has run.
+   */
+  it.each(['en', 'es', 'ru'] as const)('holds how to delete the account under the id the address names, in %s', (locale) => {
+    params.locale = locale;
+    pathname.now = `/${locale}/legal`;
+    const html = renderToString(
+      <GameProvider>
+        <LegalRoute />
+      </GameProvider>,
+    );
+    const at = html.indexOf('id="delete"');
+    expect(at).toBeGreaterThan(-1);
+    const legal = messagesFor(locale).legal as Record<string, string>;
+    expect(textOf(html.slice(at))).toContain(legal.deletionTitle);
   });
 });

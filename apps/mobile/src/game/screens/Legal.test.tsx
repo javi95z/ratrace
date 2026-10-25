@@ -23,8 +23,8 @@ afterEach(() => {
 });
 
 const en = messagesFor('en').phone.legal as Record<string, string>;
-/** The sections of the phone's notice: the web's, in its order, each in the words that are true of the app. */
-const SECTIONS = ['notice', 'data', 'why', 'who', 'device', 'rights'] as const;
+/** The sections of the phone's notice: the web's, in its order, each in the words that are true of the app; deleting the account last. */
+const SECTIONS = ['notice', 'data', 'why', 'who', 'device', 'rights', 'deletion'] as const;
 
 describe('the legal notice', () => {
   it('says the privacy and legal notice in plain words: a title, the sections that are true of this app each under its own heading, in order, and the day it was updated', () => {
@@ -72,6 +72,19 @@ describe('the legal notice', () => {
     const text = document.body.textContent ?? '';
     expect(text.indexOf('Owner: Rat Race Ltd.')).toBeGreaterThan(text.indexOf(en.noticeBody));
     expect(text.indexOf('Owner: Rat Race Ltd.')).toBeLessThan(text.indexOf(en.dataTitle));
+  });
+
+  it('says how to delete the account, last, at an address of its own (`/en/legal#delete`, the page Google Play is given), naming no address but the one above', () => {
+    owner.email = 'hello@example.com';
+    renderGame(<Legal />, memoryServices());
+    const section = document.getElementById('delete');
+    expect(section?.textContent).toContain(en.deletionTitle);
+    expect(section?.textContent).toContain('In Settings, choose Delete account');
+    expect(section?.textContent).toContain('write to the contact above');
+    // What stays, and why: nothing in it says who anyone is.
+    expect(section?.textContent).toContain('Anonymous counts of what is played and technical errors are kept');
+    expect(section?.textContent).not.toContain('hello@example.com');
+    expect((document.body.textContent ?? '').split('hello@example.com')).toHaveLength(2);
   });
 
   it('leads back to the front door', () => {

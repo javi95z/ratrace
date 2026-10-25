@@ -8,10 +8,13 @@ import { LEGAL_SECTION } from '../ownWords';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 
+/** The id of the section that says how to delete the account, which the site's address names after its `#`. */
+export const DELETION = 'delete';
+
 /**
  * Privacy and the legal notice: plain words, reached only from the foot of the front page (the web's legal/page.tsx). The sections are the
  * web's, in its order, in the phone's own words on the phone (`phone.legal`; on the web the Next web's own: `LEGAL_SECTION`, game/ownWords.ts): the phone's notification address instead of the browser's, Expo and Firebase
- * carrying the notices instead of the site and its visits, and the app's storage instead of the browser's. Who answers for it (the owner and
+ * carrying the notices instead of the site and its visits, and the app's storage instead of the browser's; and last, how to delete the account (in the settings, or by writing to the contact). Who answers for it (the owner and
  * the contact, if the build names them) is the web's `legal.owner` and `legal.contact`; the contact is shown here and nowhere else.
  */
 export function Legal() {
@@ -24,6 +27,7 @@ export function Legal() {
     [t('whoTitle'), t('whoBody')],
     [t('deviceTitle'), t('deviceBody')],
     [t('rightsTitle'), t('rightsBody')],
+    [t('deletionTitle'), t('deletionBody')],
   ] as const;
   // Who answers for the game, if the build says: the owner and how to reach them, in one line.
   const owner = [LEGAL_NAME ? web('owner', { name: LEGAL_NAME }) : null, LEGAL_EMAIL ? web('contact', { email: LEGAL_EMAIL }) : null].filter(Boolean).join(' ');
@@ -37,7 +41,8 @@ export function Legal() {
         </View>
       </View>
       {sections.map(([title, body], at) => (
-        <View key={title}>
+        // The last, how to delete the account, has an address of its own (`/en/legal#delete`): the page Google Play is given for it.
+        <View key={title} nativeID={at === sections.length - 1 ? DELETION : undefined}>
           <View accessibilityRole="header" {...LEVEL_2}>
             <PixelText size={16}>{title}</PixelText>
           </View>
