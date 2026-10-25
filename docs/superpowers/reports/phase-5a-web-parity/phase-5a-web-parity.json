@@ -12,7 +12,7 @@
   {"scene":"play-cards-legendary","locale":"en","verdict":"clean","rawPercent":10.37,"beyondPercent":0.027,"loose":287,"shape":0,"shapeBlended":0,"textLines":35,"unmeasured":0,"oneSided":0,"worstPt":0.33},
   {"scene":"play-cards-three","locale":"en","verdict":"clean","rawPercent":7.1,"beyondPercent":0.01,"loose":22,"shape":0,"shapeBlended":0,"textLines":40,"unmeasured":0,"oneSided":0,"worstPt":0.33},
   {"scene":"play-cards-ru-360","locale":"ru","verdict":"clean","rawPercent":9.06,"beyondPercent":0.136,"loose":1790,"shape":0,"shapeBlended":0,"textLines":37,"unmeasured":0,"oneSided":0,"worstPt":0.33},
-  {"scene":"play-finance-r6","locale":"en","verdict":"accepted","rawPercent":4.66,"beyondPercent":0.022,"loose":297,"shape":30,"shapeBlended":0,"textLines":52,"unmeasured":8,"oneSided":0,"worstPt":0.33},
+  {"scene":"play-finance-r6","locale":"en","verdict":"accepted","rawPercent":4.68,"beyondPercent":0.022,"loose":297,"shape":30,"shapeBlended":0,"textLines":52,"unmeasured":8,"oneSided":0,"worstPt":0.33},
   {"scene":"play-outcome-r1","locale":"en","verdict":"clean","rawPercent":10.5,"beyondPercent":0.011,"loose":27,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":0,"oneSided":0,"worstPt":0.33},
   {"scene":"play-resolve-r6","locale":"en","verdict":"clean","rawPercent":6.01,"beyondPercent":0.013,"loose":77,"shape":0,"shapeBlended":0,"textLines":42,"unmeasured":2,"oneSided":0,"worstPt":0.33},
   {"scene":"play-news-r6","locale":"en","verdict":"accepted","rawPercent":4.25,"beyondPercent":0.022,"loose":297,"shape":30,"shapeBlended":0,"textLines":41,"unmeasured":3,"oneSided":0,"worstPt":0.33},
