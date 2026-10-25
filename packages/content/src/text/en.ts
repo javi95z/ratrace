@@ -480,7 +480,7 @@ export const en: ContentText = {
     ex_convict: { name: 'Ex-convict', how: 'Serve time in prison and walk out.' },
     more_cars_than_spaces: { name: 'More cars than spaces', how: 'Own a parking space, and more cars than parking spaces.' },
     bought_the_top: { name: 'Bought the top', how: 'Hold an investment worth half or less of what you paid for it.' },
-    celeb_mosk: { name: 'Business by post', how: 'Take Elon Mosk\'s offer for your business.' },
+    celeb_mosk: { name: 'Business by post', how: 'Sell your business to Elon Mosk.' },
     celeb_grump: { name: 'Tower resident', how: 'Buy a flat in Grump Tower.' },
     celeb_poutine: { name: 'The oligarch\'s yacht', how: 'Buy an oligarch\'s yacht on the cheap.' },
     celeb_bufe: { name: 'Lunch with Bufé', how: 'Ask Warren Bufé something over lunch.' },

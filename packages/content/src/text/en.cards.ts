@@ -311,11 +311,11 @@ export const cards: Record<string, CardText> = {
     'Buy a {item:car_toyota_corolla} outright',
     'Finance a {item:car_tesla_model_3}',
   ]),
-  life_club_contacts: c('At the bar of the club', 'Someone you nod to every week leans over with an opportunity.', [
+  life_club_contacts: c('At the bar of the club', 'A member you nod to every week is putting money into a friend\'s restaurant and is looking for one more partner.', [
     'Change the subject',
-    ['Ask if they are hiring', 'They introduce you to the one who hires. You leave with a raise.', 'Kind words and nothing more.'],
-    ['Go into their deal', 'It works. Your share arrives every year.', 'You never see that money again.'],
-    ['Ask to meet the one who decides', 'One dinner later, they offer you the job above yours.', 'They listen with interest. They will call.'],
+    ['Put money into the restaurant', 'It works. Your share arrives every year.', 'It closes within the year. You never see that money again.'],
+    'Ask them to introduce you around',
+    ['Ask to meet the one who decides at your company', 'One dinner later, they offer you the job above yours.', 'They listen with interest. They will call.'],
   ]),
   life_bottle_service: c('Bottle service', 'Someone suggests a table. The waiter is already holding the menu.', [
     'Go home early',
@@ -509,6 +509,7 @@ export const cards: Record<string, CardText> = {
     'Wait it out',
     ['Walk out with the others', 'The raise is won.', 'The strike fails and the days are docked.'],
     'Cut back at home instead',
+    ['Ask on your own for a cost-of-living raise', 'You get it, quietly.', 'They tell you to wait and see how the strike ends.'],
   ]),
   crisis_debt_spreads: c('The spread', 'Lenders want twice as much to hold your government\'s debt. Every loan priced off it is about to follow.', [
     'Wait and see',

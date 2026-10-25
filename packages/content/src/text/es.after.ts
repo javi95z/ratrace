@@ -23,7 +23,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_teaching: ['La clase se queda con un desconocido.', 'En primavera quien está en la pizarra eres tú.'],
   career_creator: ['No subes nada más. El vídeo se olvida en una semana.', 'Tu segundo vídeo tiene cuarenta visitas. Treinta son de tu madre.'],
   career_out_of_town: ['Te quedas. El puesto se lo lleva alguien con coche.', 'Cuarenta minutos de ida y otros tantos de vuelta, y una nómina que lo compensa.', null],
-  life_club_contacts: ['Habláis del tiempo.', null, null, null],
+  life_club_contacts: ['Habláis del tiempo.', null, 'Sales con tres tarjetas y una cena pendiente.', null],
   career_headhunter: ['Cuelgas con educación. El café se queda sin tomar.', null, 'Nueva York. Más sueldo, más ruido y un alquiler que asusta.'],
   edu_masters: ['Las tardes siguen siendo tuyas.', 'Dos años de tardes después, hay un título en la pared.', 'El título llega antes que la última cuota.'],
   edu_finance_course: ['Los bonos seguirán siendo un misterio un tiempo más.', 'Doce tardes después, las noticias económicas empiezan a tener sentido.'],
@@ -185,7 +185,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'Pagas la factura y bajas la calefacción dos grados.',
     'Jersey en casa, el coche aparcado y nada de cenas fuera. Media factura, menos vida.',
   ],
-  crisis_energy_wages: ['Esperas a ver quién cede. No eres tú.', null, 'Menos calefacción, menos cenas fuera. Sobra algo a fin de mes.'],
+  crisis_energy_wages: ['Esperas a ver quién cede. No eres tú.', null, 'Menos calefacción, menos cenas fuera. Sobra algo a fin de mes, y se nota.', null],
   crisis_debt_spreads: [
     'Esperas. La prima sigue subiendo en el telediario.',
     'Tu hipoteca queda fija antes de que suba todo.',

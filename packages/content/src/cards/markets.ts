@@ -171,7 +171,9 @@ export const worldCards: CardDef[] = [
   card('crisis_energy_wages', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 2 } } }, [
     {},
     { when: { employed: true }, effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { salaryModPct: 6 } }, { weight: 40, effects: { salaryBoostPct: -10 } }] },
-    { effects: { lifestyleFloor: 0, cashSalaryPct: 3 } },
+    { effects: { cashSalaryPct: 3, status: -1 } },
+    // A raise for what living costs, asked alone: negotiation helps.
+    { when: { employed: true, minSkills: { negotiation: 1 } }, outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 50, effects: {} }] },
   ]),
   card('crisis_debt_spreads', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'debt', year: 1 } } }, [
     {},

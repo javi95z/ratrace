@@ -572,7 +572,7 @@ test('the scenes of the end of a life are its end screen, Play\'s last stage, wi
   expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
   cleanup();
   render(<SceneView name="end-bankrupt" />);
-  expect(await screen.findByText('Bankrupt once', {}, WAIT)).toBeTruthy();
+  expect(await screen.findByText('Bankrupt 3 times', {}, WAIT)).toBeTruthy();
   expect(screen.getByText('You never left the rat race.')).toBeTruthy();
   cleanup();
   render(<SceneView name="end-ru" />);

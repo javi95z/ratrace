@@ -762,7 +762,7 @@ describe('the scenes of the end of a life', () => {
   it('end-bankrupt is the nurse of screen-seed-5, played by the chaser to the end: bankrupt with her fourth round, and never out of the rat race', async () => {
     const store = await sceneStore('end-bankrupt');
     const state = await opened(store);
-    expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'end', bankruptcies: 1 });
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'end', bankruptcies: 3 });
     expect(state.view).toMatchObject({ finished: true });
     expect(state.view?.player.escapedAtRound).toBeNull();
     expect(state.story.find((m) => m.kind === 'bankrupt')?.round).toBe(4);

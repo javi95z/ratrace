@@ -311,11 +311,11 @@ export const cards: Record<string, CardText> = {
     'Comprar un {item:car_toyota_corolla} al contado',
     'Financiar un {item:car_tesla_model_3}',
   ]),
-  life_club_contacts: c('En la barra del club', 'Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad.', [
+  life_club_contacts: c('En la barra del club', 'Un socio al que saludas cada semana invierte en el restaurante de un amigo y busca a alguien más que entre.', [
     'Cambiar de tema',
-    ['Preguntar si buscan gente', 'Te presenta a quien contrata. Sales con una subida.', 'Buenas palabras y nada más.'],
-    ['Entrar en su negocio', 'Funciona. Tu parte llega cada año.', 'No vuelves a ver ese dinero.'],
-    ['Pedir que te presente a quien decide', 'Una cena después, te ofrecen el puesto de encima del tuyo.', 'Te escuchan con interés. Ya te llamarán.'],
+    ['Poner dinero en el restaurante', 'Funciona. Tu parte llega cada año.', 'Cierra al año. No vuelves a ver ese dinero.'],
+    'Pedirle que te presente a gente',
+    ['Pedirle que te presente a quien decide en tu empresa', 'Una cena después, te ofrecen el puesto de encima del tuyo.', 'Te escuchan con interés. Ya te llamarán.'],
   ]),
   life_bottle_service: c('Mesa con botella', 'Alguien propone coger mesa. El camarero ya tiene la carta en la mano.', [
     'Irte pronto a casa',
@@ -509,6 +509,7 @@ export const cards: Record<string, CardText> = {
     'Esperar',
     ['Parar con los demás', 'Se gana la subida.', 'La huelga fracasa y te descuentan los días.'],
     'Recortar gastos en casa',
+    ['Pedir por tu cuenta una subida por el coste de la vida', 'Te la dan, sin hacer ruido.', 'Te dicen que esperes a ver cómo acaba la huelga.'],
   ]),
   crisis_debt_spreads: c('La prima de riesgo', 'Los prestamistas piden el doble por la deuda de tu gobierno. Todo préstamo que se calcula sobre ella va detrás.', [
     'Esperar a ver',

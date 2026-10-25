@@ -69,7 +69,8 @@ export function drawHand(state: GameState, content: Content, rng: Rng): string[]
 
   const eventId = at.world.eventCardId;
   const event = eventId === null ? undefined : content.cards.find((card) => card.id === eventId);
-  if (event && conditionHolds(event.when, p, at)) hand.push(event.id);
+  // As a card of one's own, a world card is dealt only where it leaves the player a choice to make.
+  if (event && conditionHolds(event.when, p, at) && hasChoice(event, p, at)) hand.push(event.id);
 
   const pool = openCards(state, content, at);
   for (let i = 0; i < content.life.cardsPerRound && pool.length > 0; i++) {

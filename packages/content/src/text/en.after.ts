@@ -23,7 +23,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_teaching: ['The class gets a stranger instead.', 'By spring you are the one at the blackboard.'],
   career_creator: ['You post nothing else. The video is forgotten in a week.', 'Your second video has forty views. Thirty are your mother.'],
   career_out_of_town: ['You stay. Someone with a car takes the job.', 'Forty minutes each way, and a payslip that makes up for it.', null],
-  life_club_contacts: ['You talk about the weather.', null, null, null],
+  life_club_contacts: ['You talk about the weather.', null, 'You leave with three cards and a dinner to arrange.', null],
   career_headhunter: ['You hang up politely. The coffee goes undrunk.', null, 'New York. More pay, more noise, and a rent that frightens.'],
   edu_masters: ['Your evenings stay your own.', 'Two years of evenings later, there is a degree on the wall.', 'The degree arrives before the last instalment does.'],
   edu_finance_course: ['Bonds stay a mystery a while longer.', 'Twelve evenings later, the financial news starts to make sense.'],
@@ -193,7 +193,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'You pay the bill and turn the heating down two degrees.',
     'A jumper indoors, the car left at home, no dinners out. Half the bill, less of a life.',
   ],
-  crisis_energy_wages: ['You wait to see who blinks. It is not you.', null, 'Less heating, fewer dinners out. A little is left at the end of the month.'],
+  crisis_energy_wages: ['You wait to see who blinks. It is not you.', null, 'Less heating, fewer dinners out. A little is left at the end of the month, and it shows.', null],
   crisis_debt_spreads: [
     'You wait. The spread keeps rising on the evening news.',
     'Your mortgage is fixed before everything goes up.',

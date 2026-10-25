@@ -95,10 +95,11 @@ export const lifestyleCards: CardDef[] = [
   // Where a member is known, the people who hire and the people with a deal to offer are at the next table.
   card('life_club_contacts', 'lifestyle', { cooldown: 5, when: { ownsLadder: 'membership', minRound: 1 } }, [
     {},
-    { when: { employed: true }, effects: { skills: { network: 1 } }, outcomes: [{ weight: 60, effects: { salaryModPct: 6 } }, { weight: 40, effects: {} }] },
+    // A stake in a friend's restaurant: a share of it every year, or nothing.
     { effects: { cash: usd(-5_000) }, outcomes: [{ weight: 45, effects: { recurring: [yearly('club_deal', 'passive', 1_200, null)] } }, { weight: 55, effects: {} }] },
-    // Someone well known there can ask to meet the one who decides.
-    { when: { employed: true, minSkills: { network: 2 } }, outcomes: [{ weight: 50, effects: { job: { levelDelta: 1 } } }, { weight: 50, effects: { salaryModPct: 2 } }] },
+    // Introductions: contacts for anyone; for someone already well connected, now and then the one who decides.
+    { effects: { skills: { network: 1 } } },
+    { when: { employed: true, minSkills: { network: 2 } }, effects: { skills: { network: 1 } }, outcomes: [{ weight: 50, effects: { job: { levelDelta: 1 } } }, { weight: 50, effects: {} }] },
   ]),
   card('life_bottle_service', 'lifestyle', { cooldown: 3 }, [
     {},

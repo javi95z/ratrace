@@ -20,7 +20,8 @@ export const celebCards: CardDef[] = [
   // He offers three times what the business is worth, in a reply to a post; half the time he takes it back in another.
   card('celeb_mosk', 'business', { ...RARE, when: { hasBusiness: true, minRound: 2 } }, [
     {},
-    { effects: { setFlags: [met('mosk')] }, outcomes: [{ weight: 50, effects: { sellBusiness: { pricePct: 300 } } }, { weight: 50, effects: { cash: usd(-4_000) } }] },
+    // The badge is for the sale, not for the handshake.
+    { outcomes: [{ weight: 50, effects: { sellBusiness: { pricePct: 300 }, setFlags: [met('mosk')] } }, { weight: 50, effects: { cash: usd(-4_000) } }] },
   ]),
   // A flat at thirty percent over the one next door, for the name on the building, which may not stay.
   card('celeb_grump', 'housing', { ...RARE, when: { minRound: 2, minNetWorth: usd(250_000) } }, [
