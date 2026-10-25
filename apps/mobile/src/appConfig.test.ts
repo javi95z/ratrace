@@ -13,9 +13,14 @@ const config = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 
 };
 
 test('declares on Android no permission to read what the app never reads: the storage and the photos a player picked are blocked, writing kept', () => {
-  expect(config.expo.android.blockedPermissions).toEqual(['android.permission.READ_EXTERNAL_STORAGE', 'android.permission.READ_MEDIA_VISUAL_USER_SELECTED']);
+  expect(config.expo.android.blockedPermissions?.slice(0, 2)).toEqual(['android.permission.READ_EXTERNAL_STORAGE', 'android.permission.READ_MEDIA_VISUAL_USER_SELECTED']);
   expect(config.expo.android.blockedPermissions).not.toContain('android.permission.WRITE_EXTERNAL_STORAGE');
   expect(config.expo.android.permissions ?? []).not.toContain('android.permission.READ_EXTERNAL_STORAGE');
+});
+
+test('declares on Android nothing else it never uses: no drawing over other apps (the template\'s, for development), no reading the Wi-Fi (online/page.ts asks only whether the phone is online)', () => {
+  expect(config.expo.android.blockedPermissions?.slice(2)).toEqual(['android.permission.SYSTEM_ALERT_WINDOW', 'android.permission.ACCESS_WIFI_STATE']);
+  expect(readFileSync(new URL('./online/page.ts', import.meta.url), 'utf8')).not.toMatch(/getIpAddressAsync|getMacAddressAsync/);
 });
 
 test('asks the photos only to add to them: no description of reading them, no place of a picture, no kind of media to read', () => {

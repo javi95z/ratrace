@@ -38,6 +38,7 @@
     "expo-sharing": "~58.0.19",
     "expo-sqlite": "~58.0.13",
     "expo-status-bar": "~58.0.3",
+    "expo-system-ui": "~58.0.6",
     "expo-web-browser": "~58.0.6",
     "idb": "^8.0.4",
     "react": "19.3.0",
@@ -75,6 +76,7 @@
     "web:build": "tsx scripts/webBuild.ts dist",
     "site:pieces": "tsx scripts/sitePieces.ts",
     "site:worker": "tsx scripts/serviceWorker.ts",
+    "icons": "tsx scripts/appIcons.ts",
     "typecheck": "tsc --noEmit"
   },
   "private": true
