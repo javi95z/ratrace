@@ -2,7 +2,7 @@
 import { messagesFor } from '@ratrace/i18n';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { params, pathname } from '../testing/fakes';
+import { device, params, pathname } from '../testing/fakes';
 
 // The web's own sprites (the setup of the phone's tests stands a fake in for them), each file at its address as the export serves it.
 vi.unmock('../ui/Sprite');
@@ -18,6 +18,7 @@ vi.mock('../sprites/sources', () => ({
 }));
 
 const { default: HomeRoute } = await import('../app/[locale]/index');
+const { default: NotFoundRoute } = await import('../app/+not-found');
 const { forgetTheGame, GameProvider } = await import('./context');
 const { phoneTrack } = await import('../online/track');
 const { forgetThePhone } = await import('../online/index.web');
@@ -126,5 +127,26 @@ describe('the front door drawn on the server of a build with a project', () => {
     expect(read).toContain((messagesFor('es').meta as { description: string }).description);
     await new Promise((settled) => setTimeout(settled, 50));
     expect(asked).not.toHaveBeenCalled();
+  });
+});
+
+describe('the page of nothing drawn on the server', () => {
+  /*
+   * The site's one `404.html`, for every language: drawn in English (the `lang` its document says), whatever language the build's machine speaks, so
+   * the browser, which takes it over in English before it speaks the address's language, finds what it draws (`useLanguage.web.ts`).
+   */
+  it('is drawn in English whatever the machine speaks, its line and its ways back', () => {
+    device.languages = ['ru'];
+    delete params.locale;
+    pathname.now = '/+not-found';
+    const read = textOf(
+      renderToString(
+        <GameProvider>
+          <NotFoundRoute />
+        </GameProvider>,
+      ),
+    );
+    const play = messagesFor('en').play as unknown as Record<string, string>;
+    for (const words of [play.faultTitle, play.newLife, play.home]) expect(read).toContain(words);
   });
 });

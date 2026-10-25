@@ -1,11 +1,11 @@
-import { isLocale, type Locale } from '@ratrace/i18n/locales';
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@ratrace/i18n/locales';
 import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { closeAllSheets, sheetsGone } from '../ui/back';
 import { languageReady, loadLanguageWords } from './languageWords';
 import { deviceLanguages, localeOf, type GameLanguage, type LanguageKeep } from './locale';
 import { openDocument } from './openDocument';
-import { hrefOf, pageAt, useLocaleParam } from './pages';
+import { hrefOf, localeAt, pageAt, useLocaleParam } from './pages';
 
 /**
  * The web export's twin of `useLanguage.ts` (Metro picks it for the web): a page's language is its address's (`/es/play` speaks Spanish), as the Next
@@ -30,8 +30,28 @@ import { hrefOf, pageAt, useLocaleParam } from './pages';
 export function useLanguage(keep: LanguageKeep): GameLanguage {
   const param = useLocaleParam();
   const path = usePathname();
-  const [chosen, setChosen] = useState<Locale>(() => localeOf(keep.read(), deviceLanguages()));
-  const locale = isLocale(param) ? param : chosen;
+  // Drawn with no browser (the export's HTML), a page with no language in its address is drawn in English, whatever the build's machine speaks.
+  const [chosen, setChosen] = useState<Locale>(() => (typeof window === 'undefined' ? DEFAULT_LOCALE : localeOf(keep.read(), deviceLanguages())));
+  // The page of nothing (`app/+not-found.tsx`) names no language in its route, but its address may (`/es/nowhere`): it speaks the address's. The site
+  // has one HTML of it for every language (its `404.html`), drawn in English: the browser takes it over in English, as it was drawn, and then speaks
+  // the address's language, once its words are in (the page in front stays as it is meanwhile).
+  const addressed = isLocale(param) ? null : localeAt(path);
+  const [heard, setHeard] = useState<Locale | null>(null);
+  useEffect(() => {
+    if (addressed === null || heard === addressed) return;
+    let gone = false;
+    onceSpoken(
+      addressed,
+      () => {
+        if (!gone) setHeard(addressed);
+      },
+      () => undefined,
+    );
+    return () => {
+      gone = true;
+    };
+  }, [addressed, heard]);
+  const locale = isLocale(param) ? param : addressed !== null ? (heard === addressed ? addressed : DEFAULT_LOCALE) : chosen;
   // The address as it is now, for a change asked for later.
   const now = useRef({ path, locale });
   now.current = { path, locale };

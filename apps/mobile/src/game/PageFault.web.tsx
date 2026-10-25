@@ -42,8 +42,8 @@ function faultWordsIn(locale: Locale): FaultWords | null {
   }
 }
 
-/** A way out of the page, as the Next web's links: a full-width raised line. */
-function WayOut({ label, primary, onPress }: { label: string; primary?: boolean; onPress(): void }) {
+/** A way out of the page, as the Next web's links: a full-width raised line (the page of nothing's too, `screens/NotFound.web.tsx`). */
+export function WayOut({ label, primary, onPress }: { label: string; primary?: boolean; onPress(): void }) {
   return (
     <Raised
       role={primary ? 'button' : 'link'}

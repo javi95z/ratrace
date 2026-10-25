@@ -316,7 +316,7 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
 /**
  * The files of the site beside its pages, which the build writes after the export (`scripts/webBuild.ts`): the icons, the favicon, the share image,
  * the sitemap, robots and the manifest (`sitePieces.ts`), the worker and its offline page (`serviceWorker.ts`), and the page of nothing the host
- * answers an address it has nothing at with (`404.html`, the router's, `settlePages`).
+ * answers an address it has nothing at with (`404.html`, the game's `+not-found`, `settlePages`).
  */
 export const SITE_FILES: readonly string[] = [
   'favicon.ico',
@@ -333,12 +333,22 @@ export const SITE_FILES: readonly string[] = [
   '404.html',
 ];
 
+/**
+ * Whether the site's `404.html` is the game's page of nothing (`app/+not-found.tsx`, `screens/NotFound.web.tsx`) as the export draws it: its line, the
+ * error page's title in English, the page's one heading, and no link to the router's sitemap (the router's own page, `Unmatched`, which the export
+ * writes where the app has no `+not-found`, and draws nothing of in its HTML).
+ */
+function isGamesNothing(html: string): boolean {
+  const heading = /<h1\b[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1].replace(/<[^>]+>/g, '');
+  return heading === MESSAGES[DEFAULT_LOCALE].play.faultTitle && !html.includes('_sitemap');
+}
+
 /** The HTML the site serves beside its pages: the bare address (answered by the middleware before it), the offline page and the page of nothing. */
 const OTHER_HTML = ['index.html', 'offline.html', '404.html'];
 
 /**
  * What is wrong with the site as it is deployed (nothing when it is fine), beyond its export (`judgeWebExport`, `judgeHeads`): each of `SITE_FILES`
- * is in it; it serves no HTML but its pages (`pages`, `pageFiles`) and `OTHER_HTML` (a template of the router's carries the English head and is in
+ * is in it; its `404.html` is the game's page of nothing; it serves no HTML but its pages (`pages`, `pageFiles`) and `OTHER_HTML` (a template of the router's carries the English head and is in
  * no sitemap); and no source map, nor a script that names one (the maps are the size check's, made with the export and taken out of it).
  */
 export function judgeSiteFiles(files: readonly ExportFile[], pages: readonly string[]): string[] {
@@ -346,6 +356,10 @@ export function judgeSiteFiles(files: readonly ExportFile[], pages: readonly str
   const paths = new Set(files.map((file) => file.path));
   const absent = SITE_FILES.filter((path) => !paths.has(path));
   if (absent.length > 0) problems.push(`the site lacks ${absent.join(', ')}`);
+  const nothing = files.find((file) => file.path === '404.html');
+  if (nothing && !isGamesNothing(nothing.bytes.toString('utf8'))) {
+    problems.push('the site\'s 404.html is not the game\'s page of nothing (its line as the page\'s heading, in English, and no sitemap)');
+  }
   const html = new Set([...pages, ...OTHER_HTML]);
   const strays = files.filter((file) => file.path.endsWith('.html') && !html.has(file.path)).map((file) => file.path);
   if (strays.length > 0) problems.push(`the site serves ${strays.length} HTML files that are no page of it: ${strays.join(', ')}`);

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isLocale, LOCALES } from '@ratrace/i18n/locales';
+import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '@ratrace/i18n/locales';
 import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';
@@ -32,6 +32,12 @@ export function pageAt(path: string): Page | null {
   const [, locale = '', page = '', ...more] = path.split('/');
   if (!isLocale(locale) || more.length > 0) return null;
   return PAGES.find((one) => one === page) ?? null;
+}
+
+/** The language the first part of an address names (`/es/nowhere` is `es`, an address the game has no page at among them), or null. */
+export function localeAt(path: string): Locale | null {
+  const [, locale = ''] = path.split('/');
+  return isLocale(locale) ? locale : null;
 }
 
 /** The languages the pages are made in, for the web export (expo-router's `generateStaticParams`): each page once in each, as the Next web's. */

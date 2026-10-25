@@ -156,13 +156,13 @@ function dropEmptyFolders(dir: string): void {
   }
 }
 
-/** The router's page of nothing in the export, which the site serves as its `404.html` (Vercel's page for an address it has nothing at). */
+/** The game's page of nothing in the export (`app/+not-found.tsx`), which the site serves as its `404.html` (Vercel's page for an address it has nothing at). */
 const NOT_FOUND = '+not-found.html';
 
 /**
  * Leaves in the export at `out` only the HTML the site serves: every page of the game in every language (`en/index.html`, `es/play.html`), the bare
  * address (`index.html`, which the site's middleware answers before it, and draws the language's front door where it does not) and the offline page;
- * the router's page of nothing becomes the site's `404.html`. The rest is dropped: the router's templates (`[locale].html`, `[locale]/*.html`,
+ * the game's page of nothing becomes the site's `404.html`. The rest is dropped: the router's templates (`[locale].html`, `[locale]/*.html`,
  * `_sitemap.html`), which carry the English head and no page's words, and the routes that are development's or the phone's (`/scene`, `/kit`, `/dev`,
  * `/perf`, `/auth`), which a player never opens on the web (opened, they are the page of nothing: the browser's router draws them all the same). What
  * it dropped, by path from `out`.

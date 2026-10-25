@@ -14,6 +14,7 @@ import RecordsRoute from '../app/[locale]/records';
 import RoomRoute from '../app/[locale]/room';
 import AuthRoute from '../app/auth';
 import IndexRoute from '../app/index';
+import NotFoundRoute from '../app/+not-found';
 import { routerNow } from '../testing/fakes';
 import { GameProvider } from './context';
 import { memoryServices, params, renderGame, router } from '../testing/render';
@@ -36,10 +37,12 @@ test('the routes are the web\'s pages under each language, and the phone\'s own 
   // Next web's `[locale]`; the bare address, which leads to the front door of a language; the phone's own links mapped to them (`+native-intent`).
   // And the kit, the parts and the scenes, for development only; and the timing probe's, which puts a long life on the phone in a build made with
   // EXPO_PUBLIC_PERF=1 and goes home in any other. And the address Google sends the player back to (`auth`), should Android hand it to the router.
-  // And the document of every page of the web export (`+html`, drawn on the build's machine only).
+  // And the document of every page of the web export (`+html`, drawn on the build's machine only), and the page of nothing (`+not-found`): an address
+  // the game has no page at, the router's own page on the phone, the game's on the web (`screens/NotFound.web.tsx`, the site's `404.html`).
   expect(routes).toEqual([
     '+html',
     '+native-intent',
+    '+not-found',
     '[locale]/challenge',
     '[locale]/collection',
     '[locale]/index',
@@ -64,6 +67,11 @@ test('a page of the game is drawn in one of its languages only: any other first 
   const { container } = renderGame(<RecordsRoute />, memoryServices());
   expect(container.querySelector('[data-unmatched]')).not.toBeNull();
   expect(screen.queryByRole('heading', { name: 'History' })).toBeNull();
+});
+
+test('on the phone, an address the game has no page at is the router\'s own page of nothing, as it was before the game had one', () => {
+  const { container } = renderGame(<NotFoundRoute />, memoryServices());
+  expect(container.querySelector('[data-unmatched]')).not.toBeNull();
 });
 
 test('the bare address leads to the front door of the phone\'s language, the query and hash it carries with it', () => {

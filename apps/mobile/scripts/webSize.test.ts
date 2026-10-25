@@ -375,7 +375,9 @@ describe('the head of each page', () => {
 describe('the site as it is deployed', () => {
   const file = (path: string) => ({ path, bytes: Buffer.from(path) });
   const pages = pageFiles(['', 'play'], ['en', 'es']);
-  const site = [...SITE_FILES, ...pages, 'index.html', '_expo/static/js/web/entry-abc.js'].map(file);
+  /** The game's page of nothing, as the export draws it: its line the page's one heading, in English, and its ways back. */
+  const nothing = { path: '404.html', bytes: Buffer.from(`<html lang="en"><body><div id="root"><main><h1 role="heading"><span>${MESSAGES.en.play.faultTitle}</span></h1><a>${MESSAGES.en.play.newLife}</a><a>${MESSAGES.en.play.home}</a></main></div></body></html>`) };
+  const site = [...[...SITE_FILES, ...pages, 'index.html', '_expo/static/js/web/entry-abc.js'].filter((path) => path !== '404.html').map(file), nothing];
 
   it('has every piece of the site\'s beside its pages: the icons, the share image, the sitemap, robots, the manifest, the worker, the offline page and the page of nothing', () => {
     expect([...SITE_FILES].sort()).toEqual(
@@ -389,6 +391,15 @@ describe('the site as it is deployed', () => {
   it('serves no HTML but its pages, the bare address, the offline page and the page of nothing: a template left in is reported', () => {
     const problems = judgeSiteFiles([...site, file('[locale].html'), file('[locale]/play.html'), file('_sitemap.html')], pages);
     expect(problems).toEqual(['the site serves 3 HTML files that are no page of it: [locale].html, [locale]/play.html, _sitemap.html']);
+  });
+
+  it('answers an address it has no page at with the game\'s page of nothing, never the router\'s own (its sitemap link) nor an empty one', () => {
+    const others = site.filter((one) => one.path !== '404.html');
+    const routers = { path: '404.html', bytes: Buffer.from('<html lang="en"><body><div id="root"><h1>Unmatched Route</h1><a href="/_sitemap">Sitemap</a></div></body></html>') };
+    const empty = { path: '404.html', bytes: Buffer.from('<html lang="en"><body><div id="root"><!--$--><!--/$--></div></body></html>') };
+    for (const answer of [routers, empty]) {
+      expect(judgeSiteFiles([...others, answer], pages)).toEqual(['the site\'s 404.html is not the game\'s page of nothing (its line as the page\'s heading, in English, and no sitemap)']);
+    }
   });
 
   it('carries no source map, nor a script that names one: they are the check\'s, not the players\'', () => {
