@@ -101,10 +101,10 @@ export interface AccountSaves {
   /** Ends the offered life in the account instead. */
   declineOffer(): Promise<void>;
   /**
-   * The account is gone (deleted): what the device noted to tell it later (the lives given up, those the server would not take) is nobody's to
-   * tell now, and the next account is told none of it. Absent, there is nothing noted.
+   * The account is gone (deleted): a pass with it under way stops, and is waited for, so nothing it read reaches the device or the next account;
+   * and what the device noted to tell it later (the lives given up, those the server would not take) is told to none. Absent, there is nothing.
    */
-  forget?(): void;
+  forget?(): Promise<void>;
 }
 
 /** One line of a ranking: the best ranked life of one player. */

@@ -494,6 +494,44 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(d.notes[0]).toEqual([]);
   });
 
+  it('forgets a deleted account in the middle of a pass: nothing it read reaches the device, and the next account, on the same client, is sent nothing', async () => {
+    const world: World = { owners: new Map() };
+    const gone = fakeCloud(world);
+    const next = fakeCloud(world);
+    // The account to be deleted holds a finished life and one in progress, played on another device.
+    const other = device(gone.cloud, 'web');
+    await play(await other.sessions.start('nurse'), content.rounds);
+    await play(await other.sessions.start('engineer'), 2);
+    await other.mirror.sync();
+    expect(gone.state.runs).toHaveLength(1);
+    expect(gone.state.games.some((game) => game.status === 'playing')).toBe(true);
+    gone.state.asked.length = 0;
+    // One client, as on a device: whoever it is signed in as. The mirror is handed it while someone is signed in.
+    let signedIn: SyncCloud | null = gone.cloud;
+    const client = new Proxy({} as SyncCloud, { get: (_, key) => (signedIn as unknown as Record<string | symbol, unknown>)[key] });
+    let account: SyncCloud | null = client;
+    const store = new MemoryStore();
+    const mirror = new MirroredStore(store, () => account, { content, lives, versions: VERSIONS, schedule: () => {}, newId: () => 'never' });
+    // The pass has read the finished lives, and waits on the lives in progress, when the account is deleted.
+    const release = gone.hold('games');
+    const meeting = mirror.sync();
+    await vi.waitFor(() => expect(gone.state.asked).toContain('read games'));
+    account = null;
+    const forgotten = mirror.forget();
+    // The client is the next guest's by the time the old answers come.
+    signedIn = next.cloud;
+    release();
+    await forgotten;
+    await meeting;
+    expect(await store.loadGame()).toBeNull();
+    expect(await store.listRuns()).toEqual([]);
+    account = client;
+    await mirror.accountChanged();
+    expect(next.state.asked.filter((line) => !line.startsWith('read'))).toEqual([]);
+    expect(next.state.games).toEqual([]);
+    expect(mirror.status()).toBe('saved');
+  });
+
   it('forgets what it noted to tell an account that is gone: the next account is told nothing of it', async () => {
     const { cloud, state } = fakeCloud();
     const d = device(cloud);
@@ -504,7 +542,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     await d.mirror.sync();
     expect(d.notes[0]).toEqual(['a-1']);
     // The account is deleted: its lives are nobody's to give up now, here or on the next page.
-    d.mirror.forget();
+    await d.mirror.forget();
     expect(d.notes[0]).toEqual([]);
     state.down = false;
     await d.mirror.accountChanged();
@@ -736,7 +774,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(state.runs.map((run) => run.id)).toEqual([sooner]);
     expect(next.status()).toBe('saved');
     // An account deleted takes its refusals with it: they were its lives.
-    next.forget();
+    await next.forget();
     expect(kept).toEqual([]);
   });
 

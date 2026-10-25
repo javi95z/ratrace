@@ -197,7 +197,8 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     async deleteAccount() {
       // Said in as many words, so that nothing sent by mistake removes anyone; gone only when the function says so.
       try {
-        const { data, error } = await client.functions.invoke('delete-account', { body: { confirm: true } });
+        // Given up after a while, as a failure; asked again it is answered `deleted` if the account went meanwhile.
+        const { data, error } = await client.functions.invoke('delete-account', { body: { confirm: true }, timeout: PATIENCE });
         return !error && (data as { deleted?: unknown } | null)?.deleted === true;
       } catch {
         return false;

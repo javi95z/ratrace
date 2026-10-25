@@ -153,6 +153,9 @@ const standing = (upload: GameUpload): string => `${upload.id} ${upload.stateHas
 /** How a ranked life is written among the lives given up: it is the server that plays it that is told, not the table of games. */
 const RANKED = 'ranked:';
 
+/** Thrown in a pass whose account was forgotten (deleted) under it: the pass ends there, and nothing it read is written anywhere. */
+class Forgotten extends Error {}
+
 /**
  * The player's store, with the account as its mirror.
  *
@@ -187,6 +190,13 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   private readonly lifeReads = new Set<() => void>();
 
   private running: Promise<void> | null = null;
+  /** Counts the accounts forgotten (`forget`): a pass begun under an earlier count stops at its next call. */
+  private epoch = 0;
+  /**
+   * The device as the pass under way reaches it (`fenced`): every call made only while the account the pass began for stands, and nothing it answers
+   * used after. The device's own calls, the game's, are `device`.
+   */
+  private through: PlayerStore;
   /** What has been asked for and not begun: nothing, sending what the device has, or reading the account first. */
   private wanted: 'nothing' | 'send' | 'meet' = 'nothing';
   private failures = 0;
@@ -197,6 +207,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     private readonly cloud: () => SyncCloud | null,
     private readonly options: Options,
   ) {
+    this.through = device;
     this.abandoned = new Set(options.remember?.read() ?? []);
     this.refused = new Set(options.keepRefused?.read() ?? []);
   }
@@ -334,15 +345,37 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    * The account is gone (deleted), and the device with nothing of it: the lives it noted to give up there, and those the server would not take,
    * were that account's, and are told to no other. What it read of the account goes too.
    */
-  readonly forget = (): void => {
+  readonly forget = async (): Promise<void> => {
+    // A pass under way stops at its next call (`fenced`): what it read of the account gone is written neither to the device nor, through the
+    // same client signed in as someone else by then, to the next account. It is waited for, so the device is cleared after it, never under it.
+    this.epoch += 1;
+    this.wanted = 'nothing';
+    await this.running?.catch(() => undefined);
     this.abandoned.clear();
     this.options.remember?.write([]);
     this.refused.clear();
     this.options.keepRefused?.write([]);
     this.known = null;
+    this.sent = null;
     this.lifeKnown = false;
     this.setOffer(null);
   };
+
+  /** `target` as a pass begun at `epoch` reaches it: each call refused once the account is forgotten, before it is made and once it has answered. */
+  private fenced<T extends object>(target: T, epoch: number): T {
+    return new Proxy(target, {
+      get: (object, key) => {
+        const value: unknown = Reflect.get(object, key);
+        if (typeof value !== 'function') return value;
+        return async (...args: unknown[]) => {
+          if (this.epoch !== epoch) throw new Forgotten();
+          const answer: unknown = await (value as (...given: unknown[]) => unknown).apply(object, args);
+          if (this.epoch !== epoch) throw new Forgotten();
+          return answer;
+        };
+      },
+    });
+  }
 
   /** Notes a life the server would not finish, here and where the device keeps such notes: the latest few hundred. */
   private refuse(runId: string): void {
@@ -382,11 +415,14 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   }
 
   private async pass(meet: boolean): Promise<void> {
-    const cloud = this.cloud();
-    if (cloud === null) {
+    const signedIn = this.cloud();
+    if (signedIn === null) {
       this.set('off');
       return;
     }
+    const epoch = this.epoch;
+    const cloud = this.fenced(signedIn, epoch);
+    this.through = this.fenced(this.device, epoch);
     if (this.state === 'off') this.set('sending');
     try {
       await this.giveUpThere(cloud);
@@ -402,7 +438,9 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       this.failures = 0;
       this.set(outcome === 'more' ? 'sending' : 'saved');
       if (outcome === 'more') this.later(() => this.run('send'), NEXT_FEW);
-    } catch {
+    } catch (error) {
+      // The account was forgotten under the pass: nothing more is done for it, and nothing is tried again.
+      if (error instanceof Forgotten) return;
       // No connection, or the account would not answer. The device has everything, and what it has is sent
       // whole by the next try: one comes by itself, later each time, and any write or return of the connection is one too.
       this.set('waiting');
@@ -487,14 +525,15 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   /** Marks in the account the lives the device gave up. First of all, or they would come back as lives waiting there. */
   private async giveUpThere(cloud: SyncCloud): Promise<void> {
     if (this.abandoned.size === 0) return;
-    const current = this.open(await this.device.loadGame());
+    const current = this.open(await this.through.loadGame());
     for (const id of [...this.abandoned]) {
       if (id.startsWith(RANKED)) {
         // The server that plays ranked lives is asked on its own, and may be away when the account is not. The life
         // stays on the list for the next time, and nothing else waits for it.
         try {
           await cloud.giveUpRanked(id.slice(RANKED.length));
-        } catch {
+        } catch (error) {
+          if (error instanceof Forgotten) throw error;
           continue;
         }
       } else if (id !== current?.gameId) await cloud.abandonGame(id);
@@ -513,7 +552,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const finished = new Set(runs.map((run) => run.id));
     // Only a device with no life at all takes the ranked life the account has in progress, so only it asks for one:
     // a first look says whether to. One the device has yet to give up is not one to take back.
-    const before = await this.device.loadGame();
+    const before = await this.through.loadGame();
     const living = this.open(before);
     const empty = rankedOf(before) === null && (living === null || (!living.state.finished && finished.has(living.gameId)));
     const there = empty ? await cloud.rankedLife() : null;
@@ -523,7 +562,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const played = pace ? await this.playBack(playing, rankedOf(before), living, pace) : new Map<CloudGame, SavedGame | null>();
 
     // The device is looked at for good only now, with everything asked: a life begun meanwhile is the one it has.
-    const held = await this.device.loadGame();
+    const held = await this.through.loadGame();
     // A ranked life is the server's. The device holds a note of it, which is not a game to send, to
     // replace or to judge here: it stands for "this device has a life", and that is all.
     let note = rankedOf(held);
@@ -531,7 +570,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     // A life this device was still living that has been lived to the end elsewhere is over here too.
     // Its result is among the finished lives.
     if (current !== null && !current.state.finished && finished.has(current.gameId)) {
-      await this.device.clearGame();
+      await this.through.clearGame();
       current = null;
       moved = true;
     }
@@ -539,7 +578,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     // life is opened from the server when the player goes to it.
     if (current === null && note === null && ranked !== null && ranked.engineVersion === this.options.versions.engine && ranked.contentVersion === this.options.versions.content) {
       note = rankedNote({ gameId: ranked.id, lifeId: ranked.lifeId, engineVersion: ranked.engineVersion, contentVersion: ranked.contentVersion, challenge: ranked.challenge ?? null });
-      await this.device.saveGame(note);
+      await this.through.saveGame(note);
       moved = true;
     }
 
@@ -573,7 +612,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
         waiting = save;
         break;
       }
-      await this.device.saveGame(save);
+      await this.through.saveGame(save);
       current = save;
       moved = true;
     }
@@ -586,8 +625,8 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     this.setOffer(waiting);
     settle();
 
-    const { added } = mergeRuns(await this.device.listRuns(), runs.map(asRun));
-    for (const run of added) await this.device.addRun(run);
+    const { added } = mergeRuns(await this.through.listRuns(), runs.map(asRun));
+    for (const run of added) await this.through.addRun(run);
     if (added.length > 0) this.tell('runs');
     return { finished, progress };
   }
@@ -600,18 +639,18 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    */
   private async renamed(oldId: string): Promise<string> {
     const id = this.options.newId();
-    const game = this.open(await this.device.loadGame());
-    if (game?.gameId === oldId) await this.device.saveGame({ ...game, gameId: id });
-    const run = (await this.device.listRuns()).find((one) => one.runId === oldId);
+    const game = this.open(await this.through.loadGame());
+    if (game?.gameId === oldId) await this.through.saveGame({ ...game, gameId: id });
+    const run = (await this.through.listRuns()).find((one) => one.runId === oldId);
     if (run) {
       // In under its new id before it is out under the old one: never neither.
-      await this.device.addRun({ ...run, runId: id });
-      await this.device.removeRun(oldId);
+      await this.through.addRun({ ...run, runId: id });
+      await this.through.removeRun(oldId);
     }
-    const profile = await this.device.loadProfile();
+    const profile = await this.through.loadProfile();
     const pointed = (earned: Record<string, Earned>): Record<string, Earned> =>
       Object.fromEntries(Object.entries(earned).map(([what, entry]) => [what, entry.gameId === oldId ? { ...entry, gameId: id } : entry]));
-    await this.device.saveProfile({ ...profile, badges: pointed(profile.badges), unlocked: pointed(profile.unlocked) });
+    await this.through.saveProfile({ ...profile, badges: pointed(profile.badges), unlocked: pointed(profile.unlocked) });
     this.tell('renamed');
     return id;
   }
@@ -623,14 +662,14 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    */
   private async send(cloud: SyncCloud, known: Known, justMet: boolean): Promise<'all' | 'more' | 'meet' | 'failed'> {
     // The life in progress, unless it stands exactly as it did when it was last sent.
-    let current = this.open(await this.device.loadGame());
+    let current = this.open(await this.through.loadGame());
     if (current !== null && !known.finished.has(current.gameId)) {
       let upload = uploadOf(current);
       if (standing(upload) !== this.sent) {
         let answer = await cloud.pushGame(upload);
         if (answer === 'taken') {
           await this.renamed(current.gameId);
-          current = this.open(await this.device.loadGame());
+          current = this.open(await this.through.loadGame());
           if (current === null) return 'failed';
           upload = uploadOf(current);
           answer = await cloud.pushGame(upload);
@@ -648,7 +687,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const { finishPerSync = 5 } = this.options;
     const versionsOf = (run: FinishedRun) => `${run.engineVersion}/${run.contentVersion}`;
     // One known only by its result has no log to send; one the server would not take is not sent again.
-    const unseen = (await this.device.listRuns()).filter((run) => !known.finished.has(run.runId) && !this.refused.has(run.runId) && run.seed !== '');
+    const unseen = (await this.through.listRuns()).filter((run) => !known.finished.has(run.runId) && !this.refused.has(run.runId) && run.seed !== '');
     let asked = 0;
     let more = false;
     for (const run of unseen) {
@@ -694,7 +733,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
 
     // What is unlocked: both sides end with everything either had. Another device may have added to
     // the account since it was last read, so it is read again before it is written over.
-    const profile = await this.device.loadProfile();
+    const profile = await this.through.loadProfile();
     const here = progressOf(profile);
     let both = mergeProgress(here, known.progress);
     if (!sameProgress(both, known.progress)) {
@@ -708,7 +747,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       }
     }
     if (!sameProgress(both, here)) {
-      await this.device.saveProfile(withProgress(profile, both));
+      await this.through.saveProfile(withProgress(profile, both));
       this.tell('profile');
     }
     return more ? 'more' : 'all';

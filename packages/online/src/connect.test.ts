@@ -349,7 +349,9 @@ describe('what the cloud keeps of a player', () => {
     const cloud = await connectSupabase('u', 'k');
     client.answers.invoke = { data: { deleted: true }, error: null };
     expect(await cloud.deleteAccount?.()).toBe(true);
-    expect(client.asked).toEqual([['invoke', 'delete-account', { body: { confirm: true } }]]);
+    // Given up after a while, as a failure: a request that hangs leaves the player waiting for nothing. (The server may have deleted it all the
+    // same; asked again, it answers deleted.)
+    expect(client.asked).toEqual([['invoke', 'delete-account', { body: { confirm: true }, timeout: 20_000 }]]);
     // Anything else is not gone: the function's no, a gateway that does not know it, the server down, no network.
     const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
     for (const answer of [{ data: {}, error: null }, { data: null, error: null }, said(429, { error: 'too-many' }), said(401, {}), said(500, { error: 'server' }), { data: null, error: { context: new TypeError('failed to fetch') } }]) {
