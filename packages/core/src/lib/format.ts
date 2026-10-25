@@ -19,6 +19,8 @@ export interface Format {
   factor(pct: number): string;
   /** A moment as a day, by the clock of whoever is reading: 13 Oct 2026. */
   day(ms: number): string;
+  /** A day of the game's own calendar, which runs on UTC (the week's challenge), as UTC has it wherever the player is. */
+  utcDay(ms: number): string;
 }
 
 const TAGS: Record<string, string> = { en: 'en-US', es: 'es-ES', ru: 'ru-RU' };
@@ -68,6 +70,7 @@ export function formatFor(locale: string): Format {
   const fix = (text: string) => text.replace('-', MINUS);
   // No time zone is named: a badge earned late in the evening is dated the day the player earned it.
   const days = new Intl.DateTimeFormat(DAY_TAGS[locale] ?? DAY_TAGS.en, { day: 'numeric', month: 'short', year: 'numeric' });
+  const utcDays = new Intl.DateTimeFormat(DAY_TAGS[locale] ?? DAY_TAGS.en, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
   // Rounded first, and never to a negative zero: forty cents owed is "$0", not "−$0", and its sign is a plus.
   const round = (value: number) => Math.round(value) || 0;
@@ -83,5 +86,6 @@ export function formatFor(locale: string): Format {
     number: (value) => fix(whole.format(round(value))),
     factor: (pct) => hundredths.format(pct / 100),
     day: (ms) => days.format(ms),
+    utcDay: (ms) => utcDays.format(ms),
   };
 }

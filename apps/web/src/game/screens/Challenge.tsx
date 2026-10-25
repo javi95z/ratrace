@@ -177,7 +177,7 @@ export function WeeklyChallenge() {
           <div className="min-w-0 flex-1">
             <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('life')}</p>
             <p className="pixel truncate text-[23px] text-cream">{lifeName}</p>
-            <p className="mt-1 text-[12px] text-ink-200">{t('ends', { day: fmt.day(lastDay(week.week)) })}</p>
+            <p className="mt-1 text-[12px] text-ink-200">{t('ends', { day: fmt.utcDay(lastDay(week.week)) })}</p>
           </div>
         </div>
       </Panel>

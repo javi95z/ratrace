@@ -229,7 +229,7 @@ export function WeeklyChallenge() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <ReadText size={12} tone="ink-300" style={{ letterSpacing: 12 * 0.05, textTransform: 'uppercase' }}>{t('life')}</ReadText>
             <PixelText size={23} tone="cream" numberOfLines={1}>{lifeName}</PixelText>
-            <ReadText size={12} tone="ink-200" style={{ marginTop: 4 }}>{t('ends', { day: fmt.day(lastDay(week.week)) })}</ReadText>
+            <ReadText size={12} tone="ink-200" style={{ marginTop: 4 }}>{t('ends', { day: fmt.utcDay(lastDay(week.week)) })}</ReadText>
           </View>
         </View>
       </Panel>

@@ -34,6 +34,22 @@ describe('formatFor', () => {
     }
   });
 
+  it('writes a day of the game\'s own calendar as UTC has it, wherever the player is', () => {
+    const zone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    try {
+      // Midnight UTC opening Sunday 8 November is still Saturday afternoon in Los Angeles: the week's last day is the 8th all the same.
+      const sunday = Date.UTC(2026, 10, 8);
+      expect(formatFor('en').day(sunday)).toBe('7 Nov 2026');
+      expect(formatFor('en').utcDay(sunday)).toBe('8 Nov 2026');
+      expect(plain(formatFor('es').utcDay(sunday))).toBe('8 nov 2026');
+      expect(plain(formatFor('ru').utcDay(sunday))).toBe('8 нояб. 2026 г.');
+    } finally {
+      if (zone === undefined) delete process.env.TZ;
+      else process.env.TZ = zone;
+    }
+  });
+
   it('signs an amount that is a change', () => {
     expect(en.signed(120_000)).toBe('+$1,200');
     expect(en.signed(-120_000)).toBe('−$1,200');

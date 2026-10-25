@@ -89,6 +89,19 @@ describe('the weekly challenge page', () => {
     expect(document.body.textContent).toContain('Ends on 25 Oct 2026, at midnight UTC.');
   });
 
+  it('names the same last day west of UTC, where its midnight is still the day before', async () => {
+    const zone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    try {
+      renderGame(<WeeklyChallenge />, onDay(SCENE_NOW));
+      await screen.findByText(/Ends on/);
+      expect(document.body.textContent).toContain('Ends on 25 Oct 2026, at midnight UTC.');
+    } finally {
+      if (zone === undefined) delete process.env.TZ;
+      else process.env.TZ = zone;
+    }
+  });
+
   it('asks before it ends a life in progress, and starts the practice only when the answer is yes', async () => {
     const services = memoryServices();
     await services.sessions.start('engineer');
