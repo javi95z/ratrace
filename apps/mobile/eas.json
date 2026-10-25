@@ -28,7 +28,7 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease --max-workers=2 -Dorg.gradle.jvmargs=-Xmx4g"
+        "gradleCommand": ":app:bundleRelease --max-workers=1 -Dorg.gradle.jvmargs=-Xmx4g"
       },
       "env": {
         "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a"
