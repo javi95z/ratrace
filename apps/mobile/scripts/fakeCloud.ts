@@ -555,6 +555,7 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
         // The function's own code, over what is kept here: the player goes, and everything that hangs from them, as the database's cascades take it.
         const reply = await deleteAccount(
           {
+            exists: async (user) => users.has(user),
             allow: async () => true,
             remove: async (user) => {
               users.delete(user);

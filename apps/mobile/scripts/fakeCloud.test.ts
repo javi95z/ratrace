@@ -155,3 +155,13 @@ test('an account deleted through the game\'s own client: the player and everythi
   const again = await connectSupabase(url, FAKE_KEY, { storage, autoRefresh: false });
   expect(await again.currentUser()).toBeNull();
 });
+
+test('a deletion whose answer was lost is asked again with the same session, and answered deleted: the phone then forgets the player', async () => {
+  const phone = await connectSupabase(url, FAKE_KEY, { storage: memory(), autoRefresh: false });
+  const guest = await phone.signInAsGuest();
+  if (guest === null) throw new Error('no guest was made');
+  expect(await phone.deleteAccount?.()).toBe(true);
+  // The answer never came: the phone asks again, still holding the token of the player who is gone.
+  expect(await phone.deleteAccount?.()).toBe(true);
+  expect(cloud.users.has(guest.id)).toBe(false);
+});

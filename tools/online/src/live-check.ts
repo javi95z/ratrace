@@ -472,12 +472,17 @@ try {
   check(statusOf(await b.functions.invoke('delete-account', { body: {} })) === 400, 'an account is not deleted by a request that does not say so');
   const deleted = await b.functions.invoke('delete-account', { body: { confirm: true } });
   check(statusOf(deleted) === 200 && (deleted.data as { deleted?: boolean } | null)?.deleted === true, 'a player deletes their own account');
+  // Every table that holds a player's rows, each by the column that names them: all of it hangs from `auth.users`, and all of it goes.
+  const holding: Array<[string, string[]]> = [
+    ['auth.users', ['id']], ['public.profiles', ['user_id']], ['public.player_progress', ['user_id']], ['public.games', ['user_id']], ['public.runs', ['user_id']],
+    ['public.challenge_entries', ['user_id']], ['public.push_subscriptions', ['user_id']], ['public.push_tokens', ['user_id']], ['public.notice_days', ['user_id']],
+    ['public.friendships', ['follower', 'followed']], ['public.friend_requests', ['from_user', 'to_user']], ['public.name_reports', ['reporter', 'reported']],
+    ['public.room_players', ['user_id']], ['public.room_orders', ['user_id']], ['public.room_bots', ['user_id']], ['private.rate_use', ['user_id']], ['private.player_days', ['user_id']],
+  ];
   const leftOfB = asOwner(
-    `select (select count(*) from auth.users where id = '${idB}') + (select count(*) from public.profiles where user_id = '${idB}') + (select count(*) from public.games where user_id = '${idB}')
-      + (select count(*) from public.runs where user_id = '${idB}') + (select count(*) from public.friendships where follower = '${idB}' or followed = '${idB}')
-      + (select count(*) from public.room_players where user_id = '${idB}') + (select count(*) from private.rate_use where user_id = '${idB}') as left_of_b`,
+    `select ${holding.map(([table, columns]) => `(select count(*) from ${table} where ${columns.map((column) => `${column} = '${idB}'`).join(' or ')})`).join(' + ')} as left_of_b`,
   )?.[0];
-  check(Number(leftOfB?.left_of_b) === 0, 'and the account goes with everything of theirs: profile, lives, runs, friends, rooms');
+  check(Number(leftOfB?.left_of_b) === 0, `and the account goes with everything of theirs, in every table that holds a player (${holding.length})`);
   const friendsOfA = await a.functions.invoke('friends', { body: { action: 'list' } });
   check(statusOf(friendsOfA) === 200 && !((friendsOfA.data as { friends?: Array<{ userId: string }> } | null)?.friends ?? []).some((one) => one.userId === idB), 'the other player\'s list of friends no longer names them');
 } catch (error) {

@@ -10,6 +10,7 @@ const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 function deps(over: Partial<DeletionDeps> = {}) {
   const asked: string[] = [];
   const all: DeletionDeps = {
+    exists: async (user) => (asked.push(`look ${user}`), true),
     allow: async (user) => (asked.push(`count ${user}`), true),
     remove: async (user) => void asked.push(`remove ${user}`),
     ...over,
@@ -21,7 +22,14 @@ describe('deleting an account', () => {
   it('removes the player who asks, once they have said so in as many words, and says it is done', async () => {
     const { all, asked } = deps();
     expect(await deleteAccount(all, A, { confirm: true })).toEqual({ status: 200, body: { deleted: true } });
-    expect(asked).toEqual([`count ${A}`, `remove ${A}`]);
+    expect(asked).toEqual([`look ${A}`, `count ${A}`, `remove ${A}`]);
+  });
+
+  it('answers deleted for a player already gone, counting and removing nothing: an answer lost on the way is asked again with the same token', async () => {
+    const { all, asked } = deps({ exists: async (user) => (asked.push(`look ${user}`), false) });
+    expect(await deleteAccount(all, A, { confirm: true })).toEqual({ status: 200, body: { deleted: true } });
+    // The count would be refused for a player who is no longer there (its row hangs from theirs): it is not asked.
+    expect(asked).toEqual([`look ${A}`]);
   });
 
   it('removes nobody for a request that does not say so, whatever else it carries, and counts nothing for it', async () => {
@@ -35,13 +43,13 @@ describe('deleting an account', () => {
   it('removes whoever the token says is asking, never a player the body names', async () => {
     const { all, asked } = deps();
     await deleteAccount(all, A, { confirm: true, userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' });
-    expect(asked).toEqual([`count ${A}`, `remove ${A}`]);
+    expect(asked).toEqual([`look ${A}`, `count ${A}`, `remove ${A}`]);
   });
 
   it('holds a player to a limit, and removes nothing past it', async () => {
     const { all, asked } = deps({ allow: async () => false });
     expect(await deleteAccount(all, A, { confirm: true })).toEqual({ status: 429, body: { error: 'too-many' } });
-    expect(asked).toEqual([]);
+    expect(asked).toEqual([`look ${A}`]);
     const [atMost, perSeconds] = LIMITS['delete-account'];
     // A few tries an hour: one that works is the last, and one that failed may be tried again soon after.
     expect(atMost).toBeGreaterThanOrEqual(3);
@@ -67,6 +75,9 @@ describe('the function behind it', () => {
     expect(source).toContain('ctx.userClaims?.id');
     expect(source).toContain("allowed(db, user, 'delete-account')");
     expect(source).toContain('auth.admin.deleteUser');
+    // Whether the player is still there is asked of the auth server, and one it no longer knows is gone, never a failure.
+    expect(source).toContain('auth.admin.getUserById');
+    expect(source).toMatch(/status === 404/);
   });
 
   it('is named among the functions: in the project\'s file, and among those deployed', () => {

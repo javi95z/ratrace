@@ -27,11 +27,20 @@ export default {
         const db = ctx.supabaseAdmin;
         const reply = await deleteAccount(
           {
+            exists: async (user) => {
+              const { data, error } = await db.auth.admin.getUserById(user);
+              // The auth server no longer knows the player (404): gone, which is no failure.
+              if (error) {
+                if (error.status === 404) return false;
+                throw new Error(`whether the account is there could not be told: ${error.message}`);
+              }
+              return data.user !== null;
+            },
             allow: (user) => allowed(db, user, 'delete-account'),
             remove: async (user) => {
-              // Not soft: the row goes, and every row that hangs from it.
+              // Not soft: the row goes, and every row that hangs from it. One gone meanwhile (a second call at the same moment) is gone all the same.
               const { error } = await db.auth.admin.deleteUser(user);
-              if (error) throw new Error(`the account could not be deleted: ${error.message}`);
+              if (error && error.status !== 404) throw new Error(`the account could not be deleted: ${error.message}`);
             },
           },
           userId,
