@@ -267,12 +267,20 @@ describe('the business tab', () => {
     expect(probe.state!.orders).toEqual([{ type: 'tendBusiness', businessId: shop.id }]);
     expect(within(sheet()).getByText('You run it this round')).toBeTruthy();
     expect(within(sheet()).queryByText(/^Without your focus or a manager/)).toBeNull();
-    // With a manager the focus is not asked for, and the switch says so.
-    fireEvent.click(tend());
-    fireEvent.click(within(sheet()).getByRole('switch', { name: /^Hire a manager/ }));
+    // A manager takes over from the player's focus; and the player can take it back, which lets the manager go.
+    const manager = () => within(sheet()).getByRole('switch', { name: /^Hire a manager/ });
+    fireEvent.click(manager());
     await settled();
-    expect(tend().getAttribute('aria-disabled')).toBe('true');
-    expect(within(sheet()).getByText('With a manager there is no need.')).toBeTruthy();
+    expect(tend().getAttribute('aria-checked')).toBe('false');
+    expect(tend().getAttribute('aria-disabled')).not.toBe('true');
+    expect(probe.state!.orders.some((order) => order.type === 'tendBusiness')).toBe(false);
+    fireEvent.click(tend());
+    await settled();
+    expect(tend().getAttribute('aria-checked')).toBe('true');
+    expect(manager().getAttribute('aria-checked')).toBe('false');
+    expect(probe.state!.orders).toEqual([{ type: 'tendBusiness', businessId: shop.id }]);
+    fireEvent.click(manager());
+    await settled();
     fireEvent.click(within(sheet()).getByRole('button', { name: 'Close' }));
     await sheetGone('Online shop');
     expect(ordersOf()).toEqual(['Change how Online shop is run']);
@@ -311,8 +319,8 @@ describe('the business tab', () => {
     expect(ordersOf()).toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
     expect(manager().getAttribute('aria-selected')).toBe('true');
     expect(manager().textContent).toBe(`✓ Manager · ${shop.managerPct}%`);
-    // With a manager, the player's focus is not asked for.
-    expect(tend().getAttribute('aria-disabled')).toBe('true');
+    // With a manager the player's own switch is off (taking it back is the next tests').
+    expect(tend().getAttribute('aria-selected')).toBe('false');
     fireEvent.click(manager());
     await settled();
     expect(ordersOf()).not.toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
@@ -333,12 +341,31 @@ describe('the business tab', () => {
     await settled();
     // Never both: the manager runs it, the order to run it oneself is gone, and nothing is stuck on.
     expect(tend().getAttribute('aria-selected')).toBe('false');
-    expect(tend().getAttribute('aria-disabled')).toBe('true');
     expect(probe.state!.orders.some((order) => order.type === 'tendBusiness')).toBe(false);
-    // Without the manager, the player may run it again.
-    fireEvent.click(manager());
-    await settled();
+    // The player takes it back from the manager with their own switch: the manager goes, and the focus runs it.
     expect(tend().getAttribute('aria-disabled')).not.toBe('true');
+    fireEvent.click(tend());
+    await settled();
+    expect(tend().getAttribute('aria-selected')).toBe('true');
+    expect(manager().getAttribute('aria-selected')).toBe('false');
+    expect(probe.state!.orders.filter((order) => order.type === 'tendBusiness' || order.type === 'setBusiness')).toEqual([{ type: 'tendBusiness', businessId: expect.any(String) }]);
+  });
+
+  it('lets the player take back a business a manager has run since an earlier round: the manager goes, and the focus runs it', async () => {
+    const { services, session } = await inFinance('founder');
+    const [shop] = (await stateOf(services)).player.businesses;
+    await session.playRound({ orders: [{ type: 'setBusiness', businessId: shop.id, manager: true }] });
+    await toFinance(session);
+    await openTab(services);
+    const tend = () => within(yours()).getByRole('button', { name: /Run it yourself/ });
+    const manager = () => within(yours()).getByRole('button', { name: /Manager · / });
+    expect(manager().getAttribute('aria-selected')).toBe('true');
+    expect(tend().getAttribute('aria-disabled')).not.toBe('true');
+    fireEvent.click(tend());
+    await settled();
+    expect(tend().getAttribute('aria-selected')).toBe('true');
+    expect(manager().getAttribute('aria-selected')).toBe('false');
+    expect(probe.state!.orders).toEqual(expect.arrayContaining([{ type: 'setBusiness', businessId: shop.id, manager: false }, { type: 'tendBusiness', businessId: shop.id }]));
   });
 
   it('shows a business opened by a card this round as no longer the player\'s to run once a manager takes it', async () => {

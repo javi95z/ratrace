@@ -52,7 +52,11 @@ function useRunning(view: GameView | null, businessId: string, payoutPct: number
   const isSetting = (order: Order) => order.type === 'setBusiness' && order.businessId === businessId;
   const isTending = (order: Order) => order.type === 'tendBusiness' && order.businessId === businessId;
   return {
-    tend: (on: boolean) => setOrder(isTending, on ? { type: 'tendBusiness', businessId } : null),
+    // The owner takes over from a manager: the manager goes this round, and the owner's focus runs it.
+    tend: (on: boolean) => {
+      if (on && view) setOrder(isSetting, settingOrder(view, businessId, { payoutPct, manager: false }));
+      return setOrder(isTending, on ? { type: 'tendBusiness', businessId } : null);
+    },
     // A manager takes over from the owner: their focus is given back.
     manage: (on: boolean) => {
       if (!view) return false;
@@ -158,7 +162,7 @@ const BusinessLine = memo(function BusinessLine({
       {neglected ? <ReadText size={12} lineHeight={12 * SNUG} tone="wine-300" style={{ marginTop: 4 }}>{t('neglectedShort')}</ReadText> : null}
       {standing ? (
         <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
-          <QuickSwitch on={tended && !manager} disabled={standingTended || (!tended && (manager || focusLeft < 1))} label={t('quickTend')} onChange={(on) => running.tend(on)} />
+          <QuickSwitch on={tended && !manager} disabled={standingTended || (!tended && focusLeft < 1)} label={t('quickTend')} onChange={(on) => running.tend(on)} />
           <QuickSwitch on={manager} label={t('quickManager', { pct: managerPct })} onChange={(on) => running.manage(on)} />
         </View>
       ) : null}
@@ -440,10 +444,14 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
               <>
                 <Toggle
                   on={business.tended && !business.manager}
-                  disabled={standing.tended || (!business.tended && (business.manager || quote.focusLeft < 1))}
-                  onChange={(on) => setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null)}
+                  disabled={standing.tended || (!business.tended && quote.focusLeft < 1)}
+                  onChange={(on) => {
+                    // The owner takes over from a manager: the manager goes this round.
+                    if (on) set({ manager: false });
+                    setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null);
+                  }}
                   label={t('tend')}
-                  hint={business.manager ? t('tendNoNeed') : t('tendHint', { left: quote.focusLeft })}
+                  hint={t('tendHint', { left: quote.focusLeft })}
                 />
                 <Toggle
                   on={business.manager}
