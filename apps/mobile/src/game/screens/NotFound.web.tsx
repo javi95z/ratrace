@@ -1,24 +1,27 @@
-import { useIsFocused } from 'expo-router';
+import { useIsFocused, usePathname } from 'expo-router';
 import { useContext } from 'react';
 import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
-import { PixelText, Language } from '../../ui/text';
+import { Language, PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { openDocument } from '../openDocument';
-import { hrefOf } from '../pages';
+import { hrefOf, localeAt } from '../pages';
 import { WayOut } from '../PageFault.web';
 import { useT } from '../words';
 
 /*
  * The web export's twin of `NotFound.tsx` (Metro picks it for the web): the game's page of nothing, where the Next web answers an address it has no
  * page at with its 404 (and `[locale]/layout.tsx`'s `notFound()` a language it does not have). The site serves it as its `404.html`, with a 404, for
- * every such address (`scripts/sitePieces.ts`), and in the address's language once its words are in (`useLanguage.web.ts`). The words are the
- * Next web's error page's (`play.faultTitle`, `newLife`, `home`): a line, then the ways back, each a new document of the site as the error page's.
- * The router's own page (its sitemap, the address said back) is never shown.
+ * every such address (`scripts/sitePieces.ts`), and in the address's language once its words are in (`useLanguage.web.ts`): its title and line
+ * (`notFound`), then the ways back, the error page's (`play.newLife`, `home`), each a new document of the site as the error page's, in the address's
+ * language from the start (a tap before its words are in never opens another language's page, nor writes it in the cookie). The router's own page
+ * (its sitemap, the address said back) is never shown.
  */
 export function NotFound() {
-  const locale = useContext(Language);
-  const t = useT('play');
+  const spoken = useContext(Language);
+  const locale = localeAt(usePathname()) ?? spoken;
+  const t = useT('notFound');
+  const play = useT('play');
   const meta = useT('meta');
   const inFront = useIsFocused();
   return (
@@ -33,11 +36,12 @@ export function NotFound() {
       <View style={{ width: '100%', maxWidth: 384, alignSelf: 'center', paddingHorizontal: 16, gap: 16 }}>
         <Framed kind="frame" style={{ backgroundColor: COLORS['night-700'], padding: 16 }}>
           <View accessibilityRole="header">
-            <PixelText size={20}>{t('faultTitle')}</PixelText>
+            <PixelText size={20}>{t('title')}</PixelText>
           </View>
+          <ReadText size={14} lineHeight={14 * SNUG} style={{ marginTop: 8 }}>{t('body')}</ReadText>
         </Framed>
-        <WayOut label={t('newLife')} onPress={() => openDocument(hrefOf('new', { locale }), 'push')} />
-        <WayOut label={t('home')} onPress={() => openDocument(hrefOf('', { locale }), 'push')} />
+        <WayOut label={play('newLife')} onPress={() => openDocument(hrefOf('new', { locale }), 'push')} />
+        <WayOut label={play('home')} onPress={() => openDocument(hrefOf('', { locale }), 'push')} />
       </View>
     </View>
   );

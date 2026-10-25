@@ -146,7 +146,7 @@ describe('the page of nothing drawn on the server', () => {
         </GameProvider>,
       ),
     );
-    const play = messagesFor('en').play as unknown as Record<string, string>;
-    for (const words of [play.faultTitle, play.newLife, play.home]) expect(read).toContain(words);
+    const { play, notFound } = messagesFor('en') as unknown as Record<'play' | 'notFound', Record<string, string>>;
+    for (const words of [notFound.title, notFound.body, play.newLife, play.home]) expect(read).toContain(words);
   });
 });

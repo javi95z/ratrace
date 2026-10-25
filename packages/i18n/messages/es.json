@@ -2108,5 +2108,9 @@
     "roomOtherRules": "Esta partida juega con otra versión del juego. Actualiza la aplicación para jugarla.",
     "noticeChannel": "Avisos del juego",
     "noticesBlocked": "Las notificaciones están bloqueadas para esta aplicación: permítelas en los ajustes del teléfono."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "body": "No hay nada en esta dirección. Tu vida sigue donde la dejaste."
   }
 }
