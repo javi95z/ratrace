@@ -374,3 +374,15 @@ than today's: first visit, speed, search, sharing.
   `packages/*` is additive.
 - **Checked against the Next web in one browser.** The scene shots gain a target for the app's web export, shot beside the Next web's
   `/kit/scene` pages with Playwright, at phone and desk widths.
+
+### Phase 5c: the swap (2026-10-25)
+
+The web export was deployed on a new Vercel project, `ratrace-expo` (root `apps/mobile`, `pnpm web:build`), first as a protected preview,
+then on its public production domain. Checked there: every redirect and language rule against the Next web's proxy, page heads, the
+language cookie, the worker's headers and full precache (1,286 entries) and offline pages in three languages, a 404 page of the game's own,
+static files and older rules, a life played and continued, Google's way back, web notices on and off, the language switch, the desk layout,
+the weekly challenge in another time zone, and throttled timing (first text 0.30 s against the Next web's 0.50 s; the largest image
+0.37–0.40 s after the mascot went into the HTML). The test guests the checks made on the live project were deleted. Then `main` was
+fast-forwarded to `expo` and the domain `ratrace-plum.vercel.app` moved from the Next web's project (`ratrace`) to `ratrace-expo`.
+Rollback is moving the domain back. Accepted at the swap: a player offline at their first visit after it, under the Next web's old worker,
+may see one blank page before the new worker takes over. The Next web's code (`apps/web`) leaves `dev` after a quiet week.
