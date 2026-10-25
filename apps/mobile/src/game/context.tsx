@@ -24,7 +24,7 @@ import { usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
+import { kvForget, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { backFromGoogle, openForGoogle } from '../online/browser';
@@ -818,8 +818,16 @@ export function useAccountSettled(): boolean {
  * (`online/browser.ts`): the calls resolve once it has, as the web's resolve once the page has left for it. On the web (`online/browser.web.ts`) the
  * page itself leaves for Google and comes back to where it was, as the Next web's does.
  */
-export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
-  const { account, store, restart, push, community } = useCloud();
+export function useAccount(): {
+  state: AccountState;
+  keepWithGoogle(): Promise<boolean>;
+  useExistingAccount(): Promise<boolean>;
+  dismissNotice(): void;
+  signOut(): Promise<boolean>;
+  /** Null where the account cannot be deleted from here (no cloud behind the game). */
+  deleteAccount: (() => Promise<boolean>) | null;
+} {
+  const { account, store, saves, restart, push, community } = useCloud();
   const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
   return {
     state,
@@ -858,6 +866,29 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
       await restart(settings);
       return true;
     },
+    // Deleted on the server first, and only then forgotten here: a deletion that did not happen (no network, a refusal) leaves the device as it
+    // was. Once the account is gone, nothing of the player's is left on the device to go up to the next guest (the life in progress, the finished
+    // lives, the profile, the session, the lists for the account, the notices: `kvForget`, `forget`); only the settings stay, and what is the
+    // device's own (the language). Then the game starts again as on a first visit, as it does on signing out, and a new guest with it.
+    deleteAccount:
+      account.deleteAccount === undefined
+        ? null
+        : async () => {
+            const settings = (await store.loadProfile()).settings;
+            if (!(await account.deleteAccount?.())) return false;
+            // The account is gone whatever happens on the device now: each step is tried, and the game starts again all the same.
+            const step = (work: () => Promise<unknown>) => work().catch((error: unknown) => console.warn('could not forget the player here:', error));
+            await step(() => push.forget());
+            await step(() => store.clearGame());
+            await step(async () => {
+              for (const run of await store.listRuns()) await store.removeRun(run.runId);
+            });
+            await step(() => store.saveProfile({ ...newProfile(), settings }));
+            saves.forget?.();
+            await step(kvForget);
+            await restart(settings);
+            return true;
+          },
   };
 }
 

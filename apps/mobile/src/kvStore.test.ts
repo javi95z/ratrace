@@ -50,7 +50,7 @@ vi.mock('expo-sqlite/kv-store', () => {
   };
 });
 
-const { KvStore } = await import('./kvStore');
+const { KvStore, kvForget } = await import('./kvStore');
 
 const OLD = 'ratrace:runs';
 const INDEX = 'ratrace:runs:index';
@@ -324,5 +324,17 @@ describe('the step that ends a life, with 63 lives on the phone', () => {
     expect(session.view().finished).toBe(false);
     expect(listed).not.toHaveBeenCalled();
     expect(device.calls.filter((call) => call.op === 'get' && call.key?.startsWith('ratrace:run:'))).toEqual([]);
+  });
+});
+
+describe('a player who deleted their account', () => {
+  it('leaves nothing of theirs beside the store: the session, the round planned, the lists for the account, whose it was, a trip to Google', async () => {
+    const theirs = ['ratrace:session:sb-ref-auth-token', 'ratrace:session:sb-ref-auth-token-code-verifier', 'ratrace:basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:keeping-account', OLD];
+    // The phone's own: the language chosen, what was said to the notices (a no is never asked again), the install counted; and the store's, which
+    // the game clears through the store.
+    const phones = ['ratrace:locale', 'ratrace:push', 'ratrace:installed', 'ratrace:game', 'ratrace:profile', INDEX, keyOf('a'), 'something:else'];
+    for (const key of [...theirs, ...phones]) device.values.set(key, '"x"');
+    await kvForget();
+    expect([...device.values.keys()].sort()).toEqual([...phones].sort());
   });
 });

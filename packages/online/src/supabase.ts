@@ -37,6 +37,11 @@ export interface Cloud extends SyncCloud {
   signInWithGoogle(redirectTo: string, open?: Opener): Promise<boolean>;
   /** Signs this browser out. Throws if it could not. */
   signOut(): Promise<void>;
+  /**
+   * Asks the server to delete the signed-in player's account and everything of theirs. True once it says the account is gone; false otherwise
+   * (its no, no network). Never throws. It signs nothing out: the account does that after. Left out by a cloud that cannot (a test's).
+   */
+  deleteAccount?(): Promise<boolean>;
   /** Makes the player's profile row if it is not there, in the language of the page. One already there is left as it is. */
   ensureProfile(userId: string, language: string): Promise<void>;
   /** Calls `listener` whenever who is signed in changes. Returns how to stop. */
@@ -277,6 +282,18 @@ export class SupabaseAccount implements Account {
     } catch {
       return false;
     }
+    this.set({ kind: 'offline' });
+    return true;
+  };
+
+  readonly deleteAccount = async (): Promise<boolean> => {
+    const cloud = this.link;
+    if (cloud === null || this.current.kind === 'offline' || cloud.deleteAccount === undefined) return false;
+    if (!(await cloud.deleteAccount())) return false;
+    // The account is gone, and its session with it. Signing out lets the client forget it; one that cannot say so to the server (it no longer
+    // knows the session) has nobody left to be all the same.
+    await cloud.signOut().catch(() => undefined);
+    this.notice = null;
     this.set({ kind: 'offline' });
     return true;
   };

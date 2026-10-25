@@ -289,6 +289,22 @@ export const kvPush = {
 /** Where the phone notes whose account it last saw signed in, under the web's key: for the language of an account to follow a sign-in. */
 const LAST_ACCOUNT = 'ratrace.lastAccount';
 
+/** The lists of lives the account was still to be told of (`givenUpIn` and `refusedIn` of `online/over.ts`, in `kvText`). */
+const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
+
+/**
+ * Takes off the phone what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress, the
+ * finished lives, the profile): the account's session, the round being planned, the lists of lives the account was to be told of, whose account it
+ * was, a trip to Google noted, and the lives kept the old way. What is the phone's own stays: the language chosen, what the notices were told (a no is
+ * never asked twice; `online/push.ts` turns them off), the install counted once. A key the phone will not take away now is one the next player's
+ * game writes over.
+ */
+export async function kvForget(): Promise<void> {
+  for (const key of await Storage.getAllKeys().catch(() => [] as string[])) {
+    if (key.startsWith(SESSION) || key === BASKET || key === KEEPING || key === LAST_ACCOUNT || key === RUNS_BEFORE || ACCOUNT_LISTS.includes(key)) await Storage.removeItem(key).catch(() => undefined);
+  }
+}
+
 export const kvLastAccount = {
   read: (): string | null => {
     try {

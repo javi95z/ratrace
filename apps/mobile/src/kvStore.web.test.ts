@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, SavedGame } from '@ratrace/core/session/types';
 import { LocalStore } from '../../web/src/session/indexeddb';
-import { kvBasket, kvKeeping, kvLanguage, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
+import { kvBasket, kvForget, kvKeeping, kvLanguage, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
 
 /*
  * On the web the app keeps the player's things where the Next web keeps them: the same IndexedDB (`ratrace`, its three stores), the same
@@ -152,6 +152,30 @@ describe('the keys of the browser', () => {
     expect(() => kvPush.write({ state: 'off', token: null })).not.toThrow();
     expect(() => kvText.setItem('k', 'v')).not.toThrow();
     await expect(kvSession.setItem('k', 'v')).resolves.toBeUndefined();
+    vi.restoreAllMocks();
+  });
+});
+
+describe('a player who deleted their account', () => {
+  it('leaves nothing of theirs beside the database: the session, the round planned, the lists for the account, whose it was, a trip to Google', async () => {
+    for (const key of ['sb-ref-auth-token', 'sb-ref-auth-token-code-verifier', 'ratrace.basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:push']) localStorage.setItem(key, 'x');
+    sessionStorage.setItem('ratrace:keeping-account', '1');
+    // The browser's own: the language chosen, the offer to install (its visits and a no), and what is not the game's.
+    kvLanguage.write('es');
+    localStorage.setItem('ratrace.installOffer', '{"visits":3}');
+    sessionStorage.setItem('ratrace.installOffer', '1');
+    localStorage.setItem('someone.else', 'y');
+    await kvForget();
+    expect(Object.keys(localStorage).sort()).toEqual(['ratrace.installOffer', 'someone.else']);
+    expect(Object.keys(sessionStorage)).toEqual(['ratrace.installOffer']);
+    expect(kvLanguage.read()).toBe('es');
+  });
+
+  it('forgets in a browser that keeps nothing all the same, with nothing thrown', async () => {
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('refused');
+    });
+    await expect(kvForget()).resolves.toBeUndefined();
     vi.restoreAllMocks();
   });
 });

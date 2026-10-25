@@ -235,6 +235,19 @@ describe('the notices on the web', () => {
     expect(account.stopNotifying).not.toHaveBeenCalled();
   });
 
+  it('give the subscription up once the account is deleted (the server forgot it with the account), and raise nothing where the browser will not', async () => {
+    const held = subscription();
+    browser({ permission: 'granted', held });
+    const note = noted();
+    await expect(phonePush(note).forget()).resolves.toBeUndefined();
+    expect(held.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(note.write).not.toHaveBeenCalled();
+    held.unsubscribe.mockRejectedValueOnce(new Error('the browser said no'));
+    await expect(phonePush(noted()).forget()).resolves.toBeUndefined();
+    browser({ permission: 'granted' });
+    await expect(phonePush(noted()).forget()).resolves.toBeUndefined();
+  });
+
   it('name the market\'s notice by the subscription\'s address, while they are on', async () => {
     const now = browser({ permission: 'granted' });
     const push = phonePush(noted());

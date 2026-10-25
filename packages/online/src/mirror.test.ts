@@ -494,6 +494,23 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(d.notes[0]).toEqual([]);
   });
 
+  it('forgets what it noted to tell an account that is gone: the next account is told nothing of it', async () => {
+    const { cloud, state } = fakeCloud();
+    const d = device(cloud);
+    await play(await d.sessions.start('nurse'), 2);
+    await d.mirror.sync();
+    state.down = true;
+    await play(await d.sessions.start('engineer'), 1);
+    await d.mirror.sync();
+    expect(d.notes[0]).toEqual(['a-1']);
+    // The account is deleted: its lives are nobody's to give up now, here or on the next page.
+    d.mirror.forget();
+    expect(d.notes[0]).toEqual([]);
+    state.down = false;
+    await d.mirror.accountChanged();
+    expect(state.asked).not.toContain('abandon a-1');
+  });
+
   it('assumes nothing about a different account: it reads it and sends it what the device has', async () => {
     const one = fakeCloud();
     const two = fakeCloud();
@@ -718,6 +735,9 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(state.asked.filter((line) => line === `finish ${later}`)).toHaveLength(1);
     expect(state.runs.map((run) => run.id)).toEqual([sooner]);
     expect(next.status()).toBe('saved');
+    // An account deleted takes its refusals with it: they were its lives.
+    next.forget();
+    expect(kept).toEqual([]);
   });
 
   it('waits, and sends nothing more, when the server cannot be asked to finish a life', async () => {

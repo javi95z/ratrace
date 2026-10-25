@@ -345,6 +345,21 @@ describe('what the cloud keeps of a player', () => {
     }
   });
 
+  it('asks the server to delete the account, saying so in as many words, and believes it gone only when the server says it is', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.invoke = { data: { deleted: true }, error: null };
+    expect(await cloud.deleteAccount?.()).toBe(true);
+    expect(client.asked).toEqual([['invoke', 'delete-account', { body: { confirm: true } }]]);
+    // Anything else is not gone: the function's no, a gateway that does not know it, the server down, no network.
+    const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
+    for (const answer of [{ data: {}, error: null }, { data: null, error: null }, said(429, { error: 'too-many' }), said(401, {}), said(500, { error: 'server' }), { data: null, error: { context: new TypeError('failed to fetch') } }]) {
+      client.answers.invoke = answer;
+      expect(await cloud.deleteAccount?.()).toBe(false);
+    }
+    client.answers.invoke = Promise.reject(new TypeError('failed to fetch'));
+    expect(await cloud.deleteAccount?.()).toBe(false);
+  });
+
   it('sends the errors of a page, and tells what the server will never take from what is worth another try', async () => {
     const cloud = await connectSupabase('u', 'k');
     const reports = [{ message: 'boom', stack: null, place: '/play', build: '0.35.0/1.35.0', browser: 'Chrome 140 Android' }];

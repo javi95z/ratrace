@@ -220,6 +220,51 @@ describe('an account in the cloud', () => {
     expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
   });
 
+  it('deletes the account once the server says it is gone, then signs this device out of it', async () => {
+    const { cloud, calls } = fakeCloud({ deleteAccount: async () => (calls.push('delete'), true) });
+    const account = accountOn(cloud);
+    await account.start('en');
+    const heard = vi.fn();
+    account.subscribe(heard);
+    expect(await account.deleteAccount()).toBe(true);
+    expect(calls.slice(-2)).toEqual(['delete', 'sign-out']);
+    expect(account.state()).toEqual({ kind: 'offline' });
+    expect(heard).toHaveBeenCalled();
+  });
+
+  it('is signed out of an account that is gone even when signing out says it could not: there is nobody left to be', async () => {
+    const { cloud } = fakeCloud({
+      deleteAccount: async () => true,
+      signOut: async () => {
+        throw new Error('no network');
+      },
+    });
+    const account = accountOn(cloud);
+    await account.start('en');
+    expect(await account.deleteAccount()).toBe(true);
+    expect(account.state()).toEqual({ kind: 'offline' });
+  });
+
+  it('stays signed in, and says it could not, when the server did not delete the account', async () => {
+    const { cloud, calls } = fakeCloud({ currentUser: async () => member, deleteAccount: async () => false });
+    const account = accountOn(cloud);
+    await account.start('en');
+    expect(await account.deleteAccount()).toBe(false);
+    expect(calls).not.toContain('sign-out');
+    expect(account.state()).toEqual({ kind: 'member', userId: 'user-1', email: 'ana@example.com' });
+  });
+
+  it('deletes nothing with nobody signed in, or a cloud that cannot', async () => {
+    const asked = vi.fn(async () => true);
+    expect(await accountOn(fakeCloud({ deleteAccount: asked }).cloud).deleteAccount()).toBe(false);
+    expect(asked).not.toHaveBeenCalled();
+    const unable = accountOn(fakeCloud().cloud);
+    await unable.start('en');
+    expect(await unable.deleteAccount()).toBe(false);
+    expect(unable.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+    expect(await offlineAccount.deleteAccount?.()).toBe(false);
+  });
+
   it('becomes a member, with the same id, when the cloud says the account was kept', async () => {
     const { cloud, tell } = fakeCloud();
     const account = accountOn(cloud);

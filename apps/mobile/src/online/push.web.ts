@@ -43,6 +43,7 @@ export interface Push {
   pushOff(community: Community): Promise<boolean>;
   release(community: Community | null, patience?: number): Promise<void>;
   resume(): void;
+  forget(): Promise<void>;
   target(): Promise<Target | null>;
   follow(account: Account, community: () => Community | null, locale: string): () => void;
   onTap(open: (to: NoticePage) => void): () => void;
@@ -143,6 +144,12 @@ export const phonePush: (note: PushNote, options?: { platform?: string }) => Pus
     // Signing out leaves the subscription with the browser, as the Next web does.
     release: async () => undefined,
     resume: () => undefined,
+    // The account is deleted, and its row of this browser with it: the subscription is given up too (at best), so nothing is sent to it again.
+    forget: () =>
+      quietly(async () => {
+        keys = null;
+        await (await currentSubscription())?.unsubscribe();
+      }, undefined),
     target: () => quietly(async () => (await currentSubscription())?.endpoint ?? null, null),
     follow: () => () => undefined,
     // A tap is the worker's: it focuses the game's window or opens one at the notice's page.

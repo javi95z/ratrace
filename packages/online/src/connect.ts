@@ -194,6 +194,15 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) throw error;
     },
+    async deleteAccount() {
+      // Said in as many words, so that nothing sent by mistake removes anyone; gone only when the function says so.
+      try {
+        const { data, error } = await client.functions.invoke('delete-account', { body: { confirm: true } });
+        return !error && (data as { deleted?: unknown } | null)?.deleted === true;
+      } catch {
+        return false;
+      }
+    },
     async ensureProfile(userId, language) {
       // Made with the language it was first opened in; an existing one keeps its own, which only the player changes.
       const { error } = await client.from('profiles').upsert({ user_id: userId, language }, { onConflict: 'user_id', ignoreDuplicates: true });

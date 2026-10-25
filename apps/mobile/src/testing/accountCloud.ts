@@ -68,7 +68,7 @@ const codeIn = (address: string, to: string): string | null => {
  * already (linking it is then refused as `taken`, and signing in with it is that player). `held(id)` is what an account holds, for a test to fill.
  */
 export function accountCloud({ signedIn = null, existing = null, email = 'ana.garcia@example.com' }: { signedIn?: CloudUser | null; existing?: string | null; email?: string } = {}) {
-  const state = { user: signedIn, guests: 0, clock: 0 };
+  const state = { user: signedIn, guests: 0, clock: 0, deleted: [] as string[] };
   const accounts = new Map<string, Held>();
   const held = (id: string): Held => {
     let one = accounts.get(id);
@@ -109,6 +109,13 @@ export function accountCloud({ signedIn = null, existing = null, email = 'ana.ga
     linkGoogle: (to, open) => google(to, open, () => (existing !== null || state.user === null ? null : { id: state.user.id, is_anonymous: false, email })),
     signInWithGoogle: (to, open) => google(to, open, () => ({ id: existing ?? 'member-1', is_anonymous: false, email })),
     signOut: async () => become(null),
+    // The account deleted with everything it holds, as the project's function deletes it; the session goes with the sign-out the account asks for after.
+    deleteAccount: async () => {
+      if (state.user === null) return false;
+      accounts.delete(state.user.id);
+      state.deleted.push(state.user.id);
+      return true;
+    },
     ensureProfile: async () => undefined,
     onUser: (listener) => (listeners.add(listener), () => void listeners.delete(listener)),
     reportErrors: async () => 'sent',

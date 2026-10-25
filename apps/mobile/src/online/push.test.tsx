@@ -508,6 +508,28 @@ describe('the token, kept up to date with the account', () => {
     expect(asked.filter((line) => line.startsWith('notify'))).toEqual([`notify ${FIRST} ios en`]);
   });
 
+  it('is given to nobody once the account it was kept with is deleted: the notices are off on the phone, and a no is still remembered', async () => {
+    notices.status = 'granted';
+    const moved = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const { all, asked } = community();
+    const note = memoryNote('on');
+    const push = phonePush(note, { platform: 'ios' });
+    renderGame(<Preferences />, { ...memoryServices(), account: moved.account, community: () => all, push });
+    await waitFor(() => expect(asked).toContain(`notify ${FIRST} ios en`));
+    asked.length = 0;
+    await push.forget();
+    expect(note.now).toEqual({ state: 'off', token: null });
+    // The server forgot the phone with the account; the next player on it is not given it unasked.
+    act(() => moved.become({ kind: 'offline' }));
+    act(() => moved.become({ kind: 'guest', userId: 'guest-2', notice: null }));
+    await settle();
+    await settle();
+    expect(asked).toEqual([]);
+    const refused = memoryNote('refused');
+    await phonePush(refused, { platform: 'ios' }).forget();
+    expect(refused.now).toEqual({ state: 'refused', token: null });
+  });
+
   it('is not kept while the notices are off', async () => {
     notices.status = 'granted';
     const { account } = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });

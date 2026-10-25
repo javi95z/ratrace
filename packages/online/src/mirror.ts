@@ -330,6 +330,20 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     return this.run('meet');
   };
 
+  /**
+   * The account is gone (deleted), and the device with nothing of it: the lives it noted to give up there, and those the server would not take,
+   * were that account's, and are told to no other. What it read of the account goes too.
+   */
+  readonly forget = (): void => {
+    this.abandoned.clear();
+    this.options.remember?.write([]);
+    this.refused.clear();
+    this.options.keepRefused?.write([]);
+    this.known = null;
+    this.lifeKnown = false;
+    this.setOffer(null);
+  };
+
   /** Notes a life the server would not finish, here and where the device keeps such notes: the latest few hundred. */
   private refuse(runId: string): void {
     this.refused.add(runId);

@@ -138,3 +138,20 @@ test('closing ends every socket upgraded, one that never joined a channel too', 
   cloud = fakeCloud();
   await cloud.listen(0);
 });
+
+test('an account deleted through the game\'s own client: the player and everything of theirs go, and the phone is signed out of it', async () => {
+  const storage = memory();
+  const phone = await connectSupabase(url, FAKE_KEY, { storage, autoRefresh: false });
+  const guest = await phone.signInAsGuest();
+  if (guest === null) throw new Error('no guest was made');
+  await phone.ensureProfile(guest.id, 'en');
+  expect(cloud.tables.profiles.some((row) => row.user_id === guest.id)).toBe(true);
+  expect(await phone.deleteAccount?.()).toBe(true);
+  expect(cloud.users.has(guest.id)).toBe(false);
+  expect(cloud.tables.profiles.some((row) => row.user_id === guest.id)).toBe(false);
+  await phone.signOut();
+  expect(await phone.currentUser()).toBeNull();
+  // A phone that comes back with that session finds nobody: the next start makes a new guest.
+  const again = await connectSupabase(url, FAKE_KEY, { storage, autoRefresh: false });
+  expect(await again.currentUser()).toBeNull();
+});

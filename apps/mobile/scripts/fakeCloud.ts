@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { fileURLToPath } from 'node:url';
+import { deleteAccount } from '../../../supabase/functions/_shared/deletion.ts';
 import { friends as friendsFunction } from '../../../supabase/functions/_shared/friends.ts';
 import type { FriendRow, FriendsDeps } from '../../../supabase/functions/_shared/friends.ts';
 import { rankedServer } from '../../web/src/testing/rankedServer.ts';
@@ -22,7 +23,8 @@ import { roomServer } from '../../web/src/testing/roomServer.ts';
  * - **The tables** the client reads and writes (profiles, games, player_progress, runs, challenge_entries, push_subscriptions), and the RPCs
  *   (ranking, challenge_ranking, challenge_choices, claim_push_token), each row the caller's own where the database keeps it so.
  * - **The functions**: `rooms` and `ranked`, the web's in-memory servers (the edge functions' own code), `friends` the function's own code over
- *   friends kept here, and `track`, `report-error`, `finish-run` taken and kept.
+ *   friends kept here, `delete-account` the function's own code over everything kept here of the player, and `track`, `report-error`,
+ *   `finish-run` taken and kept.
  * - **Realtime**: a WebSocket that speaks Phoenix (vsn 2.0.0) as Supabase's does, telling a room's channel when its room or its players change.
  * - **The checker's own door** (`/control/*`): another player asks the rooms server as themselves (`/control/rooms`), the state is read
  *   (`/control/state`), the friends of the next guest are set (`/control/friends`), and the finished lives the account was sent are forgotten
@@ -547,6 +549,29 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
       }
       if (name === 'friends') {
         const reply = await friendsFunction(friendsDeps, caller, body);
+        return send(reply.status, reply.body);
+      }
+      if (name === 'delete-account') {
+        // The function's own code, over what is kept here: the player goes, and everything that hangs from them, as the database's cascades take it.
+        const reply = await deleteAccount(
+          {
+            allow: async () => true,
+            remove: async (user) => {
+              users.delete(user);
+              for (const [token, owner] of refresh) if (owner === user) refresh.delete(token);
+              for (const [table, column] of Object.entries(OWNED)) tables[table] = tables[table].filter((row) => row[column ?? 'user_id'] !== user);
+              rankedByUser.delete(user);
+              const drop = <T>(list: T[], gone: (one: T) => boolean) => {
+                for (let at = list.length - 1; at >= 0; at--) if (gone(list[at])) list.splice(at, 1);
+              };
+              drop(friendships, (one) => one.follower === user || one.followed === user);
+              drop(requests, (one) => one.from === user || one.to === user);
+            },
+          },
+          caller,
+          body,
+        );
+        log(`delete-account ${caller.slice(0, 8)} → ${reply.status}`);
         return send(reply.status, reply.body);
       }
       if (name === 'finish-run') {

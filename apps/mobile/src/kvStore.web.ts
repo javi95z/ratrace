@@ -259,6 +259,29 @@ export const kvLastAccount = {
   },
 };
 
+/** The lists of lives the account was still to be told of (`givenUpIn` and `refusedIn` of `online/over.ts`, in `kvText`). */
+const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
+
+/**
+ * Takes out of the browser what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress,
+ * the finished lives, the profile): the account's session (the client's `sb-…` keys), the round being planned, the lists of lives the account was
+ * to be told of, whose account it was, the phone's note of the notices, and a trip to Google noted. What is the browser's own stays: the language
+ * chosen (its cookie), the offer to install the game. A browser that keeps nothing has nothing to take away.
+ */
+export async function kvForget(): Promise<void> {
+  const theirs = (key: string) => key.startsWith('sb-') || key === BASKET || key === LAST_ACCOUNT || key === PUSH || ACCOUNT_LISTS.includes(key);
+  try {
+    for (const key of Object.keys(localStorage)) if (theirs(key)) localStorage.removeItem(key);
+  } catch {
+    // Nothing to take away from a browser that keeps nothing.
+  }
+  try {
+    sessionStorage.removeItem(KEEPING);
+  } catch {
+    // The same.
+  }
+}
+
 const INSTALL_OFFER = 'ratrace.installOffer';
 
 /**

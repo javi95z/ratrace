@@ -56,6 +56,11 @@ export interface Account {
   dismissNotice(): void;
   /** Signs this browser out of the account. False if it could not. Whoever comes next starts as a new guest. */
   signOut(): Promise<boolean>;
+  /**
+   * Deletes the account, and everything of the player's in it, for good; then signs this device out of it. True only once the server has said it
+   * is gone: false (no network, a refusal) leaves the account as it was, signed in. Absent, the account cannot be deleted from here.
+   */
+  deleteAccount?(): Promise<boolean>;
 }
 
 /**
@@ -95,6 +100,11 @@ export interface AccountSaves {
   takeOffer(): Promise<boolean>;
   /** Ends the offered life in the account instead. */
   declineOffer(): Promise<void>;
+  /**
+   * The account is gone (deleted): what the device noted to tell it later (the lives given up, those the server would not take) is nobody's to
+   * tell now, and the next account is told none of it. Absent, there is nothing noted.
+   */
+  forget?(): void;
 }
 
 /** One line of a ranking: the best ranked life of one player. */

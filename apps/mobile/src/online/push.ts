@@ -62,6 +62,12 @@ export interface Push {
    */
   release(community: Community | null, patience?: number): Promise<void>;
   resume(): void;
+  /**
+   * The account the phone was kept with is deleted, and the server forgot the phone with it (`useAccount().deleteAccount`): the notices are noted off
+   * here, so the next player on the phone is not given them unasked, and a claim in flight notes nothing. A no stays a no: the player is never asked
+   * twice. Never fails.
+   */
+  forget(): Promise<void>;
   /** The phone, as the account knows it, while the notices are on; null otherwise. */
   target(): Promise<Target | null>;
   /**
@@ -301,6 +307,12 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
       clearTimeout(timer);
     },
     resume: () => again?.(),
+    forget: async () => {
+      // A new intent, as an "off" is: a claim begun before it lands as nothing.
+      intent += 1;
+      told = null;
+      note.write({ state: noted().state === 'refused' ? 'refused' : 'off', token: null });
+    },
     target: async () => {
       if (!(available() && on() && (await allowed()))) return null;
       const now = noted().token ?? (await fresh());
