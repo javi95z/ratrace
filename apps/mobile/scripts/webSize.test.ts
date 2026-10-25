@@ -208,6 +208,15 @@ describe('the first page', () => {
     ]);
   });
 
+  it('carries none of the gesture handler: a sheet is dragged with the page\'s own pointer events, the handler loaded with what drags by it', () => {
+    const handler = { path: `${APP}gestures.js`, bytes: Buffer.from('x'), sources: ['/node_modules/react-native-gesture-handler/src/v3/hooks/gestures/pan/usePanGesture.ts'] };
+    const clean = { path: `${APP}clean.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/ui/sheetDrag.web.tsx'] };
+    expect(judgeWebExport([clean, handler, firstPage([clean.path])], [])).toEqual([]);
+    expect(judgeWebExport([clean, handler, firstPage([clean.path, handler.path])], [])).toEqual([
+      expect.stringMatching(/first page .* carries the gesture handler: \/node_modules\/react-native-gesture-handler\/src\/v3\/hooks\/gestures\/pan\/usePanGesture\.ts/),
+    ]);
+  });
+
   it('carries no language\'s words in the scripts its HTML loads: each language\'s are a chunk of their own, fetched for the page\'s language', () => {
     const words = { path: `${APP}words.js`, bytes: Buffer.from('x'), sources: ['/apps/mobile/src/game/Home.tsx', '/packages/i18n/messages/es.json'] };
     const text = { path: `${APP}text.js`, bytes: Buffer.from('x'), sources: ['/packages/content/src/text/ru.cards.ts'] };

@@ -277,6 +277,10 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
     // Nor the page of nothing (`screens/NotFound.web.tsx`): the 404's own chunk, which a page in a language the game lacks loads only then.
     const nothing = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => source.endsWith('/screens/NotFound.web.tsx')))];
     if (nothing.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries the page of nothing: ${nothing.join(', ')}`);
+    // Nor the gesture handler: a sheet is dragged with the page's own pointer events (ui/sheetDrag.web.tsx), the handler loaded with what drags by it
+    // (the cards, the slider).
+    const handler = [...new Set(first.scripts.flatMap((script) => script.sources ?? []).filter((source) => source.includes('react-native-gesture-handler')))];
+    if (handler.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries the gesture handler: ${handler.slice(0, 3).join(', ')}`);
   }
   problems.push(...judgeDoorWords(byPath));
   for (const { page, faces } of FRONT_DOORS) {
