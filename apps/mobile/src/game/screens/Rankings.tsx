@@ -18,6 +18,7 @@ import { Picker } from '../../ui/Picker';
 import { RatAvatar } from '../../ui/RatAvatar';
 import { webLine } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
+import { LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA, type ColorToken } from '../../ui/theme';
@@ -211,10 +212,10 @@ const FriendLine = memo(function FriendLine({ userId, name, avatar, bond, busy, 
   );
 });
 
-/** The heading of a group of the panel (the web's `pixel text-[12px] uppercase tracking-[0.1em]`). */
+/** The heading of a group of the panel (the web's `pixel text-[12px] uppercase tracking-[0.1em]`), under the panel's tab (on the web an `<h3>`). */
 function GroupHeading({ tone, children }: { tone: ColorToken; children: string }) {
   return (
-    <View accessibilityRole="header">
+    <View accessibilityRole="header" {...LEVEL_3}>
       <PixelText size={12} tone={tone} style={{ letterSpacing: 12 * 0.1, textTransform: 'uppercase' }}>{children}</PixelText>
     </View>
   );
