@@ -21,7 +21,7 @@ vi.mock('../context', async (original) => {
     ...real,
     // One or the other for the whole of a test.
     useGame: <T,>(select: (state: RoundState & RoundActions) => T): T =>
-      shown.earned === null ? real.useGame(select) : select({ earned: shown.earned, unlocked: shown.unlocked } as unknown as RoundState & RoundActions),
+      shown.earned === null ? real.useGame(select) : select({ earned: shown.earned, unlocked: shown.unlocked, reached: [], lifeId: null } as unknown as RoundState & RoundActions),
   };
 });
 

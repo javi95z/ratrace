@@ -3,6 +3,8 @@ import type { Bot, Locale } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import type { BasketKeep } from '../game/basket';
 import { FIRSTS, TIPS } from '../game/guide';
+import { memoryMilestones, withBests, EMPTY_BOOK } from '../game/lifeMilestones';
+import type { MilestoneKeep } from '../game/lifeMilestones';
 import { ageAt } from '../game/present';
 import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
@@ -80,6 +82,8 @@ export const SCENES: readonly Scene[] = [
   { name: 'amount-savings', locale: 'en', sheet: 'save' },
   { name: 'celebrate-legendary', locale: 'en' },
   { name: 'celebrate-earned', locale: 'en' },
+  { name: 'celebrate-milestone', locale: 'en' },
+  { name: 'celebrate-milestone-banner', locale: 'en' },
   { name: 'challenge-practice', locale: 'en' },
   { name: 'legal', locale: 'en' },
   { name: 'finance-lifestyle', locale: 'en', tab: 'lifestyle' },
@@ -263,6 +267,10 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'celebrate-legendary': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   // The same step, its legendary sheet taken in: the small cards of what it earned, in the result of the card.
   'celebrate-earned': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  // The same step again: the engineer worth 100k for the first time in any life, with both badges of the step inside its whole screen.
+  'celebrate-milestone': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  // And in a player's later life: 100k reached younger before, MrFeast met before, so a banner with the 100k's badge in it.
+  'celebrate-milestone-banner': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-271', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   'challenge-practice': null,
   legal: null,
   // The finances of play-finance-r6's sixth round, at the way of life: how the engineer works, the round's focus, how and where she lives, her
@@ -508,6 +516,22 @@ export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-ne
  */
 export const FAULTS: ReadonlySet<string> = new Set(['play-fault']);
 
+/** Badges a scene's player earned in an earlier life, so the scene's step does not earn them for the first time. */
+const BADGES_HELD: Readonly<Record<string, readonly string[]>> = { 'celebrate-milestone-banner': ['celeb_mrfeast'] };
+
+/**
+ * Where a scene's game keeps the milestones of lives (core's lifeMilestones.ts), where that is not a book of its own in memory: none at all for the
+ * scenes of badges and moments as the Next web drew them (it had no milestones), so they stay the web's to compare; and for the milestones' own
+ * scenes, the book they need, made anew for each drawing: empty for the first time ever, and for a later life the 100k reached at 22 before.
+ */
+export function sceneMilestones(name: string): MilestoneKeep | null | undefined {
+  if (name === 'celebrate-legendary' || name === 'celebrate-earned' || name.startsWith('moment-')) return null;
+  if (name !== 'celebrate-milestone-banner') return undefined;
+  const keep = memoryMilestones();
+  keep.save(withBests(EMPTY_BOOK, { worth100k: 22 }));
+  return keep;
+}
+
 /** Where a scene's game keeps the orders of its round, where that is not the game's own memory: nowhere it can read them back from, for a fault. */
 export function sceneBasket(name: string): BasketKeep | undefined {
   if (!FAULTS.has(name)) return undefined;
@@ -589,6 +613,11 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   // The lives first, on the empty device (they leave a whole profile); then what the scene unlocks, added to it.
   await liveThrough(store, name);
   await unlock(store, name);
+  const held = BADGES_HELD[name];
+  if (held !== undefined) {
+    const profile = await store.loadProfile();
+    await store.saveProfile({ ...profile, badges: { ...Object.fromEntries(held.map((id, i) => [id, { at: 1_000 + i, gameId: `earned-${i + 1}` }])), ...profile.badges } });
+  }
   if (STILL.has(name)) {
     const profile = await store.loadProfile();
     await store.saveProfile({ ...profile, settings: { ...profile.settings, reducedMotion: true } });

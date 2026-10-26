@@ -296,7 +296,7 @@ describe('the wall between the phone\'s screens and the game', () => {
   it('wires the real session and the phone\'s store in one place', () => {
     const wires = mine.filter((path) => importsOf(path).some((i) => /^@\/session\/(local|memory|resilient)$/.test(i.from) || i.from === '@/kvStore')).map(rel);
     // The others: the basket (game/phoneBasket.ts) keeps the orders of the round in the phone's store, beside the life it
-    // belongs to; the memory services (testing/memoryServices.ts) stand in for the context's services, as the web's do, for
+    // belongs to, and the milestones' book (game/phoneMilestones.ts) the milestones of lives, as the basket does; the memory services (testing/memoryServices.ts) stand in for the context's services, as the web's do, for
     // the tests' render and for the route that draws a scene; and the development page's fixture (testing/olderLife.ts)
     // writes a life straight into the phone's store to see it finished under older rules. Development only; the one route
     // that reaches each of those two is its own: the development page for the fixture, the scene page for the scenes (which
@@ -308,7 +308,7 @@ describe('the wall between the phone\'s screens and the game', () => {
     // And the phone's store's web twin (kvStore.web.ts), which keeps the player's things in the browser's IndexedDB and takes the core's memory store
     // for a browser that has none, as the Next web does.
     // And its web twin (online/index.web.ts), which keeps those lists in the browser under the Next web's keys, through the store's twin.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'kvStore.web.ts', 'online/index.ts', 'online/index.web.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'game/phoneMilestones.ts', 'kvStore.web.ts', 'online/index.ts', 'online/index.web.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/perfLife')).map(rel)).toEqual(['app/perf.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);

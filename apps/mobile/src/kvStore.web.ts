@@ -145,6 +145,27 @@ export const kvBasket: BasketText = {
   },
 };
 
+const MILESTONES = 'ratrace.milestones';
+
+/** The milestones of lives (game/phoneMilestones.ts), as text, in the browser's localStorage. A browser that keeps nothing keeps them for the page. */
+export const kvMilestones: BasketText = {
+  read: () => {
+    try {
+      return localStorage.getItem(MILESTONES);
+    } catch {
+      return null;
+    }
+  },
+  write: (text) => {
+    try {
+      if (text === null) localStorage.removeItem(MILESTONES);
+      else localStorage.setItem(MILESTONES, text);
+    } catch {
+      // Not kept: a life opened again may celebrate a milestone twice, and nothing worse.
+    }
+  },
+};
+
 /**
  * Where the account's client keeps its session: the browser's localStorage, with no prefix, as the client keeps it on its own. The web wiring
  * passes the client no storage (it uses localStorage by itself); this stays so that the export is there.

@@ -1,4 +1,5 @@
 import { rarityOf } from '@ratrace/content';
+import { FLAG_IN_ROOM } from '@ratrace/engine';
 import { momentsOf } from '@ratrace/core/game/moments';
 import type { Moment } from '@ratrace/core/game/moments';
 import type { RoundState } from '@ratrace/core/game/store';
@@ -86,4 +87,25 @@ export function cuesFor(state: Heard, before: Heard): Cue[] {
   // A badge earned for the first time ever rings, unless the moment it came with already has the floor.
   if (state.earned.length > 0 && state.earned !== before.earned && !cues.some((cue) => LONG.includes(cue))) cues.push(badgeCue(state.earned));
   return cues;
+}
+
+/** The badges' rings, which a milestone reached in the same step speaks for. */
+const RINGS: readonly Cue[] = ['badge', 'badgeUncommon', 'badgeRare', 'badgeLegendary'];
+
+/** What of the round on screen the milestones' sound listens to, besides what the web's cues do. */
+export type HeardMilestones = Heard & Pick<RoundState, 'reached'>;
+
+/**
+ * The cues of a change of the round with its milestones heard (lifeMilestones.ts; the web had none, so this is the phone's own, beside the web's
+ * `cuesFor`): a milestone reached rings for the step, in place of its badges' ring, as it is shown in their place. The whole screen gets the
+ * million's fanfare (a legendary badge carried in it, its own); a banner, the coin. A moment that already has the floor (the way out, the first
+ * million, a bankruptcy) keeps it. `milestone` says the step reached one, to be felt as a success.
+ */
+export function stepCues(state: HeardMilestones, before: HeardMilestones): { cues: Cue[]; milestone: boolean } {
+  const cues = cuesFor(state, before);
+  if (!state.view || state.reached.length === 0 || state.reached === before.reached || cues.some((cue) => LONG.includes(cue))) return { cues, milestone: false };
+  const inRoom = Object.hasOwn(state.view.player.life.flags, FLAG_IN_ROOM);
+  const legendary = state.earned.some((id) => rarityOf(id) === 'legendary');
+  const ring: Cue = inRoom ? 'coin' : state.reached.some((each) => each.size === 'big') ? 'million' : legendary ? 'badgeLegendary' : 'coin';
+  return { cues: [...cues.filter((cue) => !RINGS.includes(cue)), ring], milestone: true };
 }

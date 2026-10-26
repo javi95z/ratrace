@@ -10,6 +10,8 @@ import type { GameSession, Lost, Sessions, StepResult } from '../session/types';
 import { knownOrders } from './rules';
 import { memoryBasket } from './basket';
 import type { BasketKeep } from './basket';
+import { memoryMilestones, milestonesOfStep } from './lifeMilestones';
+import type { MilestoneKeep, Reached } from './lifeMilestones';
 
 /** Where the player is within a round. */
 export type Stage = 'news' | 'cards' | 'outcome' | 'finance' | 'resolve' | 'end';
@@ -35,6 +37,8 @@ export interface RoundState {
   earned: string[];
   /** Lives the step on screen unlocked. */
   unlocked: string[];
+  /** The milestones of the life the step on screen reached, the biggest first. Shown with its result, and gone with it, as `earned`. */
+  reached: Reached[];
   stage: Stage;
   /** What the card just answered did, while its result is on screen. The card to answer next is `view.hand[view.answered]`. */
   cardEvents: GameEvent[];
@@ -173,6 +177,7 @@ const blank: RoundState = {
   story: [],
   earned: [],
   unlocked: [],
+  reached: [],
   stage: 'news',
   cardEvents: [],
   offered: null,
@@ -210,6 +215,11 @@ export interface GameStoreOptions {
   guardMs?: number;
   /** Where the orders of the round being planned are kept until it is played. Left out, nowhere beyond the page. */
   basket?: BasketKeep;
+  /**
+   * Where the milestones of lives are kept, so a life opened again does not celebrate one twice. Left out, nowhere beyond the page. Null: none is
+   * celebrated (a scene of the badges as the Next web drew them, which had none).
+   */
+  milestones?: MilestoneKeep | null;
 }
 
 /**
@@ -244,7 +254,7 @@ function joined(a: Order, b: Order): Order | null {
  * The state of the round on screen. It talks to the game through a `GameSession` only,
  * and asks the engine's own preview what each order would do: no rule of the game lives here.
  */
-export function createGameStore({ sessions, content, now = () => 0, guardMs = 0, basket = memoryBasket() }: GameStoreOptions): GameStore {
+export function createGameStore({ sessions, content, now = () => 0, guardMs = 0, basket = memoryBasket(), milestones = memoryMilestones() }: GameStoreOptions): GameStore {
   let session: GameSession | null = null;
   /** When the stage on screen last changed. */
   let changedAt = Number.NEGATIVE_INFINITY;
@@ -276,6 +286,22 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
     }
   };
 
+  /**
+   * The milestones a step reached, from the life before it to the life after it, kept in the book as they are told. A step the book cannot be
+   * read or written for celebrates nothing rather than stop the game.
+   */
+  const reachedBy = (before: GameView, after: GameView, storyBefore: RoundState['story'], storyAfter: RoundState['story'], events: readonly GameEvent[], gameId: string | null): Reached[] => {
+    if (gameId === null || milestones === null) return [];
+    try {
+      const { reached, book } = milestonesOfStep({ content, gameId, book: milestones.load(), before, after, story: { before: storyBefore, after: storyAfter }, events });
+      milestones.save(book);
+      return reached;
+    } catch (error) {
+      console.error('the milestones of a step could not be told:', error);
+      return [];
+    }
+  };
+
   const store = createStore<RoundState & RoundActions>()((set, get) => {
     /** What every step does when the session refuses it: open the life as it now stands, or stop. */
     const refused = async (error: unknown) => {
@@ -301,14 +327,16 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
     /** Shows what a round did, as the ledger after it. */
     const shown = (view: GameView, result: StepResult, orders: Order[] = []) => {
       if (!session) return;
+      const story = session.story();
       set({
           view: result.view,
           history: session.history(),
           bankruptcies: session.bankruptcies(),
           badges: session.badges(),
-          story: session.story(),
+          story,
           earned: result.earned,
           unlocked: result.unlocked,
+          reached: reachedBy(view, result.view, get().story, story, result.events, get().gameId),
           resolved: { before: view, events: result.events, orders },
           orders: [],
           undo: null,
@@ -453,10 +481,12 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         // And whether the player had a partner then: a card that brings one in is told as that, not as a change of their pay.
         const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round], partnered: view.player.life.partner };
         // A server takes a moment to answer. The tap is seen at once on the option; then the card turns, its choice made, while the dice roll there.
-        const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], pending: true }), PENDING_AFTER_MS) : null;
+        const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], reached: [], pending: true }), PENDING_AFTER_MS) : null;
         try {
           const result = await session.answerCard(option);
-          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', pending: false, unreachable: false, rejected: false });
+          const story = session.story();
+          const reached = reachedBy(view, result.view, get().story, story, result.events, get().gameId);
+          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story, earned: result.earned, unlocked: result.unlocked, reached, stage: 'outcome', pending: false, unreachable: false, rejected: false });
         } catch (error) {
           // The card was not answered after all: it is back, to be answered again.
           if (get().pending) set({ stage: 'cards', offered: null, pending: false });
@@ -470,9 +500,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       afterCard() {
         const { view, stage, pending } = get();
         if (!view || stage !== 'outcome' || pending || !settled()) return;
-        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], offered: null, earned: [], unlocked: [] });
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], offered: null, earned: [], unlocked: [], reached: [] });
         else {
-          set({ cardEvents: [], offered: null, earned: [], unlocked: [] });
+          set({ cardEvents: [], offered: null, earned: [], unlocked: [], reached: [] });
           get().toFinance();
         }
       },
@@ -587,7 +617,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       next() {
         const { view, stage } = get();
         if (!view || stage !== 'resolve' || !settled()) return;
-        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], offered: null, resolved: null, earned: [], unlocked: [] });
+        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], offered: null, resolved: null, earned: [], unlocked: [], reached: [] });
       },
     };
   });

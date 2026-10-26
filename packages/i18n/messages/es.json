@@ -409,6 +409,37 @@
       "go": "Afrontarla"
     }
   },
+  "milestone": {
+    "kicker": "Hito",
+    "first": "¡Por primera vez!",
+    "record": "¡Nuevo récord! Tu mejor marca: {age}",
+    "headline": "¡{name} a los {age}!",
+    "at": "A los {age}",
+    "also": "También",
+    "go": "¡A por más!",
+    "share": "Compartir",
+    "shareText": "{headline} ¿Lo superas? Juega a The Rat Race:",
+    "names": {
+      "escaped": "Fuera de la rueda",
+      "worth10m": "Diez millones",
+      "worth1m": "Un millón",
+      "home": "Casa propia",
+      "business": "Negocio propio",
+      "halfway": "A mitad de camino",
+      "debtFree": "Sin deudas",
+      "worth100k": "100.000 de patrimonio"
+    },
+    "lines": {
+      "escaped": "Tu dinero trabaja para que tú no tengas que hacerlo.",
+      "worth10m": "Ocho cifras. Las demás ratas te miran desde abajo.",
+      "worth1m": "Siete cifras, en dólares de los de verdad.",
+      "home": "Llaves en mano. Tu casero te va a echar de menos.",
+      "business": "Ahora mandas tú. Al menos, sobre ti.",
+      "halfway": "Tus rentas ya pagan media vida.",
+      "debtFree": "No le debes ni un céntimo a nadie.",
+      "worth100k": "Seis cifras a tu nombre."
+    }
+  },
   "cards": {
     "progress": "Carta {n} de {total}",
     "world": "Suceso mundial",
