@@ -12,7 +12,7 @@ import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { useGame } from '../context';
 import { CODE_REACH, friendLines, Rankings } from './Rankings';
 import type { Kind } from './Rankings';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 
 afterEach(cleanup);
 
@@ -237,6 +237,60 @@ describe('the rankings', () => {
     await act(async () => waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]));
     await settled();
     expect((await linesOf('This week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
+  });
+
+  it('is read again when pulled down: the ranking on screen asked anew, kept until the new one comes, the spinner turning until it has', async () => {
+    // The answer to the second asking waits until the test lets it come.
+    let held: Promise<void> | null = null;
+    let letCome = () => {};
+    const { community: base, asked, state } = community();
+    const withFriends: Community = {
+      ...base,
+      ranking: async (query) => {
+        const answer = await base.ranking(query);
+        if (held) await held;
+        return answer;
+      },
+    };
+    show(withFriends);
+    await screen.findByText('Otra_Rata');
+    /** The phone's pull of the page's list, as the list was last given it. */
+    const pull = () => listed.at(-1)!.refreshControl as ReactElement<{ refreshing: boolean; onRefresh(): void }>;
+    held = new Promise((done) => (letCome = done));
+    state.board = () => [row(1, 'cccc3333-0000', { nickname: 'Nueva_Rata' })];
+    act(() => pull().props.onRefresh());
+    await waitFor(() => expect(pull().props.refreshing).toBe(true));
+    // What was on screen stays while it is read again.
+    expect(screen.getByText('Otra_Rata')).toBeTruthy();
+    act(() => letCome());
+    await screen.findByText('Nueva_Rata');
+    await waitFor(() => expect(pull().props.refreshing).toBe(false));
+    expect(asked.filter((one) => one.startsWith('ranking'))).toEqual(['ranking all everyone any', 'ranking all everyone any']);
+  });
+
+  it('reads the friends again with their ranking, and the week\'s challenge on its own, when pulled down on their tabs', async () => {
+    let boards = 0;
+    const { community: withFriends, asked, state } = community({ challengeRanking: async () => ((boards += 1), { rows: [], entrants: 0 }) });
+    const friendsRead = vi.spyOn(withFriends, 'friends');
+    show(withFriends, 'en', { tab: 'friends' });
+    await waitFor(() => expect(friendsRead).toHaveBeenCalledTimes(1));
+    state.friends = { ...state.friends, friends: [{ userId: 'dddd4444-0000', nickname: 'Amiga_Rata', avatar: null }] };
+    const pull = () => listed.at(-1)!.refreshControl as ReactElement<{ refreshing: boolean; onRefresh(): void }>;
+    act(() => pull().props.onRefresh());
+    await screen.findByText('Amiga_Rata');
+    expect(friendsRead).toHaveBeenCalledTimes(2);
+    expect(asked.filter((one) => one === 'ranking all friends any')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('tab', { name: "This week's challenge" }));
+    await waitFor(() => expect(boards).toBe(1));
+    act(() => pull().props.onRefresh());
+    await waitFor(() => expect(boards).toBe(2));
+    await waitFor(() => expect(pull().props.refreshing).toBe(false));
+  });
+
+  it('cannot be pulled down with nobody to ask', async () => {
+    show(null);
+    await screen.findByText(/account/i);
+    expect(listed.at(-1)!.refreshControl).toBeUndefined();
   });
 
   it('says so when nobody is in a ranking yet, and when it could not be read', async () => {

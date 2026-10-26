@@ -2,7 +2,7 @@ import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitA
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
-import { memo, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Pressable, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
@@ -318,9 +318,9 @@ export { WeeklyChallenge as Challenge };
 /**
  * The ranking of this week's challenge, as the cloud answers it, while it is `open` (its tab is the one on screen): `undefined` while the answer is
  * on its way, null where it could not be read. Each opening asks again, from nothing, as the web's board is drawn anew each time its tab is opened;
- * nobody is asked while it is shut, or where there is nobody to ask.
+ * nobody is asked while it is shut, or where there is nobody to ask. `reload` asks again (a page pulled down), the board on screen kept meanwhile.
  */
-export function useChallengeBoard(community: Community | null, open = true): ChallengeRanking | null | undefined {
+export function useChallengeBoard(community: Community | null, open = true): { board: ChallengeRanking | null | undefined; reload(): Promise<void> } {
   const week = useThisWeek();
   const [opening, setOpening] = useState({ open, n: 0 });
   let now = opening;
@@ -340,7 +340,16 @@ export function useChallengeBoard(community: Community | null, open = true): Cha
       live = false;
     };
   }, [community, week, open, n]);
-  return answer?.to === n ? answer.board : undefined;
+  // Read again (a page pulled down): the board on screen stays until the new one comes, and is replaced only if the tab is still the one opened.
+  const asked = useRef({ community, week, n });
+  asked.current = { community, week, n };
+  const reload = useCallback(async () => {
+    const { community: asking, week: thisWeek, n: at } = asked.current;
+    if (asking === null || thisWeek === null) return;
+    const board = await asking.challengeRanking(thisWeek.week);
+    if (asked.current.n === at) setAnswer({ to: at, board });
+  }, []);
+  return { board: answer?.to === n ? answer.board : undefined, reload };
 }
 
 /**

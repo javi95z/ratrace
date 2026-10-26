@@ -196,6 +196,29 @@ export const kvLanguage: LanguageKeep = {
   },
 };
 
+const TAP_SOUND = 'ratrace:tapSound';
+
+/**
+ * Whether a press clicks, on the phone: off until the player turns it on, as a phone's own controls make no sound (its touch says them,
+ * `ui/haptics.ts`). A setting of the phone's, as its language is: kept when an account is forgotten. Null on the web, where there is no such choice.
+ */
+export const kvTapSound = {
+  read: (): boolean | null => {
+    try {
+      return Storage.getItemSync(TAP_SOUND) === '1';
+    } catch {
+      return false;
+    }
+  },
+  write: (on: boolean): void => {
+    try {
+      Storage.setItemSync(TAP_SOUND, on ? '1' : '0');
+    } catch {
+      // A phone that keeps nothing: the press is silent again on the next start.
+    }
+  },
+};
+
 /**
  * The orders of the round being planned, as text, on the phone: the web's basket in its localStorage. Read and written at once
  * (synchronously), because the round store keeps the basket as it changes, and reads it when a life is opened.

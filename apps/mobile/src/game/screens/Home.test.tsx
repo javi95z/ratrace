@@ -67,7 +67,8 @@ describe('the front door', () => {
     fireEvent.click(settingsButtons()[0]);
     const sheet = (await screen.findByRole('heading', { name: 'Settings' })).closest('[aria-modal="true"]') as HTMLElement;
     expect(within(within(sheet).getByRole('radiogroup', { name: 'Language' })).getAllByRole('radio').map((choice) => choice.textContent)).toEqual(['English', 'Español', 'Русский']);
-    expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true']);
+    // Sound on, a press's click off (the phone's own), less motion off, the guide's tips on.
+    expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'true']);
     // What is switched there is switched for good.
     fireEvent.click(within(sheet).getByRole('switch', { name: /^Sound/ }));
     expect(within(sheet).getByRole('switch', { name: /^Sound/ }).getAttribute('aria-checked')).toBe('false');

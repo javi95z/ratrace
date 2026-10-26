@@ -146,15 +146,18 @@ export function LanguageMenu() {
   );
 }
 
-/** What is switched on or off: sound, less motion, and the tips of the guide. */
+/** What is switched on or off: sound (and, on the phone, the click of a press), less motion, and the tips of the guide. */
 export function Switches() {
   const t = useT('settings');
   const home = useT('home');
-  const { reducedMotion, setReducedMotion, sound, setSound } = useSettings();
+  const phone = useOwnT();
+  const { reducedMotion, setReducedMotion, sound, setSound, tapSound, setTapSound } = useSettings();
   const guide = useGuide();
   return (
     <View style={{ gap: 8 }}>
       <Toggle on={sound} onChange={setSound} label={t('sound')} hint={t('soundHint')} />
+      {/* The phone's own: whether a press clicks too, off until turned on (a phone's controls make no sound). Shown only with the sound on. */}
+      {tapSound !== null && sound ? <Toggle on={tapSound} onChange={setTapSound} label={phone('tapSound')} hint={phone('tapSoundHint')} /> : null}
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
       <WeeklyNotice />

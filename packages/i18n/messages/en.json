@@ -2085,6 +2085,8 @@
     "deletionBody": "In Settings, choose Delete account, on this site or in the app. If you signed in with Google, you can do it from any browser by signing in on the site. Or write to the contact above. Your account goes with everything in it: lives, records, nickname, rat, friends, games and notices. Another phone or browser where you played keeps its own copy until you delete the account there too. Anonymous counts of what is played and technical errors are kept, because they say nothing of who you are."
   },
   "phone": {
+    "tapSound": "Click on every press",
+    "tapSoundHint": "A soft click with each button, beside the phone's touch.",
     "captcha": {
       "title": "A quick check"
     },

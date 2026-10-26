@@ -97,6 +97,12 @@ const LOCALE_COOKIE = 'NEXT_LOCALE';
 const LOCALE_COOKIE_AGE = 60 * 60 * 24 * 365;
 
 /** The language the player chose, in the Next web's NEXT_LOCALE cookie: the whole site, a year, SameSite lax. */
+/** No choice of the press's click on the web: a page clicks with the game's sound, as the Next web's (the phone's is off until turned on). */
+export const kvTapSound = {
+  read: (): boolean | null => null,
+  write: (): void => undefined,
+};
+
 export const kvLanguage: LanguageKeep = {
   read: () => {
     try {

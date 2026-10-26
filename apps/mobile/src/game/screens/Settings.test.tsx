@@ -5,7 +5,7 @@ import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { memoryServices, renderGame, router } from '../../testing/render';
+import { kv, memoryServices, renderGame, router } from '../../testing/render';
 import { SettingsSheet } from './Settings';
 
 afterEach(cleanup);
@@ -88,7 +88,7 @@ describe('the settings of a life in progress', () => {
     const sound = within(sheet).getByRole('switch', { name: /^Sound/ });
     const motion = within(sheet).getByRole('switch', { name: /Reduce motion/ });
     const tips = within(sheet).getByRole('switch', { name: /Tips from the guide/ });
-    expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true']);
+    expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'true']);
 
     fireEvent.click(sound);
     fireEvent.click(motion);
@@ -106,6 +106,20 @@ describe('the settings of a life in progress', () => {
     // The guide can be had back: it is not gone for good.
     fireEvent.click(tips);
     await waitFor(async () => expect((await services.store.loadProfile()).guide.off).toBe(false));
+  });
+
+  it('leave a press silent on the phone until its click is turned on, kept on the phone, and offered only with the sound on', async () => {
+    const { sheet } = await open();
+    const click = () => within(sheet).queryByRole('switch', { name: /^Click on every press/ });
+    expect(click()?.getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(click()!);
+    expect(click()?.getAttribute('aria-checked')).toBe('true');
+    expect(kv.get('ratrace:tapSound')).toBe('1');
+    // With the sound off there is nothing to click: the choice is out of sight, and kept.
+    fireEvent.click(within(sheet).getByRole('switch', { name: /^Sound/ }));
+    await waitFor(() => expect(click()).toBeNull());
+    fireEvent.click(within(sheet).getByRole('switch', { name: /^Sound/ }));
+    await waitFor(() => expect(click()?.getAttribute('aria-checked')).toBe('true'));
   });
 
   it('offer the languages of the game, each under its own name, the one in use marked, and speak the one chosen from then on', async () => {

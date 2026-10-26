@@ -214,16 +214,21 @@ describe('a crisis', () => {
 });
 
 describe('the sounds of a round', () => {
-  it('tick at every press, deal the cards, and fall silent when sound is turned off', async () => {
+  it('deal the cards with no click at a press (the phone\'s own, off until turned on), tick once it is, and fall silent when sound is turned off', async () => {
     const services = await life();
     fireEvent.click(screen.getByRole('button', { name: /^(See what life brings|To your finances)$/ }));
-    expect(heard.filter((cue) => cue === 'tap')).toHaveLength(1);
+    expect(heard.filter((cue) => cue === 'tap')).toHaveLength(0);
     if (screen.queryByRole('group', { name: /^Your choices/ })) expect(heard).toContain('card');
 
     fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));
     const settings = await sheet('Settings');
+    fireEvent.click(within(settings).getByRole('switch', { name: /^Click on every press/ }));
+    await waitFor(() => expect(within(settings).getByRole('switch', { name: /^Click on every press/ }).getAttribute('aria-checked')).toBe('true'));
+    // The press that turned it on was the last silent one: the next one clicks.
+    expect(heard.filter((cue) => cue === 'tap')).toHaveLength(0);
     const before = heard.length;
     fireEvent.click(within(settings).getByRole('switch', { name: /^Sound/ }));
+    expect(heard.filter((cue) => cue === 'tap')).toHaveLength(1);
     await waitFor(() => expect(within(settings).getByRole('switch', { name: /^Sound/ }).getAttribute('aria-checked')).toBe('false'));
     fireEvent.click(within(settings).getByRole('button', { name: 'Close' }));
     // The press that turned it off was the last thing heard.

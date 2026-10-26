@@ -26,6 +26,7 @@ import { Sprite } from '../../ui/Sprite';
 import { LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
+import { TabSwipe } from '../../ui/TabSwipe';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useSettings, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
 import { BusinessTab } from './Business';
@@ -2459,10 +2460,11 @@ export function FinanceTabs() {
   );
 }
 
-/** The finance phase: the panel of the tab on screen (the web's `role="tabpanel"`, `pt-1`; the column's gutter is its `px-3`). */
+/** The finance phase: the panel of the tab on screen (the web's `role="tabpanel"`, `pt-1`; the column's gutter is its `px-3`), swiped to the next on the phone. */
 export function Finance() {
   const t = useT('finance');
   const { tab, setTab } = useFinanceTab();
+  const tabs = useTabs();
   // The next finance phase opens on the portfolio again, as the web's, whose Finance is made anew each round; and its shop on what is in reach.
   useEffect(() => () => setTab('portfolio'), [setTab]);
   const [shopView, setShopView] = useState<ShopView>('affordable');
@@ -2477,7 +2479,10 @@ export function Finance() {
   return (
     <View {...items} role="tabpanel" aria-label={t(`tabs.${tab}`)} style={{ paddingTop: 4 }}>
       <PerfDrawn name={`tab: ${tab}`} />
-      <ShopViewKept.Provider value={shop}>{Body ? <Body /> : null}</ShopViewKept.Provider>
+      {/* Swiped sideways, the panel turns to the tab beside it, as a phone's own paged tabs (nothing on the web). */}
+      <TabSwipe tabs={tabs} value={tab} onChange={setTab}>
+        <ShopViewKept.Provider value={shop}>{Body ? <Body /> : null}</ShopViewKept.Provider>
+      </TabSwipe>
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions, type HostInstance } from 'react-native';
+import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions, type HostInstance, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { closeOnBack, holdingTurn, sheetAsked, sheetOpened, sheetsShut, subscribeShut } from './back';
@@ -466,7 +466,7 @@ function Grabber() {
   );
 }
 
-function TabButton({ id, label, on, onPress }: { id: string; label: string; on: boolean; onPress: () => void }) {
+function TabButton({ id, label, on, onPress, onLayout }: { id: string; label: string; on: boolean; onPress: () => void; onLayout?: (event: LayoutChangeEvent) => void }) {
   const haptic = useHaptic();
   // Another tab taken is felt, as a phone's own segmented tabs tick; the one in front is not.
   const press = usePress({
@@ -477,6 +477,7 @@ function TabButton({ id, label, on, onPress }: { id: string; label: string; on: 
   });
   return (
     <Pressable
+      onLayout={onLayout}
       {...{ dataSet: { tab: id } }}
       {...tabStop(on)}
       accessibilityRole="tab"
@@ -505,6 +506,9 @@ function TabButton({ id, label, on, onPress }: { id: string; label: string; on: 
  * A strip of tabs that scrolls sideways, without an indicator. On the web the keyboard moves among them as the Next web's (docs/keyboard.md): one Tab
  * stop, the tab that is on; ← and → the next (round the ends), Home and End the first and last, each selected and given the focus.
  */
+/** How near the strip's edge a tab may stand and still be in sight: its gutter. */
+const STRIP_EDGE = 12;
+
 export function Tabs<T extends string>({ label, tabs, value, onChange }: { label?: string; tabs: Array<{ id: T; label: string }>; value: T; onChange(id: T): void }) {
   const keys = onKeys((event) => {
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
@@ -515,20 +519,45 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
     focusMarked('tab', next.id);
     return true;
   });
+  // The tab on screen is kept in sight in the strip, as a phone's own scrolling tabs keep theirs: one that is not wholly seen (come to by a swipe of
+  // the panel, or by the keyboard) is brought to the middle of the strip, as far as the strip goes.
+  const strip = useRef<ScrollViewInstance>(null);
+  const placed = useRef(new Map<string, { x: number; width: number }>());
+  const seen = useRef({ offset: 0, width: 0, content: 0 });
+  useEffect(() => {
+    const tab = placed.current.get(value);
+    const { offset, width, content } = seen.current;
+    if (!tab || width === 0) return;
+    if (tab.x >= offset + STRIP_EDGE && tab.x + tab.width <= offset + width - STRIP_EDGE) return;
+    const middle = tab.x + tab.width / 2 - width / 2;
+    strip.current?.scrollTo({ x: Math.max(0, Math.min(middle, content - width)), animated: true });
+  }, [value]);
   return (
     <ScrollView
       {...keys}
+      ref={strip}
       horizontal
       // A tab tapped while a field of the page has the keyboard up is the tab's (Page's `KEYBOARD`).
       keyboardShouldPersistTaps="handled"
       showsHorizontalScrollIndicator={false}
       accessibilityRole="tablist"
       accessibilityLabel={label}
+      onLayout={(event) => void (seen.current.width = event.nativeEvent.layout.width)}
+      onContentSizeChange={(width) => void (seen.current.content = width)}
+      onScroll={(event) => void (seen.current.offset = event.nativeEvent.contentOffset.x)}
+      scrollEventThrottle={32}
       style={{ flexGrow: 0 }}
       contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}
     >
       {tabs.map((tab) => (
-        <TabButton key={tab.id} id={tab.id} label={tab.label} on={tab.id === value} onPress={() => onChange(tab.id)} />
+        <TabButton
+          key={tab.id}
+          id={tab.id}
+          label={tab.label}
+          on={tab.id === value}
+          onPress={() => onChange(tab.id)}
+          onLayout={(event) => void placed.current.set(tab.id, { x: event.nativeEvent.layout.x, width: event.nativeEvent.layout.width })}
+        />
       ))}
     </ScrollView>
   );

@@ -307,7 +307,14 @@ function useFriendships(community: Community | null, active: boolean, onChanged:
     set(done ? { open: null } : { open: null, said: { key: 'followFailed', bad: true } });
     changed();
   };
-  return { list, said, open, busy, ask, answer, opening, close, end };
+  /** Reads the friends again (a page pulled down), the list on screen kept until the new one comes. */
+  const reload = useCallback(async () => {
+    const asking = latest.current.community;
+    if (asking === null) return;
+    const found = await asking.friends();
+    setState((was) => (was.active ? { ...was, list: found } : was));
+  }, []);
+  return { list, said, open, busy, ask, answer, opening, close, end, reload };
 }
 
 /**
@@ -601,8 +608,24 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
     setTurn((n) => n + 1);
   }, []);
 
-  const board = useChallengeBoard(community, kind === 'challenge');
+  const challengeBoard = useChallengeBoard(community, kind === 'challenge');
+  const board = challengeBoard.board;
   const friends = useFriendships(community, kind === 'friends', again);
+  // Pulled down, the page reads again what it shows: the ranking (and the friends with it), or the week's challenge. What is on screen stays until
+  // the new answer comes.
+  const reading = useRef({ community, kind, lifeId, asking });
+  reading.current = { community, kind, lifeId, asking };
+  const reloadBoard = challengeBoard.reload;
+  const reloadFriends = friends.reload;
+  const refresh = useCallback(async () => {
+    const now = reading.current;
+    if (now.community === null) return;
+    if (now.kind === 'challenge') return reloadBoard();
+    const ranking = now.community
+      .ranking({ period: now.kind === 'week' ? 'week' : 'all', friends: now.kind === 'friends', lifeId: now.lifeId })
+      .then((found) => setAnswers((known) => ({ ...known, [now.asking]: found })));
+    await Promise.all([ranking, now.kind === 'friends' ? reloadFriends() : undefined]);
+  }, [reloadBoard, reloadFriends]);
   const friendRows = useMemo(
     () => friendLines(friends.list, (friend) => nameOf(friend), friends.busy, { requests: t('requests'), nobody: t('nobody'), sent: t('sent') }),
     [friends.list, friends.busy, nameOf, t],
@@ -748,6 +771,8 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
         role="list"
         label={ranked > 0 ? (kind === 'challenge' ? challenge('rankingTitle') : t(kind)) : undefined}
         contentStyle={{ paddingBottom: 40 }}
+        // Pulled down, it reads the ranking on screen again: only where there is a cloud to ask.
+        onRefresh={community === null ? undefined : refresh}
       />
       {community !== null ? <RunSheet community={community} row={opened} nameOf={nameOf} onClose={() => setOpened(null)} /> : null}
       {/* A friend, or a request the player sent: their rat, and the one thing to do, which ends it for both. */}

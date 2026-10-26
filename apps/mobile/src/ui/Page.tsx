@@ -5,6 +5,7 @@ import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { tabStop } from './keyboard';
+import { usePullRefresh } from './refresh';
 import { COLORS, GUTTER, SHELL_WIDTH } from './theme';
 
 /** The ground: dots.png (6 pt tile; @2x/@3x picked by the device) repeated, never stretched. */
@@ -125,9 +126,12 @@ export function Screen({
   scroller,
   scrollY,
   width,
+  onRefresh,
 }: {
   children: ReactNode;
   width?: number;
+  /** Reads the page again when it is pulled down past its top (`usePullRefresh`, the phone's own spinner). */
+  onRefresh?: () => Promise<unknown>;
   contentStyle?: ViewStyle;
   fixed?: ReactNode;
   bar?: ReactNode;
@@ -137,6 +141,7 @@ export function Screen({
   scrollY?: SharedValue<number>;
 }) {
   const inset = useSafeAreaInsets();
+  const refreshControl = usePullRefresh(onRefresh);
   const scrolling = useRef<ScrollViewInstance>(null);
   /** How far it is scrolled and how tall it is: followed only for a screen that asks to scroll it. */
   const where = useRef({ offset: 0, viewport: 0 });
@@ -165,6 +170,7 @@ export function Screen({
       {...KEYBOARD}
       ref={scrolling as never}
       stickyHeaderIndices={sticky}
+      refreshControl={refreshControl}
       onScroll={onScrollUi}
       onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
       scrollEventThrottle={16}
@@ -178,6 +184,7 @@ export function Screen({
       {...KEYBOARD}
       ref={scrolling}
       stickyHeaderIndices={sticky}
+      refreshControl={refreshControl}
       onScroll={
         follows
           ? (event) => {
@@ -243,8 +250,11 @@ export function ListScreen<T>({
   label,
   onWidth,
   width = SHELL_WIDTH,
+  onRefresh,
 }: {
   width?: number;
+  /** Reads the page again when it is pulled down past its top, as `Screen`'s. */
+  onRefresh?: () => Promise<unknown>;
   head: ReactElement;
   foot?: ReactElement;
   data: readonly T[];
@@ -257,6 +267,7 @@ export function ListScreen<T>({
   onWidth?: (width: number) => void;
 }) {
   const inset = useSafeAreaInsets();
+  const refreshControl = usePullRefresh(onRefresh);
   // The latest `item` and `keyOf`, read by a renderer that stays the same: a page drawn again for its head draws none of its rows again. Kept as the
   // page is drawn, before its list is: rows the same drawing brings are drawn by this drawing's `item`.
   const latest = useRef({ item, keyOf, onWidth });
@@ -279,6 +290,7 @@ export function ListScreen<T>({
       extraData={extraData}
       ListHeaderComponent={head}
       ListFooterComponent={foot}
+      refreshControl={refreshControl}
       role={role}
       aria-label={label}
       onLayout={measured ? onLayout : undefined}

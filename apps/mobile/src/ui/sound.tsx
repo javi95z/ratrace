@@ -11,6 +11,7 @@ export type Cue = (typeof CUES)[number];
 const OVERLAPS: readonly Cue[] = ['tap', 'card', 'pick', 'coin', 'refuse'];
 
 const noPlay = (): void => {};
+const silentTap = (): void => {};
 const SoundContext = createContext<(cue: Cue) => void>(noPlay);
 
 /** Plays a cue now. Silent without a provider, or when the provider is off. */
@@ -27,10 +28,10 @@ interface Pool {
 
 /**
  * Plays the cues; supplies the kit's tap sound. A cue's players are made when it is first played (an ExoPlayer each on Android),
- * except the tap's, made as soon as sound is on so that the first press is instant. Turning sound off only stops playing: nothing is rebuilt.
+ * except the tap's, made as soon as sound is on (where a press clicks) so that the first press is instant. Turning sound off only stops playing: nothing is rebuilt.
  * The game's chiptune follows the phone's silent switch (`playsInSilentMode: false`) and mixes with the player's own music.
  */
-export function SoundProvider({ on, children }: { on: boolean; children: ReactNode }) {
+export function SoundProvider({ on, tap: clicks = true, children }: { on: boolean; /** Whether a press clicks too (the phone's own choice, off until turned on). */ tap?: boolean; children: ReactNode }) {
   const pools = useRef<Map<Cue, Pool>>(new Map());
   const wanted = useRef(on);
   wanted.current = on;
@@ -52,8 +53,8 @@ export function SoundProvider({ on, children }: { on: boolean; children: ReactNo
   useEffect(() => {
     if (!on) return;
     void Promise.resolve(setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' })).catch(() => undefined);
-    pool('tap');
-  }, [on, pool]);
+    if (clicks) pool('tap');
+  }, [on, clicks, pool]);
 
   useEffect(() => {
     const all = pools.current;
@@ -88,7 +89,8 @@ export function SoundProvider({ on, children }: { on: boolean; children: ReactNo
     [pool],
   );
 
-  const tap = useMemo(() => () => play('tap'), [play]);
+  // A press that does not click says nothing to the sound at all (the phone's touch still says it, ./haptics).
+  const tap = useMemo(() => (clicks ? () => play('tap') : silentTap), [play, clicks]);
   return (
     <SoundContext.Provider value={play}>
       <TapProvider value={tap}>{children}</TapProvider>

@@ -2085,6 +2085,8 @@
     "deletionBody": "En Ajustes, elige Borrar la cuenta, en esta web o en la app. Si entraste con Google, puedes hacerlo desde cualquier navegador entrando en la web. O escribe al contacto de arriba. Tu cuenta se va con todo lo que hay en ella: vidas, récords, apodo, rata, amigos, partidas y avisos. Otro teléfono o navegador donde hayas jugado guarda su propia copia hasta que borres la cuenta también allí. Se guardan los recuentos anónimos de lo que se juega y los errores técnicos, porque no dicen nada de quién eres."
   },
   "phone": {
+    "tapSound": "Clic al pulsar",
+    "tapSoundHint": "Un clic suave con cada botón, además de la vibración.",
     "captcha": {
       "title": "Una comprobación rápida"
     },

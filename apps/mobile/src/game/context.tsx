@@ -24,7 +24,7 @@ import { usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
+import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvTapSound, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { backFromGoogle, openForGoogle } from '../online/browser';
@@ -171,7 +171,7 @@ interface Cloud {
 
 const GameContext = createContext<Game | null>(null);
 /** The two settings the player can set that screens read; held apart from the profile so that the rest of it moving is not a change of them. */
-const SettingsContext = createContext<{ reducedMotion: boolean; sound: boolean } | null>(null);
+const SettingsContext = createContext<{ reducedMotion: boolean; sound: boolean; tapSound: boolean | null; setTapSound(on: boolean): void } | null>(null);
 const ProfileContext = createContext<Profile | null>(null);
 /** Finished lives, the latest first. Null until the device has answered. */
 const RunsContext = createContext<{ runs: FinishedRun[] | null } | null>(null);
@@ -671,7 +671,13 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     [made, untilFresh, restart],
   );
   const { reducedMotion, sound } = profile.settings;
-  const settings = useMemo(() => ({ reducedMotion, sound }), [reducedMotion, sound]);
+  // Whether a press clicks: the phone's own setting (off until turned on), none on the web, where it always does (kvStore's `kvTapSound`).
+  const [tapSound, setTapSoundHere] = useState(() => kvTapSound.read());
+  const setTapSound = useCallback((on: boolean) => {
+    kvTapSound.write(on);
+    setTapSoundHere(on);
+  }, []);
+  const settings = useMemo(() => ({ reducedMotion, sound, tapSound, setTapSound }), [reducedMotion, sound, tapSound, setTapSound]);
   const finished = useMemo(() => ({ runs }), [runs]);
   return (
     <CloudContext.Provider value={cloud}>
@@ -682,7 +688,7 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
               <WordsProvider locale={locale} timeZone={timeZone}>
                 <ReducedMotionProvider value={reducedMotion}>
                   <HapticProvider value={feel}>
-                    <SoundProvider on={sound}>
+                    <SoundProvider on={sound} tap={tapSound !== false}>
                       <Cues game={game} />
                       {children}
                       <CaptchaHost />
@@ -773,12 +779,15 @@ export const useStill = (): boolean => useReducedMotion();
 /** The player's settings, and the language, which the phone keeps beside them. */
 export const useSettings = () => {
   const { changeProfile, locale, setLocale } = useGameContext();
-  const { reducedMotion, sound } = held(useContext(SettingsContext));
+  const { reducedMotion, sound, tapSound, setTapSound } = held(useContext(SettingsContext));
   return {
     reducedMotion,
     setReducedMotion: (reducedMotion: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, reducedMotion } })),
     sound,
     setSound: (sound: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, sound } })),
+    /** Whether a press clicks (with the sound on): the phone's own choice, off until turned on; null on the web, which has no such choice. */
+    tapSound,
+    setTapSound,
     locale,
     setLocale,
   };

@@ -65,10 +65,17 @@ function usePaceOf() {
 /** A room's code as the web keeps one typed or brought by a link: its letters and digits, in capitals, six at most. */
 const codeOf = (given: string): string => given.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
 
-/** A page of the rooms (the web's `max-w-md gap-4 px-3 pb-10 pt-4`): its way back, its title, what it holds, and what stands over it (a toast). */
-function RoomPage({ title, fixed, children }: { title: string; fixed?: ReactNode; children: ReactNode }) {
+/**
+ * A page of the rooms (the web's `max-w-md gap-4 px-3 pb-10 pt-4`): its way back, its title, what it holds, and what stands over it (a toast). A page
+ * that shows how the room stands (`refreshable`: the way in, the lobby, a connection lost) reads it again when pulled down.
+ */
+function RoomPage({ title, fixed, refreshable = false, children }: { title: string; fixed?: ReactNode; refreshable?: boolean; children: ReactNode }) {
+  const refresh = useRoom((s) => s.refresh);
+  const lookForLobbies = useRoom((s) => s.lookForLobbies);
+  // Pulled down, a page of the rooms asks the server how the room stands now, and how many public games are waiting for players.
+  const pulled = useCallback(() => Promise.all([refresh(), lookForLobbies()]), [refresh, lookForLobbies]);
   return (
-    <Screen contentStyle={{ gap: 16, paddingBottom: 40 }} fixed={fixed}>
+    <Screen contentStyle={{ gap: 16, paddingBottom: 40 }} fixed={fixed} onRefresh={refreshable ? pulled : undefined}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackLink />
         <View accessibilityRole="header" style={{ flexShrink: 1 }}>
@@ -162,7 +169,7 @@ function RoomShown({ code }: { code?: string }) {
   }
   if (status === 'away') {
     return (
-      <RoomPage title={t('title')}>
+      <RoomPage title={t('title')} refreshable>
         <Said>{t('away')}</Said>
         <Button variant="secondary" wide onPress={() => void refresh()}>
           {t('retry')}
@@ -998,7 +1005,7 @@ function Door({ code: given }: { code?: string }) {
   // Come by an invitation, the page is the invitation: the game to join, and the one button that joins it.
   if (invited) {
     return (
-      <RoomPage title={t('title')}>
+      <RoomPage title={t('title')} refreshable>
         <View role="region" aria-label={t('invited')}>
           <Framed kind="raised" tone={GOLD} style={{ backgroundColor: COLORS['night-600'], paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>
             <Sprite id="icon.skill_network" size={{ w: 48, h: 48 }} />
@@ -1025,7 +1032,7 @@ function Door({ code: given }: { code?: string }) {
   }
 
   return (
-    <RoomPage title={t('title')}>
+    <RoomPage title={t('title')} refreshable>
       <View role="list" style={{ gap: 6 }}>
         {(['introSame', 'introWho', 'introPace'] as const).map((line) => (
           <View key={line} role="listitem" style={{ flexDirection: 'row', gap: 8 }}>
@@ -1275,6 +1282,7 @@ function Lobby({ room }: { room: RoomState }) {
   return (
     <RoomPage
       title={t('title')}
+      refreshable
       fixed={
         <>
           <Heard />
