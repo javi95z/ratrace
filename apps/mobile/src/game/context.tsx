@@ -1,5 +1,7 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import type { BasketKeep } from '@ratrace/core/game/basket';
+import { bestsOfRuns, memoryMilestones, withBests } from '@ratrace/core/game/lifeMilestones';
+import type { MilestoneKeep } from '@ratrace/core/game/lifeMilestones';
 import type { Words } from '@ratrace/core/game/present';
 import { createRoomStore } from '@ratrace/core/game/room';
 import type { RoomActions, RoomStore, RoomStoreState } from '@ratrace/core/game/room';
@@ -45,7 +47,7 @@ import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { HapticProvider, useHaptic } from '../ui/haptic';
 import { feel } from '../ui/haptics';
 import { SoundProvider, useSound } from '../ui/sound';
-import { cuesFor } from './cues';
+import { stepCues } from './cues';
 import { feltOf } from './feel';
 import { setShortcuts, shortcutTaps } from './shortcuts';
 import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
@@ -57,6 +59,7 @@ import { pageAt, useGoFromAnywhere, type Page } from './pages';
 import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
+import { phoneMilestones } from './phoneMilestones';
 import { useContentText } from './languageWords';
 import { useT, WordsProvider } from './words';
 
@@ -99,6 +102,8 @@ export interface Services {
   schedule?: (run: () => void, ms: number) => () => void;
   /** Where the orders of a round not yet played are kept. Left out, only in memory. */
   basket?: BasketKeep;
+  /** Where the milestones of lives are kept, so one is celebrated once a life. Left out, only in memory; null, none is celebrated (a scene's). */
+  milestones?: MilestoneKeep | null;
   /** True where the tabs of the money are opened one by one through a guided first life. */
   introduceTabs?: boolean;
   /** Where the language the player chose is kept. Left out, on the phone. */
@@ -275,7 +280,7 @@ export function phoneServices(): Services {
   const wired = servicesOver({ ...online, store: perfStore(online.store, 'saved') }, phoneDeps());
   // What is counted goes to the game's own project, in a release build only (`online/track.ts`), and the install with it, on the first launch; on the
   // web also to Vercel, as the Next web counts (`pwa/visits.web.tsx`).
-  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, firstDrawn: firstScreen.open, track: alsoToVercel(phoneTrack(online.account, kvText)) };
+  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, milestones: phoneMilestones, firstDrawn: firstScreen.open, track: alsoToVercel(phoneTrack(online.account, kvText)) };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */
@@ -296,21 +301,23 @@ interface Made {
   track: Track;
   push: Push;
   basket?: BasketKeep;
+  milestones: MilestoneKeep | null;
   tapGuardMs: number;
   firstDrawn?: () => void;
 }
 
 /** A round store over the game's sessions, with nothing in it until it is booted. */
-const roundStore = ({ sessions, tapGuardMs, basket }: Pick<Made, 'sessions' | 'tapGuardMs' | 'basket'>): GameStore =>
-  createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs, ...(basket ? { basket } : {}) });
+const roundStore = ({ sessions, tapGuardMs, basket, milestones }: Pick<Made, 'sessions' | 'tapGuardMs' | 'basket' | 'milestones'>): GameStore =>
+  createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs, milestones, ...(basket ? { basket } : {}) });
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore, push, firstDrawn }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, milestones = memoryMilestones(), introduceTabs, language, now, track = ignore, push, firstDrawn }: Services): Made {
   const guard = tapGuardMs ?? TAP_GUARD_MS;
   const counted = countingStarts(sessions, track);
   const roomStore = createRoomStore({
     link: rooms ?? NO_ROOMS,
     store,
     content,
+    milestones,
     lives,
     versions: VERSIONS,
     tapClock: () => performance.now(),
@@ -324,7 +331,7 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     onSaveError: (error) => console.warn('could not save the life in the room:', error),
   });
   return {
-    game: roundStore({ sessions: counted, tapGuardMs: guard, basket }),
+    game: roundStore({ sessions: counted, tapGuardMs: guard, basket, milestones }),
     rooms: roomStore,
     sessions: counted,
     store,
@@ -340,6 +347,7 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     // The phone's notices, over the note the phone's store keeps of them: made with the game, whatever services a test hands it.
     push: push ?? phonePush(kvPush),
     basket,
+    milestones,
     tapGuardMs: guard,
     firstDrawn,
   };
@@ -374,10 +382,10 @@ function Cues({ game }: { game: GameStore }) {
   useEffect(
     () =>
       game.subscribe((state, before) => {
-        const cues = cuesFor(state, before);
+        const { cues, milestone } = stepCues(state, before);
         for (const cue of cues) play(cue);
-        // And felt, as one moment, the sound on or off (game/feel.ts).
-        const felt = feltOf(cues);
+        // And felt, as one moment, the sound on or off (game/feel.ts); a milestone reached is a success, whatever it rings.
+        const felt = feltOf(cues) ?? (milestone ? 'success' : null);
         if (felt) haptic(felt);
       }),
     [game, play, haptic],
@@ -691,6 +699,18 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [made]);
 
+  // The youngest age of each milestone in the lives finished, here or on another device, taken into the book: a milestone is a record, or a first
+  // time, against every life the player has lived, not only those lived since milestones were celebrated.
+  useEffect(() => {
+    const book = made.milestones;
+    if (runs === null || book === null) return;
+    try {
+      book.save(withBests(book.load(), bestsOfRuns(content, runs)));
+    } catch {
+      // A book that cannot be kept: the milestones are judged on what it holds.
+    }
+  }, [runs, made]);
+
   const reload = useMemo(
     () => () => {
       void made.store.loadProfile().then(setProfile, () => undefined);
@@ -780,7 +800,7 @@ export function GameScope({ game, children }: { game: GameStore; children: React
     () =>
       game.subscribe((state, before) => {
         if (state.view !== before.view || state.status !== before.status) reload();
-        for (const cue of cuesFor(state, before)) play(cue);
+        for (const cue of stepCues(state, before).cues) play(cue);
       }),
     [game, reload, play],
   );

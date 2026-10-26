@@ -212,8 +212,11 @@ export interface GameStoreOptions {
   guardMs?: number;
   /** Where the orders of the round being planned are kept until it is played. Left out, nowhere beyond the page. */
   basket?: BasketKeep;
-  /** Where the milestones of lives are kept, so a life opened again does not celebrate one twice. Left out, nowhere beyond the page. */
-  milestones?: MilestoneKeep;
+  /**
+   * Where the milestones of lives are kept, so a life opened again does not celebrate one twice. Left out, nowhere beyond the page. Null: none is
+   * celebrated (a scene of the badges as the Next web drew them, which had none).
+   */
+  milestones?: MilestoneKeep | null;
 }
 
 /**
@@ -285,7 +288,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
    * read or written for celebrates nothing rather than stop the game.
    */
   const reachedBy = (before: GameView, after: GameView, storyBefore: RoundState['story'], storyAfter: RoundState['story'], events: readonly GameEvent[], gameId: string | null): Reached[] => {
-    if (gameId === null) return [];
+    if (gameId === null || milestones === null) return [];
     try {
       const { reached, book } = milestonesOfStep({ content, gameId, book: milestones.load(), before, after, story: { before: storyBefore, after: storyAfter }, events });
       milestones.save(book);

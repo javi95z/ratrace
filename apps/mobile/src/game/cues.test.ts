@@ -8,8 +8,9 @@ import type { GameEvent, GameView, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeCue as webBadgeCue, cuesFor as webCuesFor } from '../../../web/src/game/sound';
 import type { Cue } from '../ui/sound';
-import { badgeCue, cuesFor } from './cues';
-import type { Heard } from './cues';
+import type { Reached } from '@ratrace/core/game/lifeMilestones';
+import { badgeCue, cuesFor, stepCues } from './cues';
+import type { Heard, HeardMilestones } from './cues';
 
 /*
  * The phone's cues are a copy of the web's (apps/web/src/game/sound.ts): the file cannot be shared, because the
@@ -142,5 +143,27 @@ describe('the cues of a whole life', () => {
     const rung = await liveOut('nurse');
     // A life that was heard to say nothing would agree with anything.
     for (const cue of ['card', 'pick', 'coin', 'refuse', 'round', 'end'] as const) expect(rung, cue).toContain(cue);
+  });
+});
+
+describe('a milestone reached rings for its step (the phone\'s own: the web had none)', () => {
+  const at = (over: Partial<HeardMilestones>): HeardMilestones => ({ ...heard({ stage: 'outcome' }), reached: [], ...over });
+  const card = at({ stage: 'cards' });
+  const home: Reached = { id: 'home', age: 30, best: 28, size: 'medium' };
+  const first: Reached = { id: 'home', age: 30, best: null, size: 'big' };
+
+  it('rings the coin for a banner, in place of the badges of the step, and is felt', () => {
+    expect(stepCues(at({ reached: [home], earned: [ofRarity('rare')] }), card)).toEqual({ cues: ['pick', 'coin'], milestone: true });
+  });
+
+  it('plays the fanfare for the whole screen', () => {
+    expect(stepCues(at({ reached: [first] }), card).cues).toEqual(['pick', 'million']);
+  });
+
+  it('leaves the floor to a moment that already has it, and says nothing again for the same step', () => {
+    const out = at({ stage: 'resolve', resolved: resolved([{ kind: 'escaped', round: 5 } as GameEvent]), reached: [{ id: 'escaped', age: 32, best: null, size: 'big' }] });
+    expect(stepCues(out, at({ stage: 'finance' }))).toEqual({ cues: ['escape'], milestone: false });
+    const shown = at({ reached: [home] });
+    expect(stepCues(shown, shown)).toEqual({ cues: [], milestone: false });
   });
 });

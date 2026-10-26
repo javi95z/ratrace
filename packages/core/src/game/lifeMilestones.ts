@@ -207,6 +207,13 @@ export function readBook(raw: unknown): MilestoneBook {
   return { lives: lives.slice(0, KEPT_LIVES), best };
 }
 
+/** What a celebration shows: the milestone that leads, the others the same step reached, and the badges it earned. */
+export interface Carried {
+  lead: Reached;
+  others: Reached[];
+  badges: string[];
+}
+
 /** How a step's milestones and badges are shown together: always one moment, the milestone leading and the badges inside it. */
 export type Celebration =
   /** No milestone: the badges are shown as they always were. */
@@ -215,7 +222,7 @@ export type Celebration =
    * `moment`: inside the moment that already has the screen for the first million or the way out. `sheet`: the whole screen. `banner`: a card
    * that rises with the step's result and stops nothing.
    */
-  | { where: 'moment' | 'sheet' | 'banner'; lead: Reached; others: Reached[]; badges: string[] };
+  | ({ where: 'moment' | 'sheet' | 'banner' } & Carried);
 
 /**
  * Where the milestones a step reached are shown, and with what. A step with a big milestone, or a legendary badge, has the whole screen; any
