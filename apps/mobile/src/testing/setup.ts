@@ -26,6 +26,7 @@ vi.mock('expo-network', async () => (await import('./fakes')).expoNetwork);
 vi.mock('expo-web-browser', async () => (await import('./fakes')).expoWebBrowser);
 vi.mock('expo-constants', async () => (await import('./fakes')).expoConstants);
 vi.mock('expo-clipboard', async () => (await import('./fakes')).expoClipboard);
+vi.mock('expo-haptics', async () => (await import('./fakes')).expoHaptics);
 vi.mock('react-native-webview', async () => (await import('./fakes')).reactNativeWebView);
 // The phone's notices, counted as they are loaded: the push loads them only where the phone can be told (online/push.ts).
 vi.mock('expo-notifications', async () => {

@@ -9,6 +9,7 @@ import { Sprite, SpriteLayers } from './Sprite';
 import { spriteBox } from './sprites';
 import { ReadText } from './text';
 import { COLORS, TOUCH } from './theme';
+import { useHaptic } from './haptic';
 
 export interface PickerOption<T> {
   value: T;
@@ -82,6 +83,7 @@ export function Picker<T extends string | null>({ label, value, options, onChang
   const show = usePress({ onPress: () => setOpen(true) });
   // From the web's `sm` up the options stand two to a row (`grid-cols-1 sm:grid-cols-2`), each pair as tall as its taller.
   const wide = useIsWide();
+  const haptic = useHaptic();
   const each = (option: PickerOption<T>) => (
     <Option
       key={String(option.value)}
@@ -89,6 +91,8 @@ export function Picker<T extends string | null>({ label, value, options, onChang
       selected={option.value === value}
       half={wide}
       onPick={() => {
+        // Another option taken is felt, as a phone's own picker ticks; the one already chosen is not.
+        if (option.value !== value) haptic('select');
         onChange(option.value);
         setOpen(false);
       }}

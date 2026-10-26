@@ -8,6 +8,7 @@ import { CREAM, GOLD, WINE, type FrameCut, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
 import { LEVEL_2 } from './headingLevel';
 import { Language, PixelText, ReadText, TIGHT } from './text';
+import { useHaptic } from './haptic';
 import { useTap } from './tap';
 import { BODY, COLORS, TOUCH, type ColorToken } from './theme';
 
@@ -724,8 +725,16 @@ interface Choice<T> {
 }
 
 function Segment<T extends string | number>({ option, on, onChange, wide, mark }: { option: Choice<T>; on: boolean; onChange(value: T): void; wide: boolean; mark: string }) {
+  const haptic = useHaptic();
   const disabled = option.disabled ?? false;
-  const press = usePress({ onPress: () => onChange(option.value), disabled });
+  // Another choice taken is felt, as a phone's own segmented control ticks; the one already on is not.
+  const press = usePress({
+    onPress: () => {
+      if (!on) haptic('select');
+      onChange(option.value);
+    },
+    disabled,
+  });
   return (
     <Pressable
       {...{ dataSet: { segment: mark } }}
@@ -836,7 +845,15 @@ export function Segmented<T extends string | number>({
 
 /** An on/off switch with its label, the whole row pressable. `icon` is a sprite shown before the label. */
 export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { on: boolean; onChange(on: boolean): void; label: Words; hint?: Words; disabled?: boolean; icon?: string }) {
-  const press = usePress({ onPress: () => onChange(!on), disabled });
+  const haptic = useHaptic();
+  // Turned, it is felt as a phone's own switch is.
+  const press = usePress({
+    onPress: () => {
+      haptic(on ? 'toggleOff' : 'toggleOn');
+      onChange(!on);
+    },
+    disabled,
+  });
   return (
     <Pressable
       accessibilityRole="switch"

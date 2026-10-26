@@ -235,8 +235,9 @@ const FORMATJS_POLYFILLS = [
 
 /** What the web does without, by what to call it and how to tell it from a map's source path. */
 export const FORBIDDEN: readonly { label: string; matches: (source: string) => boolean }[] = [
-  // The phone's notices (expo-notifications) and Google's auth session (expo-web-browser) too: the web has its own twins (5a's final review).
-  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', 'react-native-webview', 'expo-media-library', 'expo-notifications', 'expo-web-browser'].map((name) => ({
+  // The phone's notices (expo-notifications) and Google's auth session (expo-web-browser) too: the web has its own twins (5a's final review). And
+  // the phone's touch (expo-haptics): a page feels nothing (ui/haptics.web.ts).
+  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', 'react-native-webview', 'expo-media-library', 'expo-notifications', 'expo-web-browser', 'expo-haptics'].map((name) => ({
     label: name,
     matches: (source: string) => source.includes(name),
   })),

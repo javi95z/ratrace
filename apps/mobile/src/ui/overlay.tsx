@@ -7,6 +7,7 @@ import { useIsDesk } from './desk';
 import { focusMarked, onKeys, tabStop } from './keyboard';
 import { holdSheet, SheetBackdrop, sheetModalProps, sheetPanelProps, sheetRootProps } from './sheetDialog';
 import { SheetGrip, SheetScroll, useDragSurface } from './sheetDrag';
+import { useHaptic } from './haptic';
 import { SLIDE_MS } from './sheetPull';
 import { useSheetPull } from './useSheetPull';
 import { SheetHoldProvider } from './sheetHold';
@@ -466,7 +467,14 @@ function Grabber() {
 }
 
 function TabButton({ id, label, on, onPress }: { id: string; label: string; on: boolean; onPress: () => void }) {
-  const press = usePress({ onPress });
+  const haptic = useHaptic();
+  // Another tab taken is felt, as a phone's own segmented tabs tick; the one in front is not.
+  const press = usePress({
+    onPress: () => {
+      if (!on) haptic('select');
+      onPress();
+    },
+  });
   return (
     <Pressable
       {...{ dataSet: { tab: id } }}

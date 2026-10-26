@@ -8,7 +8,7 @@ import { useServiceWorker } from '../pwa/register';
 import { Visits } from '../pwa/visits';
 import { useGameFonts } from '../ui/gameFonts';
 import { GestureRoot } from '../ui/GestureRoot';
-import { GROUND_THEME, SCREENS } from '../ui/navigation';
+import { GROUND_THEME, SCREENS, ScreenGround } from '../ui/navigation';
 import { Page } from '../ui/Page';
 import { SafeArea } from '../ui/SafeArea';
 import { PerfFrames, perfTouched, perfTouchStarted } from '../ui/perf';
@@ -25,7 +25,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /**
  * The shell of every screen, as the web's [locale]/layout.tsx: the typefaces, the game (session, store,
- * words, sound, motion) and the ground. Screens change at once, as a web page does, over the one ground.
+ * words, sound, motion) and the ground. On the phone each screen slides in on its own ground, as the platform moves between screens; on the
+ * web they change at once, as a web page does, over the one ground (ui/navigation.tsx and its twin).
  */
 export default function RootLayout() {
   const fonts = useGameFonts();
@@ -58,7 +59,7 @@ export default function RootLayout() {
               <KeyboardControls />
               <Page>
                 <ThemeProvider value={GROUND_THEME}>
-                  <Stack screenOptions={SCREENS} />
+                  <Stack screenOptions={SCREENS} screenLayout={ScreenGround} />
                 </ThemeProvider>
               </Page>
             </InstallProvider>

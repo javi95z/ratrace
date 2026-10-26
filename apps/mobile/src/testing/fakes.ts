@@ -414,6 +414,20 @@ export const expoNotifications = {
 /** The phone itself (expo-device): a real one, unless a test makes it a simulator. */
 export const expoDevice = { isDevice: true };
 
+/** What the phone's touch was asked to feel, in order, by the platform's own name for it (expo-haptics' stand-in, `expoHaptics`). */
+export const felt: string[] = [];
+
+/** expo-haptics: each call noted in `felt` (`ios:selection`, `ios:impact:medium`, `android:confirm`…), nothing felt. */
+export const expoHaptics = {
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy', Rigid: 'rigid', Soft: 'soft' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+  AndroidHaptics: new Proxy({}, { get: (_target, name) => String(name).toLowerCase().replace(/_/g, '-') }),
+  selectionAsync: async () => void felt.push('ios:selection'),
+  impactAsync: async (style: string) => void felt.push(`ios:impact:${style}`),
+  notificationAsync: async (type: string) => void felt.push(`ios:notification:${type}`),
+  performAndroidHapticsAsync: async (type: string) => void felt.push(`android:${type}`),
+};
+
 export const expoClipboard = {
   setStringAsync: async (text: string): Promise<boolean> => {
     if (clipboard.refuses) return false;
@@ -481,6 +495,7 @@ export function resetFakes(): void {
   pathname.now = '/';
   inFront.is = true;
   kv.clear();
+  felt.length = 0;
   appState.currentState = 'active';
   appState.listeners.clear();
   network.connected = true;

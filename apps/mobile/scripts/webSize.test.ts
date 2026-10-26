@@ -97,6 +97,8 @@ describe('judgeWebExport', () => {
     // The phone's notices and Google's auth session: the web has its own (5a's final review).
     'expo-notifications',
     'expo-web-browser',
+    // The phone's touch: a page feels nothing.
+    'expo-haptics',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',
   ])('reports a source naming %s', (name) => {
     const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name}/lib/index.js`;

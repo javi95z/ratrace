@@ -5,6 +5,7 @@ import { Framed } from './Frame';
 import { acceleratedRangeKey, onKeys, tabStop } from './keyboard';
 import { COLORS, TOUCH } from './theme';
 import { useSheetHold } from './sheetHold';
+import { useHaptic } from './haptic';
 
 /** The handle: the web's `.range::-webkit-slider-thumb`, 20 x 28. The track is 8 high. */
 export const THUMB = { w: 20, h: 28 } as const;
@@ -46,8 +47,12 @@ export function Slider({ value, min, max, step, onChange, label, valueText, hint
   const latest = useRef({ value, min, max, step, onChange });
   latest.current = { value, min, max, step, onChange };
 
+  const haptic = useHaptic();
+  // Each step it moves to is felt, softly, as a phone's own stepped slider ticks (a run of them is spaced out by ./haptics).
   const set = (next: number) => {
-    if (next !== latest.current.value) latest.current.onChange(next);
+    if (next === latest.current.value) return;
+    haptic('tick');
+    latest.current.onChange(next);
   };
   const place = (x: number) => {
     const now = latest.current;

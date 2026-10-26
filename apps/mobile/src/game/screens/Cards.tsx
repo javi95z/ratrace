@@ -21,6 +21,7 @@ import { ArtScale, Sprite } from '../../ui/Sprite';
 import { LEVEL_2, LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
+import { useHaptic } from '../../ui/haptic';
 import { useGame, useStill, useT, useWords } from '../context';
 import { CareerPreview } from './CareerPreview';
 import { Celebrations } from './Celebrations';
@@ -347,6 +348,9 @@ function Card({ def }: { def: CardDef }) {
  */
 function Swiped({ enabled, onRelease, children }: { enabled: boolean; onRelease(side: 1 | -1): void; children: ReactNode }) {
   const x = useSharedValue(0);
+  // The side the card stands past `SWIPE` on, where letting go answers (0: neither): crossing into it is felt, as a phone's own swipe actions click.
+  const past = useSharedValue(0);
+  const haptic = useHaptic();
   const pan = usePanGesture({
     enabled,
     activeOffsetX: [-ACTIVATE, ACTIVATE],
@@ -354,9 +358,15 @@ function Swiped({ enabled, onRelease, children }: { enabled: boolean; onRelease(
     onUpdate: (event) => {
       'worklet';
       x.value = event.translationX;
+      const side = Math.abs(event.translationX) > SWIPE ? Math.sign(event.translationX) : 0;
+      if (side !== past.value) {
+        past.value = side;
+        if (side !== 0) scheduleOnRN(haptic, 'threshold');
+      }
     },
     onDeactivate: (event) => {
       'worklet';
+      past.value = 0;
       if (!event.canceled && Math.abs(event.translationX) > SWIPE) scheduleOnRN(onRelease, event.translationX > 0 ? 1 : -1);
       x.value = withSpring(0, { ...SNAP, velocity: event.velocityX });
     },

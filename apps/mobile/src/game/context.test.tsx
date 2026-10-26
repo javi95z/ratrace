@@ -13,6 +13,11 @@ import { localeOf } from './locale';
 import { GameProvider, phoneDeps, phoneServices, useClock, useGame, useGuide, useProfile, useRuns, useSettings, useSound, useStill, useT, useWords } from './context';
 import { settled } from '../testing/renders';
 
+// What the phone's touch is asked to feel (ui/haptics.ts), by the moment's name: the platform's own words for it are ui/haptics.test.ts's.
+const touch = vi.hoisted(() => ({ felt: [] as string[] }));
+vi.mock('../ui/haptics', () => ({ feel: (kind: string) => void touch.felt.push(kind) }));
+afterEach(() => void (touch.felt.length = 0));
+
 afterEach(cleanup);
 
 type Seen = { title: string; money: string; status: string; locale: string; setLocale: (l: 'en' | 'es' | 'ru') => void };
@@ -126,6 +131,28 @@ test('the round on screen is heard: a card dealt, a choice made, as the web play
   expect(heard).toEqual(['card']);
   await act(() => seen.state.pick(0));
   expect(heard).toEqual(['card', 'pick']);
+});
+
+test('the round on screen is felt as it is heard: nothing for a card dealt, the choice made committed to', async () => {
+  const seen = round(memoryServices());
+  await waitFor(() => expect(seen.state.status).toBe('none'));
+  await act(() => seen.state.start('nurse'));
+  act(() => seen.state.leaveNews());
+  expect(touch.felt).toEqual([]);
+  await act(() => seen.state.pick(0));
+  expect(touch.felt).toEqual(['confirm']);
+});
+
+test('a round with the sound off is felt all the same: the touch is the phone\'s, not the game\'s sound', async () => {
+  const store = new MemoryStore();
+  await store.saveProfile({ ...newProfile(), settings: { sound: false, reducedMotion: false } });
+  const seen = round(memoryServices(store));
+  await waitFor(() => expect(seen.state.status).toBe('none'));
+  await act(() => seen.state.start('nurse'));
+  act(() => seen.state.leaveNews());
+  await act(() => seen.state.pick(0));
+  expect(heard).toEqual([]);
+  expect(touch.felt).toEqual(['confirm']);
 });
 
 test('a round heard with the sound off makes no sound', async () => {

@@ -11,6 +11,7 @@ import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
+import { useHaptic } from '../../ui/haptic';
 import { useGame, useKnows, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
 import { useShown } from './Hud';
@@ -74,7 +75,14 @@ const QUICK_REACH = reach(36, { above: 8, below: 8 });
  * needs (`QUICK_REACH`). On, it is lit gold on teal; the web's `aria-pressed` is said as `selected`, as the cards' choices say it.
  */
 function QuickSwitch({ on, disabled = false, label, onChange }: { on: boolean; disabled?: boolean; label: string; onChange(on: boolean): void }) {
-  const press = usePress({ onPress: () => onChange(!on), disabled });
+  const haptic = useHaptic();
+  const press = usePress({
+    onPress: () => {
+      haptic(on ? 'toggleOff' : 'toggleOn');
+      onChange(!on);
+    },
+    disabled,
+  });
   return (
     <Pressable
       accessibilityRole="button"

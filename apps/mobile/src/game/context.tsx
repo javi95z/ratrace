@@ -41,8 +41,11 @@ import { closeAllSheets, closeEverySheet, openSheetsAgain, sheetsGone } from '..
 import { whenShown } from '../ui/drawnFirst';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
+import { HapticProvider, useHaptic } from '../ui/haptic';
+import { feel } from '../ui/haptics';
 import { SoundProvider, useSound } from '../ui/sound';
 import { cuesFor } from './cues';
+import { feltOf } from './feel';
 import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
@@ -360,17 +363,22 @@ const booted = new WeakSet<GameStore>();
 export const linkLocale = (): Locale => localeOf(kvLanguage.read(), deviceLanguages());
 
 /**
- * The sounds follow the round on screen: every change of it is heard as the web hears it (`cues.ts`). The tap of a press
- * is not here: the kit ticks on each press itself.
+ * The sounds follow the round on screen: every change of it is heard as the web hears it (`cues.ts`), and its moments are felt (`feel.ts`).
+ * The tap of a press is not here: the kit ticks on each press itself, and its controls are felt where they change (./ui/haptic).
  */
 function Cues({ game }: { game: GameStore }) {
   const play = useSound();
+  const haptic = useHaptic();
   useEffect(
     () =>
       game.subscribe((state, before) => {
-        for (const cue of cuesFor(state, before)) play(cue);
+        const cues = cuesFor(state, before);
+        for (const cue of cues) play(cue);
+        // And felt, as one moment, the sound on or off (game/feel.ts).
+        const felt = feltOf(cues);
+        if (felt) haptic(felt);
       }),
-    [game, play],
+    [game, play, haptic],
   );
   return null;
 }
@@ -673,11 +681,13 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
             <RunsContext.Provider value={finished}>
               <WordsProvider locale={locale} timeZone={timeZone}>
                 <ReducedMotionProvider value={reducedMotion}>
-                  <SoundProvider on={sound}>
-                    <Cues game={game} />
-                    {children}
-                    <CaptchaHost />
-                  </SoundProvider>
+                  <HapticProvider value={feel}>
+                    <SoundProvider on={sound}>
+                      <Cues game={game} />
+                      {children}
+                      <CaptchaHost />
+                    </SoundProvider>
+                  </HapticProvider>
                 </ReducedMotionProvider>
               </WordsProvider>
             </RunsContext.Provider>
