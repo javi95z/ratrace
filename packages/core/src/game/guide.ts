@@ -18,7 +18,7 @@ export interface GuideFacts {
 /**
  * What the notes of a first time look for: a crisis on, a debt of each costly kind, and half the way out; and the three risks said
  * as they are taken: overtime the round before (the next costs health), money hidden from the tax office by this round's orders,
- * and a round whose orders leave cash short of what the savings cover.
+ * and a round whose orders leave cash short of what the savings cover. Those three are left out by an interface that cannot see them.
  */
 export interface FirstFacts {
   crisis: boolean;
@@ -26,9 +26,9 @@ export interface FirstFacts {
   mortgage: boolean;
   margin: boolean;
   halfway: boolean;
-  overtime: boolean;
-  hiding: boolean;
-  short: boolean;
+  overtime?: boolean;
+  hiding?: boolean;
+  short?: boolean;
 }
 
 interface Tip {
@@ -74,9 +74,9 @@ export const TIPS: readonly Tip[] = [
  * round it would come too late.
  */
 export const FIRSTS: ReadonlyArray<{ id: string; stage: Stage; when: (facts: FirstFacts) => boolean; urgent?: boolean }> = [
-  { id: 'firstShort', stage: 'finance', when: (facts) => facts.short, urgent: true },
-  { id: 'firstHiding', stage: 'finance', when: (facts) => facts.hiding, urgent: true },
-  { id: 'firstOvertime', stage: 'finance', when: (facts) => facts.overtime, urgent: true },
+  { id: 'firstShort', stage: 'finance', when: (facts) => facts.short === true, urgent: true },
+  { id: 'firstHiding', stage: 'finance', when: (facts) => facts.hiding === true, urgent: true },
+  { id: 'firstOvertime', stage: 'finance', when: (facts) => facts.overtime === true, urgent: true },
   { id: 'firstCrisis', stage: 'news', when: (facts) => facts.crisis },
   { id: 'firstCard', stage: 'finance', when: (facts) => facts.creditCard },
   { id: 'firstMargin', stage: 'finance', when: (facts) => facts.margin },
