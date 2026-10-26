@@ -99,6 +99,8 @@ describe('judgeWebExport', () => {
     'expo-web-browser',
     // The phone's touch: a page feels nothing.
     'expo-haptics',
+    // The shortcuts on the phone's icon: a page has none.
+    'expo-quick-actions',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',
   ])('reports a source naming %s', (name) => {
     const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name}/lib/index.js`;

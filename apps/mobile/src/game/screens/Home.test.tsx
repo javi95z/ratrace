@@ -111,8 +111,8 @@ describe('the front door', () => {
     for (const online of [/Rankings/, /friend request/, /Multiplayer/, /Pick up the life from your other device/, /Your profile/, /Keep the game/]) {
       expect(screen.queryByText(online), String(online)).toBeNull();
     }
-    // What is left to go to is what the phone has: a new life, the week, the collection, the records and the small print.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Privacy and legal notice']);
+    // What is left to go to is what the phone has: a new life, the week, the collection and the records (the small print is in the settings).
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History']);
   });
 
   it('offers the life in progress first, with who and where', async () => {
@@ -178,7 +178,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
     expect(screen.queryByRole('link', { name: /last life/ })).toBeNull();
     // Nothing else to go to but what the door always has.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Privacy and legal notice']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History']);
   });
 
   it('says so plainly when the phone is not saving, instead of promising that it is', async () => {
@@ -192,30 +192,27 @@ describe('the front door', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('leads to the privacy and legal notice, small, at the very foot', async () => {
+  it('keeps its corner to the settings alone: the language is chosen in them, as a phone app\'s', async () => {
     renderGame(<Home />, memoryServices());
-    const link = await screen.findByRole('link', { name: 'Privacy and legal notice' });
-    fireEvent.click(link);
-    expect(router.push).toHaveBeenCalledWith('/en/legal');
-    const all = screen.getAllByRole('link');
-    expect(all[all.length - 1]).toBe(link);
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('button', { name: 'Language' })).toBeNull();
+    fireEvent.click(settingsButtons()[0]);
+    const sheet = (await screen.findByRole('heading', { name: 'Settings' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getByRole('radiogroup', { name: 'Language' })).toBeTruthy();
   });
 
-  it('gives its small print the 44 a thumb needs in its own box, reaching no further than the gap above it and the page\'s foot below', async () => {
+  it('leads to the privacy and legal notice from the foot of the settings, opened once they have gone, and has none at its own foot', async () => {
     renderGame(<Home />, memoryServices());
-    const link = await screen.findByRole('link', { name: 'Privacy and legal notice' });
-    const px = (value: string) => Number.parseFloat(value || '0');
-    expect(link.getAttribute('hitSlop')).toBeNull();
-    const line = px((link.querySelector('[dir]') as HTMLElement).style.lineHeight);
-    expect(line).toBeCloseTo(12 * 1.45, 5);
-    expect(line + px(link.style.paddingTop) + px(link.style.paddingBottom)).toBeGreaterThanOrEqual(44);
-    // It takes no room: the padding is given back.
-    expect(px(link.style.marginTop)).toBe(-px(link.style.paddingTop));
-    expect(px(link.style.marginBottom)).toBe(-px(link.style.paddingBottom));
-    // Over nothing that takes a touch: no further up than the page's gap above it, no further down than the page's foot.
-    const page = link.parentElement as HTMLElement;
-    expect(px(link.style.paddingTop)).toBeLessThanOrEqual(px(page.style.rowGap || page.style.gap));
-    expect(px(link.style.paddingBottom)).toBeLessThanOrEqual(px(page.style.paddingBottom));
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('link', { name: 'Privacy and legal notice' })).toBeNull();
+    fireEvent.click(settingsButtons()[0]);
+    const sheet = (await screen.findByRole('heading', { name: 'Settings' })).closest('[aria-modal="true"]') as HTMLElement;
+    const link = within(sheet).getByRole('link', { name: 'Privacy and legal notice' });
+    // Under every switch and the account's deletion, over the version.
+    expect(link.compareDocumentPosition(within(sheet).getByText(/^Version/)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(link);
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull());
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/en/legal'));
   });
 
   it('shows that it is loading, and nothing else of the game, until the device has answered', () => {
@@ -290,44 +287,6 @@ describe('a saved life that could not be opened', () => {
     await act(() => reopen());
     expect((await screen.findByRole('status')).textContent).toBe(en.phone.movedGone);
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-  });
-});
-
-describe('the language from the corner', () => {
-  it('shows the language in use as its code, and drops the others from it; choosing one speaks it from then on', async () => {
-    renderGame(<Home />, memoryServices());
-    await screen.findByRole('link', { name: 'New life' });
-    const square = screen.getByRole('button', { name: 'Language' });
-    expect(square.textContent).toBe('en');
-    expect(square.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.queryByRole('menu')).toBeNull();
-    fireEvent.click(square);
-    const menu = await screen.findByRole('menu');
-    expect(square.getAttribute('aria-expanded')).toBe('true');
-    expect(within(menu).getAllByRole('menuitem').map((item) => [item.textContent, item.getAttribute('aria-selected')])).toEqual([
-      ['English', 'true'],
-      ['Español', 'false'],
-      ['Русский', 'false'],
-    ]);
-    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Español' }));
-    expect(await screen.findByRole('link', { name: 'Nueva vida' })).toBeTruthy();
-    expect(screen.queryByRole('menu')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Idioma' }).textContent).toBe('es');
-  });
-
-  it('is shut by pressing outside it, by pressing the square again, and by Back', async () => {
-    renderGame(<Home />, memoryServices());
-    await screen.findByRole('link', { name: 'New life' });
-    const square = screen.getByRole('button', { name: 'Language' });
-    fireEvent.click(square);
-    await screen.findByRole('menu');
-    // Outside: the page behind the menu is a button the width of the screen.
-    fireEvent.click(document.querySelector('[data-testid="menu-backdrop"]') as HTMLElement);
-    expect(screen.queryByRole('menu')).toBeNull();
-    fireEvent.click(square);
-    await screen.findByRole('menu');
-    fireEvent.click(square);
-    expect(screen.queryByRole('menu')).toBeNull();
   });
 });
 
@@ -736,7 +695,7 @@ describe('the front door of a player with an account', () => {
     expect(router.push).toHaveBeenLastCalledWith('/en/rankings');
     expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
     // Across the row under the collection and the records, as the web's `col-span-2`.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings', 'Privacy and legal notice']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings']);
   });
 
   it('keeps the way to the rankings with no connection: they are the account\'s, and say so themselves', async () => {

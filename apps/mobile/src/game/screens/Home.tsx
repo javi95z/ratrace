@@ -20,6 +20,7 @@ import { useT } from '../words';
 import { useOwnT } from '../ownWords';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './RoomCard';
+import { LANGUAGE_IN_CORNER, LEGAL_IN_SETTINGS } from './frontDoor';
 import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { InstallApp, useInstallOffer } from '../../pwa/install';
@@ -96,7 +97,7 @@ export function Home() {
     <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
       <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
       <View style={{ position: 'absolute', top: 16, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
-        <LanguageMenu />
+        {LANGUAGE_IN_CORNER ? <LanguageMenu /> : null}
         <HomePreferences />
       </View>
       {/* A first visit meets the mascot; someone coming back is waved at. */}
@@ -211,8 +212,8 @@ export function Home() {
         </View>
       ) : null}
 
-      {/* The small print, out of the way: only here, at the very foot. */}
-      <SmallPrint label={legal('link')} onPress={() => go.push('legal')} above={returning ? 16 : 20} />
+      {/* The small print, out of the way: only here, at the very foot (on the phone, at the foot of the settings: frontDoor.ts). */}
+      {LEGAL_IN_SETTINGS ? null : <SmallPrint label={legal('link')} onPress={() => go.push('legal')} above={returning ? 16 : 20} />}
     </Screen>
   );
 }

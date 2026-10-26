@@ -58,13 +58,42 @@
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": false
         }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#141b33",
+          "image": "./assets/splash-mascot.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-quick-actions",
+        {
+          "androidIcons": {
+            "shortcut_continue": {
+              "foregroundImage": "./assets/shortcuts/shortcut_continue.png",
+              "backgroundColor": "#141b33"
+            },
+            "shortcut_challenge": {
+              "foregroundImage": "./assets/shortcuts/shortcut_challenge.png",
+              "backgroundColor": "#141b33"
+            },
+            "shortcut_new": {
+              "foregroundImage": "./assets/shortcuts/shortcut_new.png",
+              "backgroundColor": "#141b33"
+            },
+            "shortcut_rankings": {
+              "foregroundImage": "./assets/shortcuts/shortcut_rankings.png",
+              "backgroundColor": "#141b33"
+            }
+          }
+        }
       ]
     ],
     "scheme": "theratrace",
     "backgroundColor": "#141b33",
-    "splash": {
-      "backgroundColor": "#141b33"
-    },
     "extra": {
       "eas": {
         "projectId": "6a550ec5-0a6f-42d7-ad3c-db48820f3f73"

@@ -46,6 +46,7 @@ import { feel } from '../ui/haptics';
 import { SoundProvider, useSound } from '../ui/sound';
 import { cuesFor } from './cues';
 import { feltOf } from './feel';
+import { setShortcuts, shortcutTaps } from './shortcuts';
 import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
@@ -56,7 +57,7 @@ import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
 import { useContentText } from './languageWords';
-import { WordsProvider } from './words';
+import { useT, WordsProvider } from './words';
 
 export { useT } from './words';
 export type { Counted, Track } from './events';
@@ -384,6 +385,35 @@ function Cues({ game }: { game: GameStore }) {
 }
 
 /**
+ * The shortcuts on the app's icon (game/shortcuts.ts), as the game stands, in its language: the life to continue first where there is one, a new
+ * life, the week's challenge, and the rankings where there is an account to rank. Set again only when one of them changes.
+ */
+function Shortcuts({ game, canSignIn }: { game: GameStore; canSignIn: boolean }): null {
+  const home = useT('home');
+  const challenge = useT('challenge');
+  const inProgress = useSyncExternalStore(
+    game.subscribe,
+    () => {
+      const state = game.getState();
+      return state.status === 'playing' && state.view !== null && state.stage !== 'end';
+    },
+    () => false,
+  );
+  const titles = { continue: home('continue'), newLife: home('newLife'), challenge: challenge('title'), rankings: home('rankings') };
+  const said = JSON.stringify(titles);
+  useEffect(() => {
+    const words = JSON.parse(said) as typeof titles;
+    setShortcuts([
+      ...(inProgress ? [{ page: 'play' as const, title: words.continue }] : []),
+      { page: 'new', title: words.newLife },
+      { page: 'challenge', title: words.challenge },
+      ...(canSignIn ? [{ page: 'rankings' as const, title: words.rankings }] : []),
+    ]);
+  }, [inProgress, canSignIn, said]);
+  return null;
+}
+
+/**
  * The screen in front, for the reports of what goes wrong (`app:<path>`): heard inside the router, round every screen, by a leaf of its own, so
  * that a change of screen draws nothing else again.
  */
@@ -402,7 +432,7 @@ const SHEETS_PATIENCE = 2_000;
  * answered) keeps the tap from opening anything rather than leave its Modal over the new screen. The screen in front already is opened anew in its
  * place, never a second copy over it. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
  */
-function Taps({ push }: { push: Push }): null {
+function Taps({ push }: { push: Pick<Push, 'onTap'> }): null {
   // The way to the pages as it is now: in the language of the address in front, whichever that is when the tap comes. A notice opens a page over the
   // stack in front, whose pages are all of one language (the address's), so the page goes on in it; the app's own links (`+native-intent`) may come
   // before any page is drawn, with no address to follow, and are opened in the phone's language, the player's choice (`linkLocale`). The two differ
@@ -488,6 +518,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     <>
       <Place />
       <Taps push={made.push} />
+      {/* A shortcut held on the app's icon is opened as a notice's tap is (game/shortcuts.ts). */}
+      <Taps push={shortcutTaps} />
       <Started key={started.count} made={made} settings={started.settings} restart={restart}>
         {children}
       </Started>
@@ -690,6 +722,7 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
                   <HapticProvider value={feel}>
                     <SoundProvider on={sound} tap={tapSound !== false}>
                       <Cues game={game} />
+                      <Shortcuts game={game} canSignIn={made.canSignIn} />
                       {children}
                       <CaptchaHost />
                     </SoundProvider>

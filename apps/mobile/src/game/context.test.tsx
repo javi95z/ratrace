@@ -16,6 +16,9 @@ import { settled } from '../testing/renders';
 // What the phone's touch is asked to feel (ui/haptics.ts), by the moment's name: the platform's own words for it are ui/haptics.test.ts's.
 const touch = vi.hoisted(() => ({ felt: [] as string[] }));
 vi.mock('../ui/haptics', () => ({ feel: (kind: string) => void touch.felt.push(kind) }));
+// What the app's icon is given to hold (game/shortcuts.ts), the last set of shortcuts.
+const icon = vi.hoisted(() => ({ shortcuts: [] as Array<{ page: string; title: string }> }));
+vi.mock('./shortcuts', () => ({ setShortcuts: (shortcuts: Array<{ page: string; title: string }>) => void (icon.shortcuts = shortcuts), shortcutTaps: { onTap: () => () => undefined } }));
 afterEach(() => void (touch.felt.length = 0));
 
 afterEach(cleanup);
@@ -153,6 +156,15 @@ test('a round with the sound off is felt all the same: the touch is the phone\'s
   await act(() => seen.state.pick(0));
   expect(heard).toEqual([]);
   expect(touch.felt).toEqual(['confirm']);
+});
+
+test('the app\'s icon holds a new life and the week\'s challenge, the life to continue first once there is one, in the game\'s language', async () => {
+  const seen = round(memoryServices());
+  await waitFor(() => expect(seen.state.status).toBe('none'));
+  await waitFor(() => expect(icon.shortcuts).toEqual([{ page: 'new', title: 'New life' }, { page: 'challenge', title: 'Weekly challenge' }]));
+  await act(() => seen.state.start('nurse'));
+  await waitFor(() => expect(icon.shortcuts.map((shortcut) => shortcut.page)).toEqual(['play', 'new', 'challenge']));
+  expect(icon.shortcuts[0].title).toBe('Continue your life');
 });
 
 test('a round heard with the sound off makes no sound', async () => {

@@ -6,7 +6,7 @@ import type { GameView } from '@ratrace/engine';
 import { LOCALES } from '@ratrace/i18n/locales';
 import type { Locale } from '@ratrace/i18n/locales';
 import type { CloudSaving, PushTarget } from '@ratrace/online/types';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -28,6 +28,7 @@ import { useAccount, useAccountSaving, useCommunity, useGame, useGuide, usePush,
 import { useOwnT } from '../ownWords';
 import { useT } from '../words';
 import { useGo } from '../pages';
+import { LEGAL_IN_SETTINGS } from './frontDoor';
 
 /** The languages the game speaks, each under its own name. */
 const LANGUAGES: Record<Locale, string> = { en: 'English', es: 'Español', ru: 'Русский' };
@@ -527,17 +528,32 @@ export function Version() {
   );
 }
 
-/** What the settings of the front door hold: the account, where things are kept, the language, the switches and the version. */
+/**
+ * What the settings of the front door hold: the account, where things are kept, the language, the switches and the version; on the phone, the way to
+ * the privacy and legal notice at their foot (`LEGAL_IN_SETTINGS`), which closes them and opens it once they have gone.
+ */
 export function HomeSettingsSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('settings');
   const common = useT('common');
+  const go = useGo();
+  // The notice asked for: opened once the sheet has gone, never under it.
+  const toLegal = useRef(false);
+  const legal = useCallback(() => {
+    toLegal.current = true;
+    onClose();
+  }, [onClose]);
+  const gone = useCallback(() => {
+    if (!toLegal.current) return;
+    toLegal.current = false;
+    go.push('legal');
+  }, [go]);
   return (
-    <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
-      <HomeSettings />
+    <Sheet open={open} onClose={onClose} onGone={gone} title={t('title')} closeLabel={common('close')}>
+      <HomeSettings onLegal={LEGAL_IN_SETTINGS ? legal : undefined} />
     </Sheet>
   );
 }
-function HomeSettings() {
+function HomeSettings({ onLegal }: { onLegal?: () => void }) {
   const home = useT('home');
   const { state: account } = useAccount();
   return (
@@ -548,8 +564,20 @@ function HomeSettings() {
       <LanguagePick />
       <Switches />
       <DeleteAccount />
+      {onLegal ? <LegalLink onPress={onLegal} /> : null}
       <Version />
     </View>
+  );
+}
+
+/** The way to the privacy and legal notice, at the foot of the phone's settings: a line of small print, its touch the 44 a thumb needs. */
+function LegalLink({ onPress }: { onPress(): void }) {
+  const legal = useT('legal');
+  const press = usePress({ onPress });
+  return (
+    <Pressable accessibilityRole="link" onPress={press} style={({ pressed }) => ({ ...pressDown(pressed), minHeight: TOUCH, alignItems: 'center', justifyContent: 'center' })}>
+      <ReadText size={13} tone="ink-200" style={{ textDecorationLine: 'underline' }}>{legal('link')}</ReadText>
+    </Pressable>
   );
 }
 

@@ -1,4 +1,5 @@
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
+import { setOptions as setSplashOptions } from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
@@ -20,7 +21,9 @@ import { PerfFrames, perfTouched, perfTouchStarted } from '../ui/perf';
 export { ErrorBoundary } from '../game/PageFault';
 
 // The splash stays until the game's typefaces are in, so nothing is drawn in the system font first; if they fail to
-// load, it lifts all the same (useGameFonts tells why), and the game goes on in the system font.
+// load, it lifts all the same (useGameFonts tells why), and the game goes on in the system font. It is the rat in its wheel on the game's
+// night (app.json's expo-splash-screen, `pnpm icons`), and fades into the front door, whose first picture is that same rat.
+setSplashOptions({ duration: 350, fade: true });
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /**
