@@ -210,7 +210,9 @@ function RatRace({ shown }: { shown: GameView }) {
   const passive = Math.floor(escape.passiveAfterTax / years);
   const outgoings = Math.floor(escape.outgoings / years);
   const before = lines.dividends + lines.interest + lines.rent + lines.otherPassive;
-  const tax = Math.max(0, before - passive);
+  // Savings interest counts half towards the way out (an older life's rules may not say so).
+  const savingsHalf = Math.floor((escape.savingsUncounted ?? 0) / years);
+  const tax = Math.max(0, before - passive - savingsHalf);
   const gap = outgoings - passive;
   const pct = outgoings > 0 ? Math.min(100, Math.floor((passive * 100) / outgoings)) : 100;
   const escaped = p.escapedAtRound !== null;
@@ -243,6 +245,7 @@ function RatRace({ shown }: { shown: GameView }) {
         {lines.interest > 0 ? <Row size={14} left={t('interest')} right={good(lines.interest)} /> : null}
         {lines.rent > 0 ? <Row size={14} left={t('rent')} right={good(lines.rent)} /> : null}
         {lines.otherPassive > 0 ? <Row size={14} left={t('otherPassive')} right={good(lines.otherPassive)} /> : null}
+        {savingsHalf > 0 ? <Row size={14} left={t('wayOut.savingsHalf')} right={bad(savingsHalf)} /> : null}
         {tax > 0 ? <Row size={14} left={t('wayOut.tax')} right={bad(tax)} /> : null}
         <Row size={14} style={passiveFirst ? { ...TOTAL, marginTop: 0 } : TOTAL} left={t('wayOut.passive')} sub={t('perYearShort')} right={<Coloured tone="teal-300">{fmt.money(passive)}</Coloured>} />
         <Row size={14} left={t('wayOut.outgoings')} sub={t('perYearShort')} right={<Coloured tone="wine-300">{fmt.money(outgoings)}</Coloured>} />

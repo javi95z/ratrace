@@ -111,7 +111,7 @@ describe('the escape test and a home of one’s own', () => {
     const preview = previewRound(content, owner, { orders: [] });
     // No passive income at all. The flat is worth 25,000,000 and its tax is 0.3% a year.
     expect(preview.tax.property).toBe(150_000);
-    expect(preview.escape).toEqual({ passiveAfterTax: 0, outgoings: preview.expenses.living + 150_000 });
+    expect(preview.escape).toEqual({ passiveAfterTax: 0, outgoings: preview.expenses.living + 150_000, savingsUncounted: 0 });
     expect(escapeProgress(content, owner)).toEqual(preview.escape);
   });
 });

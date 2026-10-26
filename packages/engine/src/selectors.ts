@@ -1,5 +1,6 @@
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import { flowsOf } from './flows';
+import type { EscapeMeasure } from './flows';
 import { statusParts } from './life/derive';
 import type { StatusParts } from './life/derive';
 import type { Cents } from './money';
@@ -60,7 +61,7 @@ export function finalScore(content: Content, state: GameView): number {
  * the tax it would bear with no salary, and outgoings, both for one round. Unlike `previewRound`,
  * this can be asked while the cards are still unanswered, so the rat-race bar always has a figure.
  */
-export function escapeProgress(content: Content, state: GameView): { passiveAfterTax: Cents; outgoings: Cents } {
+export function escapeProgress(content: Content, state: GameView): EscapeMeasure {
   return flowsOf(content, state.player, state.timeline[state.round], newTally()).escape;
 }
 

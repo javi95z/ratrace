@@ -300,25 +300,43 @@ describe('applyRound: escape', () => {
     // Living costs 3,600,000 a round. Passive income of 3,700,000 covers it before tax,
     // but the 133,000 of income tax it would bear without a salary leaves it short.
     const taxed = withPlayer(createGame({ content, start: fixtureStart() }, 'after-tax'), {}, { recurring: passive(1_850_000) });
-    expect(previewRound(content, taxed, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000 });
+    expect(previewRound(content, taxed, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000, savingsUncounted: 0 });
     expect(applyRound(content, taxed, { orders: [] }).state.player.passiveStreak).toBe(0);
 
     const enough = withPlayer(createGame({ content, start: fixtureStart() }, 'after-tax'), {}, { recurring: passive(1_900_000) });
-    expect(previewRound(content, enough, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000 });
+    expect(previewRound(content, enough, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000, savingsUncounted: 0 });
     expect(applyRound(content, enough, { orders: [] }).state.player.passiveStreak).toBe(1);
   });
 
   it('judges escape as if the salary were gone, so a high earner is not held back by the bracket their salary puts them in', () => {
     const rich = withPlayer(createGame({ content, start: { ...fixtureStart(), salaryAnnual: 50_000_000 } }, 'after-tax'), {}, { recurring: passive(1_900_000) });
-    expect(previewRound(content, rich, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000 });
+    expect(previewRound(content, rich, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000, savingsUncounted: 0 });
     expect(applyRound(content, rich, { orders: [] }).state.player.passiveStreak).toBe(1);
   });
 
   it('is easier to reach where passive income is not taxed', () => {
     // In the zero-tax city living costs 8,000,000 a round, and 8,100,000 of passive income is all kept.
     const start = withPlayer(createGame({ content, start: { ...fixtureStart(), cityId: 'haven' } }, 'no-tax'), {}, { recurring: passive(4_050_000) });
-    expect(previewRound(content, start, { orders: [] }).escape).toEqual({ passiveAfterTax: 8_100_000, outgoings: 8_000_000 });
+    expect(previewRound(content, start, { orders: [] }).escape).toEqual({ passiveAfterTax: 8_100_000, outgoings: 8_000_000, savingsUncounted: 0 });
     expect(applyRound(content, start, { orders: [] }).state.player.passiveStreak).toBe(1);
+  });
+
+  it("counts the deposit's interest at half, after its tax, so savings alone do not get a player out", () => {
+    // The deposit pays 1.5 % a year: 3,000,000 a round on 100,000,000, 630,000 of it tax.
+    // Half of the 2,370,000 left counts; the player still receives all of it.
+    const saver = withPlayer(createGame({ content, start: fixtureStart() }, 'saver'), { deposit: 100_000_000 });
+    expect(previewRound(content, saver, { orders: [] }).escape.passiveAfterTax).toBe(1_185_000);
+    expect(ledger(applyRound(content, saver, { orders: [] }).events, 'interest')).toBe(3_000_000);
+  });
+
+  it("counts in full what another player pays on a loan, and a bond's coupon", () => {
+    const lender = withPlayer(createGame({ content, start: fixtureStart() }, 'lender'), {
+      lent: [{ id: 'lent-1', peer: 'p2', principal: 100_000_000, fixedRateBp: 150, roundsLeft: 5 }],
+    });
+    expect(previewRound(content, lender, { orders: [] }).escape.passiveAfterTax).toBe(2_370_000);
+    // The long bond pays the policy rate and its spread: 3 % a year, 6,000,000 a round.
+    const holder = withPlayer(createGame({ content, start: fixtureStart() }, 'holder'), { positions: { bond_long: { value: 100_000_000, basis: 100_000_000 } } });
+    expect(previewRound(content, holder, { orders: [] }).escape.passiveAfterTax).toBe(4_740_000);
   });
 
   it('resets the streak when passive income falls short', () => {

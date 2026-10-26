@@ -169,6 +169,6 @@ describe('escapeProgress', () => {
   it('counts passive income after its own tax', () => {
     const state = createGame({ content, start: fixtureStart() }, 'escape');
     const withIncome = { ...state, player: { ...state.player, extraPassiveAnnual: 1_850_000, life: { ...state.player.life, recurring: [{ tag: 'bar', kind: 'passive' as const, annual: 1_850_000, roundsLeft: null }] } } };
-    expect(escapeProgress(content, withIncome)).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000 });
+    expect(escapeProgress(content, withIncome)).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000, savingsUncounted: 0 });
   });
 });

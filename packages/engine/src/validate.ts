@@ -81,6 +81,9 @@ export function validateContent(c: Content): string[] {
 
   checkTransitions('regime', REGIMES, c.market.regimeTransitions);
   checkTransitions('crypto', PHASES, c.market.cryptoTransitions);
+  if (!within(c.market.depositEscapePct, 0, 100)) {
+    errors.push('market.depositEscapePct must be between 0 and 100');
+  }
   if (!within(c.market.recessionWinterChancePct, 0, 100)) {
     errors.push('market.recessionWinterChancePct must be between 0 and 100');
   }

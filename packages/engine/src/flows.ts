@@ -2,24 +2,35 @@ import { residencyOf } from './life/derive';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { cityOf } from './lookup';
+import { applyBp, mulDiv } from './money';
 import type { Cents } from './money';
-import { indexed } from './rates';
+import { depositRateBp, indexed } from './rates';
 import { computeTax, effectiveTax } from './tax';
 import type { TaxBill } from './tax';
 import { declaredTax } from './evasion';
 import type { Content, Evaded, PlayerState, RoundTally, WorldState } from './types';
+
+/**
+ * The two sides of the escape test. On one side, passive income less the tax it would bear if the
+ * player had no salary: what they could live on without working. On the other, everything the
+ * round costs them, with the property tax on what they own counted as a cost of living.
+ */
+export interface EscapeMeasure {
+  passiveAfterTax: Cents;
+  outgoings: Cents;
+  /**
+   * What the passive side leaves out of the deposit's interest, after its tax: the deposit counts
+   * only in part (`market.depositEscapePct`), so savings alone are not a way out.
+   */
+  savingsUncounted: Cents;
+}
 
 export interface Flows {
   income: RoundIncome;
   expenses: RoundExpenses;
   passive: Cents;
   outgoings: Cents;
-  /**
-   * The two sides of the escape test. On one side, passive income less the tax it would bear if the
-   * player had no salary: what they could live on without working. On the other, everything the
-   * round costs them, with the property tax on what they own counted as a cost of living.
-   */
-  escape: { passiveAfterTax: Cents; outgoings: Cents };
+  escape: EscapeMeasure;
   bill: TaxBill;
   /** What the bill leaves out that the honest one would have had, by way of leaving it out. */
   evaded: Evaded;
@@ -67,6 +78,22 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
   const idle = computeTax(tax, median, content.yearsPerRound, { ...earned, salary: 0, pensionContribution: 0, realisedGains: 0 });
   const passive = passiveOf(income);
   const outgoings = outgoingsOf(expenses);
-  const escape = { passiveAfterTax: passive - idle.income - idle.investment, outgoings: outgoings + idle.property };
+  // The deposit's own interest, after the tax it adds, counts only in part towards the escape.
+  // Interest on loans to other players, coupons and dividends count in full.
+  const depositInterest = applyBp(p.deposit, depositRateBp(content, now) * content.yearsPerRound);
+  const withoutDeposit = computeTax(tax, median, content.yearsPerRound, {
+    ...earned,
+    dividends: earned.dividends - depositInterest,
+    salary: 0,
+    pensionContribution: 0,
+    realisedGains: 0,
+  });
+  const depositAfterTax = depositInterest - (idle.investment - withoutDeposit.investment);
+  const uncounted = depositAfterTax - mulDiv(depositAfterTax, content.market.depositEscapePct, 100);
+  const escape = {
+    passiveAfterTax: passive - idle.income - idle.investment - uncounted,
+    outgoings: outgoings + idle.property,
+    savingsUncounted: uncounted,
+  };
   return { income, expenses, passive, outgoings, escape, bill, evaded };
 }

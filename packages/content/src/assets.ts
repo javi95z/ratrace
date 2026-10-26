@@ -73,6 +73,8 @@ export const market: MarketParams = {
   inflationTargetBp: { expansion: 220, boom: 380, slowdown: 250, recession: 80, recovery: 180 },
   inflationNoiseBp: 80,
   depositSpreadBp: 150,
+  // Savings interest counts half towards the way out: parking cash is not a life of leisure.
+  depositEscapePct: 50,
   recessionWinterChancePct: 40,
   start: { regime: 'expansion', cryptoPhase: 'accumulation', policyRateBp: 250, inflationBp: 220 },
 };

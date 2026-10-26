@@ -8,6 +8,7 @@ export { createGame, applyCard, applyCards, applyRound, applyRoomEvents, preview
 export type { PlanRun, RejectedOrder, RoundPreview } from './game';
 export type { RoundExpenses, RoundIncome } from './economy';
 export type { TaxBill } from './tax';
+export type { EscapeMeasure } from './flows';
 export { netWorth, realNetWorth, finalScore, cashflow, cashflowLines, escapeProgress, livedStatus, scoreBreakdown, statusBreakdown } from './selectors';
 export { taxAnnual } from './flowTax';
 export type { CashflowLines, ScoreBreakdown } from './selectors';

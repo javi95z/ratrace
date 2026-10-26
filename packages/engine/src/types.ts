@@ -191,6 +191,11 @@ export interface MarketParams {
   inflationNoiseBp: Bp;
   /** Deposit rate = policy rate minus this spread, floored at zero. */
   depositSpreadBp: Bp;
+  /**
+   * The share in percent of the deposit's interest, after its tax, that counts towards the escape.
+   * The player receives all of it; only the way out weighs it less, so savings alone are not one.
+   */
+  depositEscapePct: number;
   /** Chance in percent that a recession pulls the crypto cycle into winter. */
   recessionWinterChancePct: number;
   start: { regime: Regime; cryptoPhase: CryptoPhase; policyRateBp: Bp; inflationBp: Bp };

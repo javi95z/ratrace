@@ -3,6 +3,7 @@ import { applyDebtPayments, callMargins, checkBankruptcy, settleCash } from './d
 import { dividendsByAsset } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { flowsOf } from './flows';
+import type { EscapeMeasure } from './flows';
 import { assertInvariants, assertViewInvariants } from './invariants';
 import { answerNext, answerRest, drawHand } from './life/cards';
 import { careerSwing, refreshDerived } from './life/derive';
@@ -161,7 +162,7 @@ export interface RoundPreview {
    * The two sides of the escape test for this round. The player is out of the rat race once
    * passive income, after the tax it would bear with no salary, covers the outgoings two rounds running.
    */
-  escape: { passiveAfterTax: Cents; outgoings: Cents };
+  escape: EscapeMeasure;
   rejected: RejectedOrder[];
 }
 
