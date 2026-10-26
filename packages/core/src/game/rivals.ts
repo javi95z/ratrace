@@ -78,6 +78,12 @@ const NOTICED_FROM = 1_000_00;
 /** Every this many rounds a rival looks at what the player bought since the last time, and keeps up: they have a life too. */
 const COPY_REST = 3;
 
+/**
+ * What a thing that is kept costs the one who copies it, in percent of its price: the rest is still theirs, in what it would sell for.
+ * A rival's own rough count, not the shop's: nothing of the game's figures depends on it.
+ */
+const DURABLE_LOSS_PCT = 20;
+
 /** What a home costs the one who copies it, beyond what it is worth: fees, taxes and furniture, in percent of its price. */
 const HOME_FEES_PCT = 8;
 
@@ -140,9 +146,9 @@ function notchAbove(content: Content, item: ItemDef): ItemDef {
   return best ?? item;
 }
 
-/** The home a notch above the player's, sold in the city; the same at the top. */
+/** The home a notch above the player's, sold in the city (a place only to let has no status); the same at the top. */
 function homeAbove(content: Content, typeId: string, cityId: string): PropertyTypeDef | null {
-  const sold = content.propertyTypes.filter((type) => type.rentalOnly !== true && (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId));
+  const sold = content.propertyTypes.filter((type) => type.status > 0 && (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId));
   const theirs = content.propertyTypes.find((type) => type.id === typeId);
   if (!theirs) return null;
   let best: PropertyTypeDef | null = null;
@@ -230,7 +236,7 @@ export function rivalsOf(content: Content, timeline: readonly WorldState[], hist
       const show = (rival.seed + r) % COPY_REST === 0 ? noticed(content, shows, rival.id, r) : null;
       if (show !== null && 'itemId' in show) {
         const item = notchAbove(content, content.items.find((one) => one.id === show.itemId) as ItemDef);
-        next -= item.kind === 'durable' ? item.price - Math.round((item.price * item.resaleStartPct) / 100) : item.price;
+        next -= item.kind === 'durable' ? Math.round((item.price * DURABLE_LOSS_PCT) / 100) : item.price;
         kept.set(item.ladder, { item, round: r });
         rival.copies[r] = { round: r, itemId: item.id };
       } else if (show !== null && city) {
