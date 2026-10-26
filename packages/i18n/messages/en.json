@@ -330,6 +330,37 @@
       "go": "Face it"
     }
   },
+  "milestone": {
+    "kicker": "Milestone",
+    "first": "First time ever!",
+    "record": "New record! Your best was {age}",
+    "headline": "{name} at {age}!",
+    "at": "At {age}",
+    "also": "Also reached",
+    "go": "Onwards!",
+    "share": "Share",
+    "shareText": "{headline} Can you beat it? Play The Rat Race:",
+    "names": {
+      "escaped": "Out of the rat race",
+      "worth10m": "Ten million",
+      "worth1m": "A million",
+      "home": "A home of your own",
+      "business": "Your own business",
+      "halfway": "Halfway out",
+      "debtFree": "Debt-free",
+      "worth100k": "100k net worth"
+    },
+    "lines": {
+      "escaped": "Your money works so you don't have to.",
+      "worth10m": "Eight figures. The other rats look up to you now.",
+      "worth1m": "Seven figures, in real dollars.",
+      "home": "Keys in hand. Your landlord will miss you.",
+      "business": "You're the boss now. Of yourself, at least.",
+      "halfway": "Your investments already pay for half your life.",
+      "debtFree": "You don't owe anyone a cent.",
+      "worth100k": "Six figures to your name."
+    }
+  },
   "cards": {
     "progress": "Card {n} of {total}",
     "world": "World event",

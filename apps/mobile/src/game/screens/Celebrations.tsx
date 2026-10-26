@@ -16,6 +16,8 @@ import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useGame, useT, useWords } from '../context';
 import { Medal } from './Medal';
+import { MilestoneBanner, MilestoneBig, useCelebration } from './Milestones';
+import type { Carried } from '@ratrace/core/game/lifeMilestones';
 import { RARITY_GLOW, RARITY_TONE } from './rarityStyle';
 
 /** The sparks of a badge won are the colours of its rim: bronze, silver, gold, and the gem's green and cream. */
@@ -137,25 +139,36 @@ function Unlocked({ lives }: { lives: readonly string[] }) {
 }
 
 /**
- * What the step on screen earned for the first time ever: badges, and lives unlocked.
- * It says what the session reported; whether a badge was earned is never judged here.
- * It reads the round only for those two lists, and is drawn again only when what is in them changes. `seen` is what a scene shows as taken in
+ * What the step on screen earned for the first time ever: badges, and lives unlocked; and the milestones of the life it reached (Milestones.tsx),
+ * which carry the step's badges inside them, so that a step is always one celebration.
+ * It says what the session and the round store reported; whether a badge was earned, or a milestone reached, is never judged here.
+ * It reads the round only for those lists, and is drawn again only when what is in them changes. `seen` is what a scene shows as taken in
  * already: legendary badges whose sheet the player has moved on from (the web's scene presses its button).
  */
 export function Celebrations({ seen: taken = [] }: { seen?: readonly string[] }) {
   const { text } = useWords();
   const common = useT('common');
+  const milestone = useT('milestone');
   const earned = useGame(useShallow((s) => s.earned));
   const unlocked = useGame(useShallow((s) => s.unlocked));
+  const reached = useGame(useShallow((s) => s.reached));
+  const lifeId = useGame((s) => s.lifeId) ?? '';
+  const plan = useCelebration();
   // Legendary badges already taken in: each has the whole screen once, until the player moves on.
   const [seen, setSeen] = useState<ReadonlySet<string>>(() => new Set(taken));
-  const grand = earned.find((id) => rarityOf(id) === 'legendary' && !seen.has(id));
+  // The step whose milestone had the whole screen and was moved on from.
+  const [done, setDone] = useState<unknown>(null);
+  const grand = plan.where === 'badges' ? earned.find((id) => rarityOf(id) === 'legendary' && !seen.has(id)) : undefined;
   // The sheet keeps saying what it said while it leaves.
   const [held, setHeld] = useState(grand);
   if (grand !== undefined && grand !== held) setHeld(grand);
-  if (earned.length === 0 && unlocked.length === 0) return null;
+  const big = plan.where === 'sheet' ? plan : null;
+  const [bigHeld, setBigHeld] = useState(big);
+  if (big !== null && big.lead !== bigHeld?.lead) setBigHeld(big);
+  if (earned.length === 0 && unlocked.length === 0 && reached.length === 0) return null;
   const dismiss = () => grand && setSeen((now) => new Set(now).add(grand));
   const shown = grand ?? held;
+  const bigOpen = big !== null && done !== reached;
 
   return (
     <>
@@ -164,9 +177,14 @@ export function Celebrations({ seen: taken = [] }: { seen?: readonly string[] })
           <Legendary badgeId={shown} onDone={dismiss} />
         </Sheet>
       ) : null}
-      {earned.map((id) => (
-        <Earned key={id} badgeId={id} />
-      ))}
+      {bigHeld !== null ? (
+        <Sheet open={bigOpen} onClose={() => setDone(reached)} title={milestone(`names.${bigHeld.lead.id}`)} closeLabel={common('close')} tone="gold">
+          <MilestoneBig plan={bigHeld} lifeId={lifeId} onDone={() => setDone(reached)} />
+        </Sheet>
+      ) : null}
+      {/* Moved on from the whole screen, the milestone stays with the step's result as its banner, as a badge's card stays. */}
+      {plan.where === 'banner' || (big !== null && !bigOpen) ? <MilestoneBanner plan={plan as Carried} lifeId={lifeId} /> : null}
+      {plan.where === 'badges' ? earned.map((id) => <Earned key={id} badgeId={id} />) : null}
       {unlocked.length > 0 ? <Unlocked lives={unlocked} /> : null}
     </>
   );
