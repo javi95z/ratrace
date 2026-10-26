@@ -1,6 +1,7 @@
-# What EAS uploads for a build: the repo as git sees it (this file replaces .gitignore for EAS, so it repeats it),
-# without what the app's build never reads: the raw art, the docs and their shots.
+# What EAS Build is not sent (with this file, EAS reads no .gitignore: their rules are repeated here). The app's build needs the packages, the
+# app, the clean art (`pnpm sprites`), the web's older rules (`pnpm rules`) and the lockfile; never the raw art, the reports or the tools' output.
 
+# As .gitignore
 node_modules
 dist
 .DS_Store
@@ -10,51 +11,36 @@ art/preview/
 .next/
 playwright-report/
 test-results/
-
-# Local settings and keys: never committed. `.env.example` files say which values exist.
 .env
 .env.*
 !.env.example
 .vercel
-# Generated from the current routes, public assets and production chunks.
 apps/web/public/sw.js
+.claude/
+.superpowers/
 
-# apps/mobile/.gitignore, anchored here
-apps/mobile/**/node_modules/
-apps/mobile/**/.expo/
-apps/mobile/**/dist/
-apps/mobile/**/web-build/
-apps/mobile/**/expo-env.d.ts
-apps/mobile/**/.kotlin/
-apps/mobile/**/*.orig.*
-apps/mobile/**/*.jks
-apps/mobile/**/*.p8
-apps/mobile/**/*.p12
-apps/mobile/**/*.key
-apps/mobile/**/*.mobileprovision
-apps/mobile/**/.metro-health-check*
-apps/mobile/**/npm-debug.*
-apps/mobile/**/yarn-debug.*
-apps/mobile/**/yarn-error.*
-apps/mobile/**/.DS_Store
-apps/mobile/**/*.pem
-apps/mobile/**/.env*.local
-apps/mobile/**/*.tsbuildinfo
-apps/mobile/ios
-apps/mobile/android
+# As apps/mobile/.gitignore
+apps/mobile/.expo/
+apps/mobile/web-build/
+apps/mobile/expo-env.d.ts
+apps/mobile/.kotlin/
+apps/mobile/ios/
+apps/mobile/android/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+apps/mobile/.kit-shots/
 apps/mobile/assets/sprites/
 apps/mobile/public/sprites/
-apps/mobile/src/rules/v*.js
 apps/mobile/public/rules/
-apps/mobile/.kit-shots/
-apps/mobile/.perf/
+apps/mobile/src/rules/v*.js
 
-# Not needed to build the app (its sprites come from art/clean)
+# Not needed to build the app: the art before it is cleaned, the contact sheets, the reports, their screenshots and the store's pictures.
 art/raw/
 art/contact/
-art/preview/
 docs/
-
-# Local working folders (kept out of git by .git/info/exclude)
-.superpowers/
-**/.claude/
+supabase/functions/_shared/game/
