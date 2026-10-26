@@ -438,13 +438,19 @@ describe('the rankings', () => {
     }
   });
 
-  it('shows the player their friend code, and copies it for them when it is pressed', async () => {
+  it('shows the player their friend code, which opens their invitation: its QR code, the link to share, the code to copy', async () => {
     const { community: c } = community();
     show(c);
     const you = await screen.findByRole('region', { name: 'You' });
     await waitFor(() => expect(you.textContent).toContain('Your friend code: ABCD2345'));
-    // The web's code is selected whole by a tap; a phone selects nothing in a line of text, so the code copies itself, and says so.
     fireEvent.click(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' }));
+    const sheet = screen.getByRole('heading', { name: 'Your friend code' }).closest('[aria-modal="true"]') as HTMLElement;
+    // The QR code another phone's camera reads: the friends' page with the code ready to send, which Android opens in the app.
+    expect(within(sheet).getByRole('img', { name: /Scan it with another phone's camera/ })).toBeTruthy();
+    expect(within(sheet).getByText('ABCD2345')).toBeTruthy();
+    expect(within(sheet).getByRole('button', { name: 'Share' })).toBeTruthy();
+    // Copied, the sheet goes and the page says so.
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Copy' }));
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(screen.getByRole('alert').textContent).toBe('Code copied');
     expect(clipboard.text).toBe('ABCD2345');
@@ -457,8 +463,35 @@ describe('the rankings', () => {
     const you = await screen.findByRole('region', { name: 'You' });
     await waitFor(() => expect(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' })).toBeTruthy());
     fireEvent.click(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     await settled();
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('opens on the friends with a friend\'s code written in, from their link (their QR code), for the player to send', async () => {
+    const { community: c, asked } = community();
+    show(c, 'en', { tab: 'friends', friend: 'WXYZ6789' });
+    const friends = await friendsPanel();
+    expect((within(friends).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
+    expect(asked.some((one) => one.startsWith('befriend'))).toBe(false);
+    fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
+    await waitFor(() => expect(asked).toContain('befriend WXYZ6789'));
+  });
+
+  it('answers a friend request from its notice\'s button, once the friends are read, and once only', async () => {
+    const { community: c, asked, state } = community();
+    state.friends = { friends: [], incoming: [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }], outgoing: [] };
+    show(c, 'en', { tab: 'friends', answering: { userId: 'bbbb2222-0000', yes: true } });
+    await waitFor(() => expect(asked).toContain('answer bbbb2222-0000 yes'));
+    await settled();
+    expect(asked.filter((one) => one.startsWith('answer'))).toHaveLength(1);
+    // One who is no longer asking (answered elsewhere) is left alone.
+    cleanup();
+    const other = community();
+    show(other.community, 'en', { tab: 'friends', answering: { userId: 'cccc3333-0000', yes: false } });
+    await friendsPanel();
+    await settled();
+    expect(other.asked.filter((one) => one.startsWith('answer'))).toEqual([]);
   });
 
   it('asks another player to be friends by their code', async () => {

@@ -6,6 +6,7 @@ import { createContext, useContext } from 'react';
  * - `tick`: a value moves past one of many steps (a slider);
  * - `toggleOn`, `toggleOff`: a switch is turned;
  * - `threshold`: a drag reaches the point where letting go acts (a card swiped far enough to answer);
+ * - `hold`: a long press opens what can be done with something (its menu);
  * - `confirm`: the player commits to something (an answer, the round played);
  * - `success`: something good is won (a badge, the way out of the rat race, a new rank);
  * - `warning`: something goes wrong round the player (a crisis begins);
@@ -13,7 +14,7 @@ import { createContext, useContext } from 'react';
  *
  * Nothing for a plain press of a button: a phone's own buttons say nothing to the touch either.
  */
-export type Haptic = 'select' | 'tick' | 'toggleOn' | 'toggleOff' | 'threshold' | 'confirm' | 'success' | 'warning' | 'reject';
+export type Haptic = 'select' | 'tick' | 'toggleOn' | 'toggleOff' | 'threshold' | 'hold' | 'confirm' | 'success' | 'warning' | 'reject';
 
 const silent = (): void => undefined;
 

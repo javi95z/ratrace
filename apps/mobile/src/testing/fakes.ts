@@ -410,6 +410,12 @@ export const notices = {
   loads: 0,
   taps: new Set<(response: NoticeTap) => void>(),
   tokens: new Set<(token: { type: string; data: string }) => void>(),
+  /** The buttons registered, by category: each button's name and words. */
+  categories: new Map<string, Array<{ identifier: string; buttonTitle: string; options?: { opensAppToForeground?: boolean } }>>(),
+  /** The notices in the phone's tray (their id and kind), those taken from it, and the number on the app's icon (null until set). */
+  presented: [] as Array<{ identifier: string; tag: string }>,
+  dismissed: [] as string[],
+  badge: null as number | null,
   tap(response: NoticeTap) {
     for (const listener of [...notices.taps]) listener(response);
   },
@@ -448,6 +454,20 @@ export const expoNotifications = {
   addPushTokenListener: (listener: (token: { type: string; data: string }) => void) => {
     notices.tokens.add(listener);
     return { remove: () => void notices.tokens.delete(listener) };
+  },
+  DEFAULT_ACTION_IDENTIFIER: 'expo.modules.notifications.actions.DEFAULT',
+  setNotificationCategoryAsync: async (id: string, buttons: Array<{ identifier: string; buttonTitle: string; options?: { opensAppToForeground?: boolean } }>) => {
+    notices.categories.set(id, buttons);
+    return { identifier: id, actions: buttons };
+  },
+  getPresentedNotificationsAsync: async () => notices.presented.map(({ identifier, tag }) => ({ request: { identifier, content: { data: { tag } } } })),
+  dismissNotificationAsync: async (identifier: string) => {
+    notices.dismissed.push(identifier);
+    notices.presented = notices.presented.filter((one) => one.identifier !== identifier);
+  },
+  setBadgeCountAsync: async (count: number) => {
+    notices.badge = count;
+    return true;
   },
 };
 /** The phone itself (expo-device): a real one, unless a test makes it a simulator. */
@@ -565,6 +585,10 @@ export function resetFakes(): void {
   notices.tokenAsks.length = 0;
   notices.channels.length = 0;
   notices.taps.clear();
+  notices.categories.clear();
+  notices.presented = [];
+  notices.dismissed = [];
+  notices.badge = null;
   notices.tokens.clear();
   expoDevice.isDevice = true;
   delete (expoConstants.default as { executionEnvironment?: string }).executionEnvironment;

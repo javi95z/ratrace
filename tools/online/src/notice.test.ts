@@ -42,6 +42,15 @@ describe('what a notice says', () => {
     expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://rankings?tab=friends');
     expect(noticeOf('en', { kind: 'friendAccepted', who: null }, 'app').url).toBe('theratrace://rankings?tab=friends');
     expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }).url).toBe('/es/rankings#friends');
+    // A request that says who asked is answered from the phone's notice: its buttons, and the link each opens. None on the web, nor for the rest.
+    const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana', from }, 'app')).toMatchObject({
+      url: 'theratrace://rankings?tab=friends',
+      category: 'friend-request',
+      actions: { accept: `theratrace://rankings?tab=friends&accept=${from}`, decline: `theratrace://rankings?tab=friends&decline=${from}` },
+    });
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana', from })).not.toHaveProperty('actions');
+    expect(noticeOf('es', { kind: 'friendAccepted', who: 'Ana' }, 'app')).not.toHaveProperty('category');
     expect(noticeOf('es', { kind: 'idle' }, 'web')).toEqual(noticeOf('es', { kind: 'idle' }));
     expect(noticeOf(null, { kind: 'idle' }, 'app').title).toBe('Your life is waiting');
   });

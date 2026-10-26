@@ -151,6 +151,82 @@ describe('the link a tap opens', () => {
       expect(pageOf(url), `${about.kind}: ${url}`).not.toBeNull();
     }
     expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toEqual({ page: 'rankings', query: { tab: 'friends' } });
+    // A friend request's buttons: the friends, answering whoever asked.
+    const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
+    const { actions } = noticeOf('es', { kind: 'friendRequest', who: null, from }, 'app');
+    expect(pageOf(actions?.accept)).toEqual({ page: 'rankings', query: { tab: 'friends', accept: from } });
+    expect(pageOf(actions?.decline)).toEqual({ page: 'rankings', query: { tab: 'friends', decline: from } });
+    expect(pageOf('theratrace://rankings?tab=friends&accept=not-an-id')).toBeNull();
+  });
+});
+
+describe('the buttons of a notice', () => {
+  const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
+  /** A press of a friend request's button, as the phone hands it over. */
+  const pressed = (button: string, identifier = 'notice-9') => {
+    const { url, tag, actions } = noticeOf('en', { kind: 'friendRequest', who: 'Ana', from }, 'app');
+    return { notification: { request: { identifier, content: { data: { url, tag, actions } } } }, actionIdentifier: button };
+  };
+
+  it('are registered in the game\'s words, each opening the app, and again in a new language', async () => {
+    notices.status = 'granted';
+    const { account } = accountAt({ kind: 'guest', userId: 'guest-1', notice: null });
+    const { all } = community();
+    renderGame(<Preferences />, { ...memoryServices(), account, community: () => all, push: phonePush(memoryNote('on'), { platform: 'ios' }) }, 'es');
+    await waitFor(() =>
+      expect(notices.categories.get('friend-request')).toEqual([
+        { identifier: 'accept', buttonTitle: 'Aceptar', options: { opensAppToForeground: true } },
+        { identifier: 'decline', buttonTitle: 'Rechazar', options: { opensAppToForeground: true } },
+      ]),
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'English' }));
+    await waitFor(() => expect(notices.categories.get('friend-request')?.map((button) => button.buttonTitle)).toEqual(['Accept', 'Decline']));
+  });
+
+  it('open the link of the button pressed, and take its notice from the tray', async () => {
+    const push = phonePush(memoryNote(), { platform: 'android' });
+    renderGame(<Preferences />, { ...memoryServices(), push });
+    await waitFor(() => expect(notices.taps.size).toBe(1));
+    act(() => notices.tap(pressed('accept')));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith(`/en/rankings?tab=friends&accept=${from}`));
+    expect(notices.dismissed).toEqual(['notice-9']);
+    act(() => notices.tap(pressed('decline', 'notice-10')));
+    // Over the friends opened by the first, in their place.
+    const moves = () => [...router.push.mock.calls, ...router.replace.mock.calls].map(([to]) => to);
+    await waitFor(() => expect(moves()).toContain(`/en/rankings?tab=friends&decline=${from}`));
+    // The notice itself, tapped: its own link, and the phone takes it from the tray.
+    act(() => notices.tap({ ...pressed('expo.modules.notifications.actions.DEFAULT', 'notice-11') }));
+    await settle();
+    expect(notices.dismissed).toEqual(['notice-9', 'notice-10']);
+  });
+});
+
+describe('the notices seen', () => {
+  it('go from the tray as the page that shows what they told comes in front, and the icon\'s number is what is left', async () => {
+    notices.presented = [
+      { identifier: 'a', tag: 'friends' },
+      { identifier: 'b', tag: 'room' },
+      { identifier: 'c', tag: 'weekly-challenge' },
+    ];
+    const push = phonePush(memoryNote(), { platform: 'ios' });
+    pathname.now = '/en/rankings';
+    renderGame(<Preferences />, { ...memoryServices(), push });
+    await waitFor(() => expect(notices.badge).toBe(2));
+    expect(notices.dismissed).toEqual(['a']);
+    expect(notices.presented.map((one) => one.identifier)).toEqual(['b', 'c']);
+  });
+
+  it('only set the number again on a page that shows none of them; nothing where the phone cannot be told', async () => {
+    notices.presented = [{ identifier: 'b', tag: 'room' }];
+    pathname.now = '/en/records';
+    renderGame(<Preferences />, { ...memoryServices(), push: phonePush(memoryNote(), { platform: 'ios' }) });
+    await waitFor(() => expect(notices.badge).toBe(1));
+    expect(notices.dismissed).toEqual([]);
+    cleanup();
+    notices.badge = null;
+    renderGame(<Preferences />, { ...memoryServices(), push: phonePush(memoryNote(), { platform: 'web' }) });
+    await settle();
+    expect(notices.badge).toBeNull();
   });
 });
 

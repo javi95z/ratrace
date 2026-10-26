@@ -13,6 +13,12 @@ export interface Notice {
   url: string;
   /** Notices of one kind take each other's place: a newer one replaces an older one still unread. */
   tag: string;
+  /**
+   * On a phone, the buttons the notice shows (the app registers them under this name, in the game's language: `apps/mobile/src/online/push.ts`),
+   * and the link each opens, by its name. None on the web.
+   */
+  category?: string;
+  actions?: Record<string, string>;
 }
 
 /**
@@ -27,7 +33,7 @@ export interface Notice {
  * - `marketMoved`: something the player holds in their ranked life moved 5% or more in the round they last played.
  *   `percent` is signed, in whole percent; `asset` is the asset's id, named here in the player's language.
  * - `shout`: another player of the game said something, by its number among the game's shouts.
- * - `friendRequest`: another player asks to be the player's friend.
+ * - `friendRequest`: another player (`from`, their id) asks to be the player's friend.
  * - `friendAccepted`: a player the player asked said yes.
  */
 export type NoticeAbout =
@@ -40,7 +46,7 @@ export type NoticeAbout =
   | { kind: 'marketMoved'; asset: string; percent: number }
   | { kind: 'loanOffer'; who: string | null; lend: boolean; amount: number; rateBp: number; rounds: number }
   | { kind: 'shout'; who: string | null; n: number }
-  | { kind: 'friendRequest'; who: string | null }
+  | { kind: 'friendRequest'; who: string | null; from?: string }
   | { kind: 'friendAccepted'; who: string | null };
 
 /** The six faces a player may shout, which no language changes. The page's own list, held to it by a test. */
@@ -160,7 +166,21 @@ export const APP_LINK = 'theratrace://';
 export function noticeOf(locale: string | null, about: NoticeAbout, on: 'web' | 'app' = 'web'): Notice {
   const lang = langOf(locale);
   const words = (WORDS[lang][about.kind] as Words)(about as never);
-  return { ...words, url: on === 'app' ? `${APP_LINK}${APP_PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
+  const notice: Notice = { ...words, url: on === 'app' ? `${APP_LINK}${APP_PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
+  return on === 'app' ? { ...notice, ...buttonsOf(about) } : notice;
+}
+
+/** The name a phone knows a friend request's buttons by: Accept and Decline. */
+export const FRIEND_REQUEST = 'friend-request';
+
+/**
+ * The buttons of a notice on a phone, and what each opens: a friend request is answered from its notice (the friends' page, answering it,
+ * `theratrace://rankings?tab=friends&accept=<id>`). Nothing for the rest, nor for a request that does not say who asked.
+ */
+function buttonsOf(about: NoticeAbout): Pick<Notice, 'category' | 'actions'> {
+  if (about.kind !== 'friendRequest' || about.from === undefined) return {};
+  const answer = (how: 'accept' | 'decline') => `${APP_LINK}rankings?tab=friends&${how}=${about.from}`;
+  return { category: FRIEND_REQUEST, actions: { accept: answer('accept'), decline: answer('decline') } };
 }
 
 /** True where a push service says a subscription is gone for good: the browser unsubscribed, or it expired. */

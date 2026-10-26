@@ -79,12 +79,16 @@ export const EXPO_BATCH = 100;
 /** How long Expo has to answer a batch, in milliseconds: a service that hangs must not hold back the players after. */
 export const EXPO_PATIENCE = 10_000;
 
-/** A message to a phone, as Expo's push service takes it. The tap's link and the notice's kind travel in `data`. */
+/**
+ * A message to a phone, as Expo's push service takes it. The tap's link and the notice's kind travel in `data`, with the links of its buttons where it
+ * has some (`actions`), shown by the category the app registered under their name (`categoryId`).
+ */
 export interface ExpoMessage {
   to: string;
   title: string;
   body: string;
-  data: { url: string; tag: string };
+  data: { url: string; tag: string; actions?: Record<string, string> };
+  categoryId?: string;
   ttl: number;
   priority: 'default' | 'high';
   sound: 'default';
@@ -95,7 +99,8 @@ export const expoMessage = (token: string, notice: Notice, ttl: number, urgency:
   to: token,
   title: notice.title,
   body: notice.body,
-  data: { url: notice.url, tag: notice.tag },
+  data: { url: notice.url, tag: notice.tag, ...(notice.actions ? { actions: notice.actions } : null) },
+  ...(notice.category ? { categoryId: notice.category } : null),
   ttl,
   priority: urgency === 'high' ? 'high' : 'default',
   sound: 'default',

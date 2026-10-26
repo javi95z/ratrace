@@ -154,5 +154,7 @@ export const phonePush: (note: PushNote, options?: { platform?: string }) => Pus
     follow: () => () => undefined,
     // A tap is the worker's: it focuses the game's window or opens one at the notice's page.
     onTap: () => () => undefined,
+    // The browser's notices are the worker's: it shows them, and the browser keeps no number on an icon of the game's.
+    seen: () => undefined,
   };
 };

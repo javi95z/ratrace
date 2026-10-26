@@ -1561,7 +1561,9 @@
     "unfriend": "Remove friend",
     "cancelRequest": "Cancel request",
     "unfriendAbout": "You will no longer see each other's lives among friends. To be friends again takes a new request.",
-    "answerGone": "That request is no longer there."
+    "answerGone": "That request is no longer there.",
+    "inviteScan": "Scan it with another phone's camera: it opens the game with your code ready to send.",
+    "inviteText": "Be my friend in The Rat Race. My friend code is {code}"
   },
   "keyboard": {
     "title": "Keyboard controls",
@@ -2121,7 +2123,16 @@
     "roomOtherVersion": "That game plays another version. Update the app and try again.",
     "roomOtherRules": "This game plays another version. Update the app to play it.",
     "noticeChannel": "The game's notices",
-    "noticesBlocked": "Notices are blocked for this app: allow them in your phone's settings."
+    "noticesBlocked": "Notices are blocked for this app: allow them in your phone's settings.",
+    "menu": {
+      "buyMore": "Buy more",
+      "sellAll": "Sell it all",
+      "details": "Details"
+    },
+    "noticeActions": {
+      "accept": "Accept",
+      "decline": "Decline"
+    }
   },
   "notFound": {
     "title": "Page not found",

@@ -16,6 +16,7 @@ import { adjustedRead, webLine } from '../../ui/fonts';
 import { useDrawnFirst, whenShown } from '../../ui/drawnFirst';
 import { Bar, Bare, Button, Figure, LineTag, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
+import { useHoldMenu } from '../../ui/holdMenu';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { Slider } from '../../ui/Slider';
@@ -121,6 +122,7 @@ function Portfolio() {
   // The same two for every holding and every drawing, so a holding is drawn again only when what it shows changes (`Holding` is memoised).
   const buy = useCallback((asset: AssetDef) => setBuying(asset), []);
   const sell = useCallback((asset: AssetDef) => setMove({ kind: 'sell', asset }), []);
+  const sellAll = useCallback((asset: AssetDef, amount: number) => void addOrder({ type: 'sell', assetId: asset.id, amount }), [addOrder]);
   // Worked out once for the round as it stands, not again for each drawing (the quote is the glance's, made once a round: `portfolioQuote`).
   const held = useMemo(() => content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id)), [content, p.positions]);
   const dividends = useMemo(() => new Map(portfolioQuote(content, shown).dividends.map((paid) => [paid.assetId, paid.amount])), [content, shown]);
@@ -183,6 +185,7 @@ function Portfolio() {
             sellable={sellable(asset.id)}
             onBuy={buy}
             onSell={sell}
+            onSellAll={sellAll}
           />
         ))}
       </Panel>
@@ -199,14 +202,25 @@ function Portfolio() {
  * Drawn again only when one of its figures changes (an order of another holding, or of the cash, leaves it as it is): what is owed on it follows
  * the round itself (`MarginLine`), and its mark the orders of its own asset (`AssetMark`).
  */
-const Holding = memo(function Holding({ asset, value, gain, pays, planned, sellable, onBuy, onSell }: { asset: AssetDef; value: number; gain: number; pays: number | null; planned: number; sellable: number; onBuy(asset: AssetDef): void; onSell(asset: AssetDef): void }) {
+const Holding = memo(function Holding({ asset, value, gain, pays, planned, sellable, onBuy, onSell, onSellAll }: { asset: AssetDef; value: number; gain: number; pays: number | null; planned: number; sellable: number; onBuy(asset: AssetDef): void; onSell(asset: AssetDef): void; onSellAll(asset: AssetDef, amount: number): void }) {
   const t = useT('finance.portfolio');
+  const menuWords = useT('phone.menu');
+  const common = useT('common');
   const { names, fmt } = useWords();
   const buy = usePress({ onPress: () => onBuy(asset) });
+  // Held, on the phone: buy more, sell some, or sell it all (an order in the basket, taken back as any other).
+  const { held, menu } = useHoldMenu({
+    title: names.assets[asset.id].name,
+    closeLabel: common('close'),
+    actions: [
+      { label: menuWords('buyMore'), onPress: () => onBuy(asset) },
+      ...(sellable > 0 ? [{ label: t('sell'), onPress: () => onSell(asset) }, { label: menuWords('sellAll'), onPress: () => onSellAll(asset, sellable), danger: true }] : []),
+    ],
+  });
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
       {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
-      <Pressable {...ITEM} accessibilityRole="button" onPress={buy} style={{ flexDirection: 'row', minHeight: TOUCH, minWidth: 0, flex: 1, alignItems: 'center', gap: 12 }}>
+      <Pressable {...ITEM} {...held} accessibilityRole="button" onPress={buy} style={{ flexDirection: 'row', minHeight: TOUCH, minWidth: 0, flex: 1, alignItems: 'center', gap: 12 }}>
         <AssetMark asset={asset} />
         <View style={{ minWidth: 0, flex: 1 }}>
           <ReadText numberOfLines={1}>{names.assets[asset.id].name}</ReadText>
@@ -221,6 +235,7 @@ const Holding = memo(function Holding({ asset, value, gain, pays, planned, sella
       <Button variant="secondary" onPress={() => onSell(asset)} disabled={sellable <= 0}>
         {t('sell')}
       </Button>
+      {menu}
     </View>
   );
 });
@@ -1020,12 +1035,26 @@ const OwnedHome = memo(function OwnedHome({
   onLodger(on: boolean): void;
 }) {
   const t = useT('finance.property');
+  const menuWords = useT('phone.menu');
+  const common = useT('common');
   const { text, names, fmt } = useWords();
   const open = usePress({ onPress: () => onOpen(id), disabled: sold });
+  // Held, on the phone: everything about it, and what its buttons below do.
+  const { held, menu } = useHoldMenu({
+    title: homeName(text, typeId, cityId),
+    closeLabel: common('close'),
+    actions: sold
+      ? []
+      : [
+          { label: menuWords('details'), onPress: () => onOpen(id) },
+          ...(mine && !letOnly ? [{ label: rented ? t('stopRenting') : t('startRenting'), onPress: () => onRent(id, !rented, wasRented) }] : []),
+          ...(mine ? [{ label: t('sell', { amount: fmt.compact(value) }), onPress: () => onSell(id), danger: true }] : []),
+        ],
+  });
   return (
     <View style={[{ paddingVertical: 8 }, last ? null : { borderBottomWidth: 2, borderBottomColor: COLORS['night-900'] }]}>
       {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
-      <Pressable {...ITEM} accessibilityRole="button" accessibilityState={{ disabled: sold }} disabled={sold} onPress={open} style={{ flexDirection: 'row', width: '100%', alignItems: 'center', gap: 12 }}>
+      <Pressable {...ITEM} {...held} accessibilityRole="button" accessibilityState={{ disabled: sold }} disabled={sold} onPress={open} style={{ flexDirection: 'row', width: '100%', alignItems: 'center', gap: 12 }}>
         <Bare>
           <Sprite id={propertyArt(typeId, cityId)} fallback={HOME} />
         </Bare>
@@ -1066,6 +1095,7 @@ const OwnedHome = memo(function OwnedHome({
           <Toggle on={lodgerOn} onChange={onLodger} label={t('lodger')} hint={t('lodgerHint', { amount: fmt.money(lodgerAnnual), status: lodgerStatus })} icon="icon.rent_room" />
         </View>
       ) : null}
+      {menu}
     </View>
   );
 });

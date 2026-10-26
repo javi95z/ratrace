@@ -4,7 +4,7 @@ import { escapeAge } from '@ratrace/core/game/present';
 import type { Community, Friend, Friends, RankedLifeDetail, RankingRow } from '@ratrace/online/types';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import { copy } from '../../ui/copy';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
@@ -20,9 +20,12 @@ import { webLine } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
 import { LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
+import { QrCode } from '../../ui/QrCode';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA, type ColorToken } from '../../ui/theme';
-import { useAccount, useCommunity, useSettings, useWords } from '../context';
+import { useAccount, useCommunity, useSettings, useTrack, useWords } from '../context';
+import { friendLink } from '../roomLink';
+import { canShareLink, shareLink } from '../sharing';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ChallengeBoard, ChallengeEntry, topTenth, useChallengeBoard } from './Challenge';
@@ -55,7 +58,7 @@ export const CODE_REACH = reach(CODE_LINE, { above: 8, below: 12 + 16 + 8 });
 /** The player's own name, and the code a friend follows them with. Nothing, where theirs could not be read. */
 function You({ community, onRenamed, onTold, naming }: { community: Community; onRenamed(): void; onTold(message: string): void; naming: boolean }) {
   const t = useT('rankings');
-  const player = useT('player');
+  const room = useT('room');
   const { locale } = useSettings();
   const codeLine = codeLineOf(locale);
   const [me, setMe] = useState<{ nickname: string | null; friendCode: string } | null>(null);
@@ -80,7 +83,8 @@ function You({ community, onRenamed, onTold, naming }: { community: Community; o
       wanted = false;
     };
   }, [community]);
-  const copyCode = usePress({ onPress: () => void (me ? copy(me.friendCode, () => onTold(player('copied'))) : undefined) });
+  const [inviting, setInviting] = useState(false);
+  const invite = usePress({ onPress: () => setInviting(true) });
 
   if (me === null) return null;
 
@@ -140,14 +144,60 @@ function You({ community, onRenamed, onTold, naming }: { community: Community; o
           <View style={{ flexDirection: 'row', height: codeLine.height }}>
             <ReadText size={12} tone="ink-300" style={{ marginTop: codeLine.tops[1] }}>{`${t('code')}: `}</ReadText>
             <View style={{ marginTop: codeLine.tops[2] }}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`${t('code')}: ${me.friendCode}`} accessibilityHint={player('copy')} onPress={copyCode} style={({ pressed }) => [CODE_REACH.style, pressDown(pressed)]}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`${t('code')}: ${me.friendCode}`} accessibilityHint={room('invite')} onPress={invite} style={({ pressed }) => [CODE_REACH.style, pressDown(pressed)]}>
                 <PixelText size={15} tone="gold-500" lineHeight={CODE_LINE} style={{ letterSpacing: 15 * 0.12 }}>{me.friendCode}</PixelText>
               </Pressable>
             </View>
           </View>
         </View>
       </Panel>
+      {inviting ? <FriendInvite code={me.friendCode} onClose={() => setInviting(false)} onTold={onTold} /> : null}
     </View>
+  );
+}
+
+/**
+ * The player's friend code, pressed: as a QR code another phone's camera reads (the friends' page with the code ready to send, `friendLink`, which
+ * Android opens in the app), as words and a link for the phone's share sheet, or copied.
+ */
+function FriendInvite({ code, onClose, onTold }: { code: string; onClose(): void; onTold(message: string): void }) {
+  const t = useT('rankings');
+  const room = useT('room');
+  const player = useT('player');
+  const common = useT('common');
+  const { locale } = useSettings();
+  const track = useTrack();
+  const { width } = useWindowDimensions();
+  const url = friendLink(locale, code);
+  const share = async () => {
+    try {
+      if (await shareLink(t('code'), t('inviteText', { code }), url)) track({ name: 'share', what: 'invite' });
+    } catch {
+      // The share sheet would not open: the code is on screen, and it can be copied.
+    }
+  };
+  const copied = () => {
+    onClose();
+    onTold(player('copied'));
+  };
+  return (
+    <Sheet open onClose={onClose} title={t('code')} closeLabel={common('close')}>
+      <View style={{ alignItems: 'center', gap: 12, paddingBottom: 4 }}>
+        <QrCode value={url} width={Math.min(240, width - 96)} label={t('inviteScan')} />
+        <PixelText size={28} tone="gold-500" lineHeight={28} style={{ letterSpacing: 28 * 0.12 }}>{code}</PixelText>
+        <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t('inviteScan')}</ReadText>
+        <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
+          {canShareLink() ? (
+            <Button variant="primary" cell onPress={() => void share()}>
+              {room('share')}
+            </Button>
+          ) : null}
+          <Button variant="secondary" cell onPress={() => void copy(code, copied)}>
+            {player('copy')}
+          </Button>
+        </View>
+      </View>
+    </Sheet>
   );
 }
 
@@ -319,11 +369,12 @@ function useFriendships(community: Community | null, active: boolean, onChanged:
 
 /**
  * The foot of the friends' panel: a friend code to ask with, and what the panel says of the last thing done. The code is its own while it is typed
- * (the page is not drawn again for each letter), and emptied once it is done with.
+ * (the page is not drawn again for each letter), and emptied once it is done with. A friend's link (their QR code, `friendLink`) brings it written in
+ * (`initial`), for the player to send.
  */
-function FriendForm({ busy, said, onAsk }: { busy: boolean; said: Said | null; onAsk(code: string): Promise<boolean> }) {
+function FriendForm({ busy, said, onAsk, initial = '' }: { busy: boolean; said: Said | null; onAsk(code: string): Promise<boolean>; initial?: string }) {
   const t = useT('rankings');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(initial);
   const ask = async () => {
     if (await onAsk(code)) setCode('');
   };
@@ -563,7 +614,13 @@ const PAGE_GAP = 16;
  * `tab` is the ranking it opens on (the route's `?tab=`: a friend request's notice opens it on the friends, a link on the week's challenge); `naming`
  * opens the form of the player's name from the start (a scene's initial state; the player opens it by a tap).
  */
-export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean } = {}) {
+/** A friend request answered from its notice's button (`theratrace://rankings?tab=friends&accept=<id>`): who asked, and the answer. */
+export interface Answering {
+  userId: string;
+  yes: boolean;
+}
+
+export function Rankings({ tab, naming = false, friend: friendCode, answering }: { tab?: Kind; naming?: boolean; friend?: string; answering?: Answering } = {}) {
   const t = useT('rankings');
   const challenge = useT('challenge');
   const common = useT('common');
@@ -611,6 +668,17 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
   const challengeBoard = useChallengeBoard(community, kind === 'challenge');
   const board = challengeBoard.board;
   const friends = useFriendships(community, kind === 'friends', again);
+  // A notice's button answered a friend request: answered here once the friends are read, once for each notice.
+  const answered = useRef<string | null>(null);
+  const answerFriend = friends.answer;
+  const listed = friends.list;
+  useEffect(() => {
+    if (answering === undefined || listed === undefined) return;
+    const which = `${answering.userId}:${answering.yes}`;
+    if (answered.current === which) return;
+    answered.current = which;
+    if (listed?.incoming.some((one) => one.userId === answering.userId)) void answerFriend(answering.userId, answering.yes);
+  }, [answering, listed, answerFriend]);
   // Pulled down, the page reads again what it shows: the ranking (and the friends with it), or the week's challenge. What is on screen stays until
   // the new answer comes.
   const reading = useRef({ community, kind, lifeId, asking });
@@ -750,7 +818,7 @@ export function Rankings({ tab, naming = false }: { tab?: Kind; naming?: boolean
     community !== null && kind === 'friends' ? (
       <View style={friendRows.length === 0 ? { paddingTop: PAGE_GAP } : null}>
         <PanelPart part={friendRows.length === 0 ? 'whole' : 'bottom'} title={friendRows.length === 0 ? t('following') : undefined}>
-          <FriendForm busy={friends.busy} said={friends.said} onAsk={friends.ask} />
+          <FriendForm key={friendCode ?? ''} busy={friends.busy} said={friends.said} onAsk={friends.ask} initial={friendCode} />
         </PanelPart>
       </View>
     ) : undefined;

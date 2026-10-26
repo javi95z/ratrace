@@ -75,8 +75,16 @@ export interface Push {
    * game, and for a new token from Expo. The channel the notices show in (Android) is named in the game's language. Returns how to stop.
    */
   follow(account: Account, community: () => Community | null, locale: string): () => void;
-  /** Opens what a tap on a notice names (`open`, with the page and its query): the tap that opened the app, and each one while it runs. Returns how to stop. */
+  /**
+   * Opens what a tap on a notice names (`open`, with the page and its query): the tap that opened the app, and each one while it runs; a button of the
+   * notice (a friend request's Accept) opens the link the server gave that button. Returns how to stop.
+   */
   onTap(open: (to: NoticePage) => void): () => void;
+  /**
+   * The notices of these kinds (their `tag`s, `supabase/functions/_shared/notice.ts`) are seen: taken from the phone's tray, as a phone's own apps take
+   * a notice once what it told is on screen, and the number on the app's icon is what is left there. With none, only the number is set again.
+   */
+  seen(tags: readonly string[]): void;
 }
 
 /** A page a notice opens, and the query it opens it with: opened in the language of the address in front (`game/pages.ts`). */
@@ -87,13 +95,16 @@ export interface NoticePage {
 
 /** The app's own scheme, which the server writes a phone's links in (`APP_LINK`). */
 const SCHEME = 'theratrace://';
+/** An account's id, as a notice's button names the player who asked. */
+const USER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The screens a notice may open, each with what of its query it reads, and what that may be. */
 const PAGES: Partial<Record<Page, Record<string, RegExp>>> = {
   challenge: {},
   play: {},
   // A room's code: six letters and digits (Room.tsx's `codeOf`).
   room: { code: /^[A-Za-z0-9]{6}$/ },
-  rankings: { tab: /^(all|week|friends|challenge)$/ },
+  // A friend request's notice's buttons answer it (`?accept=<id>`, `?decline=<id>`): the asker's id.
+  rankings: { tab: /^(all|week|friends|challenge)$/, accept: USER_ID, decline: USER_ID },
 };
 /** Longer than any link the server sends. */
 const LONGEST = 200;
@@ -119,6 +130,12 @@ export function pageOf(url: unknown): NoticePage | null {
   }
   return { page, query: Object.fromEntries(kept) };
 }
+
+/**
+ * The buttons a notice may show, by the name the server gives them (`categoryId`, `FRIEND_REQUEST` in `_shared/notice.ts`), each opening the app on
+ * the link the server gave it (`data.actions`), its words the game's.
+ */
+const BUTTONS: Record<string, ReadonlyArray<'accept' | 'decline'>> = { 'friend-request': ['accept', 'decline'] };
 
 /** The Android channel the server's notices are shown in: Expo's own default, which a message with no channel goes to. */
 const CHANNEL = 'default';
@@ -190,12 +207,25 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
 
   const allowed = (): Promise<boolean> => quietly(async () => (await (await notifications()).getPermissionsAsync()).status === 'granted', false);
 
-  /** The channel, named in the language of the game: made before the player is asked, as Android 13 wants. Updated in place when it is there. */
+  /**
+   * The channel, named in the language of the game: made before the player is asked, as Android 13 wants. Updated in place when it is there. And the
+   * notices' buttons, in the same words, registered again as the language changes.
+   */
   const channel = async (): Promise<void> => {
+    const words = messagesFor(speaking).phone;
+    await quietly(async () => {
+      const library = await notifications();
+      for (const [category, buttons] of Object.entries(BUTTONS)) {
+        await library.setNotificationCategoryAsync(
+          category,
+          buttons.map((button) => ({ identifier: button, buttonTitle: words.noticeActions[button], options: { opensAppToForeground: true } })),
+        );
+      }
+    }, undefined);
     if (platform !== 'android') return;
     await quietly(async () => {
       const library = await notifications();
-      await library.setNotificationChannelAsync(CHANNEL, { name: messagesFor(speaking).phone[CHANNEL_WORDS], importance: library.AndroidImportance.DEFAULT });
+      await library.setNotificationChannelAsync(CHANNEL, { name: words[CHANNEL_WORDS], importance: library.AndroidImportance.DEFAULT });
     }, undefined);
   };
 
@@ -370,7 +400,13 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
         opened.add(request.identifier);
         // The tap that opened the app is had: a reload of the app does not open it again.
         if (first) library.clearLastNotificationResponse();
-        const to = pageOf(request.content?.data?.url);
+        const data = request.content?.data ?? {};
+        const button = response?.actionIdentifier;
+        // A button opens its own link (a friend request accepted), and its notice goes: a button leaves it in the tray on Android.
+        const pressed = button !== undefined && button !== library.DEFAULT_ACTION_IDENTIFIER;
+        const actions = data.actions as Record<string, unknown> | undefined;
+        const to = pageOf(pressed ? actions?.[button] : data.url);
+        if (pressed) void quietly(() => library.dismissNotificationAsync(request.identifier), undefined);
         if (to !== null) open(to);
       };
       void quietly(async () => {
@@ -391,6 +427,16 @@ export function phonePush(note: PushNote, options: { platform?: string } = {}): 
         live = false;
         stopTaps?.();
       };
+    },
+    seen: (tags) => {
+      if (!available()) return;
+      void quietly(async () => {
+        const library = await notifications();
+        const shown = await library.getPresentedNotificationsAsync();
+        const gone = shown.filter((notice) => tags.includes(String(notice.request.content.data?.tag ?? '')));
+        await Promise.all(gone.map((notice) => library.dismissNotificationAsync(notice.request.identifier)));
+        await library.setBadgeCountAsync(shown.length - gone.length);
+      }, undefined);
     },
   };
 }

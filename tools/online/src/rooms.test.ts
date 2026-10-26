@@ -1081,7 +1081,7 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     // A request, not a friendship; and whoever is asked hears of it, by the asker's name.
     expect(server.db.friendships).toEqual([]);
     expect(server.db.requests).toEqual([{ from: HOST, to: B }]);
-    expect(server.notices.slice(told)).toEqual([{ user: B, about: { kind: 'friendRequest', who: 'Hosta_1' } }]);
+    expect(server.notices.slice(told)).toEqual([{ user: B, about: { kind: 'friendRequest', who: 'Hosta_1', from: HOST } }]);
     // Asked once, it is not asked twice, nor told twice.
     await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: B });
     expect(server.db.requests).toHaveLength(1);

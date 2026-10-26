@@ -1561,7 +1561,9 @@
     "unfriend": "Eliminar amigo",
     "cancelRequest": "Cancelar solicitud",
     "unfriendAbout": "Dejaréis de ver vuestras vidas entre amigos. Para volver, hará falta otra solicitud.",
-    "answerGone": "Esa solicitud ya no está."
+    "answerGone": "Esa solicitud ya no está.",
+    "inviteScan": "Escanéalo con la cámara de otro móvil: abre el juego con tu código listo para enviar.",
+    "inviteText": "Sé mi amigo en The Rat Race. Mi código de amigo es {code}"
   },
   "keyboard": {
     "title": "Controles de teclado",
@@ -2121,7 +2123,16 @@
     "roomOtherVersion": "Esa partida juega con otra versión del juego. Actualiza la aplicación y vuelve a intentarlo.",
     "roomOtherRules": "Esta partida juega con otra versión del juego. Actualiza la aplicación para jugarla.",
     "noticeChannel": "Avisos del juego",
-    "noticesBlocked": "Las notificaciones están bloqueadas para esta aplicación: permítelas en los ajustes del teléfono."
+    "noticesBlocked": "Las notificaciones están bloqueadas para esta aplicación: permítelas en los ajustes del teléfono.",
+    "menu": {
+      "buyMore": "Comprar más",
+      "sellAll": "Venderlo todo",
+      "details": "Ver detalles"
+    },
+    "noticeActions": {
+      "accept": "Aceptar",
+      "decline": "Rechazar"
+    }
   },
   "notFound": {
     "title": "Página no encontrada",

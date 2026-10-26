@@ -30,7 +30,7 @@ describe('friends, both ways', () => {
     const { all, told, asked } = deps();
     expect(await friends(all, A, { action: 'request', code: ' abcd2345 ' })).toEqual({ status: 200, body: { answer: 'sent' } });
     expect(asked).toEqual([`request ${A}  abcd2345 `]);
-    expect(told).toEqual([{ user: B, about: { kind: 'friendRequest', who: 'Ana_1' } }]);
+    expect(told).toEqual([{ user: B, about: { kind: 'friendRequest', who: 'Ana_1', from: A } }]);
   });
 
   it('tells the asker when the other asked first, and nobody of anything else', async () => {

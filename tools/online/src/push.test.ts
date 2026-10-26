@@ -78,6 +78,17 @@ describe('a notice to the browsers and the phones of players', () => {
     expect(posts[0].headers).toEqual({ accept: 'application/json', 'accept-encoding': 'gzip, deflate', 'content-type': 'application/json' });
   });
 
+  it('gives a phone a friend request\'s buttons: their category, and the link each opens; the browser none', async () => {
+    const { senders, web, posts } = fakes();
+    const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
+    expect(await deliverTo([browser('u1'), phone('u1')], () => ({ kind: 'friendRequest', who: 'Ana', from }), 86_400, 'normal', senders)).toEqual({ sent: 2, removed: 0 });
+    expect(JSON.parse(web[0].payload)).not.toHaveProperty('actions');
+    expect(posts[0].messages[0]).toMatchObject({
+      categoryId: 'friend-request',
+      data: { url: 'theratrace://rankings?tab=friends', tag: 'friends', actions: { accept: `theratrace://rankings?tab=friends&accept=${from}`, decline: `theratrace://rankings?tab=friends&decline=${from}` } },
+    });
+  });
+
   it('forgets a phone Expo says is no longer registered, as a browser the push service says is gone', async () => {
     const { senders, forgotten } = fakes({
       tickets: (to) => (to.includes('dead') ? { status: 'error', message: 'not registered', details: { error: 'DeviceNotRegistered' } } : to.includes('busy') ? { status: 'error', message: 'slow down', details: { error: 'MessageRateExceeded' } } : { status: 'ok', id: 'x' }),

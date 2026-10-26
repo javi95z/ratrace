@@ -23,6 +23,7 @@ import { getCalendars } from 'expo-localization';
 import { usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
+import { AppState } from 'react-native';
 import { useStore } from 'zustand';
 import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvTapSound, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
@@ -52,7 +53,7 @@ import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
 import { deviceLanguages, localeOf, type LanguageKeep } from './locale';
 import { reloadDocument } from './reloadDocument';
-import { pageAt, useGoFromAnywhere } from './pages';
+import { pageAt, useGoFromAnywhere, type Page } from './pages';
 import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
@@ -432,6 +433,34 @@ const SHEETS_PATIENCE = 2_000;
  * answered) keeps the tap from opening anything rather than leave its Modal over the new screen. The screen in front already is opened anew in its
  * place, never a second copy over it. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
  */
+/** The notices each page shows what they told of, by their kind (`tag`, `supabase/functions/_shared/notice.ts`): seen once the page is in front. */
+const SEEN_ON: Partial<Record<Page, readonly string[]>> = {
+  rankings: ['friends'],
+  room: ['room', 'room-loan', 'room-shout'],
+  challenge: ['weekly-challenge'],
+  play: ['idle-life', 'market-moved'],
+};
+
+/**
+ * The notices of what is on screen go from the phone's tray, as a phone's own apps take a notice once what it told is shown, and the number on the
+ * app's icon is what is left (`Push.seen`): as each page comes in front, and as the app comes back in front (a notice may have come meanwhile).
+ */
+function Seen({ push }: { push: Pick<Push, 'seen'> }): null {
+  const page = pageAt(usePathname());
+  const shown = useRef(page);
+  shown.current = page;
+  useEffect(() => {
+    push.seen((page !== null && SEEN_ON[page]) || []);
+  }, [push, page]);
+  useEffect(() => {
+    const back = AppState.addEventListener('change', (state) => {
+      if (state === 'active') push.seen((shown.current !== null && SEEN_ON[shown.current]) || []);
+    });
+    return () => back.remove();
+  }, [push]);
+  return null;
+}
+
 function Taps({ push }: { push: Pick<Push, 'onTap'> }): null {
   // The way to the pages as it is now: in the language of the address in front, whichever that is when the tap comes. A notice opens a page over the
   // stack in front, whose pages are all of one language (the address's), so the page goes on in it; the app's own links (`+native-intent`) may come
@@ -518,6 +547,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     <>
       <Place />
       <Taps push={made.push} />
+      <Seen push={made.push} />
       {/* A shortcut held on the app's icon is opened as a notice's tap is (game/shortcuts.ts). */}
       <Taps push={shortcutTaps} />
       <Started key={started.count} made={made} settings={started.settings} restart={restart}>

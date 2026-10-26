@@ -48,7 +48,7 @@ const bad = (field: string): Reply => ({ status: 400, body: { error: 'bad-reques
 export async function tellOf(deps: { names: FriendsDeps['names']; notify(userIds: string[], about: Extract<NoticeAbout, { kind: 'friendRequest' | 'friendAccepted' }>): Promise<void> }, from: string, to: string, said: string): Promise<void> {
   if (said !== 'sent' && said !== 'accepted') return;
   const who = (await deps.names([from]))[from] ?? null;
-  await deps.notify([to], said === 'sent' ? { kind: 'friendRequest', who } : { kind: 'friendAccepted', who });
+  await deps.notify([to], said === 'sent' ? { kind: 'friendRequest', who, from } : { kind: 'friendAccepted', who });
 }
 
 /** The friends function: `list`, `request` by code, `answer` a request, `remove` a friend or a request. */
