@@ -5,12 +5,12 @@ import { compare, seedsFor } from './simulate';
 import type { BotSummary } from './simulate';
 
 /**
- * The acceptance bands of spec 3.7. Every bot plays the three starting lives over the same fixed
+ * The acceptance bands of spec 3.7. Every bot plays the three lives of Madrid, where the game is learnt, over the same fixed
  * seeds, so the numbers below never change between runs or machines. When this fails after a change
  * to the content, the content is out of balance: tune it, not the bots and not the bands.
  * `pnpm balance` prints the full table on a larger set of seeds.
  */
-const starting = lives.filter((life) => life.unlock === 'default');
+const starting = lives.filter((life) => ['nurse', 'engineer', 'civil_servant'].includes(life.id));
 const SEEDS = 60;
 
 describe('balance', () => {

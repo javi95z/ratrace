@@ -34,11 +34,12 @@ export interface LifeDef {
 
 /**
  * Twenty starting lives: the six of spec section 4, five that each open with a badge, one for each of the five newer careers,
- * each opened by a badge too, and one for each of the four cities added since. A perk or a handicap is either a number in the start
+ * each opened by a badge too, and one for each of the four cities added since. Six are open from the start, so a newcomer has a
+ * choice of lives far apart (a steady wage, pay that swings, a new country, a small wage in a rich city); the rest are goals. A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
  * `share_plan`, `bilingual` and `has_business` by cards.
  *
- * The three first lives begin in Madrid, where the game is learnt; the rest are spread over the six
+ * The three first lives begin in Madrid, where the game is learnt (the balance bands are held on them); the rest are spread over the six
  * cities, each where its trade is at home. Dubai and Singapore tax gains lightly and make any life
  * easier, so the lives that begin there are the ones that need it: the heir, the teacher, and the
  * crypto kid on low pay.
@@ -89,7 +90,7 @@ export const lives: LifeDef[] = [
   {
     // Four focus points; pay that swings every round, and nothing in the bank.
     id: 'rider',
-    unlock: 'finish_one_life',
+    unlock: 'default',
     start: {
       cityId: 'bangkok',
       cash: 0,
@@ -118,7 +119,7 @@ export const lives: LifeDef[] = [
   {
     // Four focus points and a second language; little cash, and money sent home for the first rounds.
     id: 'newcomer',
-    unlock: 'three_cities',
+    unlock: 'default',
     start: {
       cityId: 'london',
       cash: usd(3_500),
@@ -219,7 +220,7 @@ export const lives: LifeDef[] = [
   {
     // A job for life that leaves the afternoons free: a point of focus more every round, and pay that never goes far.
     id: 'teacher',
-    unlock: 'index_only',
+    unlock: 'default',
     start: {
       cityId: 'singapore',
       cash: usd(4_000),

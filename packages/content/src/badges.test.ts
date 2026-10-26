@@ -480,19 +480,17 @@ describe('a whole life', () => {
 });
 
 describe('unlocking lives', () => {
-  it('opens the rider after one finished life, the heir with a million, the newcomer with three cities', () => {
+  it('opens the heir with a million', () => {
     expect(unlockedLives(lives, { finished: 0, badges: [] })).toEqual([]);
-    expect(unlockedLives(lives, { finished: 1, badges: [] })).toEqual(['rider']);
+    expect(unlockedLives(lives, { finished: 9, badges: [] })).toEqual([]);
     expect(unlockedLives(lives, { finished: 0, badges: ['millionaire'] })).toEqual(['heir']);
-    expect(unlockedLives(lives, { finished: 0, badges: ['three_cities'] })).toEqual(['newcomer']);
-    expect(unlockedLives(lives, { finished: 3, badges: ['first_100k', 'millionaire', 'three_cities'] })).toEqual(['rider', 'heir', 'newcomer']);
   });
 
   it('opens each of the later lives with the badge its goal names, and with no other', () => {
     const later: Record<string, string> = {
       banker: 'mba', doctor: 'escaped', comeback: 'bankrupt', founder: 'sold_business', crypto_kid: 'crypto_winter',
       // One for each of the five newer careers.
-      lawyer: 'first_luxury_watch', teacher: 'index_only', influencer: 'status_100', waiter: 'first_share', salesperson: 'bought_the_dip',
+      lawyer: 'first_luxury_watch', influencer: 'status_100', waiter: 'first_share', salesperson: 'bought_the_dip',
       // One for each of the four cities added later.
       robotics_engineer: 'world_tour', programmer: 'five_asset_classes', chef: 'family_of_four', private_banker: 'swiss_banker',
     };
@@ -501,12 +499,12 @@ describe('unlocking lives', () => {
       expect(lives.find((x) => x.id === life)?.unlock).toBe(badge);
       expect(unlockedLives(lives, { finished: 0, badges: [badge] })).toEqual([life]);
     }
-    expect(unlockedLives(lives, { finished: 0, badges: badges.map((b) => b.id).filter((id) => !Object.values(later).includes(id) && id !== 'millionaire' && id !== 'three_cities') })).toEqual([]);
+    expect(unlockedLives(lives, { finished: 0, badges: badges.map((b) => b.id).filter((id) => !Object.values(later).includes(id) && id !== 'millionaire') })).toEqual([]);
   });
 
   it('never lists a life that was open from the start', () => {
     const open = lives.filter((life) => life.unlock === 'default').map((life) => life.id);
-    expect(open).toEqual(['nurse', 'engineer', 'civil_servant']);
+    expect(open).toEqual(['nurse', 'engineer', 'civil_servant', 'rider', 'newcomer', 'teacher']);
     for (const id of open) expect(unlockedLives(lives, { finished: 9, badges: badges.map((b) => b.id) })).not.toContain(id);
   });
 });
