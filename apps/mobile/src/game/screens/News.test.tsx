@@ -102,6 +102,46 @@ describe('the news of a round', () => {
     expect(people.textContent).toMatch(/^.*You now have more than \w+, your ex$/);
   });
 
+  /** The clippings of the paper of a scene. */
+  async function clippingsOf(scene: string) {
+    renderGame(<Headlines />, memoryServices(await sceneStore(scene)));
+    const paper = await screen.findByRole('region', { name: 'News' });
+    return within(paper).getAllByRole('listitem');
+  }
+
+  /** The ways a sentence of the rivals is written, filled with who it is about and the thing. */
+  const ways = (sentence: string, who: string, thing = '') => sentence.split('|').map((way) => way.replace('{who}', who).replace('{thing}', thing));
+
+  it('tells of a rival who keeps up with what the player bought: a notch better, its picture beside it', async () => {
+    const clippings = await clippingsOf('play-news-rival-copy');
+    const people = clippings.at(-1) as HTMLElement;
+    expect(people.querySelector('[data-topic]')?.textContent).toBe(en.rivals.topic.toUpperCase());
+    expect(people.querySelector('[data-sprite="item.watch_ap"]')).toBeTruthy();
+    const said = people.textContent ?? '';
+    expect(ways(en.rivals.asides.copyWatch, '', 'Audemars Piguet Royal Oak').some((way) => said.endsWith(way.slice(1)))).toBe(true);
+  });
+
+  it('carries a line from a rival about the player\'s fall, under its own heading, the same each time the paper is read', async () => {
+    const clippings = await clippingsOf('play-news-rival-needle');
+    const needle = clippings.at(-1) as HTMLElement;
+    expect(needle.querySelector('[data-topic]')?.textContent).toBe(en.rivals.needles.needleTopic.toUpperCase());
+    expect(needle.querySelector('[data-sprite="icon.room_tease"]')).toBeTruthy();
+    const said = needle.textContent ?? '';
+    expect(ways(en.rivals.needles.needleBankrupt, '').some((way) => said.includes(way.trim()))).toBe(true);
+    cleanup();
+    const again = await clippingsOf('play-news-rival-needle');
+    expect(again.at(-1)?.textContent).toBe(said);
+  });
+
+  it('tells of the luck that brings a rival back within reach of a player far ahead', async () => {
+    const clippings = await clippingsOf('play-news-rival-luck');
+    const people = clippings.at(-1) as HTMLElement;
+    expect(people.querySelector('[data-topic]')?.textContent).toBe(en.rivals.topic.toUpperCase());
+    const said = people.textContent ?? '';
+    const lucky = [en.rivals.asides.luckInheritance, en.rivals.asides.luckStartup, en.rivals.asides.luckCoin].flatMap((sentence) => ways(sentence, ''));
+    expect(lucky.some((way) => said.includes(way.trim()))).toBe(true);
+  });
+
   it('opens on the bar of a crisis, whole, when the world is in one', async () => {
     const store = await sceneStore('hud-crisis');
     renderGame(<NewsPanel />, memoryServices(store));

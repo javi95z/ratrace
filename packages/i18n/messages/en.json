@@ -1680,6 +1680,28 @@
       "boom": "{who} shows off a new car on every social network",
       "bust": "{who} loses almost everything on stocks and crypto"
     },
+    "asides": {
+      "copyCar": "{who} sees your new car and buys a better one: {thing}|{who} gets a new car just after you, by pure chance: {thing}|{who} parks right next to you and says nothing. No need: {thing}",
+      "copyWatch": "{who} checks the time all through dinner on a new watch: {thing}|{who} saw your watch and raised you: {thing}|{who} rolls up a sleeve in every photo: {thing}",
+      "copyFashion": "{who} copies your style, one step up: {thing}|{who} turns up at the family lunch in something better than yours: {thing}|{who} posts the latest buy online: {thing}",
+      "copyArt": "{who} hangs something dearer than yours in the living room: {thing}|{who} becomes a collector, right now of all times: {thing}|{who} invites you round to see the new acquisition: {thing}",
+      "copyTravel": "{who} hears about your trip and books a better one: {thing}|{who} fills your feed with holiday photos: {thing}|{who} cannot stop talking about the holiday: {thing}",
+      "copyCharter": "{who} sends you photos from the water: {thing}|{who} does what you did, only bigger: {thing}|{who} does not go on holiday like before: {thing}",
+      "copyHome": "{who} moves somewhere bigger than yours: {thing}|{who} signs a mortgage a week after you: {thing}|{who} invites you to the housewarming: {thing}",
+      "soldCopy": "{who} quietly sells what was bought to keep up with you: {thing}|{who} sells the splurge to pay off the card: {thing}|{who} brags less these days. For sale: {thing}",
+      "luckInheritance": "{who} inherits from an uncle abroad and is back in the race|{who} gets an inheritance nobody saw coming and is right behind you|{who} gets grandma's flat, and everything else, and closes in on you",
+      "luckStartup": "{who} sells a startup to a big company and is back in the race|{who} finally cashes in the app nobody understood and is right behind you|{who} sells the business to an American fund and closes in on you",
+      "luckCoin": "{who} bought a joke coin and it is now worth a fortune: back in the race|{who} bets on a coin with a dog on it and closes in on you|{who} cashes in a crypto bet and is right behind you"
+    },
+    "needles": {
+      "needleTopic": "At dinner",
+      "needleBankrupt": "{who} asks in the family chat if you need anything|{who} offers you a sofa, just in case|{who} says bankruptcy can happen to anyone. With a smile",
+      "needleJail": "{who} asks if there is wifi in prison|{who} writes you a letter. It is a gym flyer|{who} tells everyone you are on a retreat",
+      "needleTrial": "{who} asks if the lawyer was expensive|{who} saw your case on the news and shares it|{who} recommends a good tax adviser. Their own, of course",
+      "needleDrop": "{who} asks how the markets are treating you. They know|{who} sends you an article: ten rookie investor mistakes|{who} says money cannot buy happiness anyway",
+      "needleBurnout": "{who} recommends a meditation app|{who} says you look tired|{who} mentions a four-day week at work",
+      "needleRenting": "{who} asks if you are still renting|{who} says renting is throwing money away. Again|{who} shows you photos of a new kitchen and asks about your landlord"
+    },
     "title": "Your rivals",
     "you": "You",
     "about": "People your age living their lives beside yours, in the same economy, by score.",

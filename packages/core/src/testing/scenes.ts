@@ -94,6 +94,9 @@ export const SCENES: readonly Scene[] = [
   { name: 'profile-owned', locale: 'en', sheet: 'watch_casio' },
   { name: 'balance-r6', locale: 'en', sheet: 'netWorth' },
   { name: 'rivals-r6', locale: 'en' },
+  { name: 'play-news-rival-copy', locale: 'en' },
+  { name: 'play-news-rival-needle', locale: 'en' },
+  { name: 'play-news-rival-luck', locale: 'en' },
   { name: 'end-escaped', locale: 'en' },
   { name: 'end-bankrupt', locale: 'en' },
   { name: 'end-share', locale: 'en', sheet: 'share' },
@@ -291,6 +294,13 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'balance-r6': { life: 'engineer', round: 6, stage: 'news' },
   // The same round: where the engineer stands among the rivals, the board alone on a page (in the profile it is far down its sheet).
   'rivals-r6': { life: 'engineer', round: 6, stage: 'news' },
+  // The paper of the people the player grew up with, where they react to the player. On screen-seed-10 the chaser's engineer buys a Rolex in her
+  // second round, and her ex wears an Audemars Piguet to the third.
+  'play-news-rival-copy': { life: 'engineer', round: 3, stage: 'news', seed: 'screen-seed-10', player: 'chaser' },
+  // end-bankrupt's nurse, the round after she went bankrupt: her ex has something to say about it.
+  'play-news-rival-needle': { life: 'nurse', round: 5, stage: 'news', seed: BANKRUPT, player: 'chaser' },
+  // end-escaped's engineer, twice as rich as all three for two rounds running by her fifth: her ex's coin goes to the moon.
+  'play-news-rival-luck': { life: 'engineer', round: 5, stage: 'news', seed: ESCAPED },
   // The engineer of screen-seed-335 (play-cards-legendary's), played by the saver to the end of the life: out of the rat race with the fifteenth round, never bankrupt.
   'end-escaped': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
   // The nurse of screen-seed-5, played by the chaser to the end of the life: bankrupt with her fourth round, never out of the rat race.
@@ -491,7 +501,7 @@ const STILL: ReadonlySet<string> = new Set([
  * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
  * Every other scene is someone new, who is shown the tips as they come.
  */
-export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt',
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-news-rival-copy', 'play-news-rival-needle', 'play-news-rival-luck', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt',
   'finance-lifestyle',
   'finance-move',
   'play-cards-city',
