@@ -55,7 +55,8 @@ export function SheetScroll({ drag, enabled, atHalf = false, children, onScroll,
   // A sheet at its half (`atHalf`) is moved by any drag of its body, up to its whole as down: nothing scrolls until it is whole.
   const pan = usePanGesture({
     enabled: atTop,
-    ...(atHalf ? { activeOffsetY: [-GRAB, GRAB] as [number, number] } : { activeOffsetY: GRAB, failOffsetY: -GRAB }),
+    activeOffsetY: atHalf ? [-GRAB, GRAB] : GRAB,
+    failOffsetY: atHalf ? undefined : -GRAB,
     failOffsetX: [-SIDEWAYS, SIDEWAYS],
     // A control that drags itself (a slider) pressed: the pan gives way, to it and to the scroll.
     onTouchesMove: (event) => {
