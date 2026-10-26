@@ -1,4 +1,5 @@
 import { ratArt } from '@ratrace/content';
+import type { Term } from '@ratrace/core/game/glossary';
 import { isFirst, nextTip } from '@ratrace/core/game/guide';
 import { escapeProgress } from '@ratrace/engine';
 import { useState } from 'react';
@@ -9,9 +10,10 @@ import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button } from '../../ui/kit';
 import { Sprite } from '../../ui/Sprite';
-import { PixelText, ReadText, SNUG } from '../../ui/text';
+import { PixelText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useGame, useGuide, useRuns, useT, useWords } from '../context';
+import { MarkedText, TermSheet, useGuideValues } from './GuideWords';
 
 /**
  * The tip of the guided first life that is due on this screen, if any. It is a note in the flow
@@ -30,7 +32,9 @@ export function Guide() {
   // The player as the orders of this round will leave them: someone who has just put money to work needs no telling.
   const player = useGame((s) => s.preview?.player ?? s.view?.player ?? null);
   const view = useGame((s) => s.view);
-  const { content, fmt } = useWords();
+  const preview = useGame((s) => s.preview);
+  const { content } = useWords();
+  const values = useGuideValues();
   const guide = useGuide();
   const runs = useRuns();
   // The visit to a stage in which a tip was last read.
@@ -48,6 +52,12 @@ export function Guide() {
     mortgage: kinds.has('mortgageFixed') || kinds.has('mortgageVariable'),
     margin: kinds.has('margin'),
     halfway: escape !== null && escape.outgoings > 0 && escape.passiveAfterTax * 2 >= escape.outgoings && escape.passiveAfterTax < escape.outgoings,
+    // Overtime the round before: the next in a row is the one that costs health, and the third may burn the player out.
+    overtime: (view?.player.life.overtimeStreak ?? 0) >= 1,
+    // Something hidden from the tax office as the round's orders leave it.
+    hiding: player.life.evasion.blackPct > 0 || player.life.evasion.shell || player.life.evasion.hideCrypto,
+    // The orders leave cash short of what the savings cover: the rest goes on the card (the warning before the round says so too).
+    short: preview !== null && -preview.cashAfter - preview.player.deposit > 0,
   };
   // While the game is being made, the guide shows whatever lives this device has finished, and even when it was turned off, so it can be seen and tried.
   const developing = process.env.NODE_ENV === 'development';
@@ -58,7 +68,7 @@ export function Guide() {
     <Note
       title={isFirst(tip) ? t('firstTitle') : t('title')}
       label={t('title')}
-      text={t(tip, { rate: fmt.rate(content.debt.creditCardRateBp) })}
+      text={t(tip, values)}
       gotIt={t('gotIt')}
       skip={t('skip')}
       onRead={() => {
@@ -70,9 +80,13 @@ export function Guide() {
   );
 }
 
-/** The note itself, rising into its place: the rat thinking it over with the player, the tip, and the two ways to be done with it. */
+/**
+ * The note itself, rising into its place: the rat thinking it over with the player, the tip, and the two ways to be done with it. A word of
+ * the glossary in the tip opens what it means in a sheet.
+ */
 function Note({ title, label, text, gotIt, skip, onRead, onSkip }: { title: string; label: string; text: string; gotIt: string; skip: string; onRead(): void; onSkip(): void }) {
   const rise = useRise();
+  const [term, setTerm] = useState<Term | null>(null);
   return (
     // A note in the flow of the page and nothing more: a shade over the screen made the sticky bars look to jump as the page scrolled.
     <Animated.View role="note" aria-label={label} style={[{ marginBottom: 12 }, rise]}>
@@ -85,7 +99,7 @@ function Note({ title, label, text, gotIt, skip, onRead, onSkip }: { title: stri
           <Sprite id={ratArt('think')} fallback={{ w: 128, h: 128 }} size={{ w: 64, h: 64 }} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <PixelText size={14} tone="gold-500" style={{ marginBottom: 4, letterSpacing: 14 * 0.1 }}>{title.toUpperCase()}</PixelText>
-            <ReadText size={14} lineHeight={14 * SNUG}>{text}</ReadText>
+            <MarkedText text={text} size={14} onTerm={setTerm} />
           </View>
         </View>
         <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
@@ -100,6 +114,7 @@ function Note({ title, label, text, gotIt, skip, onRead, onSkip }: { title: stri
           </Button>
         </View>
       </Framed>
+      <TermSheet term={term} onClose={() => setTerm(null)} />
     </Animated.View>
   );
 }

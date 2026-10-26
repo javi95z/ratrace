@@ -29,6 +29,7 @@ import { useOwnT } from '../ownWords';
 import { useT } from '../words';
 import { useGo } from '../pages';
 import { LEGAL_IN_SETTINGS } from './frontDoor';
+import { HowToPlay } from './GuideWords';
 
 /** The languages the game speaks, each under its own name. */
 const LANGUAGES: Record<Locale, string> = { en: 'English', es: 'Español', ru: 'Русский' };
@@ -161,6 +162,8 @@ export function Switches() {
       {tapSound !== null && sound ? <Toggle on={tapSound} onChange={setTapSound} label={phone('tapSound')} hint={phone('tapSoundHint')} /> : null}
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
+      {/* Everything the guide says, to read again whenever: the goal, a round, the score, every tip and the words of the game. */}
+      <HowToPlay />
       <WeeklyNotice />
     </View>
   );
