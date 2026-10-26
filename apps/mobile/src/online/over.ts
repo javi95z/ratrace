@@ -9,7 +9,7 @@ import type { Page } from '@ratrace/online/follow';
 import { MirroredStore } from '@ratrace/online/mirror';
 import { offlineAccount } from '@ratrace/online/offline';
 import { SupabaseAccount } from '@ratrace/online/supabase';
-import type { Cloud } from '@ratrace/online/supabase';
+import type { Cloud, GoogleOnDevice } from '@ratrace/online/supabase';
 import type { Account, AccountSaves, Community } from '@ratrace/online/types';
 
 /*
@@ -56,6 +56,8 @@ export interface OnlineParts {
   /** Where the finished lives the server would not take are noted, so they are not sent again. */
   keepRefused?: { read(): string[]; write(ids: string[]): void };
   schedule?(run: () => Promise<void>, ms: number): void;
+  /** The phone's own Google sign-in, where its build has one (`google.ts`): asked before any browser is opened. */
+  google?: GoogleOnDevice;
   /** Makes an id for a life the account will not take under its own. */
   newId(): string;
   /** Awaited before each life in progress the account offers is played back (the mirror's `pace`). */
@@ -68,7 +70,7 @@ export interface OnlineParts {
  * long as the page does.
  */
 export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
-  const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
+  const account = new SupabaseAccount(parts.connect, parts.address, parts.clean, parts.google);
   const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, keepRefused: parts.keepRefused, schedule: parts.schedule, newId: parts.newId, pace: parts.pace });
   follow(account, mirror, parts.page);
   return {

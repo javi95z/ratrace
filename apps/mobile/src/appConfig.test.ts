@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { ExpoConfig } from 'expo/config';
 import { describe, expect, test } from 'vitest';
-import { serverProblem, withServerCheck } from '../app.config';
+import { serverProblem, withGoogleOnDevice, withServerCheck } from '../app.config';
 
 /*
  * The app's config (app.json): what it asks of the phone. Saving the picture of a life to the photos (`expo-media-library`) is the only thing it
@@ -127,4 +127,13 @@ describe('a Vercel build of the web (preview or production) carries the live pro
   test('holds the phone\'s store builds to the project only: the web\'s settings are the web\'s', () => {
     expect(serverProblem({ ...live, EAS_BUILD_PROFILE: 'production' })).toBeNull();
   });
+});
+
+test('a build that names its iOS Google client gets the library\'s URL scheme for Google\'s sheet to come back to; one that names none, nothing of it', () => {
+  const base = { name: 'x', slug: 'x', plugins: ['expo-router'] } as ExpoConfig;
+  expect(withGoogleOnDevice(base, {})).toBe(base);
+  expect(withGoogleOnDevice(base, { EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: '1234-abcd.apps.googleusercontent.com' }).plugins).toEqual([
+    'expo-router',
+    ['@react-native-google-signin/google-signin', { iosUrlScheme: 'com.googleusercontent.apps.1234-abcd' }],
+  ]);
 });

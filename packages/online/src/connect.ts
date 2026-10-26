@@ -189,6 +189,17 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
+    async linkGoogleToken(token) {
+      const { error } = await client.auth.linkIdentity({ provider: 'google', token });
+      if (error === null) return 'linked';
+      // The Google account is already another player's: theirs to sign in to, not this one's to take.
+      return error.code === 'identity_already_exists' || /already (linked|exists)/i.test(error.message) ? 'taken' : 'failed';
+    },
+    async signInWithGoogleToken(token) {
+      // Replaces whoever is signed in here with the player the Google account belongs to, as `signInWithGoogle` does.
+      const { error } = await client.auth.signInWithIdToken({ provider: 'google', token });
+      return error === null;
+    },
     async signOut() {
       // This browser only: the player's other devices stay signed in.
       const { error } = await client.auth.signOut({ scope: 'local' });

@@ -479,3 +479,85 @@ describe('reading what Google sent the player back with', () => {
     expect(noticeIn('not an address')).toBeNull();
   });
 });
+
+describe('an account on a phone with its own Google sign-in, no browser', () => {
+  /** A cloud that takes Google's ID tokens: `taken` names the tokens of a Google account already a player's. */
+  function tokenCloud({ taken = [] as string[], refuses = false } = {}) {
+    const asked: string[] = [];
+    let tell: (user: CloudUser | null) => void = () => {};
+    const made = fakeCloud({
+      currentUser: async () => guest,
+      linkGoogleToken: async (token) => {
+        asked.push(`link ${token}`);
+        if (refuses) return 'failed';
+        if (taken.includes(token)) return 'taken';
+        tell(member);
+        return 'linked';
+      },
+      signInWithGoogleToken: async (token) => {
+        asked.push(`sign-in ${token}`);
+        if (refuses) return false;
+        tell(member);
+        return true;
+      },
+    });
+    tell = made.tell;
+    return { ...made, asked };
+  }
+  const onPhone = (cloud: Cloud, google: () => Promise<string | 'cancelled' | null>) => new SupabaseAccount(async () => cloud, () => null, () => {}, google);
+  const neverOpened = async () => {
+    throw new Error('no browser is opened where the phone asks Google itself');
+  };
+
+  it('keeps a guest\'s account with the Google account chosen on the phone, and opens no browser', async () => {
+    const { cloud, asked, calls } = tokenCloud();
+    const account = onPhone(cloud, async () => 'token-A');
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', neverOpened)).toBe(true);
+    expect(asked).toEqual(['link token-A']);
+    expect(calls.filter((call) => call.startsWith('link ') || call.startsWith('sign-in '))).toEqual([]);
+    expect(account.state()).toEqual({ kind: 'member', userId: 'user-1', email: 'ana@example.com' });
+  });
+
+  it('takes a guest whose Google account already has a player into it, with the same choice and nothing more to tap', async () => {
+    const { cloud, asked } = tokenCloud({ taken: ['token-B'] });
+    const account = onPhone(cloud, async () => 'token-B');
+    await account.start('en');
+    const seen: unknown[] = [];
+    account.subscribe(() => seen.push(account.state()));
+    expect(await account.keepWithGoogle('theratrace://auth', neverOpened)).toBe(true);
+    expect(seen).toContainEqual({ kind: 'guest', userId: 'user-1', notice: 'joining' });
+    expect(asked).toEqual(['link token-B', 'sign-in token-B']);
+  });
+
+  it('signs in to an existing account with the Google account chosen', async () => {
+    const { cloud, asked } = tokenCloud();
+    const account = onPhone(cloud, async () => 'token-C');
+    await account.start('en');
+    expect(await account.useExistingAccount('theratrace://auth', neverOpened)).toBe(true);
+    expect(asked).toEqual(['sign-in token-C']);
+  });
+
+  it('says nothing when the player closes the chooser, and says it failed when the cloud will not take the token', async () => {
+    const closed = tokenCloud();
+    const account = onPhone(closed.cloud, async () => 'cancelled');
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', neverOpened)).toBe(false);
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+    expect(closed.asked).toEqual([]);
+    const refused = tokenCloud({ refuses: true });
+    const other = onPhone(refused.cloud, async () => 'token-D');
+    await other.start('en');
+    expect(await other.keepWithGoogle('theratrace://auth', neverOpened)).toBe(false);
+    expect(other.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
+  });
+
+  it('goes to Google through the browser, as it always did, where the phone cannot ask it itself', async () => {
+    const { cloud, calls } = tokenCloud();
+    const account = onPhone(cloud, async () => null);
+    await account.start('en');
+    const opened: string[] = [];
+    await account.keepWithGoogle('theratrace://auth', async (url) => (opened.push(url), null));
+    expect(calls).toContain('link theratrace://auth');
+  });
+});

@@ -1,19 +1,25 @@
-import { SHELL_WIDTH } from './theme';
+import { useWindowDimensions } from 'react-native';
 
 /*
- * The widths a browser lays the game out at, as the Next web's stylesheet does (its `desk` and `sm` breakpoints, its `max-w-2xl` pages). The phone has
- * none of them: it is one column at every width, as it has always been. The web's twin (`desk.web.ts`) answers the browser's own media queries.
+ * The widths the game lays out at on the phone's own screen, the web's (`desk.web.ts`) in points: a phone is one column; a tablet held sideways (or
+ * one wide enough upright) has the game's three columns, and a list of two short things two to a row from the web's `sm`. Read from the window, so
+ * a tablet turned, or an app given half of one, lays itself out again.
  */
 
-/** Whether the screen is wide enough for the game's three columns (the web's `desk`, 64rem). Never on the phone. */
+/** The web's `desk` (64rem) in points: the game's three columns from here up. */
+export const DESK_WIDTH = 1024;
+/** The web's `sm` (40rem) in points. */
+export const WIDE_WIDTH = 640;
+
+/** Whether the window is wide enough for the game's three columns (a tablet held sideways). Never on a phone. */
 export function useIsDesk(): boolean {
-  return false;
+  return useWindowDimensions().width >= DESK_WIDTH;
 }
 
-/** Whether the screen is at least the web's `sm` wide (40rem): where a list of two short things stands two to a row. Never on the phone. */
+/** Whether the window is at least the web's `sm` wide: where a list of two short things stands two to a row. Never on a phone. */
 export function useIsWide(): boolean {
-  return false;
+  return useWindowDimensions().width >= WIDE_WIDTH;
 }
 
-/** The column of a page of lists and reading (the rankings, the records, the collection, the legal page): the web's `max-w-2xl`. On the phone, its one column. */
-export const WIDE_COLUMN = SHELL_WIDTH;
+/** The column of a page of lists and reading (the rankings, the records, the collection, the legal page): the web's `max-w-2xl`; a phone's is narrower. */
+export const WIDE_COLUMN = 672;

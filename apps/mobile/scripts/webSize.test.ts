@@ -101,6 +101,8 @@ describe('judgeWebExport', () => {
     'expo-haptics',
     // The shortcuts on the phone's icon: a page has none.
     'expo-quick-actions',
+    // Google's own sign-in on the phone: the web goes to Google by redirect.
+    '@react-native-google-signin/google-signin',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',
   ])('reports a source naming %s', (name) => {
     const source = name.startsWith('apps/') ? `../../${name}` : `../../node_modules/${name}/lib/index.js`;

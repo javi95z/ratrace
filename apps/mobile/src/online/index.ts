@@ -8,6 +8,7 @@ import { heldSaves, pacedLives } from './held';
 import { givenUpIn, offline, onlineOver, refusedIn } from './over';
 import type { Online } from './over';
 import { phonePage, whileActive } from './page';
+import { googleOnDevice } from './google';
 
 export { givenUpIn, onlineOver, refusedIn } from './over';
 export type { Online, OnlineParts } from './over';
@@ -102,9 +103,11 @@ export function phoneOnline(device: PlayerStore, livesAfter?: () => Promise<void
       const cloud = await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha });
       return phone.connected(livesAfter ? heldSaves(cloud, livesAfter) : cloud);
     },
-    // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean.
+    // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean;
+    // or, where the build names its Google clients, the phone's own chooser answers with no browser at all (`google.ts`).
     address: () => null,
     clean: () => undefined,
+    google: googleOnDevice(),
     page: phonePage,
     remember: givenUpIn(() => kvText),
     keepRefused: refusedIn(() => kvText),

@@ -237,7 +237,7 @@ const FORMATJS_POLYFILLS = [
 export const FORBIDDEN: readonly { label: string; matches: (source: string) => boolean }[] = [
   // The phone's notices (expo-notifications) and Google's auth session (expo-web-browser) too: the web has its own twins (5a's final review). And
   // the phone's touch (expo-haptics): a page feels nothing (ui/haptics.web.ts); nor the shortcuts on an app's icon (game/shortcuts.web.ts).
-  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', 'react-native-webview', 'expo-media-library', 'expo-notifications', 'expo-web-browser', 'expo-haptics', 'expo-quick-actions'].map((name) => ({
+  ...['@shopify/react-native-skia', 'canvaskit-wasm', 'expo-sqlite', 'react-native-webview', 'expo-media-library', 'expo-notifications', 'expo-web-browser', 'expo-haptics', 'expo-quick-actions', '@react-native-google-signin'].map((name) => ({
     label: name,
     matches: (source: string) => source.includes(name),
   })),

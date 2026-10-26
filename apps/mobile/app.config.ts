@@ -77,4 +77,16 @@ export const withServerCheck = (config: ExpoConfig, env: Env): ExpoConfig => {
   return config;
 };
 
-export default ({ config }: ConfigContext): ExpoConfig => withServerCheck(config as ExpoConfig, process.env);
+/**
+ * Google on the phone itself (online/google.ts): a build that names its iOS Google client (`EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, from the project's EAS
+ * environment) is given the library's plugin with that client's URL scheme, which Google's sheet comes back to; Android needs none. A build that
+ * names none has no plugin, and goes to Google through the browser as it always did.
+ */
+export const withGoogleOnDevice = (config: ExpoConfig, env: Env): ExpoConfig => {
+  const ios = env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
+  if (!ios) return config;
+  const scheme = `com.googleusercontent.apps.${ios.replace(/\.apps\.googleusercontent\.com$/, '')}`;
+  return { ...config, plugins: [...(config.plugins ?? []), ['@react-native-google-signin/google-signin', { iosUrlScheme: scheme }]] };
+};
+
+export default ({ config }: ConfigContext): ExpoConfig => withGoogleOnDevice(withServerCheck(config as ExpoConfig, process.env), process.env);

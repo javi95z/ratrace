@@ -35,6 +35,13 @@ export interface Cloud extends SyncCloud {
   linkGoogle(redirectTo: string, open?: Opener): Promise<boolean>;
   /** Starts signing in as the player a Google account already belongs to. False if it could not start. With `open`, as `linkGoogle`. */
   signInWithGoogle(redirectTo: string, open?: Opener): Promise<boolean>;
+  /**
+   * Links the Google account an ID token is of (the phone's own Google sign-in, no browser) to the one signed in: `linked`; `taken` where that
+   * Google account is already a player's; `failed` otherwise. Left out by a cloud that cannot (a test's).
+   */
+  linkGoogleToken?(token: string): Promise<'linked' | 'taken' | 'failed'>;
+  /** Signs in as the player the Google account of an ID token belongs to (made a player if it is none yet). True once signed in. */
+  signInWithGoogleToken?(token: string): Promise<boolean>;
   /** Signs this browser out. Throws if it could not. */
   signOut(): Promise<void>;
   /**
@@ -114,6 +121,12 @@ function withoutFailure(address: string): string {
 }
 
 /**
+ * The phone's own Google sign-in, no browser: the system's chooser of the Google accounts on the device, answered with the chosen one's ID token;
+ * `cancelled` when the player closed it; null when it could not be shown (no Google services, no network) or is not set up in this build.
+ */
+export type GoogleOnDevice = () => Promise<string | 'cancelled' | null>;
+
+/**
  * The player's account in the cloud. It signs in as a guest on first launch, with no form, and
  * can be kept with Google later; either way it is the same account, so nothing has to be moved.
  * Every failure leaves the game where it would be with no cloud at all: playing, offline.
@@ -138,12 +151,14 @@ export class SupabaseAccount implements Account {
   /**
    * `connect` loads the client, so a game that never goes online never downloads it.
    * `address` is where the page is; `clean` replaces it once a notice has been read from it. A phone has
-   * no address (null): what Google says comes back to it with the browser instead (`travel`).
+   * no address (null): what Google says comes back to it with the browser instead (`travel`). `google`, a phone's own Google sign-in where its
+   * build has one, is asked first: the browser is the way only where it cannot answer.
    */
   constructor(
     private readonly connect: () => Promise<Cloud>,
     private readonly address: () => string | null,
     private readonly clean: (address: string) => void,
+    private readonly google?: GoogleOnDevice,
   ) {}
 
   /** The cloud, once someone is signed in to it. For what syncs to the account, not for screens. */
@@ -212,10 +227,36 @@ export class SupabaseAccount implements Account {
 
   // The web's calls carry the address alone, as they always have: `open` is passed on only where there is one.
   readonly keepWithGoogle = async (returnTo: string, open?: Opener): Promise<boolean> =>
-    open ? this.once(() => this.travel(returnTo, open, 'link')) : this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
+    open ? this.once(() => this.onDevice('link', () => this.travel(returnTo, open, 'link'))) : this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
 
   readonly useExistingAccount = async (returnTo: string, open?: Opener): Promise<boolean> =>
-    open ? this.once(() => this.travel(returnTo, open, 'sign-in')) : this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+    open ? this.once(() => this.onDevice('sign-in', () => this.travel(returnTo, open, 'sign-in'))) : this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+
+  /**
+   * Google on the phone itself, where its build has it (`google`): the system's chooser, then the chosen account's token given to the cloud, the
+   * paths the browser's trip takes from there (kept; a Google account that is already a player's, taken into it with nothing more to tap; any
+   * other failure, said; closed by the player, nothing said). Where the phone cannot ask Google itself, the browser's trip (`browser`).
+   */
+  private async onDevice(way: 'link' | 'sign-in', browser: () => Promise<boolean>): Promise<boolean> {
+    const cloud = this.link;
+    if (!this.google || !cloud?.linkGoogleToken || !cloud.signInWithGoogleToken) return browser();
+    if (this.current.kind === 'offline') return false;
+    const token = await this.google().catch(() => null);
+    if (token === null) return browser();
+    if (token === 'cancelled') return false;
+    let done: boolean;
+    if (way === 'link') {
+      const linked = await cloud.linkGoogleToken(token).catch(() => 'failed' as const);
+      if (linked === 'taken' && this.current.kind === 'guest') {
+        this.say('joining');
+        done = await cloud.signInWithGoogleToken(token).catch(() => false);
+      } else done = linked === 'linked';
+    } else done = await cloud.signInWithGoogleToken(token).catch(() => false);
+    // The session is the account's now: the cloud tells who it is, and there is nothing left to say.
+    this.say(done ? null : 'failed');
+    if (done) this.notice = null;
+    return done;
+  }
 
   /** One trip to Google at a time: asked again while one is under way, that one answers. */
   private once(go: () => Promise<boolean>): Promise<boolean> {

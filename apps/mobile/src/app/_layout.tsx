@@ -1,5 +1,6 @@
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { setOptions as setSplashOptions } from 'expo-splash-screen';
+import { useTabletTurns } from '../ui/orientation';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense, useEffect } from 'react';
 import { GameProvider } from '../game/context';
@@ -33,6 +34,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
  */
 export default function RootLayout() {
   const fonts = useGameFonts();
+  // A tablet turns every way, its wide screen in three columns; a phone stays upright (ui/orientation.ts).
+  useTabletTurns();
   // The site's worker, so the web opens offline (the web: pwa/register.web.ts); nothing on the phone.
   useServiceWorker();
   useEffect(() => {

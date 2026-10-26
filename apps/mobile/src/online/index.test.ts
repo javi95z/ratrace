@@ -35,8 +35,11 @@ describe('the phone\'s cloud is the web\'s', () => {
     const asThePhone = twin
       .replace('  address(): string;\n', '  address(): string | null;\n')
       .replace('  newId(): string;\n}', '  newId(): string;\n  /** Awaited before each life in progress the account offers is played back (the mirror\'s `pace`). */\n  pace?(): Promise<void>;\n}')
-      .replace('newId: parts.newId });', 'newId: parts.newId, pace: parts.pace });');
-    expect(asThePhone.split('\n').length).toBe(twin.split('\n').length + 2);
+      .replace('newId: parts.newId });', 'newId: parts.newId, pace: parts.pace });')
+      // And Google on the phone itself, where its build has it (google.ts), asked before any browser is opened.
+      .replace('  /** Makes an id for a life the account will not take under its own. */', "  /** The phone's own Google sign-in, where its build has one (`google.ts`): asked before any browser is opened. */\n  google?: GoogleOnDevice;\n  /** Makes an id for a life the account will not take under its own. */")
+      .replace('new SupabaseAccount(parts.connect, parts.address, parts.clean);', 'new SupabaseAccount(parts.connect, parts.address, parts.clean, parts.google);');
+    expect(asThePhone.split('\n').length).toBe(twin.split('\n').length + 4);
     expect(asThePhone).toContain('pace: parts.pace });');
     expect(phone).toContain(asThePhone);
   });
