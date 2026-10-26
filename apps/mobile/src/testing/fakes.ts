@@ -115,9 +115,48 @@ export function pressBack(): 'sheet' | 'screen' | 'left' {
 
 /** The phone: its languages in its order of preference, and the time zone it is in. */
 export const device = { languages: ['en'] as string[], timeZone: 'UTC' };
+/** Told when the phone's languages change while the app runs (`changeLanguages`), as expo-localization's `useLocales` is. */
+const localeListeners = new Set<() => void>();
+/** The phone's languages changed while the app runs: in its settings, the phone's own or the app's (Android's per-app language). */
+export function changeLanguages(languages: string[]): void {
+  device.languages = languages;
+  for (const listener of [...localeListeners]) listener();
+}
+const getLocales = () => device.languages.map((languageCode) => ({ languageCode, languageTag: languageCode }));
 export const expoLocalization = {
-  getLocales: () => device.languages.map((languageCode) => ({ languageCode, languageTag: languageCode })),
+  getLocales,
   getCalendars: () => [{ timeZone: device.timeZone }],
+  useLocales: () => {
+    const [locales, setLocales] = useState(getLocales);
+    useEffect(() => {
+      const listener = () => setLocales(getLocales());
+      localeListeners.add(listener);
+      return () => void localeListeners.delete(listener);
+    }, []);
+    return locales;
+  },
+};
+
+/**
+ * The app's language as the system keeps it (`appLanguage.ts`, Android 13 and later): none unless a test turns it on (`kept`), its language what it
+ * was last written, or set in the phone's settings by the test (`changeLanguages` then tells the app).
+ */
+export const systemLanguageKeep = {
+  kept: false,
+  language: null as string | null,
+  writes: [] as string[],
+};
+export const appLanguageModule = {
+  systemLanguage: () =>
+    systemLanguageKeep.kept
+      ? {
+          read: () => systemLanguageKeep.language,
+          write: (locale: string) => {
+            systemLanguageKeep.language = locale;
+            systemLanguageKeep.writes.push(locale);
+          },
+        }
+      : null,
 };
 
 /**
@@ -491,6 +530,9 @@ export function resetFakes(): void {
   backListeners.length = 0;
   device.languages = ['en'];
   device.timeZone = 'UTC';
+  systemLanguageKeep.kept = false;
+  systemLanguageKeep.language = null;
+  systemLanguageKeep.writes = [];
   for (const key of Object.keys(params)) delete params[key];
   pathname.now = '/';
   inFront.is = true;

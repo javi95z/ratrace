@@ -18,6 +18,8 @@ const device = vi.hoisted(() => ({
   calls: [] as Array<{ op: 'get' | 'set' | 'remove' | 'keys'; key?: string; value?: string }>,
   writesLeft: Number.POSITIVE_INFINITY,
 }));
+// The system keeps no language of the app's here (Android 13's, `appLanguage.ts`): the game keeps the player's choice alone.
+vi.mock('./appLanguage', () => ({ systemLanguage: () => null }));
 vi.mock('expo-sqlite/kv-store', () => {
   const write = () => {
     if (device.writesLeft <= 0) throw new Error('the app was killed');

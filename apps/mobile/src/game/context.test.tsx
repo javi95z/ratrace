@@ -7,7 +7,7 @@ import { LocalSessions } from '@ratrace/core/session/local';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { newProfile, SAVE_FORMAT } from '@ratrace/core/session/types';
 import type { Order } from '@ratrace/engine';
-import { device, heard, kv, memoryServices, renderGame } from '../testing/render';
+import { changeLanguages, device, heard, kv, memoryServices, renderGame, systemLanguageKeep } from '../testing/render';
 import { phoneBasket } from './phoneBasket';
 import { localeOf } from './locale';
 import { GameProvider, phoneDeps, phoneServices, useClock, useGame, useGuide, useProfile, useRuns, useSettings, useSound, useStill, useT, useWords } from './context';
@@ -71,6 +71,46 @@ test('a language the player chose is kept on the phone and used from then on', a
   cleanup();
   const again = mount();
   expect(again.locale).toBe('ru');
+});
+
+test('a change of the phone\'s languages while the app runs is followed, unless the player chose one', () => {
+  const seen = mount();
+  expect(seen.locale).toBe('en');
+  act(() => changeLanguages(['es', 'en']));
+  expect(seen.locale).toBe('es');
+  act(() => seen.setLocale('ru'));
+  act(() => changeLanguages(['en']));
+  expect(seen.locale).toBe('ru');
+});
+
+test('where the system keeps the app\'s language (Android 13 and later), the game\'s choice and the settings\' are one', () => {
+  systemLanguageKeep.kept = true;
+  const seen = mount();
+  expect(seen.locale).toBe('en');
+  // Chosen in the game: written in the phone's settings too.
+  act(() => seen.setLocale('es'));
+  expect(systemLanguageKeep.writes).toEqual(['es']);
+  expect(kv.get('ratrace:locale')).toBe('es');
+  // Chosen in the phone's settings: the system tells the app, which speaks it at once.
+  systemLanguageKeep.language = 'ru';
+  act(() => changeLanguages(['ru', 'en']));
+  expect(seen.locale).toBe('ru');
+  // The settings' "System default": the phone's own language, not the choice made before.
+  systemLanguageKeep.language = null;
+  act(() => changeLanguages(['en']));
+  expect(seen.locale).toBe('en');
+  cleanup();
+  expect(mount().locale).toBe('en');
+});
+
+test('a choice made before the system kept the app\'s language is handed to it once', () => {
+  kv.set('ratrace:locale', 'ru');
+  systemLanguageKeep.kept = true;
+  expect(mount().locale).toBe('ru');
+  expect(systemLanguageKeep.writes).toEqual(['ru']);
+  cleanup();
+  expect(mount().locale).toBe('ru');
+  expect(systemLanguageKeep.writes).toEqual(['ru']);
 });
 
 test('the round store boots: with nothing saved there is no life', async () => {

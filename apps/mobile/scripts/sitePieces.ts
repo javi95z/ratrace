@@ -11,7 +11,7 @@ import { pageFiles } from './webSize';
  * What the site says to search engines and to the devices that install it, written into the web export after `expo export` (the build runs this
  * next: `pnpm --filter @ratrace/mobile site:pieces <export folder>`): `sitemap.xml` and `robots.txt` (as the Next web's `src/app/sitemap.ts` and
  * `robots.ts`, written as Next writes them), `manifest.webmanifest` (`src/app/manifest.ts`), the share image `og.png`, the icons and `favicon.ico`
- * (the Next web's `scripts/pwa.ts`, drawn from the same sprites). Each page's own head (title, addresses, Open Graph, card) is in its HTML
+ * (the Next web's `scripts/pwa.ts`, drawn from the same sprites), and `.well-known/assetlinks.json`, which lets the Android app open the site's pages. Each page's own head (title, addresses, Open Graph, card) is in its HTML
  * (`src/game/pageHead.web.tsx`). `sharp` is the repo's (a root devDependency, as the Next web's `scripts/pwa.ts` takes it).
  */
 const here = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +50,29 @@ export function sitemapXml(site: URL): string {
 export function robotsTxt(site: URL): string {
   return `User-Agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${new URL('/sitemap.xml', site).href}\n`;
 }
+
+/**
+ * The phone's app that may open the site's pages (app.json's `intentFilters`, `autoVerify`): its package and the SHA-256 of each key a player's copy
+ * may be signed with. Android asks the site (`/.well-known/assetlinks.json`) as the app is installed, and opens the pages in the app only once the site
+ * names it. The key EAS signs the builds with (the APK a player installs by hand, and the upload to Google Play); once Google Play signs the copies it
+ * hands out, its app signing key is added here too (Play Console: Test and release → App integrity).
+ */
+export const ANDROID_APP = {
+  package: 'com.hackio.theratrace',
+  keys: ['47:CC:A5:08:39:C3:24:12:85:61:E6:3A:D7:0E:7F:4B:C3:CE:75:83:39:BA:62:53:22:07:6E:11:23:E3:DC:C2'],
+} as const;
+
+/** The site's word that the app is its own (Digital Asset Links), so Android opens its pages in the app. */
+export function assetLinksJson(): string {
+  const statement = {
+    relation: ['delegate_permission/common.handle_all_urls'],
+    target: { namespace: 'android_app', package_name: ANDROID_APP.package, sha256_cert_fingerprints: [...ANDROID_APP.keys] },
+  };
+  return `${JSON.stringify([statement], null, 2)}\n`;
+}
+
+/** Where Android asks for it. */
+export const ASSET_LINKS = '.well-known/assetlinks.json';
 
 /** The install metadata shared by all languages (`/` chooses the player's language on first launch), as the Next web's `manifest.ts`. */
 export function manifestJson(): string {
@@ -135,7 +158,9 @@ export async function writeSitePieces(out: string, site: URL = SITE_URL): Promis
   writeFileSync(join(out, 'sitemap.xml'), sitemapXml(site));
   writeFileSync(join(out, 'robots.txt'), robotsTxt(site));
   writeFileSync(join(out, 'manifest.webmanifest'), manifestJson());
-  return [...(await writeIcons(out)), ...(await writeShareImage(out)), 'sitemap.xml', 'robots.txt', 'manifest.webmanifest'];
+  mkdirSync(join(out, '.well-known'), { recursive: true });
+  writeFileSync(join(out, ASSET_LINKS), assetLinksJson());
+  return [...(await writeIcons(out)), ...(await writeShareImage(out)), 'sitemap.xml', 'robots.txt', 'manifest.webmanifest', ASSET_LINKS];
 }
 
 /** Every file under `dir`, by its path from `dir`, `/`-separated. */

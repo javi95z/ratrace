@@ -25,6 +25,40 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.hackio.theratrace",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ratrace-plum.vercel.app"
+            },
+            {
+              "path": "/en"
+            },
+            {
+              "pathPrefix": "/en/"
+            },
+            {
+              "path": "/es"
+            },
+            {
+              "pathPrefix": "/es/"
+            },
+            {
+              "path": "/ru"
+            },
+            {
+              "pathPrefix": "/ru/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -48,7 +82,18 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-localization",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "android": [
+              "en",
+              "es",
+              "ru"
+            ]
+          }
+        }
+      ],
       "expo-sharing",
       [
         "expo-media-library",

@@ -17,6 +17,7 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
 
 vi.mock('expo-router', async () => (await import('./fakes')).expoRouter);
 vi.mock('expo-localization', async () => (await import('./fakes')).expoLocalization);
+vi.mock('../appLanguage', async () => (await import('./fakes')).appLanguageModule);
 vi.mock('expo-sqlite/kv-store', async () => (await import('./fakes')).expoKeyValueStore);
 vi.mock('expo-audio', async () => (await import('./fakes')).expoAudio);
 vi.mock('expo-file-system', async () => (await import('./fakes')).expoFileSystem);

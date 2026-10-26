@@ -336,6 +336,7 @@ export const SITE_FILES: readonly string[] = [
   'sitemap.xml',
   'robots.txt',
   'manifest.webmanifest',
+  '.well-known/assetlinks.json',
   'sw.js',
   'offline.html',
   '404.html',

@@ -26,6 +26,7 @@ import { Sprite } from '../../ui/Sprite';
 import { LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
+import { SwipeAway } from '../../ui/SwipeAway';
 import { TabSwipe } from '../../ui/TabSwipe';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useSettings, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
@@ -2303,20 +2304,41 @@ function PutBack() {
 }
 
 /** One order in the basket, and the button that takes it out. */
+/** The space between the basket's rows. */
+const ORDERS_GAP = 8;
+
+/** An order in the basket: taken out by its button, or on the phone swiped to the left (`SwipeAway`). */
 function Ordered({ label, onRemove }: { label: string; onRemove(): void }) {
   const t = useT('finance');
   const remove = usePress({ onPress: onRemove });
   return (
     <View role="listitem">
-      <Framed kind="frame" style={{ backgroundColor: COLORS['night-600'], flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 4, paddingLeft: 12, paddingRight: 4 }}>
-        <ReadText numberOfLines={1} style={{ flexShrink: 1 }}>{label}</ReadText>
-        <Pressable accessibilityRole="button" accessibilityLabel={`${t('remove')}: ${label}`} onPress={remove} style={{ width: TOUCH, height: TOUCH, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
-          <PixelText size={18} tone="wine-300">{'✕'}</PixelText>
-        </Pressable>
-      </Framed>
+      <SwipeAway label={t('remove')} gap={ORDERS_GAP} onAway={onRemove}>
+        <Framed kind="frame" style={{ backgroundColor: COLORS['night-600'], flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 4, paddingLeft: 12, paddingRight: 4 }}>
+          <ReadText numberOfLines={1} style={{ flexShrink: 1 }}>{label}</ReadText>
+          <Pressable accessibilityRole="button" accessibilityLabel={`${t('remove')}: ${label}`} onPress={remove} style={{ width: TOUCH, height: TOUCH, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
+            <PixelText size={18} tone="wine-300">{'✕'}</PixelText>
+          </Pressable>
+        </Framed>
+      </SwipeAway>
     </View>
   );
 }
+
+/**
+ * Each order's own key, for as long as it is in the basket: the same order keeps its row (and a row swiped away is never handed to the order after
+ * it), whatever its place. Taking one out leaves the others the same orders; one put back is a new row.
+ */
+const orderKeys = new WeakMap<Order, number>();
+let lastOrderKey = 0;
+const keyOfOrder = (order: Order): number => {
+  let key = orderKeys.get(order);
+  if (key === undefined) {
+    key = ++lastOrderKey;
+    orderKeys.set(order, key);
+  }
+  return key;
+};
 
 /**
  * The orders of the round so far, in the order they will run, each removable. A move already
@@ -2354,7 +2376,7 @@ export function BasketList() {
             : t('basketSummary', { count: orders.length, from: words.fmt.money(view.player.cash), to: words.fmt.money(preview.player.cash) })}
         </ReadText>
       ) : null}
-      <View role="list" aria-label={t('basketTitle')} style={{ gap: 8 }}>
+      <View role="list" aria-label={t('basketTitle')} style={{ gap: ORDERS_GAP }}>
         {moving ? (
           <View role="listitem">
             <Framed kind="frame" style={{ backgroundColor: COLORS['night-600'], minHeight: TOUCH, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 12, paddingVertical: 4 }}>
@@ -2367,7 +2389,7 @@ export function BasketList() {
           </View>
         ) : null}
         {orders.map((order, i) => (
-          <Ordered key={i} label={orderLabel(words, labels, view.player, order)} onRemove={() => removeOrder(i)} />
+          <Ordered key={keyOfOrder(order)} label={orderLabel(words, labels, view.player, order)} onRemove={() => removeOrder(i)} />
         ))}
       </View>
       {putBack}

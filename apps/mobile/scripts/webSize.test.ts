@@ -405,7 +405,7 @@ describe('the site as it is deployed', () => {
 
   it('has every piece of the site\'s beside its pages: the icons, the share image, the sitemap, robots, the manifest, the worker, the offline page and the page of nothing', () => {
     expect([...SITE_FILES].sort()).toEqual(
-      ['404.html', 'favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'offline.html', 'og.png', 'robots.txt', 'sitemap.xml', 'sw.js'].sort(),
+      ['.well-known/assetlinks.json', '404.html', 'favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'offline.html', 'og.png', 'robots.txt', 'sitemap.xml', 'sw.js'].sort(),
     );
     expect(judgeSiteFiles(site, pages)).toEqual([]);
     const without = judgeSiteFiles(site.filter((one) => one.path !== 'og.png' && one.path !== 'icons/icon-192.png'), pages);

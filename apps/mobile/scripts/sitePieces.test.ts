@@ -8,9 +8,10 @@ import robots from '../../web/src/app/robots';
 import sitemap from '../../web/src/app/sitemap';
 import manifest from '../../web/src/app/manifest';
 import { PAGES as WEB_PAGES, SITE_URL as WEB_SITE } from '../../web/src/i18n/metadata';
+import { LOCALES } from '@ratrace/i18n/locales';
 import { PAGES } from '../src/game/pageList';
 import { SITE_URL } from '../src/game/site';
-import { ICONS, manifestJson, robotsTxt, settlePages, sitemapXml, writeSitePieces } from './sitePieces';
+import { ANDROID_APP, assetLinksJson, ICONS, manifestJson, robotsTxt, settlePages, sitemapXml, writeSitePieces } from './sitePieces';
 import { SITE_FILES } from './webSize';
 
 /*
@@ -64,17 +65,38 @@ describe('the sitemap, the robots file and the manifest', () => {
   });
 });
 
+describe('the Android app\'s links (`.well-known/assetlinks.json`)', () => {
+  it('name the app app.json builds, by the SHA-256 of a signing key, for the site\'s every page: Android opens them in the app', () => {
+    expect(JSON.parse(assetLinksJson())).toEqual([
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: { namespace: 'android_app', package_name: ANDROID_APP.package, sha256_cert_fingerprints: [...ANDROID_APP.keys] },
+      },
+    ]);
+    for (const key of ANDROID_APP.keys) expect(key).toMatch(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/);
+    const app = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8')) as {
+      expo: { android: { package: string; intentFilters: Array<{ autoVerify?: boolean; data: Array<Record<string, string>> }> } };
+    };
+    expect(app.expo.android.package).toBe(ANDROID_APP.package);
+    const [filter] = app.expo.android.intentFilters.filter((one) => one.autoVerify);
+    expect(filter.data[0]).toEqual({ scheme: 'https', host: SITE_URL.host });
+    // Each language's front door and its pages, and nothing of the site's beside them (its worker, its files).
+    expect(filter.data.slice(1)).toEqual(LOCALES.flatMap((locale) => [{ path: `/${locale}` }, { pathPrefix: `/${locale}/` }]));
+  });
+});
+
 describe('the files written into the export', () => {
-  it('are the site\'s: the sitemap, robots, manifest, share image, icons and favicon', async () => {
+  it('are the site\'s: the sitemap, robots, manifest, share image, icons, favicon and the Android app\'s links', async () => {
     const written = await writeSitePieces(made, WEB_SITE);
     expect(written.sort()).toEqual(
-      ['favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'og.png', 'robots.txt', 'sitemap.xml'].sort(),
+      ['.well-known/assetlinks.json', 'favicon.ico', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'manifest.webmanifest', 'og.png', 'robots.txt', 'sitemap.xml'].sort(),
     );
     // And the build's check finds each of them in the site (webSize.ts, `judgeSiteFiles`).
     for (const file of written) expect(SITE_FILES, file).toContain(file);
     expect(readFileSync(join(made, 'sitemap.xml'), 'utf8')).toBe(sitemapXml(WEB_SITE));
     expect(readFileSync(join(made, 'robots.txt'), 'utf8')).toBe(robotsTxt(WEB_SITE));
     expect(readFileSync(join(made, 'manifest.webmanifest'), 'utf8')).toBe(manifestJson());
+    expect(readFileSync(join(made, '.well-known/assetlinks.json'), 'utf8')).toBe(assetLinksJson());
   });
 
   it('draw the share image and the icons as the Next web\'s are drawn: the same pixels, at the sizes every network and device asks for', async () => {

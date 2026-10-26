@@ -3,6 +3,7 @@ import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-rou
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';
 import { PAGES, type Page } from './pageList';
+import { SITE_URL } from './site';
 
 /*
  * The pages of the game and their addresses, as the Next web's: the language first, then the page (`/es/room?code=K7Q2XM`, `/en/rankings#friends`,
@@ -100,11 +101,27 @@ export function useGoFromAnywhere(): Go {
 const OUTSIDE = new Set(['auth', 'scene', 'kit', 'dev', 'perf']);
 
 /**
+ * The page of the game a link of the site's opens, where Android hands it to the app (app.json's `intentFilters`: an invitation,
+ * `https://ratrace-plum.vercel.app/en/room?code=K7Q2XM`): the same page in `locale`, as a link of the app's, whatever the language of the one who sent
+ * it. Undefined for a link that is not the site's, null for one of the site's that is no page of the game.
+ */
+function pageOfSiteLink(link: string, locale: string): string | null | undefined {
+  const site = /^https:\/\/([^/?#]+)(\/[^?#]*)?([?#].*)?$/i.exec(link);
+  if (site === null || site[1].toLowerCase() !== SITE_URL.host) return undefined;
+  const [, language = '', path = '', ...more] = (site[2] ?? '').replace(/\/+$/, '').split('/');
+  const page = PAGES.find((one) => one === path);
+  return isLocale(language) && more.length === 0 && page !== undefined ? `${hrefOf(page, { locale })}${site[3] ?? ''}` : null;
+}
+
+/**
  * The page of the game a link of the phone's opens (`theratrace://room?code=K7Q2XM`, or Expo Go's `exp://…/--/room?code=K7Q2XM`): the same page, in
- * `locale`, its query and hash kept (`/es/room?code=K7Q2XM`, `/en/rankings#friends`); the app's bare address is the front door (`/en`). Anything else
- * (Google's way back, the development routes, a page already in a language, a page the game does not have) is left as it came.
+ * `locale`, its query and hash kept (`/es/room?code=K7Q2XM`, `/en/rankings#friends`); the app's bare address is the front door (`/en`); a page of the
+ * site's, the same page in `locale` (`pageOfSiteLink`). Anything else (Google's way back, the development routes, a page already in a language, a
+ * page the game does not have) is left as it came.
  */
 export function pageOfLink(link: string, locale: string): string {
+  const fromSite = pageOfSiteLink(link, locale);
+  if (fromSite !== undefined) return fromSite ?? link;
   const expoGo = /^exps?:\/\/[^/]*\/--\/(.*)$/.exec(link);
   const scheme = /^[a-z][a-z0-9+.-]*:\/\/(.*)$/i.exec(link);
   if (scheme !== null && expoGo === null && /^exps?:/i.test(link)) return link;

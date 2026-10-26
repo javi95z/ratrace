@@ -115,6 +115,18 @@ describe('the phone\'s own links (`+native-intent`)', () => {
     expect(redirectSystemPath({ path: 'exp://127.0.0.1:8090/--/rankings#friends', initial: false })).toBe('/en/rankings#friends');
   });
 
+  it('opens a link of the site\'s that Android hands the app (an invitation) as the same page in the phone\'s language', () => {
+    device.languages = ['es'];
+    expect(redirectSystemPath({ path: 'https://ratrace-plum.vercel.app/en/room?code=ABC123', initial: true })).toBe('/es/room?code=ABC123');
+    expect(redirectSystemPath({ path: 'https://ratrace-plum.vercel.app/ru/rankings#friends', initial: false })).toBe('/es/rankings#friends');
+    expect(redirectSystemPath({ path: 'https://ratrace-plum.vercel.app/en', initial: false })).toBe('/es');
+    expect(redirectSystemPath({ path: 'https://Ratrace-Plum.vercel.app/es/play/', initial: false })).toBe('/es/play');
+    // Another site's, or an address of the site's that is no page of the game, as it came: the router's page of nothing.
+    for (const path of ['https://example.com/en/room?code=ABC123', 'https://ratrace-plum.vercel.app/en/nowhere', 'https://ratrace-plum.vercel.app/de/room', 'https://ratrace-plum.vercel.app/en/room/more']) {
+      expect(redirectSystemPath({ path, initial: false }), path).toBe(path);
+    }
+  });
+
   it('leaves alone what is not a page of the game: Google\'s way back, the development routes, a page already in a language, anything else', () => {
     for (const path of ['theratrace://auth', 'theratrace://auth?code=c0de&state=x', 'theratrace:///perf?life=moment-escape', 'theratrace://scene?name=home', 'theratrace://kit', 'theratrace://dev', '/es/play', 'theratrace://es/room?code=ABC123', 'theratrace://nowhere', 'exp://127.0.0.1:8090']) {
       expect(redirectSystemPath({ path, initial: false }), path).toBe(path);

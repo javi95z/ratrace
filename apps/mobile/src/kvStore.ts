@@ -2,6 +2,8 @@ import Storage from 'expo-sqlite/kv-store';
 import { readProfile } from '@ratrace/core/session/profile';
 import { readRun, readRuns } from '@ratrace/core/session/runs';
 import type { FinishedRun, PlayerStore, Profile, StoredGame } from '@ratrace/core/session/types';
+import { isLocale } from '@ratrace/i18n/locales';
+import { systemLanguage } from './appLanguage';
 import type { LanguageKeep } from './game/locale';
 import type { BasketText } from './game/phoneBasket';
 
@@ -175,24 +177,47 @@ export class KvStore implements PlayerStore {
   saveProfile = (profile: Profile): Promise<void> => write(PROFILE, profile);
 }
 
+/** Set once the player's choice is kept by the system too (`systemLanguage`): from then on, none there is the phone's own language. */
+const LOCALE_HANDED = 'ratrace:locale:system';
+
+const stored = (key: string): string | null => {
+  try {
+    return Storage.getItemSync(key);
+  } catch {
+    return null;
+  }
+};
+const store = (key: string, value: string): void => {
+  try {
+    Storage.setItemSync(key, value);
+  } catch {
+    // A phone that keeps nothing: the language is chosen again on the next start.
+  }
+};
+
 /**
  * The language the player chose, on the phone: the web's NEXT_LOCALE cookie. Read at once (synchronously)
- * when the app opens, so that nothing is ever shown in another language first.
+ * when the app opens, so that nothing is ever shown in another language first. Where the system keeps an app's language (Android 13 and later),
+ * it is that one: chosen in the game, it is written there too, and chosen in the phone's settings, it is the player's; the settings' "System
+ * default" is the phone's own language. A choice made before the system kept it (an older build) is handed to it once.
  */
 export const kvLanguage: LanguageKeep = {
   read: () => {
-    try {
-      return Storage.getItemSync(LOCALE);
-    } catch {
-      return null;
-    }
+    const chosen = stored(LOCALE);
+    const system = systemLanguage();
+    if (system === null) return chosen;
+    const kept = system.read();
+    if (kept !== null || stored(LOCALE_HANDED) !== null) return kept;
+    if (isLocale(chosen)) system.write(chosen);
+    store(LOCALE_HANDED, '1');
+    return chosen;
   },
   write: (locale) => {
-    try {
-      Storage.setItemSync(LOCALE, locale);
-    } catch {
-      // A phone that keeps nothing: the language is chosen again on the next start.
-    }
+    store(LOCALE, locale);
+    const system = systemLanguage();
+    if (system === null) return;
+    system.write(locale);
+    store(LOCALE_HANDED, '1');
   },
 };
 
