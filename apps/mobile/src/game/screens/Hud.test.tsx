@@ -15,6 +15,9 @@ import { Hud, raysOf } from './Hud';
 import { memoryServices, renderGame } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { Counted, settled } from '../../testing/renders';
+import { COLORS } from '../../ui/theme';
+
+const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 import type { Renders } from '../../testing/renders';
 
 afterEach(cleanup);
@@ -128,6 +131,22 @@ describe('the figures of the HUD', () => {
       expect(status.textContent, locale).toContain(String(now));
       cleanup();
     }
+  });
+
+  it('tell, under the things, how long each status that runs out still counts, its last round in the warning colour', async () => {
+    const fading = [
+      { itemId: 'sea_yacht_charter', value: 0, roundsLeft: 2, paid: 0, age: 0 },
+      { itemId: 'travel_weekend', value: 0, roundsLeft: 1, paid: 0, age: 0 },
+    ];
+    await open({ view: (view) => ({ ...view, player: { ...view.player, life: { ...view.player.life, items: fading } } }) });
+    fireEvent.click(screen.getByRole('button', { name: /Status/ }));
+    const parts = sheetTitled('Status');
+    // The soonest first.
+    expect(valueOf(parts, 'Ryanair weekend')).toBe('Last round');
+    expect(valueOf(parts, 'Yacht charter week')).toBe('2 rounds left');
+    expect(within(parts).getByText('Last round').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['wine-300']));
+    const order = [...parts.querySelectorAll('div')].map((el) => el.textContent).filter((t) => t === 'Ryanair weekend' || t === 'Yacht charter week');
+    expect(order[0]).toBe('Ryanair weekend');
   });
 
   it('say what status is for: the score as it stands today, and how much of it is money and how much status', async () => {
