@@ -11,7 +11,7 @@ const chosenOf = (orders: readonly Order[]): string | null => ((orders.find(isMo
 /**
  * The moves the player's career makes at the rung they are on, each a point of focus: a switch,
  * with what it is, the chance it comes off and how many rounds it takes. One a round at most, as
- * any use of focus. Nothing where the rung makes none.
+ * any use of focus. Nothing where the rung makes none, and nothing of a move that cannot be made now.
  */
 export function CareerMoves({ work, left }: { work: WorkQuote; left: number }) {
   const t = useT('work');
@@ -30,6 +30,8 @@ export function CareerMoves({ work, left }: { work: WorkQuote; left: number }) {
         const told = text.careers[career]?.moves?.[move.id];
         if (!told) return null;
         const on = chosen === move.id;
+        // A move that cannot be made now (tried too lately) is not shown at all.
+        if (move.lock !== null && !on) return null;
         const reason = move.lock === 'move-resting' ? t('moveResting') : null;
         const progress = move.rounds > 1 ? t('moveRounds', { done: move.progress, rounds: move.rounds }) : null;
         return (
@@ -37,7 +39,7 @@ export function CareerMoves({ work, left }: { work: WorkQuote; left: number }) {
             key={move.id}
             move={move.id}
             on={on}
-            disabled={!on && (left < 1 || move.lock !== null)}
+            disabled={!on && left < 1}
             label={told.name}
             hint={[told.about, reason ?? t('moveChance', { pct: move.chancePct }), progress].filter(Boolean).join(' · ')}
             icon={careerArt(career)}

@@ -1657,9 +1657,12 @@ function Lifestyle() {
     ),
   ]);
   const perYear = (cents: number) => common('perYear', { amount: fmt.compact(cents) });
+  // A use that cannot be had now (asked too lately, or not open to this player) is not shown at all; one out of reach of the focus left is, its
+  // switch off, since taking another back gives the focus for it.
   const switchOf = (use: { action: FocusAction; label: string; note: FocusNote }) => {
     const on = has(use.action);
-    return <FocusSwitch key={use.action} action={use.action} on={on} disabled={!on && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} onFocus={focus} />;
+    if (use.note.locked && !on) return null;
+    return <FocusSwitch key={use.action} action={use.action} on={on} disabled={!on && left < 1} label={use.label} hint={use.note.hint} onFocus={focus} />;
   };
 
   return (

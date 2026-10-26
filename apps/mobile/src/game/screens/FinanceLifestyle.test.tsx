@@ -122,6 +122,17 @@ async function onLifestyle(services: ReturnType<typeof memoryServices>, locale: 
 }
 
 describe('the lifestyle tab', () => {
+  it('shows no use of focus that cannot be had now: a raise asked for a round ago is not offered again until it may be', async () => {
+    const { services, session } = await inFinance('nurse');
+    await session.playRound({ orders: [{ type: 'focus', action: 'askRaise' }] });
+    await toFinance(session);
+    expect((await stateOf(services)).player.life.raiseRest).toBeGreaterThan(0);
+    const tab = await onLifestyle(services);
+    expect(within(tab).queryByRole('switch', { name: /^Ask for a raise/ })).toBeNull();
+    // What can be had is there, as before.
+    expect(within(tab).getByRole('switch', { name: /^Rest/ })).toBeTruthy();
+  });
+
   it('draws a picture on every choice: how to work, how to live, where, and each insurance', async () => {
     const { services } = await inFinance('nurse');
     await onLifestyle(services);

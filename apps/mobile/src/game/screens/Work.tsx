@@ -633,7 +633,9 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
         <View style={{ gap: 8 }}>
           {uses.map((each) => {
             const on = ordered.includes(each.action);
-            return <FocusSwitch key={each.action} action={each.action} on={on} disabled={!on && (work.focus.left < 1 || each.note.locked)} label={each.name} hint={each.note.hint} onFocus={focus} />;
+            // What cannot be had now is not shown; what the focus left does not reach is, off.
+            if (each.note.locked && !on) return null;
+            return <FocusSwitch key={each.action} action={each.action} on={on} disabled={!on && work.focus.left < 1} label={each.name} hint={each.note.hint} onFocus={focus} />;
           })}
           <MasteredLine names={mastered} />
           <CareerMoves work={work} left={work.focus.left} />
@@ -665,7 +667,8 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
 
 /**
  * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it is aimed at. The teaser gains status this round;
- * the rival starts the next one with less, and reads who did it. Nothing here in a life alone. With a `title`, it stands in a panel of its own. The
+ * the rival starts the next one with less, and reads who did it. Nothing here in a life alone, nor the round after a tease. With a `title`, it stands
+ * in a panel of its own. The
  * rivals are read from the room by their names alone (`useRoomSlice`): a look at the room that changes neither draws nothing here.
  */
 export function TeaseUse({ left, title }: { left: number; title?: string }) {
@@ -676,10 +679,12 @@ export function TeaseUse({ left, title }: { left: number; title?: string }) {
   const aimed = useGame(useShallow((s) => s.orders.filter((order) => order.type === 'focus' && order.action === 'tease').map((order) => (order as { target?: string }).target ?? '')));
   const setOrder = useGame((s) => s.setOrder);
   const rivals = useRoomSlice(({ room: now }) => (now === null ? [] : now.members.filter((member) => !member.me && !member.left).map((member) => ({ userId: member.userId, name: member.name }))));
+  // Never two rounds running: the round after a tease has none to offer.
+  const resting = useGame((s) => (s.view?.player.life.teaseRest ?? 0) > 0);
   const known = useKnows()('focus:tease');
-  if (!known || !inRoom || rivals.length === 0) return null;
-  const isTease = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'tease';
   const teasing = aimed.length > 0;
+  if (!known || !inRoom || rivals.length === 0 || (resting && !teasing)) return null;
+  const isTease = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'tease';
   const target = rivals.some((rival) => rival.userId === aimed[0]) ? aimed[0] : undefined;
   const aim = (userId: string | null) => setOrder(isTease, userId === null ? null : { type: 'focus', action: 'tease', target: userId });
   const nameOf = (rival: (typeof rivals)[number]) => rival.name ?? room('nameless', { tag: rival.userId.slice(0, 4).toUpperCase() });
