@@ -4,6 +4,7 @@ import { ratArt } from '@ratrace/content';
 import { Sprite } from '@/ui/Sprite';
 import { useRef, useState } from 'react';
 import { useGame, useGuide, useRuns, useT, useWords } from '@/game/context';
+import { plain } from '@ratrace/core/game/glossary';
 import { isFirst, nextTip } from '@ratrace/core/game/guide';
 import { escapeProgress } from '@ratrace/engine';
 import { Button } from '@/ui/kit';
@@ -58,7 +59,7 @@ export function Guide() {
       <Sprite id={ratArt('think')} fallback={{ w: 128, h: 128 }} className="!h-16 !w-16 shrink-0" />
       <div className="min-w-0">
       <p className="pixel mb-1 text-[14px] uppercase tracking-[0.1em] text-gold-500">{isFirst(tip) ? t('firstTitle') : t('title')}</p>
-      <p className="text-[14px] leading-snug">{t(tip, { rate: fmt.rate(content.debt.creditCardRateBp) })}</p>
+      <p className="text-[14px] leading-snug">{plain(t(tip, { rate: fmt.rate(content.debt.creditCardRateBp) }))}</p>
       </div>
       </div>
       <div className="mt-3 flex gap-2">
