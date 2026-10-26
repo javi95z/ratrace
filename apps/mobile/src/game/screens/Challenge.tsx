@@ -475,7 +475,7 @@ export function ChallengeResult({ week }: { week: string }) {
           </>
         ) : null}
       </View>
-      <Sheet open={all} onClose={() => setAll(false)} title={t('choicesTitle')} closeLabel={common('close')}>
+      <Sheet open={all} half onClose={() => setAll(false)} title={t('choicesTitle')} closeLabel={common('close')}>
         <View role="list" style={{ gap: 8 }}>
           {told.map((choice, i) => (
             // The web's `border-l-4 border-night-900 pl-2`: a rule down the side of each choice.

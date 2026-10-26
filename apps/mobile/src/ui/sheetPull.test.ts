@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { BACK_SPRING, CLOSE_SHARE, FLICK, FLICK_TRAVEL, RUBBER, SLIDE_MS, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
+import { BACK_SPRING, CLOSE_SHARE, FLICK, FLICK_TRAVEL, RUBBER, SLIDE_MS, backSpring, dimOf, halfOf, letGo, pulledTo, settleAt, slideMs } from './sheetPull';
 
 test('pulled down, the panel follows the finger point for point', () => {
   expect(pulledTo(0)).toBe(0);
@@ -81,4 +81,37 @@ test('a locked sheet (one that cannot be closed now) gives a little either way a
 test('the spring back never carries an upward flick past the rest: no gap is ever shown under a panel standing on the foot of the screen', () => {
   expect(backSpring(-5000)).toEqual({ ...BACK_SPRING, velocity: 0, overshootClamping: true });
   expect(backSpring(800)).toEqual({ ...BACK_SPRING, velocity: 800, overshootClamping: true });
+});
+
+test('a sheet of two heights has a half only where it is tall enough: half the screen shown, the rest below its foot', () => {
+  expect(halfOf(700, 800)).toBe(300);
+  expect(halfOf(520, 800)).toBe(0);
+  expect(halfOf(521, 800)).toBe(121);
+  expect(halfOf(0, 800)).toBe(0);
+  expect(halfOf(700, 0)).toBe(0);
+});
+
+test('let go, a sheet of two heights goes to the nearer, whole on a flick up, to its half on a flick down from above it, away from below it', () => {
+  const height = 700;
+  const half = 300;
+  expect(settleAt(100, 0, height, half)).toBe('full');
+  expect(settleAt(200, 0, height, half)).toBe('half');
+  expect(settleAt(-5, 0, height, half)).toBe('full');
+  expect(settleAt(250, -FLICK, height, half)).toBe('full');
+  expect(settleAt(100, FLICK, height, half)).toBe('half');
+  expect(settleAt(300 + FLICK_TRAVEL, FLICK, height, half)).toBe('close');
+  expect(settleAt(310, FLICK, height, half)).toBe('half');
+  // Away past a third of what its half shows.
+  expect(settleAt(300 + 400 * CLOSE_SHARE + 1, 0, height, half)).toBe('close');
+  expect(settleAt(300 + 400 * CLOSE_SHARE - 1, 0, height, half)).toBe('half');
+  // With no half, the sheet of one height.
+  expect(settleAt(250, 0, 600, 0)).toBe('close');
+  expect(settleAt(150, 0, 600, 0)).toBe('full');
+});
+
+test('the page stays dimmed whole down to a sheet\'s half, and fades from there', () => {
+  expect(dimOf(300, 700, 300)).toBe(1);
+  expect(dimOf(100, 700, 300)).toBe(1);
+  expect(dimOf(500, 700, 300)).toBeCloseTo(0.5);
+  expect(dimOf(350, 700)).toBeCloseTo(0.5);
 });

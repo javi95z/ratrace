@@ -45,17 +45,17 @@ export function SheetGrip({ drag, enabled, children }: { drag: SheetPull; enable
 
 /**
  * The sheet's body, which scrolls: dragged down only from its top. Whether it is at its top is kept for the pan as the scroll goes (`atTop`); a pan
- * never enabled leaves the scroll free.
+ * never enabled leaves the scroll free. A sheet standing at its half is dragged either way from its body, and scrolls once it is whole.
  */
-export function SheetScroll({ drag, enabled, children, onScroll, ...props }: ScrollViewProps & { drag: SheetPull; enabled: boolean; children: ReactNode }) {
+export function SheetScroll({ drag, enabled, atHalf = false, children, onScroll, ...props }: ScrollViewProps & { drag: SheetPull; enabled: boolean; atHalf?: boolean; children: ReactNode }) {
   const atTop = useSharedValue(enabled);
   useEffect(() => {
     if (!enabled) atTop.value = false;
   }, [enabled, atTop]);
+  // A sheet at its half (`atHalf`) is moved by any drag of its body, up to its whole as down: nothing scrolls until it is whole.
   const pan = usePanGesture({
     enabled: atTop,
-    activeOffsetY: GRAB,
-    failOffsetY: -GRAB,
+    ...(atHalf ? { activeOffsetY: [-GRAB, GRAB] as [number, number] } : { activeOffsetY: GRAB, failOffsetY: -GRAB }),
     failOffsetX: [-SIDEWAYS, SIDEWAYS],
     // A control that drags itself (a slider) pressed: the pan gives way, to it and to the scroll.
     onTouchesMove: (event) => {
@@ -83,7 +83,7 @@ export function SheetScroll({ drag, enabled, children, onScroll, ...props }: Scr
   return (
     <GestureDetector gesture={pan}>
       <View collapsable={false} style={{ flexShrink: 1, minHeight: 0 }}>
-        <ScrollView {...props} requireToFail={pan} onScroll={scrolled} scrollEventThrottle={16}>
+        <ScrollView {...props} scrollEnabled={!atHalf && props.scrollEnabled !== false} requireToFail={pan} onScroll={scrolled} scrollEventThrottle={16}>
           {children}
         </ScrollView>
       </View>

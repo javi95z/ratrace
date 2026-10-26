@@ -491,7 +491,7 @@ function HudLead({ compact, skyline, flush, onProfile, open }: { compact: boolea
       </View>
       <JailSheet open={jail && life.jailRounds > 0} onClose={() => setJail(false)} left={life.jailRounds} />
       <HudSettings open={settings} onClose={() => setSettings(false)} />
-      <Sheet open={paper} onClose={() => setPaper(false)} title={t('newsTitle')} closeLabel={common('close')}>
+      <Sheet open={paper} half onClose={() => setPaper(false)} title={t('newsTitle')} closeLabel={common('close')}>
         {paper ? <Headlines /> : null}
       </Sheet>
     </View>

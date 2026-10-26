@@ -139,6 +139,7 @@ export function Sheet({
   tone,
   initialFocus = 'panel',
   locked = false,
+  half = false,
   children,
 }: {
   open: boolean;
@@ -150,6 +151,8 @@ export function Sheet({
   tone?: 'gold' | 'wine';
   initialFocus?: InitialFocus;
   locked?: boolean;
+  /** A long sheet to read or browse: on the phone it opens at half the screen and is pulled up to its whole (`sheetPull.ts`'s `HALF`). */
+  half?: boolean;
   children: ReactNode;
 }) {
   // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
@@ -208,7 +211,7 @@ export function Sheet({
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>
-      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus} locked={locked}>
+      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus} locked={locked} half={half}>
         {children}
       </SheetPanel>
     </SheetParent.Provider>
@@ -251,6 +254,7 @@ function SheetPanel({
   tone,
   initialFocus,
   locked,
+  half,
   children,
 }: {
   open: boolean;
@@ -262,6 +266,7 @@ function SheetPanel({
   tone?: 'gold' | 'wine';
   initialFocus: InitialFocus;
   locked: boolean;
+  half: boolean;
   children: ReactNode;
 }) {
   // The dialog on the web (`sheetDialog.web.tsx`): the Modal's own, named by the title; the panel takes the focus as it is shown (or its Close, or
@@ -293,7 +298,13 @@ function SheetPanel({
   // dialog, not a sheet risen from the foot: it is not dragged, and has no grabber.
   const draggable = !desk;
   // A sheet comes up from the foot of the screen and slides back down to it, however it is closed; a dialog in the middle of a wide screen rises.
-  const pull = useSheetPull({ open, onClose, locked, enters: !desk, screen: height });
+  // Two heights on the phone only: the web's sheets are the Next web's, of one.
+  const pull = useSheetPull({ open, onClose, locked, enters: !desk, screen: height, half: half && !desk && Platform.OS !== 'web' });
+  // A field's keyboard up, a sheet at its half is raised whole: the field and what it asks are above the keyboard.
+  const expand = pull.expand;
+  useEffect(() => {
+    if (typing) expand();
+  }, [typing, expand]);
   // Closed by a press or by its owner, its Modal stays shown while it slides away (`sliding`), and is hidden once it has gone. Decided as it closes, in
   // the render that closes it, so the Modal is never hidden for a frame first.
   const [sliding, setSliding] = useState(false);
@@ -426,6 +437,7 @@ function SheetPanel({
                     <SheetScroll
                       drag={pull.drag}
                       enabled={draggable}
+                      atHalf={pull.atHalf}
                       // A button tapped in a sheet while one of its fields has the keyboard up is the button's, not a tap that puts the keyboard away (Page's `KEYBOARD`).
                       keyboardShouldPersistTaps="handled"
                       bounces={false}

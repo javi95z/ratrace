@@ -147,6 +147,14 @@
     ],
     "scheme": "theratrace",
     "backgroundColor": "#141b33",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6a550ec5-0a6f-42d7-ad3c-db48820f3f73",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "extra": {
       "eas": {
         "projectId": "6a550ec5-0a6f-42d7-ad3c-db48820f3f73"

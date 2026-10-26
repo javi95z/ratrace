@@ -46,11 +46,46 @@ export function letGo(at: number, velocity: number, height: number): 'close' | '
   return height > 0 && at > height * CLOSE_SHARE ? 'close' : 'back';
 }
 
-/** The dimmed page's opacity with the panel `pull` points down: whole at rest (and above it), none once it has gone its whole `height`. */
-export function dimOf(pull: number, height: number): number {
+/*
+ * A sheet of two heights, on the phone (a long sheet to read or browse, which its owner asks for: `Sheet`'s `half`): it opens with half the screen
+ * shown, the rest of it below the foot of the screen, is pulled up to its whole height and down again to the half, and closes from the half as a
+ * sheet of one height does from its whole. Only a sheet taller than `HALF_FROM` of the screen stands at a half: a shorter one is whole at once.
+ */
+
+/** The share of the screen a sheet of two heights shows at its half. */
+export const HALF = 0.5;
+/** A sheet stands at a half only where it is taller than this share of the screen: shorter, its half would be nearly its whole. */
+export const HALF_FROM = 0.65;
+
+/** How far below its whole a sheet `height` tall stands at its half, on a `screen` that tall: none where it is not tall enough to have one. */
+export function halfOf(height: number, screen: number): number {
   'worklet';
-  if (height <= 0 || pull <= 0) return 1;
-  return Math.max(0, 1 - pull / height);
+  if (height <= 0 || screen <= 0 || height <= screen * HALF_FROM) return 0;
+  return height - screen * HALF;
+}
+
+/**
+ * Where a sheet of two heights let go `at` points below its whole, moving at `velocity` (down positive), goes: its whole (`full`), its half, or away.
+ * A flick up takes it whole; a flick down takes it to its half from above it, away from below it; otherwise the nearer height, or away past a third of
+ * what the half shows. With no half (`half` 0) it is the sheet of one height (`letGo`).
+ */
+export function settleAt(at: number, velocity: number, height: number, half: number): 'full' | 'half' | 'close' {
+  'worklet';
+  if (half <= 0) return letGo(at, velocity, height) === 'close' ? 'close' : 'full';
+  if (at <= 0 || velocity <= -FLICK) return 'full';
+  if (velocity >= FLICK) return at < half ? 'half' : at - half >= FLICK_TRAVEL ? 'close' : 'half';
+  if (at > half + (height - half) * CLOSE_SHARE) return 'close';
+  return at < half / 2 ? 'full' : 'half';
+}
+
+/**
+ * The dimmed page's opacity with the panel `pull` points down: whole at rest (and above it, and anywhere above its half, `half`), none once it has
+ * gone its whole `height`.
+ */
+export function dimOf(pull: number, height: number, half = 0): number {
+  'worklet';
+  if (height <= 0 || pull <= half) return 1;
+  return Math.max(0, 1 - (pull - half) / (height - half));
 }
 
 /** How long the slide away takes for the `left` points still to go: at the finger's `velocity` when that is quicker, never longer than `SLIDE_MS`. */

@@ -138,7 +138,7 @@ export function RoomHistory({ runs, opened }: { runs: FinishedRun[]; opened?: st
               <KeptLife key={one.runId} runId={one.runId} lifeId={one.lifeId} name={lifeName(one.lifeId)} day={fmt.day(one.finishedAt)} score={fmt.number(one.score)} onOpen={setOpenRun} />
             ))}
       </View>
-      <Sheet open={open !== null} onClose={() => setOpenGame(null)} title={open ? lifeName(open.lifeId) : ''} closeLabel={common('close')}>
+      <Sheet open={open !== null} onClose={() => setOpenGame(null)} half title={open ? lifeName(open.lifeId) : ''} closeLabel={common('close')}>
         {open ? (
           <View style={{ gap: 12 }}>
             {/* The game: when, how long its rounds were, and where the player came. */}
@@ -186,7 +186,7 @@ export function RoomHistory({ runs, opened }: { runs: FinishedRun[]; opened?: st
           </View>
         ) : null}
       </Sheet>
-      <Sheet open={run !== null} onClose={() => setOpenRun(null)} title={run ? lifeName(run.lifeId) : ''} closeLabel={common('close')}>
+      <Sheet open={run !== null} half onClose={() => setOpenRun(null)} title={run ? lifeName(run.lifeId) : ''} closeLabel={common('close')}>
         {run ? <RunDetail run={run} /> : null}
       </Sheet>
     </View>

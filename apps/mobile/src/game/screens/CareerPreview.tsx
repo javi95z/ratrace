@@ -29,7 +29,7 @@ export function CareerPreview({ careerId, startLevel, shown, onClose }: { career
   const top = quote.ladder[quote.ladder.length - 1];
   const perYear = (annual: number) => common('perYear', { amount: fmt.money(annual) });
   return (
-    <Sheet open onClose={onClose} title={text.careers[careerId].name} closeLabel={common('close')}>
+    <Sheet open onClose={onClose} title={text.careers[careerId].name} half closeLabel={common('close')}>
       <View style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Bare style={{ width: 32, height: 32 }}>

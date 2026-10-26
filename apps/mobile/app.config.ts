@@ -21,12 +21,14 @@ const nearby = (host: string): boolean =>
   host === 'localhost' || host.endsWith('.local') || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$)/.test(host) || host === '[::1]';
 
 /**
- * The build held to the live project, by name, or null: an EAS `preview` or `production` build, or a Vercel deployment of the web export
+ * The build held to the live project, by name, or null: an EAS `preview` or `production` build or update, or a Vercel deployment of the web export
  * (`VERCEL_ENV` `preview` or `production`: `pnpm web:build` runs `expo export`, which reads this config). A build on this machine, the checks'
  * own on the fake project among them, has neither.
  */
 const heldBuild = (env: Env): { build: string; where: string } | null => {
   if (env.EAS_BUILD_PROFILE && HELD.has(env.EAS_BUILD_PROFILE)) return { build: `The ${env.EAS_BUILD_PROFILE} build`, where: "the project's EAS environment" };
+  // An update sent to the players' builds over the air (`pnpm update:preview`, `update:production`: `eas update` with the channel's EAS environment).
+  if (env.RATRACE_UPDATE && HELD.has(env.RATRACE_UPDATE)) return { build: `The ${env.RATRACE_UPDATE} update`, where: "the project's EAS environment (`eas update --environment`)" };
   if (env.VERCEL_ENV && HELD.has(env.VERCEL_ENV)) return { build: `Vercel's ${env.VERCEL_ENV} build`, where: "the Vercel project's environment" };
   return null;
 };

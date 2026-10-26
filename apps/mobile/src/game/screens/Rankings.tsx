@@ -486,7 +486,7 @@ function RunSheet({ community, row, nameOf, onClose }: { community: Community; r
   if (row !== null && row !== last) setLast(row);
   const shown = row ?? last;
   return (
-    <Sheet open={row !== null} onClose={onClose} title={shown ? nameOf(shown) : ''} closeLabel={common('close')}>
+    <Sheet open={row !== null} half onClose={onClose} title={shown ? nameOf(shown) : ''} closeLabel={common('close')}>
       {shown ? <RunLife community={community} row={shown} /> : null}
     </Sheet>
   );

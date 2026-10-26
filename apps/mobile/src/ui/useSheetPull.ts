@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, type LayoutChangeEvent } from 'react-native';
 import { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useReducedMotion } from './animations';
-import { ENTER_MS, GRAB, OFF, SLIDE_MS, backSpring, dimOf, letGo, pulledTo, slideMs } from './sheetPull';
+import { ENTER_MS, GRAB, OFF, SLIDE_MS, backSpring, dimOf, halfOf, pulledTo, settleAt, slideMs } from './sheetPull';
 import type { SheetHold } from './sheetHold';
 
 /** A sheet being pulled: what the gestures tell it (the phone's on its UI thread, the web's from the page's pointer events), and what it draws. */
@@ -42,8 +42,44 @@ export interface SheetPull {
 /** How long a sheet that comes up waits to be measured before it stands in its place without coming up (a frame or two is the usual wait). */
 const MEASURE_BACKSTOP_MS = 80;
 
-export function useSheetPull({ open, onClose, locked = false, enters = false, screen = 0 }: { open: boolean; onClose(): void; locked?: boolean; enters?: boolean; screen?: number }) {
+/** Whether a screen reader is on: it reads a sheet whole, never one standing at its half (its foot below the screen, and no drag to raise it). */
+function useScreenReader(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void AccessibilityInfo.isScreenReaderEnabled?.()
+      .then((now) => {
+        if (live) setOn(now);
+      })
+      .catch(() => undefined);
+    const told = AccessibilityInfo.addEventListener?.('screenReaderChanged', setOn);
+    return () => {
+      live = false;
+      told?.remove();
+    };
+  }, []);
+  return on;
+}
+
+/**
+ * A sheet of two heights (`half`, its owner's ask, on the phone: `sheetPull.ts`'s `halfOf`) opens at its half where it is tall enough, is pulled up to
+ * its whole and down again, and goes whole by itself where it must be (`expand`: a field's keyboard). `atHalf` says where it stands, for its body:
+ * at its half, any drag of the body moves the sheet, and nothing scrolls.
+ */
+export function useSheetPull({ open, onClose, locked = false, enters = false, screen = 0, half = false }: { open: boolean; onClose(): void; locked?: boolean; enters?: boolean; screen?: number; half?: boolean }) {
   const still = useReducedMotion();
+  const reader = useScreenReader();
+  const twoHeights = half && !reader;
+  // How far below its whole its half stands (0: it has none), and where it rests now: its whole (0) or its half.
+  const halfAt = useSharedValue(0);
+  const stand = useSharedValue(0);
+  const [atHalf, setAtHalf] = useState(false);
+  // Whether the player has moved it from where it opened (a drag let go, or raised whole for a field): then it stays where they left it.
+  const moved = useRef(false);
+  const twice = useSharedValue(twoHeights);
+  useEffect(() => {
+    twice.value = twoHeights;
+  }, [twoHeights, twice]);
   // Whether it comes up as it opens, decided once, as it is first drawn.
   const [entering] = useState(() => enters && open && !still && screen > 0);
   const pull = useSharedValue(entering ? screen + OFF : 0);
@@ -86,9 +122,10 @@ export function useSheetPull({ open, onClose, locked = false, enters = false, sc
     if (!open) return;
     draggedAway.current = false;
     leaving.value = false;
-    pull.value = still ? 0 : withSpring(0, backSpring(0));
-  }, [asks, open, still, leaving, pull]);
+    pull.value = still ? stand.value : withSpring(stand.value, backSpring(0));
+  }, [asks, open, still, leaving, pull, stand]);
 
+  const markMoved = useCallback(() => void (moved.current = true), []);
   const begin = useCallback(
     (translation: number) => {
       'worklet';
@@ -113,8 +150,15 @@ export function useSheetPull({ open, onClose, locked = false, enters = false, sc
       if (!dragging.value) return;
       dragging.value = false;
       const at = pulledTo(from.value + translation, lockedNow.value);
-      if (lockedNow.value || letGo(at, velocity, height.value) === 'back') {
-        pull.value = quiet.value ? 0 : withSpring(0, backSpring(velocity));
+      const goes = settleAt(at, velocity, height.value, halfAt.value);
+      if (lockedNow.value || goes !== 'close') {
+        const to = !lockedNow.value && goes === 'half' ? halfAt.value : lockedNow.value ? stand.value : 0;
+        if (to !== stand.value) {
+          stand.value = to;
+          scheduleOnRN(setAtHalf, to > 0);
+        }
+        scheduleOnRN(markMoved);
+        pull.value = quiet.value ? to : withSpring(to, backSpring(velocity));
         return;
       }
       leaving.value = true;
@@ -127,14 +171,22 @@ export function useSheetPull({ open, onClose, locked = false, enters = false, sc
         if (done) scheduleOnRN(ask);
       });
     },
-    [dragging, leaving, from, height, pull, quiet, lockedNow, ask],
+    [dragging, leaving, from, height, pull, quiet, lockedNow, ask, halfAt, stand, markMoved],
   );
   const cancel = useCallback(() => {
     'worklet';
     if (!dragging.value) return;
     dragging.value = false;
+    pull.value = quiet.value ? stand.value : withSpring(stand.value, backSpring(0));
+  }, [dragging, pull, quiet, stand]);
+  /** Whole, from its half (a field's keyboard is up): nothing where it is whole already, or being dragged. */
+  const expand = useCallback(() => {
+    if (stand.value === 0 || dragging.value || leaving.value) return;
+    moved.current = true;
+    stand.value = 0;
+    setAtHalf(false);
     pull.value = quiet.value ? 0 : withSpring(0, backSpring(0));
-  }, [dragging, pull, quiet]);
+  }, [stand, dragging, leaving, pull, quiet]);
   const isHeld = useCallback(() => {
     'worklet';
     return holding.value;
@@ -152,14 +204,34 @@ export function useSheetPull({ open, onClose, locked = false, enters = false, sc
     (event: LayoutChangeEvent) => {
       const measuredHeight = event.nativeEvent.layout.height;
       height.value = measuredHeight;
-      if (measured.current) return;
+      // Its half, for the height it has now: one standing at its half stays at it as what it holds grows or shrinks.
+      const halfNow = twice.value ? halfOf(measuredHeight, screen) : 0;
+      halfAt.value = halfNow;
+      if (measured.current) {
+        if (dragging.value || leaving.value) return;
+        // At its half, it stays at its half as what it holds grows or shrinks; never moved by the player yet, one that grows tall enough (what it
+        // shows came: a life read from the server) goes to its half, as it would have opened.
+        if (stand.value > 0 || (!moved.current && halfNow > 0)) {
+          const was = stand.value;
+          stand.value = halfNow;
+          pull.value = was > 0 || quiet.value ? halfNow : withSpring(halfNow, backSpring(0));
+          setAtHalf(halfNow > 0);
+        }
+        return;
+      }
       measured.current = true;
-      if (!entering || dragging.value) return;
+      // A sheet of two heights tall enough opens at its half.
+      stand.value = halfNow;
+      setAtHalf(halfNow > 0);
+      if (!entering || dragging.value) {
+        if (!dragging.value) pull.value = halfNow;
+        return;
+      }
       // Measured, it comes up from just below the foot of the screen, slowing as it lands.
       pull.value = measuredHeight + OFF;
-      pull.value = withTiming(0, { duration: ENTER_MS, easing: Easing.bezier(0, 0, 0.2, 1) });
+      pull.value = withTiming(halfNow, { duration: ENTER_MS, easing: Easing.bezier(0, 0, 0.2, 1) });
     },
-    [entering, height, pull, dragging],
+    [entering, height, pull, dragging, leaving, twice, halfAt, stand, screen, quiet],
   );
   // Never measured (a page laid out by nobody, a browser in the background) it would wait below the screen for ever: in a moment it is in its place.
   useEffect(() => {
@@ -188,8 +260,8 @@ export function useSheetPull({ open, onClose, locked = false, enters = false, sc
     [leaving, dragging, pull, height],
   );
   const panelStyle = useAnimatedStyle(() => ({ transform: [{ translateY: pull.value }] }));
-  const dimStyle = useAnimatedStyle(() => ({ opacity: dimOf(pull.value, height.value) }));
+  const dimStyle = useAnimatedStyle(() => ({ opacity: dimOf(pull.value, height.value, halfAt.value) }));
   // One drag for the sheet's life: the pans are given it once, not made again with every render of the sheet.
   const drag = useMemo<SheetPull>(() => ({ begin, move, end, cancel, held: isHeld }), [begin, move, end, cancel, isHeld]);
-  return { drag, hold, measure, panelStyle, dimStyle, isLeaving, canSlideAway, slideAway };
+  return { drag, hold, measure, panelStyle, dimStyle, isLeaving, canSlideAway, slideAway, atHalf, expand };
 }

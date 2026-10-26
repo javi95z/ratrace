@@ -23,9 +23,11 @@ export function SheetGrip({ children }: { drag: SheetPull; enabled: boolean; chi
 }
 
 /** The sheet's body, which scrolls: marked for the panel's listener, which reads how far it is scrolled. */
-export function SheetScroll({ drag, enabled, children, ...props }: ScrollViewProps & { drag: SheetPull; enabled: boolean; children: ReactNode }) {
+export function SheetScroll({ drag, enabled, atHalf, children, ...props }: ScrollViewProps & { drag: SheetPull; enabled: boolean; atHalf?: boolean; children: ReactNode }) {
   void drag;
   void enabled;
+  // The web's sheets have one height (`useSheetPull`'s `half` is the phone's).
+  void atHalf;
   return (
     <ScrollView {...props} {...{ dataSet: { sheetScroll: true } }}>
       {children}

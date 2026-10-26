@@ -44,6 +44,7 @@
     "expo-sqlite": "~58.0.13",
     "expo-status-bar": "~58.0.3",
     "expo-system-ui": "~58.0.6",
+    "expo-updates": "~58.0.18",
     "expo-web-browser": "~58.0.6",
     "idb": "^8.0.4",
     "qrcode-generator": "2.0.4",
@@ -84,7 +85,9 @@
     "site:worker": "tsx scripts/serviceWorker.ts",
     "icons": "tsx scripts/appIcons.ts",
     "play:graphics": "tsx scripts/playGraphics.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "update:preview": "RATRACE_UPDATE=preview eas update --channel preview --environment preview --auto",
+    "update:production": "RATRACE_UPDATE=production eas update --channel production --environment production --auto"
   },
   "private": true
 }

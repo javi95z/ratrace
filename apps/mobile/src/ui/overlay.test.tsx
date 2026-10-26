@@ -1103,3 +1103,85 @@ test('a sheet closed some other way while it slides away (the browser\'s Back) i
   await wait(1000);
   expect(onClose).not.toHaveBeenCalled();
 });
+
+/*
+ * A sheet of two heights (`half`): a long one to read, which on the phone opens with half the screen shown and is pulled up to its whole.
+ */
+const translate = () => Number(/translateY\((-?[\d.]+)px\)/.exec(pullStyle().transform)![1]);
+const gripPan = () => gestures.pans.findLast((pan) => pan.failOffsetX !== undefined && Array.isArray(pan.activeOffsetY) && pan.failOffsetY === undefined && pan.onTouchesMove === undefined)!;
+const bodyPan = () => gestures.pans.findLast((pan) => pan.onTouchesMove !== undefined)!;
+
+test('a long sheet of two heights opens at half the screen on the phone, is pulled up whole, down to its half again, and away from there', async () => {
+  platform.OS = 'ios';
+  const restore = browserAt(393, 800);
+  const onClose = sheet({ half: true });
+  laidOut(700);
+  // Its half: 400 of the 800 shown, the rest below the foot of the screen; the page dimmed whole all the same.
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 300, duration: 240 });
+  await wait(240);
+  expect(translate()).toBe(300);
+  expect(backdropOpacity()).toBe('1');
+  // At its half, the body is dragged either way and nothing scrolls.
+  expect(bodyPan().activeOffsetY).toEqual([-10, 10]);
+  expect(bodyPan().failOffsetY).toBeUndefined();
+  // Pulled up, it is whole; then the body scrolls again, and is dragged only down.
+  drag(bodyPan(), -200);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  expect(translate()).toBe(0);
+  expect(bodyPan().activeOffsetY).toBe(10);
+  // Pulled down a little, back to its half; flicked up, whole again.
+  drag(gripPan(), 260);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 300 });
+  await wait(1000);
+  drag(gripPan(), -40, -1500);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  await wait(1000);
+  // From its half, pulled past a third of what it shows, it goes as any sheet does.
+  drag(gripPan(), 260);
+  await wait(1000);
+  expect(onClose).not.toHaveBeenCalled();
+  drag(gripPan(), 160);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 724 });
+  await wait(rea.assigned.at(-1)!.duration);
+  await wait(1);
+  expect(onClose).toHaveBeenCalledTimes(1);
+  restore();
+});
+
+test('a sheet of two heights too short to have a half, or on the web, is whole at once; a field\'s keyboard raises one at its half', async () => {
+  const restore = browserAt(393, 800);
+  platform.OS = 'android';
+  sheet({ half: true });
+  laidOut(500);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 0 });
+  cleanup();
+  letHeldTurnsGo();
+  platform.OS = 'web';
+  rea.assigned.length = 0;
+  sheet({ half: true });
+  laidOut(700);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'timing', to: 0 });
+  cleanup();
+  letHeldTurnsGo();
+  platform.OS = 'ios';
+  sheet({ half: true });
+  laidOut(700);
+  await wait(240);
+  expect(translate()).toBe(300);
+  keyboardSays('keyboardWillShow');
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 0 });
+  restore();
+});
+
+test('a sheet of two heights whose life comes after it opened (read from the server) goes to its half as it grows, unless the player moved it', async () => {
+  platform.OS = 'ios';
+  const restore = browserAt(393, 800);
+  sheet({ half: true });
+  laidOut(200);
+  await wait(240);
+  expect(translate()).toBe(0);
+  laidOut(700);
+  expect(rea.assigned.at(-1)).toMatchObject({ kind: 'spring', to: 300 });
+  restore();
+});

@@ -188,7 +188,7 @@ export function Records({ opened, game }: { opened?: string; game?: string } = {
         label={lines.length > 0 ? t('history') : undefined}
         contentStyle={{ paddingBottom: 40 }}
       />
-      <Sheet open={open !== null} onClose={() => setOpenId(null)} title={open ? lifeName(open) : ''} closeLabel={common('close')}>
+      <Sheet open={open !== null} onClose={() => setOpenId(null)} half title={open ? lifeName(open) : ''} closeLabel={common('close')}>
         {open ? <RunDetail run={open} /> : null}
       </Sheet>
     </>

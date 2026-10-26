@@ -78,6 +78,28 @@ describe('a store build (EAS preview or production) carries the live project, ne
     expect(() => withServerCheck(base, { EAS_BUILD_PROFILE: 'production' })).toThrow(/EXPO_PUBLIC_SUPABASE_URL/);
     expect(withServerCheck(base, {})).toBe(base);
   });
+
+  test('an update sent over the air to the players\' builds is held to it as their builds are (`pnpm update:preview`, `update:production`)', () => {
+    const live = { EXPO_PUBLIC_SUPABASE_URL: 'https://abcdefgh.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live' };
+    expect(serverProblem({ RATRACE_UPDATE: 'production' })).toMatch(/production update has no EXPO_PUBLIC_SUPABASE_URL/);
+    expect(serverProblem({ ...live, RATRACE_UPDATE: 'preview' })).toBeNull();
+    const scripts = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { scripts: Record<string, string> }).scripts;
+    for (const channel of ['preview', 'production']) {
+      expect(scripts[`update:${channel}`]).toBe(`RATRACE_UPDATE=${channel} eas update --channel ${channel} --environment ${channel} --auto`);
+    }
+  });
+});
+
+/*
+ * Updates over the air (EAS Update): each build listens on its profile's channel, and takes an update only made for its own native code (the runtime's
+ * fingerprint), checked for as the app opens and put in place at its next start, never in the middle of a life.
+ */
+test('takes the game\'s updates over the air on its build\'s channel, for its own native code only, put in place at the next start', () => {
+  const expo = config.expo as unknown as { runtimeVersion: unknown; updates: Record<string, unknown>; extra: { eas: { projectId: string } } };
+  expect(expo.runtimeVersion).toEqual({ policy: 'fingerprint' });
+  expect(expo.updates).toEqual({ url: `https://u.expo.dev/${expo.extra.eas.projectId}`, checkAutomatically: 'ON_LOAD', fallbackToCacheTimeout: 0 });
+  const eas = JSON.parse(readFileSync(new URL('../eas.json', import.meta.url), 'utf8')) as { build: Record<string, { channel?: string }> };
+  for (const profile of ['development', 'preview', 'production']) expect(eas.build[profile].channel).toBe(profile);
 });
 
 describe('a Vercel build of the web (preview or production) carries the live project too, and everything else the live web needs', () => {
