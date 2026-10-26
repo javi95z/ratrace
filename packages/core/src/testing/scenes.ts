@@ -204,7 +204,7 @@ type Reach = {
   player?: string;
 } & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
 
-/** The seed of the engineer whom the saver takes out of the rat race with her fifteenth round, at 50, never bankrupt (and whose third round holds the appointment). */
+/** The seed of the engineer whom the saver takes out of the rat race with her seventeenth round, at 54, never bankrupt (and whose third round holds the appointment). */
 const ESCAPED = 'screen-seed-335';
 /** The seed of the nurse whom the chaser takes bankrupt with her fourth round, once, never out of the rat race. */
 const BANKRUPT = 'screen-seed-5';
@@ -291,7 +291,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'balance-r6': { life: 'engineer', round: 6, stage: 'news' },
   // The same round: where the engineer stands among the rivals, the board alone on a page (in the profile it is far down its sheet).
   'rivals-r6': { life: 'engineer', round: 6, stage: 'news' },
-  // The engineer of screen-seed-335 (play-cards-legendary's), played by the saver to the end of the life: out of the rat race with the fifteenth round, never bankrupt.
+  // The engineer of screen-seed-335 (play-cards-legendary's), played by the saver to the end of the life: out of the rat race with the seventeenth round, never bankrupt.
   'end-escaped': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
   // The nurse of screen-seed-5, played by the chaser to the end of the life: bankrupt with her fourth round, never out of the rat race.
   'end-bankrupt': { life: 'nurse', round: 1, stage: 'end', seed: BANKRUPT, player: 'chaser' },
@@ -299,8 +299,8 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'end-share': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
   // end-escaped's life in Russian.
   'end-ru': { life: 'engineer', round: 1, stage: 'end', seed: ESCAPED },
-  // end-escaped's engineer, played by the saver, leaves the rat race with the fifteenth round: its ledger, and the moment over it.
-  'moment-escape': { life: 'engineer', round: 15, stage: 'finance', seed: ESCAPED, then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  // end-escaped's engineer, played by the saver, leaves the rat race with the seventeenth round: its ledger, and the moment over it.
+  'moment-escape': { life: 'engineer', round: 17, stage: 'finance', seed: ESCAPED, then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
   // The nurse of screen-seed-5, played by the chaser, who lives as grandly as the money lasts: bankrupt with her fourth round.
   'moment-bankrupt': { life: 'nurse', round: 4, stage: 'finance', seed: BANKRUPT, player: 'chaser', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
   // The engineer of screen-seed-10 (hud-crisis's world): the crash opens with the fifth round, at its news.
@@ -376,7 +376,7 @@ type Lived = { life: string; seed: string; player: string };
  * Three lives, each of the lives to begin with, played to their ends one after another, each holding a best: the nurse of screen-seed-5 played by
  * the chaser (moment-bankrupt's), who buys the grandest things the money allows and goes bankrupt in her fourth round, the most status; the civil
  * servant of screen-seed-3 played by the landlord, who buys homes to let, the greatest net worth; the engineer of screen-seed-335 played by the
- * saver (moment-escape's), out of the rat race at fifty, the best score.
+ * saver (moment-escape's), out of the rat race at fifty-four, the best score.
  */
 const THREE_LIVES: readonly Lived[] = [
   { life: 'nurse', seed: BANKRUPT, player: 'chaser' },

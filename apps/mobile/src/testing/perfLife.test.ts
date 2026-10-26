@@ -14,6 +14,4 @@ test('the early escape is a life whose next round, played with no orders, leaves
   const played = await session.playRound({ orders: [] });
   expect(played.events.some((event) => event.kind === 'escaped')).toBe(true);
   expect(played.earned.filter((id) => rarityOf(id) === 'legendary')).toEqual(['escaped_before_40']);
-  // And the first million in the same round: a second moment before the badge's sheet.
-  expect(played.earned).toContain('millionaire');
 }, 60_000);

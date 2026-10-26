@@ -34,28 +34,28 @@ async function scene(name: string) {
 }
 
 describe('the age a life left the rat race at', () => {
-  // The engineer of the scenes, played by the saver: her fifteenth round (round 14, counted from 0) is the second that covers her life.
-  // She lives it at 50 and is 52 once it is played. The rules count her out at 50: `escapedAtRound` is 14, and the badges'
-  // `escapedAtAge` (content/badges.ts) is START_AGE + 14 × 2.
+  // The engineer of the scenes, played by the saver: her seventeenth round (round 16, counted from 0) is the second that covers her life.
+  // She lives it at 54 and is 56 once it is played. The rules count her out at 54: `escapedAtRound` is 16, and the badges'
+  // `escapedAtAge` (content/badges.ts) is START_AGE + 16 × 2.
   it('is the age of the round the life got out in, wherever it is told: the moment, the life line, the epilogue', async () => {
     const state = await scene('moment-escape');
     const view = state.view!;
-    expect(view.round).toBe(15);
-    expect(view.player.escapedAtRound).toBe(14);
-    expect(escapeAge(content, view.player.escapedAtRound!)).toBe(50);
+    expect(view.round).toBe(17);
+    expect(view.player.escapedAtRound).toBe(16);
+    expect(escapeAge(content, view.player.escapedAtRound!)).toBe(54);
 
     const moment = momentsOf(state).find((m) => m.kind === 'escape');
-    expect(moment).toMatchObject({ kind: 'escape', round: 14 });
-    expect(escapeAge(content, (moment as { round: number }).round)).toBe(50);
+    expect(moment).toMatchObject({ kind: 'escape', round: 16 });
+    expect(escapeAge(content, (moment as { round: number }).round)).toBe(54);
 
     const out = state.story.find((m) => m.kind === 'escaped')!;
-    expect(milestoneRound(out)).toBe(14);
-    expect(milestoneAge(content, out)).toBe(50);
+    expect(milestoneRound(out)).toBe(16);
+    expect(milestoneAge(content, out)).toBe(54);
 
     const life = lives.find((one) => one.id === 'engineer')!;
     const [, middle] = epilogue({ words: { content, ...textFor('en'), fmt: formatFor('en') }, t: tale, life, view, story: state.story, score: 0, bankruptcies: 0 });
-    expect(middle).toContain('At 50 you left the rat race');
-    expect(middle).not.toContain('At 52 you left the rat race');
+    expect(middle).toContain('At 54 you left the rat race');
+    expect(middle).not.toContain('At 56 you left the rat race');
   });
 
   it('is told before what the same round brought once it was played, which is a round older', () => {

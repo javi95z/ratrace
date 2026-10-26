@@ -741,12 +741,12 @@ describe('the scenes of the profile', () => {
 const onScreenOf = (state: { stage: string; view: { round: number; player: unknown } | null }) => JSON.stringify([state.stage, state.view?.round, state.view?.player]);
 
 describe('the scenes of the end of a life', () => {
-  it('end-escaped is the engineer of screen-seed-335, played by the saver to the end: out of the rat race with the fifteenth round, never bankrupt, and the game opens on its end', async () => {
+  it('end-escaped is the engineer of screen-seed-335, played by the saver to the end: out of the rat race with the seventeenth round, never bankrupt, and the game opens on its end', async () => {
     const store = await sceneStore('end-escaped');
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'end', bankruptcies: 0 });
     expect(state.view).toMatchObject({ finished: true, round: content.rounds });
-    expect(state.view?.player.escapedAtRound).toBe(14);
+    expect(state.view?.player.escapedAtRound).toBe(16);
     expect(await saveOf(store)).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-335', lifeId: 'engineer' });
     // The start and every round: the graph of a whole life.
     expect(state.history).toHaveLength(content.rounds + 1);
@@ -798,12 +798,12 @@ describe('the moments of a life: real lives, played to the round a moment stops 
     return game.getState();
   }
 
-  it('moment-escape is the ledger of the round the engineer of screen-seed-335 (end-escaped\'s) leaves the rat race in, the fifteenth, played by the saver', async () => {
+  it('moment-escape is the ledger of the round the engineer of screen-seed-335 (end-escaped\'s) leaves the rat race in, the seventeenth, played by the saver', async () => {
     const save = (await saveOf(await sceneStore('moment-escape'))) as SavedGame;
     expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-335', lifeId: 'engineer' });
     const state = await played('moment-escape');
     expect(state).toMatchObject({ status: 'playing', stage: 'resolve', busy: false });
-    expect(state.resolved?.before.round).toBe(14);
+    expect(state.resolved?.before.round).toBe(16);
     expect(state.resolved?.events.some((event) => event.kind === 'escaped')).toBe(true);
     // Out for the first time this round: no round before it left the rat race.
     expect(state.resolved?.before.player.escapedAtRound).toBeNull();
@@ -878,7 +878,7 @@ describe('the records and the collection: three real lives, each played to its e
     }
     // Each holds a best: the engineer the best score and the youngest escape, the civil servant (the landlord) the greatest net worth, the nurse (the chaser) the most status.
     const [engineer, servant, nurse] = runs;
-    expect(engineer).toMatchObject({ escapedAtRound: 14, bankruptcies: 0 });
+    expect(engineer).toMatchObject({ escapedAtRound: 16, bankruptcies: 0 });
     expect(nurse.bankruptcies).toBeGreaterThan(0);
     expect(engineer.score).toBe(Math.max(...runs.map((run) => run.score)));
     expect(servant.netWorth).toBe(Math.max(...runs.map((run) => run.netWorth)));

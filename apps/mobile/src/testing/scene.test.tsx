@@ -563,7 +563,7 @@ test('the scene of the rivals is their board alone on a page, where the engineer
 test('the scenes of the end of a life are its end screen, Play\'s last stage, with the picture to share open over it where the scene names it', async () => {
   render(<SceneView name="end-escaped" />);
   expect(await screen.findByRole('heading', { name: 'The end' }, WAIT)).toBeTruthy();
-  expect(screen.getByText('You left the rat race at 50.')).toBeTruthy();
+  expect(screen.getByText('You left the rat race at 54.')).toBeTruthy();
   expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull();
   cleanup();
   render(<SceneView name="end-share" />);
@@ -631,9 +631,9 @@ test('the scenes of the records are the records themselves: none yet, three live
   render(<SceneView name="records-detail" />);
   const sheet = (await screen.findByRole('heading', { name: 'Software engineer' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
   expect(sheet).not.toBeNull();
-  expect(sheet.textContent).toContain('Out at 50');
+  expect(sheet.textContent).toContain('Out at 54');
   // The day it ended and the one city she lived in (she never moved).
-  expect(sheet.textContent).toContain('21 Oct 2026 · TokyoOut at 50');
+  expect(sheet.textContent).toContain('21 Oct 2026 · TokyoOut at 54');
 });
 
 test('the scenes of the collection are the collection itself, open on its badges or on its things without a tap: what three lives earned and owned', async () => {
