@@ -1797,6 +1797,28 @@
       "boom": "{who} estrena coche y lo sube a todas las redes",
       "bust": "{who} lo pierde casi todo en bolsa y cripto"
     },
+    "asides": {
+      "copyCar": "{who} ve tu coche nuevo y se compra uno mejor: {thing}|{who} estrena coche justo después que tú, por pura casualidad: {thing}|{who} aparca a tu lado y no dice nada. No hace falta: {thing}",
+      "copyWatch": "{who} se pasa la cena mirando la hora en su reloj nuevo: {thing}|{who} ha visto tu reloj y ha subido la apuesta: {thing}|{who} se remanga en cada foto para que se vea: {thing}",
+      "copyFashion": "{who} copia tu estilo, pero un escalón más arriba: {thing}|{who} aparece en la comida familiar con algo mejor que lo tuyo: {thing}|{who} sube a Instagram su última compra: {thing}",
+      "copyArt": "{who} cuelga en el salón algo más caro que lo tuyo: {thing}|{who} se hace coleccionista justo ahora: {thing}|{who} te invita a ver su nueva adquisición: {thing}",
+      "copyTravel": "{who} se entera de tu viaje y se va a uno mejor: {thing}|{who} te llena el móvil de fotos de sus vacaciones: {thing}|{who} no para de hablar de su viaje: {thing}",
+      "copyCharter": "{who} te manda fotos desde el agua: {thing}|{who} hace lo mismo que tú, pero a lo grande: {thing}|{who} ya no veranea como antes: {thing}",
+      "copyHome": "{who} se muda a algo más grande que lo tuyo: {thing}|{who} firma hipoteca una semana después que tú: {thing}|{who} te invita a la inauguración de su casa nueva: {thing}",
+      "soldCopy": "{who} vende a escondidas lo que se compró para no ser menos que tú: {thing}|{who} vende su capricho para pagar la tarjeta: {thing}|{who} ya no presume tanto. Se vende: {thing}",
+      "luckInheritance": "{who} hereda de un tío de América y vuelve a la carrera|{who} cobra una herencia que nadie esperaba y ya te pisa los talones|{who} se queda con el piso de la abuela, y con todo lo demás, y se te acerca",
+      "luckStartup": "{who} vende su startup a una multinacional y vuelve a la carrera|{who} vende por fin la app que nadie entendía y ya te pisa los talones|{who} vende su empresa a un fondo americano y se te acerca",
+      "luckCoin": "{who} compró una cripto de broma y ahora vale una fortuna: vuelve a la carrera|{who} apuesta por una moneda con un perro en el logo y se te acerca|{who} cobra su apuesta en cripto y ya te pisa los talones"
+    },
+    "needles": {
+      "needleTopic": "En la cena",
+      "needleBankrupt": "{who} pregunta en el grupo de la familia si necesitas algo|{who} te ofrece su sofá, por si acaso|{who} dice que una bancarrota le pasa a cualquiera. Sonriendo",
+      "needleJail": "{who} pregunta si en la cárcel hay wifi|{who} te escribe una carta. Es un folleto de su gimnasio|{who} le cuenta a todo el mundo que estás de retiro espiritual",
+      "needleTrial": "{who} pregunta si el abogado era caro|{who} ha visto tu caso en las noticias y lo comparte|{who} te recomienda un buen asesor fiscal. El suyo, claro",
+      "needleDrop": "{who} pregunta qué tal te va en bolsa. Ya lo sabe|{who} te manda un artículo: diez errores del inversor novato|{who} dice que el dinero no da la felicidad, de todas formas",
+      "needleBurnout": "{who} te recomienda una app de meditación|{who} dice que tienes mala cara|{who} comenta que en su trabajo hacen semana de cuatro días",
+      "needleRenting": "{who} pregunta si sigues de alquiler|{who} dice que alquilar es tirar el dinero. Otra vez|{who} te enseña fotos de su cocina nueva y te pregunta por tu casero"
+    },
     "title": "Tus rivales",
     "you": "Tú",
     "about": "Gente de tu edad que vive a la par que tú, en la misma economía, ordenada por puntuación.",

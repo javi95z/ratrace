@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import { useGame, useT, useWords } from './context';
-import { RIVALS, rivalsOf } from '@ratrace/core/game/rivals';
+import { RIVALS, rivalsOf, showsOf } from '@ratrace/core/game/rivals';
 import type { Rival } from '@ratrace/core/game/rivals';
 
 /** How many names there are of each sex, in every language. */
@@ -26,13 +26,15 @@ export function useRivals(): { rivals: Rival[]; who(rival: Rival): string } | nu
   const { content } = useWords();
   const view = useGame((s) => s.view);
   const history = useGame((s) => s.history);
+  const story = useGame((s) => s.story);
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const rivals = useMemo(() => {
     if (!view || history.length === 0) return null;
     // The first page of the life's newspaper is its own: the rivals are the same each time it is opened, and different in the next life.
     const key = `${lifeId}:${JSON.stringify(view.timeline[0]?.news ?? [])}`;
-    return rivalsOf(content, view.timeline, history, view.player.life.homeCityId, key, RIVAL_NAMES);
-  }, [content, view, history, lifeId]);
+    // What the player bought that shows, which the one it suits keeps up with.
+    return rivalsOf(content, view.timeline, history, view.player.life.homeCityId, key, RIVAL_NAMES, showsOf(content, view, story));
+  }, [content, view, history, story, lifeId]);
   if (rivals === null) return null;
   const who = (rival: Rival) => {
     const woman = isWoman(rival, lifeId);

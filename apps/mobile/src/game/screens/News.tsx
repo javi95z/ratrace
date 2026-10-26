@@ -1,8 +1,9 @@
-import { headlineArt } from '@ratrace/content';
+import { headlineArt, homeName, itemArt, propertyArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt, headlineText, paperOf } from '@ratrace/core/game/present';
 import { memberName } from '@ratrace/core/game/room';
-import { rivalNews } from '@ratrace/core/game/rivals';
+import { rivalAside, rivalNeedle, rivalNews } from '@ratrace/core/game/rivals';
+import type { CatchUp, Fall, RivalAside } from '@ratrace/core/game/rivals';
 import type { Headline } from '@ratrace/engine';
 import { useMemo, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
@@ -109,6 +110,50 @@ export function storyText(t: (key: string, values?: Record<string, string | numb
   }
 }
 
+/** What each rival who keeps up says, by the ladder of what they bought (a home has none): the keys are written out, one by one. */
+const COPY: Record<string, string> = {
+  car: 'copyCar',
+  watch: 'copyWatch',
+  fashion: 'copyFashion',
+  art: 'copyArt',
+  travel: 'copyTravel',
+  charter: 'copyCharter',
+  home: 'copyHome',
+};
+
+/** How luck brought a rival back within reach, in words, and the picture beside it. */
+const LUCK: Record<CatchUp, { key: string; art: string }> = {
+  inheritance: { key: 'luckInheritance', art: 'icon.gift' },
+  startup: { key: 'luckStartup', art: 'icon.biz_app' },
+  coin: { key: 'luckCoin', art: 'logo.dogecoin' },
+};
+
+/** What a rival says of each fall of the player's. */
+const NEEDLE: Record<Fall, string> = {
+  bankrupt: 'needleBankrupt',
+  jail: 'needleJail',
+  trial: 'needleTrial',
+  drop: 'needleDrop',
+  burnout: 'needleBurnout',
+  renting: 'needleRenting',
+};
+
+/** One of the ways a sentence is written, its ways parted by `|`, picked by `n`: the same each time the paper is read. */
+const oneWay = (sentence: string, n: number): string => {
+  const ways = sentence.split('|');
+  return ways[n % ways.length];
+};
+
+/** What a rival did because of the player, in the words of the paper, and the picture beside it. */
+function asideOf(t: (key: string, values?: Record<string, string>) => string, words: ReturnType<typeof useWords>, who: string, aside: RivalAside, cityId: string): { text: string; art: string } {
+  if (aside.kind === 'catchUp') return { text: oneWay(t(`asides.${LUCK[aside.how].key}`, { who }), aside.n), art: LUCK[aside.how].art };
+  if (aside.kind === 'sold') return { text: oneWay(t('asides.soldCopy', { who, thing: words.names.items[aside.itemId] ?? '' }), aside.n), art: itemArt(aside.itemId) };
+  const { copy } = aside;
+  if ('typeId' in copy) return { text: oneWay(t(`asides.${COPY.home}`, { who, thing: homeName(words.text, copy.typeId, cityId) }), aside.n), art: propertyArt(copy.typeId, cityId) };
+  const ladder = words.content.items.find((item) => item.id === copy.itemId)?.ladder ?? 'car';
+  return { text: oneWay(t(`asides.${COPY[ladder] ?? COPY.car}`, { who, thing: words.names.items[copy.itemId] ?? '' }), aside.n), art: itemArt(copy.itemId) };
+}
+
 export { dashesOf } from '../../ui/DashedRule';
 
 /** A clipping of the paper: the block with its picture, what it is about, and what it says, under a dashed rule unless it is the first. */
@@ -158,6 +203,7 @@ export function Headlines() {
   const { names, text, fmt } = words;
   const view = useGame((s) => s.view);
   const history = useGame((s) => s.history);
+  const lived = useGame((s) => s.story);
   const people = useRivals();
   const r = useT('rivals');
   const room = useT('room');
@@ -168,8 +214,14 @@ export function Headlines() {
   const world = view.timeline[view.round];
   // In a game with friends the paper tells of the players themselves; alone, of the people the player grew up with, now and then.
   const story = players ? roomStory(players) : null;
-  const gossip = players === null && people ? rivalNews(people.rivals, history, view.round) : null;
-  const told = story ? storyText(room, story, view.round) : gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
+  const alone = players === null ? people : null;
+  // What a rival did because of the player goes first: luck that brought them back within reach, a thing bought to keep up, one sold to pay for it.
+  const aside = alone ? rivalAside(alone.rivals, view.round) : null;
+  const kept = aside && alone ? asideOf(r, words, alone.who(aside.rival), aside, view.player.life.homeCityId) : null;
+  const gossip = alone && !aside ? rivalNews(alone.rivals, history, view.round) : null;
+  const told = story ? storyText(room, story, view.round) : kept ? kept.text : gossip && alone ? r(`stories.${gossip.story}`, { who: alone.who(gossip.rival) }) : null;
+  // And now and then, a line from one of them about how the player has fallen.
+  const needle = alone ? rivalNeedle(words.content, alone.rivals, view, history, lived) : null;
 
   return (
     <View style={{ gap: 12 }}>
@@ -210,9 +262,14 @@ export function Headlines() {
                   <Clipping
                     first={false}
                     topic={story ? room('paperTopic') : r('topic')}
-                    picture={story ? <RatAvatar look={ratLookOf(story.who.avatar, story.who.userId)} size="md" /> : <Picture art="icon.percentile" bg="gold-200" />}
+                    picture={story ? <RatAvatar look={ratLookOf(story.who.avatar, story.who.userId)} size="md" /> : <Picture art={kept?.art ?? 'icon.percentile'} bg="gold-200" />}
                   >
                     {told}
+                  </Clipping>
+                ) : null}
+                {needle && alone ? (
+                  <Clipping first={false} topic={r('needles.needleTopic')} picture={<Picture art="icon.room_tease" bg="wine-300" />}>
+                    {oneWay(r(`needles.${NEEDLE[needle.fall]}`, { who: alone.who(needle.rival) }), needle.n)}
                   </Clipping>
                 ) : null}
               </View>
