@@ -108,6 +108,17 @@ describe('the settings of a life in progress', () => {
     await waitFor(async () => expect((await services.store.loadProfile()).guide.off).toBe(false));
   });
 
+  it('open How to play over themselves, with the guide on or off, and are there again once it is closed', async () => {
+    const { sheet } = await open();
+    fireEvent.click(within(sheet).getByRole('switch', { name: /Tips from the guide/ }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'How to play' }));
+    const reading = await waitFor(() => sheetTitled('How to play'));
+    expect(within(reading).getByRole('heading', { name: 'The words of the game' })).toBeTruthy();
+    fireEvent.click(within(reading).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'How to play' })).toBeNull());
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy();
+  });
+
   it('leave a press silent on the phone until its click is turned on, kept on the phone, and offered only with the sound on', async () => {
     const { sheet } = await open();
     const click = () => within(sheet).queryByRole('switch', { name: /^Click on every press/ });

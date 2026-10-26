@@ -241,29 +241,107 @@
   },
   "guide": {
     "title": "Guide",
-    "news": "Every round opens with the paper. Some headlines hint at the next two years, and not all of them come true; the rest are just the world talking. You can read it again later from the paper button at the top.",
-    "cards": "Life deals you a few cards every round. Each choice shows what it costs and what it brings before you pick, with the odds where there are dice. A choice cannot be taken back.",
-    "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
-    "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
-    "ratRace": "The bar at the top is the whole game: your passive income against what your life costs. Cover the cost two rounds running and you are out of the rat race.",
-    "invest": "Cash earns nothing. Savings pay a little and are safe. Funds, bonds and shares are open from the start; gold and crypto need more Finance, which a finance course (Lifestyle tab) or years of investing bring.",
-    "focus": "The Lifestyle tab holds your focus: study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
-    "flow": "Flow, at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
     "gotIt": "Got it",
     "skip": "Skip the guide",
+    "firstTitle": "First time",
+    "news": "Every round opens with the paper: some headlines hint at the next two years, and not all of them come true. You can read it again from the paper button at the top.",
+    "cards": "Life deals you a few cards every round. Each choice shows what it costs and what it brings before you pick, with the odds where there are dice, and it cannot be taken back.",
+    "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you the exact [cash](cash) you will have afterwards. Start in Portfolio.",
+    "ledger": "Two years went by: this is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
+    "ratRace": "The bar at the top is the whole game: your [passive income](passive) against what your life costs. Cover the cost two rounds running and you are out of the rat race.",
+    "goal": "A life is {rounds} rounds of two years, from {from} to {to}. Your score adds your [net worth](netWorth), which gives fewer points per dollar the more you have, to your average [status](status) over every round, so a weak round weighs. Ending out of the rat race multiplies it, the more the sooner you got out.",
+    "invest": "Cash earns nothing; [savings](savings) pay a little and are safe. [Funds](index), [bonds](bond) and shares are open from the start; gold and crypto need more Finance, which a course (Lifestyle tab) or years of investing bring.",
+    "focus": "The Lifestyle tab holds your [focus](focus): study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
+    "status": "Your [status](status) comes from your job, your home, your city, how you live (Lifestyle tab) and what you buy (Shop); the score counts its average over the whole life. Living better raises your living costs, and many things cost upkeep every year and lose value.",
+    "flow": "[Flow](flow), at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
     "debt": "Debt and Taxes are open now. A loan says what it costs each round before you take it; Taxes shows this round to the dollar, and what you could hide from the taxman, at a risk.",
     "rivals": "\"Your people\" in the paper are three people your age living beside you: a classmate, a cousin and an ex. Your profile shows where you stand among them, and the end of your life ranks you.",
-    "property": "Homes are open now. Buying one costs a deposit and a tax, and saves the rent; a home with a spare room can take a lodger.",
-    "business": "Businesses are open now. Starting one takes a point of focus and money; run it yourself or pay a manager. If it pays most of your salary for two rounds, you can quit for it.",
-    "move": "Moving to another city is in Life, under where you live. Each city pays and costs differently; going back home has its perks.",
-    "workMode": "In Life, How you work: half the day frees focus for less pay; working from home comes a few rungs up, in the trades that allow it.",
+    "inflation": "With [inflation](inflation), prices and pay tend to rise every year, but your cash does not: each round it buys less. Your score counts net worth in the money of when you were {from}, so what does not grow shrinks.",
+    "property": "Homes are open now: buying one costs a [deposit](downPayment) and a tax, and saves the rent. A home with a spare room can take a lodger.",
+    "business": "Businesses are open now: starting one takes a point of focus and money, and you run it or pay a manager. If it pays at least {share}% of your salary two rounds running, you can quit for it.",
+    "move": "Moving to another city is in Lifestyle, under Your city. Each city pays and costs differently, and going back home has its perks.",
+    "workMode": "In Lifestyle, How you work: half the day frees focus for less pay; working from home comes a few rungs up, in the trades that allow it.",
     "taxes": "In Taxes you can hide part of your pay, open a company abroad, or keep crypto gains quiet. It saves money now and builds suspicion; an inspection takes it back with a fine.",
-    "firstTitle": "First time",
-    "firstCrisis": "Your first crisis. Prices fall and some lose their jobs. Whoever has cash and does not sell in a panic usually comes out ahead: what is cheap today tends to recover.",
-    "firstCard": "You owe money on the credit card, at {rate} a year: the dearest debt in the game. Pay it off before investing, because no investment earns that much.",
-    "firstMargin": "You bought with the broker's money: you win and lose faster. If the asset falls far enough, the broker sells it all without asking. Keep an eye on the gauge in Debt.",
-    "firstMortgage": "You have a mortgage now. Fixed: you pay the same whatever happens. Variable: it follows rates, cheaper when they fall and painful when they rise. You can switch it in Debt.",
-    "firstHalfway": "Your passive income already covers half your outgoings. Once it covers all of them two rounds running, you are out of the rat race."
+    "firstCrisis": "Your first crisis: prices fall and some lose their jobs. Whoever has cash and does not sell in a panic usually comes out ahead, because what is cheap today tends to recover.",
+    "firstCard": "You owe money on the [credit card](creditCard), at {rate} a year: the dearest debt in the game. Pay it off before investing, because no investment earns that much.",
+    "firstMargin": "You bought on [margin](margin): you win and lose faster. If the asset falls far enough, the broker sells it all without asking; keep an eye on the gauge in Debt.",
+    "firstMortgage": "You have a [mortgage](mortgage) now. Fixed: you pay the same whatever happens. Variable: it follows rates, cheaper when they fall and painful when they rise. You can switch it in Debt.",
+    "firstHalfway": "Your [passive income](passive) already covers half your outgoings. Once it covers all of them two rounds running, you are out of the rat race.",
+    "firstOvertime": "You worked overtime last round. Two rounds running cost health, and from the third there is a {chance}% chance of burning out: more health and a point of focus less the round after. Resting that round breaks the streak.",
+    "firstHiding": "You are hiding money from the taxman: each round suspicion grows, and with it the chance of an inspection. One takes what you hid, a {fine}% fine on top and status; if it is a lot, there is a trial, and prison means no pay and a rung lower.",
+    "firstShort": "These orders leave you short: what your savings do not cover goes on the [credit card](creditCard), at {rate}. If that debt grows past three years of your income while you owe more than you own, you go bankrupt: everything is sold at a discount, status is lost for good, and no loans for years.",
+    "whatIs": "What is \"{term}\"?",
+    "terms": {
+      "cash": {
+        "name": "Cash",
+        "text": "The money you have to hand. Your spending and buying come out of it; while it waits it earns nothing, and with inflation it buys less every year."
+      },
+      "netWorth": {
+        "name": "Net worth",
+        "text": "Everything you own less everything you owe: cash, savings, pension, investments, homes, businesses, and what your things would sell for."
+      },
+      "flow": {
+        "name": "Flow",
+        "text": "What comes in over a year less what goes out, before tax. Green, you have money to spare; red, you are eating into your cash."
+      },
+      "passive": {
+        "name": "Passive income",
+        "text": "What you earn without working: dividends and coupons, savings interest, rent and businesses. Once, after tax, it pays all your outgoings two rounds running, you are out of the rat race."
+      },
+      "status": {
+        "name": "Status",
+        "text": "Points for who you are and what you have: your job, your home, your city, how you live, your things, your contacts and what cards bring. The score counts its average over the whole life, not where it ends."
+      },
+      "focus": {
+        "name": "Focus",
+        "text": "Your spare time each round, in points. You spend it on study, overtime, a job hunt, learning, starting a business or moving, among other things."
+      },
+      "savings": {
+        "name": "Savings",
+        "text": "A safe account that pays a little interest, up and down with rates. If you are short of cash at the end of a round, it comes from here first."
+      },
+      "index": {
+        "name": "Index fund",
+        "text": "A fund that buys a little of every company in a market. It rises and falls with the whole market, without hanging on any one company."
+      },
+      "bond": {
+        "name": "Bond",
+        "text": "A loan to a government. It pays you interest every year, the coupon, which follows rates, and its price moves less than shares do."
+      },
+      "creditCard": {
+        "name": "Credit card",
+        "text": "It covers what is missing once cash and savings run out, at {rate} a year: the dearest debt. Cash to spare at the end of a round pays it down by itself."
+      },
+      "margin": {
+        "name": "Margin",
+        "text": "Buying with money the broker lends you, against what you buy. You win and lose faster, and if the price falls too far, the broker sells it all without asking."
+      },
+      "mortgage": {
+        "name": "Mortgage",
+        "text": "A loan to buy a home, paid back over many years. Fixed: you pay the same whatever happens. Variable: the payment follows rates, up or down."
+      },
+      "downPayment": {
+        "name": "Deposit",
+        "text": "The part of a home's price you pay yourself when you buy it; the rest can be a mortgage."
+      },
+      "inflation": {
+        "name": "Inflation",
+        "text": "How much prices rise each year, nearly always. Your pay and your costs rise with them, but cash does not. Your score counts net worth in the money of when you were {from}."
+      }
+    },
+    "howTo": {
+      "open": "How to play",
+      "openHint": "The goal, the rounds, the score, every tip and the words of the game.",
+      "goalTitle": "The goal",
+      "goal": "You live a life of {rounds} rounds of two years, from {from} to {to}, and aim to end it with the best score. Getting out of the rat race multiplies it: [passive income](passive) that pays all your outgoings.",
+      "roundTitle": "A round",
+      "round": "You read the paper, with hints of what is coming. You answer the cards life deals you. You decide what to do with your money, and nothing happens until you play the round. Then two years go by: you are paid, you pay, prices move and you see where it all went.",
+      "scoreTitle": "The score",
+      "score": "Your [net worth](netWorth), in the money of when you were {from}, makes points on a curve that flattens: going from $10,000 to $100,000 adds 100, and from 1 to 10 million, another 100. Your average [status](status) over every round is added, not where it ends: 40 for ten rounds and 10 for ten more make 25. If you end out of the rat race, the total is multiplied, the more the sooner you got out.",
+      "tipsTitle": "The tips",
+      "firstsTitle": "First times",
+      "termsTitle": "The words of the game"
+    }
   },
   "news": {
     "title": "News",
