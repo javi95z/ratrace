@@ -543,7 +543,7 @@ function HudFigures({ flush, open }: { flush: boolean; open?: HudOpen }) {
 }
 
 /**
- * The way out of the rat race, just under the figures, scrolling away with the page (the web's button under its sticky block): how far passive
+ * The way out of the rat race, just under the figures (on the phone stuck with them, Play's header): how far passive
  * income is from the year's outgoings, and a tap opens what it means.
  */
 function HudWayOut({ open }: { open?: HudOpen }) {
@@ -584,9 +584,8 @@ function HudWayOut({ open }: { open?: HudOpen }) {
  * leaves the skyline out and shrinks the portrait, to give the cards and the finance tabs room.
  *
  * On the phone it is three parts of a `StickyScreen`, as the web's page makes of it with `position: sticky`: `part="lead"` scrolls away
- * (the skyline, the portrait, who and where, the paper and the settings), `part="header"` sticks (the three figures alone), and
- * `part="wayOut"` is the bar of the way out, which the screen places just under the header, where the page scrolls (in the finances, the first
- * of what stands between the figures and their tabs). Each draws only what it shows, and holds its own sheets. The strip of a crisis that hangs
+ * (the skyline, the portrait, who and where, the paper and the settings), `part="header"` sticks (the three figures), and
+ * `part="wayOut"` is the bar of the way out, which the screen places just under the figures, in what sticks with them (Play's header). Each draws only what it shows, and holds its own sheets. The strip of a crisis that hangs
  * under it on the web (`CrisisBar compact`) is the screen's to place too, under the way out. `open` is what a scene shows open at the start;
  * each part opens what is its own. `flush` is the web's, for a column with margins of its own (the desk's profile, `PlayDesk.web.tsx`): no room
  * above the portrait's row or round the figures, which stand in that column's own gaps, nothing of them sticking.

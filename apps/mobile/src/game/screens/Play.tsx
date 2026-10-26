@@ -284,27 +284,33 @@ function Waiting({ children }: { children: string }) {
   );
 }
 
-/** Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page: only the figures stay stuck. */
-function CrisisStrip() {
+/**
+ * Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page under the figures and the way out,
+ * which stay stuck. Nothing at all with no crisis: no room is kept for it. `spaced` stands it 8 under what is over it (in the finances, the header).
+ */
+function CrisisStrip({ spaced = false }: { spaced?: boolean }) {
   const crisis = useGame((s) => (s.view ? (s.view.timeline[s.view.round]?.crisis ?? null) : null));
-  // Its place is there with no crisis too: the web's Hud keeps the strip's `mt-2` box, empty, so the stage stands 8 lower than it would without it.
-  // (The strip itself is not put in a box: its touch reaches a point past it, into the page's gap.)
-  return crisis ? <CrisisBar crisis={crisis} compact /> : <View />;
+  // (The strip itself is not put in a box but where it is spaced: its touch reaches a point past it, into the page's gap.)
+  if (!crisis) return null;
+  return spaced ? (
+    <View style={{ marginTop: 8 }}>
+      <CrisisBar crisis={crisis} compact />
+    </View>
+  ) : (
+    <CrisisBar crisis={crisis} compact />
+  );
 }
 
 /**
- * What stands between the Hud's figures and the finances' tabs, as the web's page has it: the way out of the rat race right under the figures, the
- * strip of a crisis 8 under that (its place kept with none, the web's empty `mt-2`), and the tip of the guide when one is due, 12 under that (the stage's `pt-3`). It scrolls up under the figures
- * as the page does, and the tabs follow it until they meet them (`StickyScreen`'s `between`). The tabs stand 12 under it (`subGap`: with a tip,
- * the tip's own `mb-3`; with none, the stage's `pt-3`), so the tip is given its 12 above it in place of the one below it, and with no tip the
- * two cancel out to nothing.
+ * What stands between the stuck header (the figures and the way out) and the finances' tabs: the strip of a crisis 8 under the header, in a room
+ * its bar 8 under that, and the tip of the guide when one is due, 12 under that. It scrolls up under the header as the page does, and the tabs
+ * follow it until they meet it (`StickyScreen`'s `between`). With none of them, the tabs stand right under the header, their strip's own room
+ * between them. The tip's own 12 under it is taken back (`marginBottom: -12`), the strip's room enough there.
  */
-function FinanceLeadIn({ wayOut, bar }: { wayOut: ReactNode; bar?: ReactNode }) {
+function FinanceLeadIn({ bar }: { bar?: ReactNode }) {
   return (
     <>
-      {wayOut}
-      <View style={{ height: 8 }} />
-      <CrisisStrip />
+      <CrisisStrip spaced />
       {/* In a room, its bar: 8 under the strip, as the web's stands under its Hud (`pt-2`). */}
       {bar ? <View style={{ marginTop: 8 }}>{bar}</View> : null}
       <View style={{ marginTop: 12, marginBottom: -12 }}>
@@ -328,7 +334,7 @@ export interface RoomSlots {
 /**
  * A life being played: the HUD, the stage of the round, and the next thing to do. In a room, `room` adds the room's bar, its wait and its order
  * (and the room says itself where to go: no life is never a way home). The HUD is the two parts of the page's `StickyScreen`:
- * the portrait's row scrolls away, the figures stick. Each part is made once for as long as the HUD is compact or not, so a change of
+ * the portrait's row scrolls away, the figures and the way out of the rat race under them stick. Each part is made once for as long as the HUD is compact or not, so a change of
  * stage draws neither again (the figures are drawn again by what they show). Android's Back goes home, and the life stays saved; a sheet
  * that is open takes Back first (its Modal does).
  */
@@ -424,16 +430,25 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   // The skyline opens and closes a round. In between, the room goes to the cards and the finances.
   const compact = stage !== 'news' && stage !== 'resolve';
   const lead = useMemo(() => <Hud part="lead" compact={compact} onProfile={openProfile} />, [compact, openProfile]);
-  const header = useMemo(() => <Hud part="header" compact={compact} />, [compact]);
-  // The way out of the rat race, just under the figures, scrolls away with the page: only the figures stick.
-  const wayOut = useMemo(() => <Hud part="wayOut" />, []);
+  // The way out of the rat race sticks with the figures, right under them, and a little room under it.
+  const header = useMemo(
+    () => (
+      <>
+        <Hud part="header" compact={compact} />
+        <View style={{ paddingBottom: 4 }}>
+          <Hud part="wayOut" />
+        </View>
+      </>
+    ),
+    [compact],
+  );
   // The stage is made once a stage, as the Hud's parts are: what Play itself draws again (the basket opened, the calendar turning) does not draw it again.
   const stageView = useMemo(() => <StageView stage={stage} />, [stage]);
-  // In the finances, their tabs stick under the figures, and what stands between the two (the strip of a crisis, the guide's tip) scrolls up under them.
+  // In the finances, their tabs stick under the header, and what stands between the two (the strip of a crisis, the guide's tip) scrolls up under it.
   const finances = stage === 'finance';
   const financeTabs = useMemo(() => <FinanceTabs />, []);
   const bar = room?.bar;
-  const financeLeadIn = useMemo(() => <FinanceLeadIn wayOut={wayOut} bar={bar} />, [wayOut, bar]);
+  const financeLeadIn = useMemo(() => <FinanceLeadIn bar={bar} />, [bar]);
   // Made once for as long as it is open or shut: a step of the round draws Play again, and not the profile, which draws what it shows itself.
   const profileSheet = useMemo(() => <ProfileSheet open={profileOpen} onClose={closeProfile} />, [profileOpen, closeProfile]);
   // The moments that stop the game (a crisis opening, the rat race left, a bankruptcy): a sheet of their own, over everything, made once, as the
@@ -499,7 +514,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           lead={lead}
           header={header}
           subHeader={finances ? financeTabs : undefined}
-          subGap={12}
+          subGap={0}
           between={finances ? financeLeadIn : undefined}
           bar={
             hasActions ? (
@@ -525,8 +540,6 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
             <SrOnly>{heading}</SrOnly>
           </View>
           <PerfDrawn name={`stage: ${stage}`} />
-          {/* Right under the figures (their block's own 8 below them, the web's `pb-2`), not the page's gap further: in the finances it stands over their tabs (`FinanceLeadIn`). */}
-          {finances ? null : <View style={{ marginTop: -8 }}>{wayOut}</View>}
           {compact && !finances ? <CrisisStrip /> : null}
           {/* In a room, its bar, 8 under the Hud (the web's `pt-2`); in the finances it stands over their tabs (`FinanceLeadIn`). */}
           {bar && !finances ? bar : null}
