@@ -907,7 +907,13 @@
       "review": "Проверить",
       "playAnyway": "Всё равно играть"
     },
-    "basketCount": "{count, plural, one {# план} few {# плана} many {# планов} other {# плана}}"
+    "basketCount": "{count, plural, one {# план} few {# плана} many {# планов} other {# плана}}",
+    "escapeAfter": {
+      "buy": "После покупки: пассивный доход {passive} / расходы {outgoings}",
+      "buyBack": "После покупки: пассивный доход {passive} / расходы {outgoings}. Снова в крысиных бегах.",
+      "change": "С этим изменением: пассивный доход {passive} / расходы {outgoings}",
+      "changeBack": "С этим изменением: пассивный доход {passive} / расходы {outgoings}. Снова в крысиных бегах."
+    }
   },
   "resolve": {
     "title": "Два года спустя",

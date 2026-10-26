@@ -907,7 +907,13 @@
       "review": "Review",
       "playAnyway": "Play anyway"
     },
-    "basketCount": "{count, plural, one {# order} other {# orders}}"
+    "basketCount": "{count, plural, one {# order} other {# orders}}",
+    "escapeAfter": {
+      "buy": "After buying: passive {passive} / outgoings {outgoings}",
+      "buyBack": "After buying: passive {passive} / outgoings {outgoings}. Back in the rat race.",
+      "change": "With this change: passive {passive} / outgoings {outgoings}",
+      "changeBack": "With this change: passive {passive} / outgoings {outgoings}. Back in the rat race."
+    }
   },
   "resolve": {
     "title": "Two years later",

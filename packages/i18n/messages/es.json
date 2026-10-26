@@ -907,7 +907,13 @@
       "review": "Revisar",
       "playAnyway": "Jugar igualmente"
     },
-    "basketCount": "{count, plural, one {# orden} other {# órdenes}}"
+    "basketCount": "{count, plural, one {# orden} other {# órdenes}}",
+    "escapeAfter": {
+      "buy": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}",
+      "buyBack": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda.",
+      "change": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}",
+      "changeBack": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda."
+    }
   },
   "resolve": {
     "title": "Dos años después",

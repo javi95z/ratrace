@@ -1,5 +1,7 @@
 import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, saleSignArt, START_AGE, USED_ART } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
+import { escapeShift } from '@ratrace/core/game/escapeShift';
+import type { EscapeShift } from '@ratrace/core/game/escapeShift';
 import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
 import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
 import { rulesSell } from '@ratrace/core/game/rules';
@@ -107,6 +109,25 @@ type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { ki
 /** A line of the figures' small print: 12, in its colour (the web's `div text-[12px]`). */
 function Small({ tone, children }: { tone: 'teal-300' | 'wine-300' | 'ink-300' | 'sky-300' | 'gold-200'; children: string }) {
   return <ReadText size={12} tone={tone}>{children}</ReadText>;
+}
+
+/**
+ * What a choice leaves of the way out, a year at a time: passive income after tax beside the outgoings, in the warning's colour when the
+ * choice is what sends a covered life back into the rat race (`escapeShift`, null for a life far from it). Said aloud as it changes. A
+ * purchase's is a note of its sheet, in the middle; a change of the way of life's, a line of its panel.
+ */
+function EscapeLine({ shift, buying }: { shift: EscapeShift | null; buying: boolean }) {
+  const t = useT('finance.escapeAfter');
+  const { fmt } = useWords();
+  if (shift === null) return null;
+  const key = buying ? (shift.back ? 'buyBack' : 'buy') : shift.back ? 'changeBack' : 'change';
+  return (
+    <View accessibilityLiveRegion="polite">
+      <ReadText size={buying ? 13 : 12} tone={shift.back ? 'wine-300' : 'ink-300'} style={buying ? { textAlign: 'center' } : undefined}>
+        {t(key, { passive: fmt.compact(shift.passiveAnnual), outgoings: fmt.compact(shift.outgoingsAnnual) })}
+      </ReadText>
+    </View>
+  );
 }
 
 function Portfolio() {
@@ -709,7 +730,8 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const t = useT('finance.property');
   const common = useT('common');
   const { content, text, fmt } = useWords();
-  const { shown } = useRound();
+  const { view, shown } = useRound();
+  const orders = useGame((s) => s.orders);
   const addOrder = useGame((s) => s.addOrder);
   const quote = useMemo(() => quoteProperty(content, shown, typeId), [content, shown, typeId]);
   const [mortgage, setMortgage] = useState<'fixed' | 'variable' | 'none'>(quote.canBorrow ? 'fixed' : 'none');
@@ -717,6 +739,9 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   // What nobody can live in is bought to let, and there is nothing to choose.
   const [rented, setRented] = useState(quote.letOnly);
   const cashDown = mortgage === 'none' ? quote.price : down;
+  const order = useMemo<Order>(() => ({ type: 'buyProperty', typeId, downPayment: mortgage === 'none' ? 0 : down, mortgage, rented }), [typeId, down, mortgage, rented]);
+  // What the home would leave of the way out, as it is set up now: its taxes and upkeep, the mortgage's payments, a rent if let.
+  const shift = useMemo(() => escapeShift(content, view, orders, [...orders, order]), [content, view, orders, order]);
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
   const { locale } = useSettings();
   const downLine = webLine([['pixel', 14, 14 * 1.1], ['pixel', 17, 17 * 1.1]], locale);
@@ -779,13 +804,14 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
         )}
 
         <PixelText size={17} tone="gold-500" style={{ textAlign: 'center' }}>{t('payNow', { amount: fmt.money(cashDown + quote.purchaseTax) })}</PixelText>
+        <EscapeLine shift={shift} buying />
         <Button
           variant="primary"
           wide
           // Something only a landlord can own is not for sale to anyone else: the line above says why.
           disabled={quote.letOnly && !quote.canRentOut}
           onPress={() => {
-            if (addOrder({ type: 'buyProperty', typeId, downPayment: mortgage === 'none' ? 0 : down, mortgage, rented })) onClose();
+            if (addOrder(order)) onClose();
           }}
         >
           {t('buy')}
@@ -1791,6 +1817,25 @@ function Lifestyle() {
   );
 }
 
+/**
+ * What a change of the way of life ordered leaves of the way out (`EscapeLine`): the basket with it against the basket without it. Nothing
+ * while it is not ordered. It reads the basket itself, so the memoised panel it stands in is not drawn again for every order.
+ */
+function LivingEscape({ type }: { type: 'setLifestyle' | 'setRentTier' }) {
+  const { content } = useWords();
+  const view = useGame((s) => s.view);
+  const orders = useGame((s) => s.orders);
+  const shift = useMemo(
+    () => (view && orders.some((order) => order.type === type) ? escapeShift(content, view, orders.filter((order) => order.type !== type), orders) : null),
+    [content, view, orders, type],
+  );
+  return shift ? (
+    <View style={{ marginTop: 8 }}>
+      <EscapeLine shift={shift} buying={false} />
+    </View>
+  ) : null;
+}
+
 /** How the job is done (the web's panel of a Segmented and its hint, `-mt-1` under it): drawn again only when one of these changes. */
 const WorkModes = memo(function WorkModes({ current, remote, before, hint }: { current: WorkMode; remote: boolean; before: WorkMode; hint: string }) {
   const t = useT('finance.lifestyle');
@@ -1826,6 +1871,7 @@ const Tiers = memo(function Tiers({ value, before, min, hints, status }: { value
       />
       <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{status}</ReadText>
       {min > 0 ? <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('tierFloor')}</ReadText> : null}
+      <LivingEscape type="setLifestyle" />
     </Panel>
   );
 }, alike);
@@ -1846,6 +1892,7 @@ const Rents = memo(function Rents({ value, before, hints, status }: { value: Ren
             options={([0, 1] as const).map((tier) => ({ value: tier, label: text.rentTiers[tier], icon: rentTierIcon[tier], hint: hints[tier] }))}
           />
           <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{status}</ReadText>
+          <LivingEscape type="setRentTier" />
         </>
       ) : (
         <ReadText size={14} tone="ink-300">{t('ownerNote')}</ReadText>
@@ -1983,12 +2030,20 @@ function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
   const t = useT('finance.shop');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
-  const { shown, p } = useRound();
-  const inBasket = useGame((s) => s.orders.some((order) => order.type === 'buyItem' && order.itemId === itemId));
+  const { view, shown, p } = useRound();
+  const orders = useGame((s) => s.orders);
+  const inBasket = orders.some((order) => order.type === 'buyItem' && order.itemId === itemId);
   const addOrder = useGame((s) => s.addOrder);
   const setOrder = useGame((s) => s.setOrder);
   const once = useOnce();
   const quote = useMemo(() => quoteItem(content, shown, itemId), [content, shown, itemId]);
+  // What buying it would leave of the way out, its upkeep counted: paid at once, and on instalments, whose payments count too.
+  const offered = quote.forSale && !inBasket && !p.life.items.some((owned) => owned.itemId === itemId);
+  const shift = useMemo(() => (offered ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId }]) : null), [content, view, orders, itemId, offered]);
+  const financedShift = useMemo(
+    () => (offered && quote.finance?.lock === null ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId, financed: true }]) : null),
+    [content, view, orders, itemId, offered, quote.finance],
+  );
   const item = content.items.find((x) => x.id === itemId);
   if (!item) return null;
   const plan = quote.finance;
@@ -2037,6 +2092,7 @@ function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
           )
         ) : quote.forSale ? (
           <>
+            <EscapeLine shift={shift} buying />
             <Button variant="primary" wide onPress={() => done(() => addOrder({ type: 'buyItem', itemId: item.id }))}>
               {t('buy', { amount: fmt.money(quote.price) })}
             </Button>
@@ -2050,6 +2106,8 @@ function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
                 ) : (
                   note(`${t('financeTerms', { loan: fmt.money(plan.loan), rate: fmt.rate(plan.rateBp), years: plan.termRounds * years, annual: fmt.money(plan.annual) })} ${t('financeKept')}`)
                 )}
+                {/* On instalments it is said only where it is worse than paying at once: where the payments are what send the life back. */}
+                {financedShift?.back && !shift?.back ? <EscapeLine shift={financedShift} buying /> : null}
               </View>
             ) : null}
             {quote.used ? <SecondHand used={quote.used} onBought={() => done(() => addOrder({ type: 'buyItem', itemId: item.id, used: true }))} /> : null}
