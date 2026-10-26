@@ -406,6 +406,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-46', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['stag_party', 'viral_bad', 'influencer_review', 'smartwatch', 'festival_rental', 'school_treasurer'].map((id) => `card.${id}`) },
   { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat', 'startup_advisor', 'upstairs_leak'].map((id) => `card.${id}`) },
   { file: 'cards/cards-48', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['transfer_asia', 'digital_nomad', 'offer_madrid', 'tokyo_lifetime', 'zurich_savings', 'london_flatshare'].map((id) => `card.${id}`) },
+  // Content 1.50: the troubles of a fortune. Stand-ins cut from older scenes until drawn.
+  { file: 'cards/cards-49', group: 'cards', kind: 'scenes', cols: 2, rows: 5, width: 288, height: 120, ids: ['lawsuit', 'scandal', 'tax_squad', 'partner_swindle', 'divorce', 'gala', 'uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid'].map((id) => `card.rich_${id}`) },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

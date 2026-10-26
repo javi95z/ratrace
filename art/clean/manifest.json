@@ -4516,6 +4516,56 @@
       "width": 288,
       "height": 120
     },
+    "card.rich_lawsuit": {
+      "file": "cards/card.rich_lawsuit.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_scandal": {
+      "file": "cards/card.rich_scandal.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_tax_squad": {
+      "file": "cards/card.rich_tax_squad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_partner_swindle": {
+      "file": "cards/card.rich_partner_swindle.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_divorce": {
+      "file": "cards/card.rich_divorce.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_gala": {
+      "file": "cards/card.rich_gala.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_uncle_castle": {
+      "file": "cards/card.rich_uncle_castle.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_yacht_rocks": {
+      "file": "cards/card.rich_yacht_rocks.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_threat": {
+      "file": "cards/card.rich_threat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_hostile_bid": {
+      "file": "cards/card.rich_hostile_bid.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

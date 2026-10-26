@@ -1149,4 +1149,54 @@ export const cards: Record<string, CardText> = {
     ['Buscar a otro compañero', 'Encuentras a alguien en una semana. Hasta friega los platos.', 'Nadie que no dé miedo. Pagas tú mientras tanto.'],
     'Mudarte a las afueras',
   ]),
+  // Los problemas de una fortuna.
+  rich_lawsuit: c('Una demanda', 'Un hombre al que no conoces dice que parte de tu fortuna es suya. Sus abogados tienen gabinete de prensa.', [
+    'Llegar a un acuerdo',
+    ['Pelearlo en los tribunales', 'El juez la desestima. Tus abogados te pasan la factura.', 'Pierdes, y la cifra sale en los periódicos.'],
+    'Negociarlo tú en persona',
+    ['Defenderte tú en el juicio', 'Ganas, y la toga te sienta bien.', 'El juez no se deja impresionar. El cliente tampoco.'],
+  ]),
+  rich_scandal: c('Una foto de la fiesta equivocada', 'Una foto tuya de hace años, con quien no debías, está hoy en todas partes.', [
+    'Aguantar el chaparrón',
+    ['Contratar una agencia de comunicación', 'A la semana, nadie se acuerda.', 'El desmentido de la agencia es más famoso que la foto.'],
+    ['Pedir perdón en horario de máxima audiencia', 'Lágrimas, un perro, una causa. Caes mejor que antes.', 'Sonó ensayado. El vídeo es un meme.'],
+  ]),
+  rich_tax_squad: c('La unidad de grandes patrimonios', 'Hacienda tiene ahora un equipo para gente como tú. Quiere verlo todo, desde hace años.', [
+    'Abrir todos los libros',
+    ['Contratar al gran despacho de asesores', 'Lo único que encuentran son sus honorarios.', 'Discuten bien. Los inspectores excavan más.'],
+    ['Pelearlo en los tribunales', 'El caso cae por un defecto de forma.', 'Pierdes, y ahora te vigilan.'],
+  ]),
+  rich_partner_swindle: c('Tu socio cobra dos veces', 'Alguien de la empresa te insinúa que tu socio lleva años cobrándose el sueldo dos veces.', [
+    ['Confiar en él', 'Eran rumores. Te trae una tarta.', 'Era verdad. Medio negocio está ya a su nombre.'],
+    ['Llamar a los auditores', 'Las cuentas están limpias. Los auditores no son baratos.', 'Lo pillas a tiempo, y aun así duele.'],
+    ['Revisar las cuentas tú en persona', 'Todo cuadra. Duermes a pierna suelta.', 'Lo encuentras en la página cuarenta. Falta menos de lo que podría.'],
+  ]),
+  rich_divorce: c('Un divorcio de portada', 'Tu matrimonio se ha acabado, y con tu dinero, es noticia.', [
+    'Llegar a un acuerdo discreto',
+    ['Pelearlo en los tribunales', 'Tus abogados se ganan el sueldo. Conservas casi todo.', 'Cada vista en portada, y la mitad de todo perdida.'],
+    ['Intentarlo una última vez', 'Un viaje largo y mucho hablar. Seguís juntos.', 'Solo ha encarecido el final.'],
+  ]),
+  rich_gala: c('La gala benéfica', 'La silla en la gala es gratis. Lo que prometes en la mesa se lee en voz alta.', [
+    'Rechazar la invitación',
+    'Prometer algo generoso',
+    'Pagar un ala del hospital',
+  ]),
+  rich_uncle_castle: c('El castillo del tío abuelo', 'Un tío abuelo al que no conociste te deja un castillo. Y, dice el notario, lo que debiera.', [
+    'Renunciar a la herencia',
+    ['Aceptarla y venderlo todo', 'Lo compra una cadena hotelera. Las deudas eran pocas.', 'Las deudas no eran pocas. La factura tampoco.'],
+    ['Quedarte el castillo', 'Un título, una torre y un tejado con goteras.', 'Llegan juntos el tejado y los acreedores.'],
+  ]),
+  rich_yacht_rocks: c('El barco en las rocas', 'El patrón sacó tu barco para una fiesta suya y lo dejó en las rocas. Con invitados a bordo.', [
+    'Pagar a todos sin ruido',
+    ['Dejar que lo peleen los abogados', 'El patrón carga con la culpa. Con razón.', 'Los invitados ganan, y las fotos del naufragio circulan.'],
+  ]),
+  rich_threat: c('Una carta sin firma', 'Sabe dónde vives y a qué colegio van tus hijos. Quiere dinero.', [
+    ['No hacer caso', 'No pasa nada. Era un adolescente aburrido.', 'Alguien entra en casa. La policía lo siente mucho.'],
+    'Contratar escoltas',
+  ]),
+  rich_hostile_bid: c('Una oferta por tu negocio', 'Un rival diez veces mayor quiere tu negocio, y avisa de que puede ponértelo difícil si dices que no.', [
+    ['Rechazarla', 'Hacen ruido, y luego se cansan.', 'Abren al lado y se llevan a tu mejor gente.'],
+    'Vender a su precio',
+    'Plantarles cara',
+  ]),
 };

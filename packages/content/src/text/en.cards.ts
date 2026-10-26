@@ -1149,4 +1149,54 @@ export const cards: Record<string, CardText> = {
     ['Find a new flatmate', 'You find someone in a week. They even do the washing up.', 'Nobody who is not alarming. You pay meanwhile.'],
     'Move out to the suburbs',
   ]),
+  // The troubles of a fortune.
+  rich_lawsuit: c('A lawsuit', 'A man you have never met says part of your fortune is his. His lawyers have a press office.', [
+    'Settle out of court',
+    ['Fight it in court', 'The judge throws it out. Your lawyers send their bill.', 'You lose, and the papers print the figure.'],
+    'Negotiate it down yourself',
+    ['Take the case yourself', 'You win, and in the robes it suits you.', 'The judge was not impressed. Neither was the client.'],
+  ]),
+  rich_scandal: c('A photo from the wrong party', 'A picture of you with the wrong people, from years ago, is everywhere this morning.', [
+    'Ride it out',
+    ['Hire a PR firm', 'A week later, nobody remembers.', 'The firm\'s denial is more famous than the photo.'],
+    ['Apologise on prime time', 'Tears, a dog, a cause. People like you more than before.', 'It sounded rehearsed. The clip of it is a meme.'],
+  ]),
+  rich_tax_squad: c('The unit for large fortunes', 'The tax office has a team for people like you now. They would like to see everything, going back years.', [
+    'Open every book',
+    ['Hire the big firm of tax advisers', 'Their fees are the only thing found.', 'They argue well. The inspectors dig deeper.'],
+    ['Fight them in court', 'The case falls on a technicality.', 'You lose, and now they watch you.'],
+  ]),
+  rich_partner_swindle: c('Your partner, twice paid', 'Someone at the business hints that your partner has been paying himself twice for years.', [
+    ['Trust him', 'It was gossip. He brings you a cake.', 'It was true. Half the business is in his name now.'],
+    ['Call in the auditors', 'The books are clean. The auditors are not cheap.', 'Caught early, and it still hurts.'],
+    ['Go through the books yourself', 'Every number adds up. You sleep well.', 'You find it on page forty. Less gone than it could be.'],
+  ]),
+  rich_divorce: c('A divorce for the papers', 'Your marriage is over, and with your money, it is news.', [
+    'Settle quietly',
+    ['Fight it in court', 'Your lawyers earn their fee. You keep most of it.', 'Every hearing on the front page, and half of everything gone.'],
+    ['Try one last time', 'A long trip and a lot of talking. You stay together.', 'It only made the ending more expensive.'],
+  ]),
+  rich_gala: c('The charity gala', 'A seat at the gala costs nothing. What you pledge at the table is read out loud.', [
+    'Decline the invitation',
+    'Pledge something generous',
+    'Fund a hospital wing',
+  ]),
+  rich_uncle_castle: c('A great-uncle\'s castle', 'A great-uncle you never knew leaves you a castle. And, the notary says, whatever he owed.', [
+    'Renounce the inheritance',
+    ['Accept it and sell it all', 'A hotel chain buys it. The debts were small.', 'The debts were not small. Neither is the bill.'],
+    ['Keep the castle', 'A title, a tower and a roof that leaks.', 'The roof, and then the creditors, arrive together.'],
+  ]),
+  rich_yacht_rocks: c('The boat on the rocks', 'The skipper took your boat out for a party of his own and left it on the rocks. With guests aboard.', [
+    'Pay everyone off quietly',
+    ['Let the lawyers fight it', 'The skipper takes the blame. Rightly.', 'The guests win, and the photos of the wreck go round.'],
+  ]),
+  rich_threat: c('A letter with no name', 'It knows where you live, and where the children go to school. It wants money.', [
+    ['Ignore it', 'Nothing happens. It was a bored teenager.', 'Someone gets into the house. The police are very sorry.'],
+    'Hire bodyguards',
+  ]),
+  rich_hostile_bid: c('A bid for your business', 'A rival ten times your size wants your business, and says it can make things hard if you say no.', [
+    ['Turn it down', 'They make noise, then they lose interest.', 'They open next door, and take your best people.'],
+    'Sell at their price',
+    'Fight them off',
+  ]),
 };

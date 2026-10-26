@@ -1679,6 +1679,56 @@
     "w": 288,
     "h": 120
   },
+  "card.rich_divorce": {
+    "src": "cards/card.rich_divorce.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_gala": {
+    "src": "cards/card.rich_gala.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_hostile_bid": {
+    "src": "cards/card.rich_hostile_bid.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_lawsuit": {
+    "src": "cards/card.rich_lawsuit.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_partner_swindle": {
+    "src": "cards/card.rich_partner_swindle.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_scandal": {
+    "src": "cards/card.rich_scandal.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_tax_squad": {
+    "src": "cards/card.rich_tax_squad.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_threat": {
+    "src": "cards/card.rich_threat.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_uncle_castle": {
+    "src": "cards/card.rich_uncle_castle.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_yacht_rocks": {
+    "src": "cards/card.rich_yacht_rocks.png",
+    "w": 288,
+    "h": 120
+  },
   "card.ring_light": {
     "src": "cards/card.ring_light.png",
     "w": 288,

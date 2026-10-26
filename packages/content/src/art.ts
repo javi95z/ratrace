@@ -270,6 +270,16 @@ export const cardArt: Record<string, string> = {
   celeb_swiftly: scene('celeb_swiftly'),
   celeb_bellfort: scene('celeb_bellfort'),
   celeb_ortiga: scene('celeb_ortiga'),
+  rich_lawsuit: scene('rich_lawsuit'),
+  rich_scandal: scene('rich_scandal'),
+  rich_tax_squad: scene('rich_tax_squad'),
+  rich_partner_swindle: scene('rich_partner_swindle'),
+  rich_divorce: scene('rich_divorce'),
+  rich_gala: scene('rich_gala'),
+  rich_uncle_castle: scene('rich_uncle_castle'),
+  rich_yacht_rocks: scene('rich_yacht_rocks'),
+  rich_threat: scene('rich_threat'),
+  rich_hostile_bid: scene('rich_hostile_bid'),
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
