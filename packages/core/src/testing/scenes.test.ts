@@ -194,7 +194,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
 });
 
 describe('the scenes of the page where a life is chosen', () => {
-  it('new-first is a device with nothing on it: the three lives to begin with, and the seventeen to unlock', async () => {
+  it('new-first is a device with nothing on it: the six lives to begin with, and the fourteen to unlock', async () => {
     const store = await sceneStore('new-first');
     expect(await saveOf(store)).toBeNull();
     expect(await opened(store)).toMatchObject({ status: 'none', lost: null, view: null });
@@ -206,7 +206,7 @@ describe('the scenes of the page where a life is chosen', () => {
     const store = await sceneStore('new-unlocked');
     expect(await saveOf(store)).toBeNull();
     const { unlocked } = await store.loadProfile();
-    expect(Object.keys(unlocked)).toEqual(['rider', 'heir']);
+    expect(Object.keys(unlocked)).toEqual(['heir', 'banker']);
     for (const id of Object.keys(unlocked)) expect(lives.find((life) => life.id === id)?.unlock, id).not.toBe('default');
     // The rest of the profile is a new player's: nothing else is earned.
     expect(await store.loadProfile()).toEqual({ ...newProfile(), unlocked });
@@ -933,7 +933,7 @@ describe('the records and the collection: three real lives, each played to its e
     expect(both.unlocked[earned[0]]).toEqual(lived.profile.unlocked[earned[0]]);
     expect(Object.keys(both.unlocked).sort()).toEqual([...new Set([...earned, 'heir'])].sort());
     // On a new player's profile it is the unlocks alone, as new-unlocked has them.
-    expect(withUnlocked(newProfile(), ['rider', 'heir'])).toEqual({ ...newProfile(), unlocked: { rider: { at: 1_000, gameId: 'earned-1' }, heir: { at: 1_001, gameId: 'earned-2' } } });
+    expect(withUnlocked(newProfile(), ['heir', 'banker'])).toEqual({ ...newProfile(), unlocked: { heir: { at: 1_000, gameId: 'earned-1' }, banker: { at: 1_001, gameId: 'earned-2' } } });
   });
 
   it('opens on no life in progress, as the game does once a life\'s last screen is left', async () => {

@@ -745,7 +745,7 @@ describe('what a step earned', () => {
     expect(get().offered?.partnered).toBe(before);
   });
 
-  it('includes the life unlocked by finishing a first one', async () => {
+  it('unlocks nothing by finishing a first life: the lives that were earned that way are open from the start', async () => {
     const { get } = setup();
     await get().start('civil_servant');
     for (let round = 0; round < 20; round++) {
@@ -753,7 +753,7 @@ describe('what a step earned', () => {
       await get().play();
       if (round < 19) get().next();
     }
-    expect(get()).toMatchObject({ stage: 'resolve', unlocked: ['rider'] });
+    expect(get()).toMatchObject({ stage: 'resolve', unlocked: [] });
     get().next();
     expect(get()).toMatchObject({ stage: 'end', unlocked: [] });
   });

@@ -358,17 +358,24 @@ describe('what a life earns', () => {
     expect((await store.loadProfile()).gallery).toContain('watch_casio');
   });
 
-  it('unlocks the delivery rider when a first life is lived to the end, and says so once', async () => {
+  it('unlocks no life by finishing one: the rider and the others that were earned so are open from the start', async () => {
     const { store, sessions } = setup();
     const session = await sessions.start('civil_servant');
     const { unlocked } = await live(session, 20);
     expect(session.view().finished).toBe(true);
-    expect(unlocked).toEqual(['rider']);
-    expect((await store.loadProfile()).unlocked.rider.gameId).toBe('id-1');
+    expect(unlocked).toEqual([]);
+    expect(Object.keys((await store.loadProfile()).unlocked)).toEqual([]);
+  });
 
-    const again = await live(await sessions.start('nurse'), 20);
+  it('unlocks the comeback when a life goes bankrupt, and says so once', async () => {
+    const { store, sessions } = setup();
+    const { unlocked } = await live(await sessions.start('nurse'), 10, lavish);
+    expect(unlocked).toEqual(['comeback']);
+    expect((await store.loadProfile()).unlocked.comeback.gameId).toBe('id-1');
+
+    const again = await live(await sessions.start('nurse'), 10, lavish);
     expect(again.unlocked).toEqual([]);
-    expect(Object.keys((await store.loadProfile()).unlocked)).toEqual(['rider']);
+    expect(Object.keys((await store.loadProfile()).unlocked)).toEqual(['comeback']);
   });
 
   it('records the run with the badges and the cities of the life', async () => {
@@ -417,24 +424,23 @@ describe('what a life earns', () => {
     await vi.waitFor(async () => expect(Object.keys((await store.loadProfile()).badges)).toContain('bankrupt'));
   });
 
-  it('unlocks the rider for anyone with a finished life on the device, whenever that is noticed', async () => {
+  it('unlocks the comeback for anyone with the badge on the device, whenever that is noticed', async () => {
     const { store, sessions } = setup();
-    await live(await sessions.start('civil_servant'), 20);
+    await live(await sessions.start('nurse'), 10, lavish);
     // A profile from before lives could be unlocked.
     await store.saveProfile({ ...(await store.loadProfile()), unlocked: {} });
     const next = await sessions.start('nurse');
     const first = await next.answerCard(0);
-    expect(first.unlocked).toEqual(['rider']);
+    expect(first.unlocked).toEqual(['comeback']);
   });
 
-  it('unlocks the rider at the end of a first life even if the list of lives cannot be read just then', async () => {
+  it('unlocks a life at the step that earns its badge even if the list of lives cannot be read just then', async () => {
     const store = new MemoryStore();
     const { sessions } = setup(store);
-    const session = await sessions.start('civil_servant');
+    const session = await sessions.start('nurse');
     store.listRuns = () => Promise.reject(new Error('busy'));
-    const { unlocked } = await live(session, 20);
-    expect(session.view().finished).toBe(true);
-    expect(unlocked).toEqual(['rider']);
+    const { unlocked } = await live(session, 10, lavish);
+    expect(unlocked).toEqual(['comeback']);
   });
 
   it('counts a badge of the gallery among the badges of the life that earned it', async () => {

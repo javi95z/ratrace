@@ -69,56 +69,56 @@ describe('choosing a life', () => {
   it('lets the random number choose which, and never the life already chosen', async () => {
     renderGame(<NewLife />, memoryServices());
     await screen.findAllByRole('radio');
-    // The others, in the order they stand: the engineer and the civil servant.
+    // The others, in the order they stand: the engineer to the teacher.
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(screen.getByRole('button', { name: /At random/ }));
-    expect(chosen()?.textContent).toMatch(/^Civil servant/);
+    expect(chosen()?.textContent).toMatch(/^Teacher/);
     random.mockReturnValue(0);
     fireEvent.click(screen.getByRole('button', { name: /At random/ }));
     expect(chosen()?.textContent).toMatch(/^Nurse/);
     random.mockRestore();
   });
 
-  it('offers the three starting lives, and shows what unlocks the others', async () => {
+  it('offers the six starting lives, and shows what unlocks the others', async () => {
     renderGame(<NewLife />, memoryServices());
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     // The lives that can be lived are the ones to choose from, each with how hard it is.
     const open = screen.getAllByRole('radio');
-    expect(open.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant)\b/).textContent?.split(' · ')[0])).toEqual(['Nurse', 'Software engineer', 'Civil servant']);
+    expect(open.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant|Delivery rider|Newcomer abroad|Teacher)\b/).textContent?.split(' · ')[0])).toEqual(['Nurse', 'Software engineer', 'Civil servant', 'Delivery rider', 'Newcomer abroad', 'Teacher']);
     // The one chosen says who lives it.
     expect(open[0].textContent).toContain('Nurse · Lucía');
     expect(within(open[1]).getByRole('img', { name: 'Difficulty: normal' })).toBeTruthy();
     // The others wait at the foot, folded, with what unlocks each.
     expect(screen.queryByText(/To unlock/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '17 lives to unlock' }));
-    await waitFor(() => expect(screen.getAllByText(/To unlock/)).toHaveLength(17));
+    fireEvent.click(screen.getByRole('button', { name: '14 lives to unlock' }));
+    await waitFor(() => expect(screen.getAllByText(/To unlock/)).toHaveLength(14));
   });
 
-  it('draws the locked lives a few to a frame, not all seventeen in the frame that opens the list, and all of them in the end', async () => {
+  it('draws the locked lives a few to a frame, not all fourteen in the frame that opens the list, and all of them in the end', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: '17 lives to unlock' }));
+    fireEvent.click(await screen.findByRole('button', { name: '14 lives to unlock' }));
     // The frame that opens it has the first of them, and the button has already turned.
     expect(screen.getAllByText(/To unlock/)).toHaveLength(LOCKED_FIRST);
-    expect(screen.getByRole('button', { name: '17 lives to unlock' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: '14 lives to unlock' }).getAttribute('aria-expanded')).toBe('true');
     // Then a few more to each frame, in the order they are in, until there are no more.
     await waitFor(() => expect(screen.getAllByText(/To unlock/)).toHaveLength(LOCKED_FIRST + LOCKED_STEP));
-    await waitFor(() => expect(screen.getAllByText(/To unlock/)).toHaveLength(17));
+    await waitFor(() => expect(screen.getAllByText(/To unlock/)).toHaveLength(14));
     const names = screen.getAllByText(/To unlock/).map((line) => line.parentElement?.parentElement?.firstElementChild?.textContent);
-    expect(names.slice(0, 3)).toEqual(['Delivery rider', 'Heir', 'Newcomer abroad']);
+    expect(names.slice(0, 3)).toEqual(['Heir', 'Investment banker', 'Doctor']);
     // Shut and opened again, it begins again from the first few.
-    fireEvent.click(screen.getByRole('button', { name: '17 lives to unlock' }));
+    fireEvent.click(screen.getByRole('button', { name: '14 lives to unlock' }));
     expect(screen.queryByText(/To unlock/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '17 lives to unlock' }));
+    fireEvent.click(screen.getByRole('button', { name: '14 lives to unlock' }));
     expect(screen.getAllByText(/To unlock/)).toHaveLength(LOCKED_FIRST);
   });
 
   it('says the locked lives are a list, and each a list item', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: '17 lives to unlock' }));
+    fireEvent.click(await screen.findByRole('button', { name: '14 lives to unlock' }));
     const list = screen.getByRole('list');
     expect(within(list).getAllByRole('listitem')).toHaveLength(LOCKED_FIRST);
-    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(17));
-    expect(within(within(list).getAllByRole('listitem')[0]).getByText('Delivery rider')).toBeTruthy();
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(14));
+    expect(within(within(list).getAllByRole('listitem')[0]).getByText('Heir')).toBeTruthy();
   });
 
   it('has a tile for every life the player has unlocked, twenty at most, and says nothing of the locked when none is left', async () => {
@@ -134,8 +134,8 @@ describe('choosing a life', () => {
   it('says in a group of its own which life is chosen, and of how many', async () => {
     renderGame(<NewLife />, memoryServices());
     const group = await screen.findByRole('radiogroup', { name: 'Choose a life' });
-    expect(within(group).getAllByRole('radio')).toHaveLength(3);
-    expect(within(group).getAllByRole('radio').map((radio) => radio.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false']);
+    expect(within(group).getAllByRole('radio')).toHaveLength(6);
+    expect(within(group).getAllByRole('radio').map((radio) => radio.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'false', 'false', 'false']);
   });
 
   it('opens the chosen life across the row, with where it starts, what it is good at and what holds it back; the others only as a brief', async () => {
@@ -160,9 +160,9 @@ describe('choosing a life', () => {
     renderGame(<NewLife />, memoryServices());
     await screen.findAllByRole('radio');
     expect(document.querySelector('[data-sprite="portrait.nurse.22"]')).not.toBeNull();
-    expect(document.querySelector('[data-sprite="portrait.rider.22"]')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '17 lives to unlock' }));
-    const shape = document.querySelector('[data-sprite="portrait.rider.22"]');
+    expect(document.querySelector('[data-sprite="portrait.heir.22"]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '14 lives to unlock' }));
+    const shape = document.querySelector('[data-sprite="portrait.heir.22"]');
     expect(shape?.getAttribute('data-silhouette')).toBe('true');
     expect(document.querySelector('[data-sprite="portrait.nurse.22"]')?.getAttribute('data-silhouette')).toBeNull();
   });
@@ -170,78 +170,64 @@ describe('choosing a life', () => {
   it('centres every portrait against what is written beside it, as the rows of the web do', async () => {
     renderGame(<NewLife />, memoryServices());
     await screen.findAllByRole('radio');
-    fireEvent.click(screen.getByRole('button', { name: '17 lives to unlock' }));
-    for (const id of ['nurse', 'engineer', 'rider', 'heir']) {
+    fireEvent.click(screen.getByRole('button', { name: '14 lives to unlock' }));
+    for (const id of ['nurse', 'engineer', 'rider', 'banker']) {
       const well = document.querySelector(`[data-sprite="portrait.${id}.22"]`)?.parentElement as HTMLElement;
       expect([id, well.style.alignSelf]).toEqual([id, 'center']);
       expect([well.style.width, well.style.height]).toEqual(['68px', '68px']);
     }
   });
 
-  it('gives each locked life a hint, and counts the lives finished only where that is the goal', async () => {
+  it('gives each locked life a hint, and counts nothing where no goal is a count of lives', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: '17 lives to unlock' }));
+    fireEvent.click(await screen.findByRole('button', { name: '14 lives to unlock' }));
     expect(screen.getByText('A head start nobody earned. What does it do to a person?')).toBeTruthy();
-    // Finishing one life is counted; a goal the device does not record has only its requirement.
-    expect(await screen.findAllByText('Lives finished: 0 of 1')).toHaveLength(1);
-  });
-
-  it('opens the delivery rider for someone who has finished a life: what finishing one earns is on the profile the page reads', async () => {
-    const services = memoryServices();
-    const session = await services.sessions.start('nurse');
-    while (!session.view().finished) {
-      while (session.view().phase === 'cards') await session.answerCard(0);
-      await session.playRound({ orders: [] });
-    }
-    renderGame(<NewLife />, services);
-    expect(await screen.findByRole('radio', { name: /^Delivery rider/ })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '16 lives to unlock' }));
-    // The goal is reached: there is nothing left of it to count.
+    // No goal left counts lives finished (unlockProgress's own test holds that one): each has only its requirement.
     expect(screen.queryByText(/Lives finished/)).toBeNull();
   });
 
   it('says what unlocks each locked life, folded under a button that says how many there are, and shuts again', async () => {
     renderGame(<NewLife />, memoryServices());
-    const toggle = await screen.findByRole('button', { name: '17 lives to unlock' });
+    const toggle = await screen.findByRole('button', { name: '14 lives to unlock' });
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(toggle.textContent).toBe('17 lives to unlock▾');
+    expect(toggle.textContent).toBe('14 lives to unlock▾');
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(toggle.textContent).toBe('17 lives to unlock▴');
+    expect(toggle.textContent).toBe('14 lives to unlock▴');
     expect(document.querySelector('[data-sprite="icon.locked"]')).not.toBeNull();
     // Each says its name, how hard it is, and what unlocks it.
     const text = document.body.textContent ?? '';
-    expect(text).toContain('Delivery rider');
+    expect(text).toContain('Heir');
     expect(text).toContain('To unlock: ');
-    await waitFor(() => expect(screen.getAllByRole('img', { name: /^Difficulty: / })).toHaveLength(2 + 17));
+    await waitFor(() => expect(screen.getAllByRole('img', { name: /^Difficulty: / })).toHaveLength(5 + 14));
     fireEvent.click(toggle);
     expect(screen.queryByText(/To unlock/)).toBeNull();
   });
 
   it('opens a life the player has unlocked, and marks it', async () => {
     const services = memoryServices();
-    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
-    const rider = await screen.findByRole('radio', { name: /^Delivery rider/ });
-    expect(screen.getByRole('button', { name: '16 lives to unlock' })).toBeTruthy();
+    const rider = await screen.findByRole('radio', { name: /^Heir/ });
+    expect(screen.getByRole('button', { name: '13 lives to unlock' })).toBeTruthy();
     fireEvent.click(rider);
     expect(chosen()).toBe(rider);
     fireEvent.click(screen.getByRole('button', START));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
-    expect((await saved(services))?.lifeId).toBe('rider');
+    expect((await saved(services))?.lifeId).toBe('heir');
   });
 
   it('lays out the open lives in the order of the web\'s grid: the chosen one across a row, the next fills the gap above it', async () => {
     const services = memoryServices();
-    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
-    await screen.findByRole('radio', { name: /^Delivery rider/ });
-    const names = () => screen.getAllByRole('radio').map((radio) => /^(Nurse|Software engineer|Civil servant|Delivery rider)/.exec(radio.textContent ?? '')?.[1]);
+    await screen.findByRole('radio', { name: /^Heir/ });
+    const names = () => screen.getAllByRole('radio').map((radio) => /^(Nurse|Software engineer|Civil servant|Delivery rider|Heir|Newcomer abroad|Teacher)/.exec(radio.textContent ?? '')?.[1]);
     // The nurse is chosen and has a row of her own; the rest follow in order.
-    expect(names()).toEqual(['Nurse', 'Software engineer', 'Civil servant', 'Delivery rider']);
-    // The second of four chosen: the first and the third stand together above it.
+    expect(names()).toEqual(['Nurse', 'Software engineer', 'Civil servant', 'Delivery rider', 'Heir', 'Newcomer abroad', 'Teacher']);
+    // The second of seven chosen: the first and the third stand together above it.
     fireEvent.click(screen.getByRole('radio', { name: /^Software engineer/ }));
-    expect(names()).toEqual(['Nurse', 'Civil servant', 'Software engineer', 'Delivery rider']);
+    expect(names()).toEqual(['Nurse', 'Civil servant', 'Software engineer', 'Delivery rider', 'Heir', 'Newcomer abroad', 'Teacher']);
   });
 
   it('starts the life chosen and goes to it, leaving no way back onto this screen', async () => {
@@ -397,7 +383,7 @@ describe('the page in other languages', () => {
     renderGame(<NewLife />, memoryServices(), 'es');
     expect(await screen.findByRole('radiogroup', { name: 'Elige una vida' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Empezar esta vida' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '17 vidas por desbloquear' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '14 vidas por desbloquear' })).toBeTruthy();
     expect(screen.getAllByRole('radio')[0].textContent).toContain('Lucía');
   });
 
@@ -444,32 +430,32 @@ describe('what the page is drawn again for', () => {
 
   it('draws again only the two tiles that change when another life is chosen, the one let go and the one chosen: the others are memoised', async () => {
     const services = memoryServices();
-    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
-    await screen.findByRole('radio', { name: /^Delivery rider/ });
+    await screen.findByRole('radio', { name: /^Heir/ });
     await settled();
     // A tile's portrait is drawn each time the tile is: the sprite stand-in counts them.
     const drawn = (id: string) => spriteRenders.get(`portrait.${id}.22`) ?? 0;
-    const before = ['nurse', 'engineer', 'civil_servant', 'rider'].map(drawn);
+    const before = ['nurse', 'engineer', 'civil_servant', 'heir'].map(drawn);
     expect(before.every((count) => count > 0)).toBe(true);
     fireEvent.click(screen.getByRole('radio', { name: /^Software engineer/ }));
     await settled();
-    const after = ['nurse', 'engineer', 'civil_servant', 'rider'].map(drawn);
+    const after = ['nurse', 'engineer', 'civil_servant', 'heir'].map(drawn);
     // The nurse is let go and the engineer chosen: each is drawn once more. The civil servant and the rider are not drawn again, though the grid moved them.
     expect(after.map((count, i) => count - before[i])).toEqual([1, 1, 0, 0]);
   });
 
   it('keeps the tiles it has when another life is chosen: none is made again, a life that moves in the grid is the same life, moved', async () => {
     const services = memoryServices();
-    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
-    await screen.findByRole('radio', { name: /^Delivery rider/ });
+    await screen.findByRole('radio', { name: /^Heir/ });
     const portraits = () => Array.from(document.querySelectorAll('[data-sprite^="portrait."]'));
     const before = portraits();
-    expect(before).toHaveLength(4);
+    expect(before).toHaveLength(7);
     fireEvent.click(screen.getByRole('radio', { name: /^Software engineer/ }));
     const after = portraits();
-    expect(before.map((sprite) => after.includes(sprite))).toEqual([true, true, true, true]);
+    expect(before.map((sprite) => after.includes(sprite))).toEqual([true, true, true, true, true, true, true]);
   });
 });
 
@@ -488,9 +474,9 @@ describe('the dice shows the life it picked', () => {
   /** Four open lives, a page 600 tall that the group of tiles stands 100 down, and what the screen reader and the scroll are asked. */
   async function laidOut(options: { reducedMotion?: boolean } = {}) {
     const services = memoryServices();
-    await services.store.saveProfile({ ...newProfile(), settings: { sound: true, reducedMotion: options.reducedMotion === true }, unlocked: { rider: { at: 5, gameId: 'g' } } });
+    await services.store.saveProfile({ ...newProfile(), settings: { sound: true, reducedMotion: options.reducedMotion === true }, unlocked: { heir: { at: 5, gameId: 'g' } } });
     const rendered = renderGame(<StrictMode><NewLife /></StrictMode>, services);
-    await screen.findByRole('radio', { name: /^Delivery rider/ });
+    await screen.findByRole('radio', { name: /^Teacher/ });
     await settled();
     scrollBox().scrollTo = scrollTo;
     layOut(scrollBox(), { y: 0, height: 600 });
@@ -512,12 +498,12 @@ describe('the dice shows the life it picked', () => {
     await laidOut();
     vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(dice());
-    const rider = screen.getByRole('radio', { name: /^Delivery rider/ });
+    const rider = screen.getByRole('radio', { name: /^Teacher/ });
     expect(rider.getAttribute('aria-checked')).toBe('true');
     // The tile opens across a row and the others move: it is not known where it stands until the page says so.
     expect(scrollTo).not.toHaveBeenCalled();
     expect(focus).not.toHaveBeenCalled();
-    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
+    layOut(tileOf(/^Teacher/), { y: 800, height: 100 });
     // Its foot at the foot of the page, and the 12 of room: 100 for the group, 800 down it, 100 tall.
     expect(scrollTo).toHaveBeenCalledTimes(1);
     expect(scrollTo).toHaveBeenCalledWith({ y: 100 + 800 + 100 + 12 - 600, animated: true });
@@ -539,7 +525,7 @@ describe('the dice shows the life it picked', () => {
     await laidOut({ reducedMotion: true });
     vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(dice());
-    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
+    layOut(tileOf(/^Teacher/), { y: 800, height: 100 });
     expect(scrollTo).toHaveBeenCalledWith({ y: 412, animated: false });
   });
 
@@ -547,8 +533,8 @@ describe('the dice shows the life it picked', () => {
     await laidOut();
     vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(dice());
-    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
-    layOut(tileOf(/^Delivery rider/), { y: 805, height: 100 });
+    layOut(tileOf(/^Teacher/), { y: 800, height: 100 });
+    layOut(tileOf(/^Teacher/), { y: 805, height: 100 });
     expect(scrollTo).toHaveBeenCalledTimes(1);
     expect(focus).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('radio', { name: /^Civil servant/ }));

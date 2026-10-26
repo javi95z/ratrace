@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { bots, content, lives, textFor } from '@ratrace/content';
+import { bots, content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
 import en from '@ratrace/i18n/messages/en.json';
 import { describe, expect, it } from 'vitest';
@@ -126,7 +127,11 @@ describe('the round the way out is written with, in every rules bundle still pla
   const files = readdirSync(held).filter((file) => /^v\d+\.\d+\.\d+-\d+\.\d+\.\d+\.js$/.test(file));
 
   it('is the round after the one the life got out in, or was caught in, from the oldest to the newest', () => {
-    expect(files.map((file) => file.slice(1, -3).replace('-', '/')).sort()).toEqual([...shipped].sort());
+    // The bundle of the rules now in the code may be written and not shipped yet: it ships with the deploy, which locks it in shipped.json.
+    const keys = files.map((file) => file.slice(1, -3).replace('-', '/')).sort();
+    const unshipped = keys.filter((key) => !shipped.includes(key));
+    expect(unshipped.every((key) => key === `${ENGINE_VERSION}/${CONTENT_VERSION}`)).toBe(true);
+    expect(keys.filter((key) => shipped.includes(key))).toEqual([...shipped].sort());
     // The story's writer: every milestone of a step at the round the game stands at after it (`o = after.round`), the way out among them.
     const story = /(\w)=(\w)\.round,\w=\2\.player,[^]*?kind==="escaped"&&\w\.push\(\{round:\1,kind:"escaped"\}\),\w\.kind==="escapeLost"&&\w\.push\(\{round:\1,kind:"escapeLost"\}\)/;
     // The round's step: `completed = round + 1`; out at `completed - 1`, caught again in the same step; the game then stands at `completed`.

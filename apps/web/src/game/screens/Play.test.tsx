@@ -254,7 +254,7 @@ describe('the play screen', () => {
     expect(screen.getByRole('link', { name: 'Live another life' }).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Home' }).getAttribute('href')).toBe('/');
 
-    // A first life lived to the end: its badges are shown, and the life it unlocked.
+    // A first life lived to the end: its badges are shown; finishing one opens no life now.
     const earned = screen.getByRole('region', { name: 'Badges of this life' });
     expect(run.badges.length).toBeGreaterThan(0);
     expect(within(earned).getAllByRole('listitem')).toHaveLength(run.badges.length);
@@ -267,11 +267,8 @@ describe('the play screen', () => {
     const sheet = screen.getByRole('dialog', { name: badgeText.name });
     expect(within(sheet).getByText(badgeText.how)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
-    expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
-    // The life unlocked gets a card of its own, with a way to begin it at once.
-    const card = screen.getByRole('region', { name: 'A new life is open' });
-    expect(within(card).getByText(/Delivery rider is open to you/)).toBeTruthy();
-    expect(within(card).getByRole('button', { name: 'Try it now' })).toBeTruthy();
+    expect(screen.queryByText(/New life unlocked/)).toBeNull();
+    expect(screen.queryByRole('region', { name: 'A new life is open' })).toBeNull();
     // Nothing to beat in a first life, so no personal best is claimed.
     expect(screen.queryByText('New best score')).toBeNull();
     expect(screen.getByRole('link', { name: 'See your collection' }).getAttribute('href')).toBe('/collection');
@@ -300,10 +297,6 @@ describe('the play screen', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score), { selector: '.sr-only' })).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
-
-    // The card offers the life it unlocked, and "Try it now" starts it.
-    await user.click(within(screen.getByRole('region', { name: 'A new life is open' })).getByRole('button', { name: 'Try it now' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
   });
 
   it('stands the guide\'s note out in a gold ring, under its gold bevel: both drawn, as the stylesheet compiles them', async () => {

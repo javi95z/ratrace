@@ -765,7 +765,7 @@ describe('the end of a life', () => {
     expect(within(score).getByText(String(run.status))).toBeTruthy();
     expect(screen.getByRole('img', { name: /Your net worth through life/ })).toBeTruthy();
 
-    // A first life lived to the end: its badges are shown, and the life it unlocked.
+    // A first life lived to the end: its badges are shown; no life opens by finishing one now (the rider is open from the start).
     const earned = panel('Badges of this life');
     expect(run.badges.length).toBeGreaterThan(0);
     expect(within(earned).getAllByRole('listitem')).toHaveLength(run.badges.length);
@@ -779,11 +779,8 @@ describe('the end of a life', () => {
     expect(within(sheet).getByText(badgeText.how)).toBeTruthy();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: badgeText.name })).toBeNull());
-    expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
-    // The life unlocked gets a card of its own, with a way to begin it at once.
-    const card = panel('A new life is open');
-    expect(within(card).getByText(/Delivery rider is open to you/)).toBeTruthy();
-    expect(within(card).getByRole('button', { name: 'Try it now' })).toBeTruthy();
+    expect(screen.queryByText(/New life unlocked/)).toBeNull();
+    expect(screen.queryByLabelText('A new life is open')).toBeNull();
     // Nothing to beat in a first life, so no personal best is claimed.
     expect(screen.queryByText('New best score')).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'See your collection' }));
@@ -810,12 +807,6 @@ describe('the end of a life', () => {
     renderGame(<Play />, memoryServices(services.store));
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Score' })).getAllByText(full).length).toBeGreaterThan(0);
-
-    // The card offers the life it unlocked, and "Try it now" starts it, on this very screen.
-    fireEvent.click(within(panel('A new life is open')).getByRole('button', { name: 'Try it now' }));
-    expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
-    expect((await saved(services.store)).lifeId).toBe('rider');
-    expect(router.push).not.toHaveBeenCalledWith('/en/new');
   });
 
   it('marks a second life that beats the first', async () => {
@@ -834,7 +825,7 @@ describe('the end of a life', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(await screen.findByText('New best score')).toBeTruthy();
     expect(screen.getByText('Your richest life yet')).toBeTruthy();
-    // The rider was unlocked by the first life, not by this one.
+    // Nothing is unlocked by finishing a life.
     expect(screen.queryByText(/New life unlocked/)).toBeNull();
   });
 });

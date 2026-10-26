@@ -65,7 +65,7 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
     for (const badge of whole.journal.earned) expect(Object.keys(profile.badges)).toContain(badge);
   });
 
-  it('tells each step what happened, and what the life opened for the first time, like any other life', async () => {
+  it('tells each step what happened, and what the life opened for the first time (nothing, for a plain nurse), like any other life', async () => {
     const server = rankedServer();
     const d = device(server);
     const session = await d.sessions.start('nurse', { ranked: true });
@@ -73,10 +73,10 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
     expect(result.events.length).toBeGreaterThan(0);
     expect(result.view).toBe(session.view());
     expect(result.unlocked).toEqual([]);
-    // A first life lived to the end opens another: the step that ends it says so, and the profile holds it.
+    // Finishing a first life opens no other now (the rider is open from the start): the step that ends it says so.
     while (!session.view().finished) result = session.view().phase === 'cards' ? await session.answerCard(0) : await session.playRound({ orders: [] });
-    expect(result.unlocked).toEqual(['rider']);
-    expect(Object.keys((await d.store.loadProfile()).unlocked)).toContain('rider');
+    expect(result.unlocked).toEqual([]);
+    expect(Object.keys((await d.store.loadProfile()).unlocked)).toEqual([]);
   });
 
   it('waits on the device with the last view it was given, and is taken up again from the server', async () => {

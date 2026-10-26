@@ -364,7 +364,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
  * The page where a life is chosen draws the open lives from it.
  */
 const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
-  'new-unlocked': ['rider', 'heir'],
+  'new-unlocked': ['heir', 'banker'],
   // The founder is a life to unlock: the player of the scene has.
   'finance-business': ['founder'],
 };

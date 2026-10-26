@@ -5,6 +5,8 @@ import { profileAfter, readProfile, settleRank, tellProfile, updateProfile } fro
 import { newProfile } from './types';
 import type { FinishedRun, PlayerStore, Profile } from './types';
 
+/** No life is unlocked by finishing one any more (the rider is open from the start); the goal still works, held here on a stand-in. */
+const withFinishGoal = lives.map((life) => (life.id === 'rider' ? { ...life, unlock: 'finish_one_life' as const } : life));
 const earnedIn = (gameId: string, at: number) => ({ at, gameId });
 const step = (over: Partial<Parameters<typeof profileAfter>[3]> = {}) => ({ gameId: 'g1', at: 100, earned: [], collection: [], finished: 0, ...over });
 
@@ -126,16 +128,16 @@ describe('what a step of a life adds to the profile', () => {
   });
 
   it('unlocks the lives that the badges and the finished lives have earned, once', () => {
-    const none = profileAfter(content, lives, newProfile(), step());
+    const none = profileAfter(content, withFinishGoal, newProfile(), step());
     expect(none.unlocked).toEqual([]);
-    const rich = profileAfter(content, lives, none.profile, step({ earned: ['millionaire'] }));
+    const rich = profileAfter(content, withFinishGoal, none.profile, step({ earned: ['millionaire'] }));
     expect(rich.unlocked).toEqual(['heir']);
     expect(rich.profile.unlocked).toEqual({ heir: earnedIn('g1', 100) });
-    const done = profileAfter(content, lives, rich.profile, step({ gameId: 'g1', at: 200, finished: 1 }));
+    const done = profileAfter(content, withFinishGoal, rich.profile, step({ gameId: 'g1', at: 200, finished: 1 }));
     expect(done.unlocked).toEqual(['rider']);
     expect(done.profile.unlocked).toEqual({ heir: earnedIn('g1', 100), rider: earnedIn('g1', 200) });
     // The next life starts with no finished life counted in its steps: what was unlocked stays unlocked.
-    const next = profileAfter(content, lives, done.profile, step({ gameId: 'g2', at: 300 }));
+    const next = profileAfter(content, withFinishGoal, done.profile, step({ gameId: 'g2', at: 300 }));
     expect(next.unlocked).toEqual([]);
     expect(Object.keys(next.profile.unlocked)).toEqual(['heir', 'rider']);
   });
@@ -181,7 +183,7 @@ describe('telling the profile a step of a life', () => {
 
   it('counts the finished lives by their ids on a step that does not end the life, where the store tells them: the lives are not read', async () => {
     const { store, asked } = await counted(true);
-    const told = await tellProfile(store, content, lives, life(false));
+    const told = await tellProfile(store, content, withFinishGoal, life(false));
     // One life finished: the life it unlocks is told, as it would be from the list.
     expect(told.unlocked).toEqual(['rider']);
     expect(asked).toEqual({ lists: 0, ids: 1 });
@@ -190,7 +192,7 @@ describe('telling the profile a step of a life', () => {
   it('reads the lives on the step that ends one, for its rank', async () => {
     const { store, asked } = await counted(true);
     await store.addRun(finished('r2'));
-    await tellProfile(store, content, lives, life(true));
+    await tellProfile(store, content, withFinishGoal, life(true));
     expect(asked.lists).toBe(1);
     expect(asked.ids).toBe(0);
     expect(Object.keys((await store.loadProfile()).rank.lives).sort()).toEqual(['r1', 'r2']);
@@ -198,10 +200,10 @@ describe('telling the profile a step of a life', () => {
 
   it('reads the lives on every step where the store has no ids to tell (the web\'s), as it always did', async () => {
     const { store, asked } = await counted(false);
-    const told = await tellProfile(store, content, lives, life(false));
+    const told = await tellProfile(store, content, withFinishGoal, life(false));
     expect(told.unlocked).toEqual(['rider']);
     expect(asked.lists).toBe(1);
-    await tellProfile(store, content, lives, life(false));
+    await tellProfile(store, content, withFinishGoal, life(false));
     expect(asked.lists).toBe(2);
   });
 });
