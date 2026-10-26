@@ -53,8 +53,11 @@ export interface RoundState {
   refusal: RejectReason | null;
   /** How many other orders went with the last one removed, because they only worked thanks to it. The player is told. */
   alsoRemoved: number;
-  /** The round just played: the game as it stood before, and everything that happened. */
-  resolved: { before: GameView; events: GameEvent[] } | null;
+  /**
+   * The round just played: the game as it stood before, everything that happened, and the orders it was played with where this page
+   * sent them (none for a round played by the clock in a game with friends).
+   */
+  resolved: { before: GameView; events: GameEvent[]; orders?: Order[] } | null;
   /** True while an answer or a round is being played. */
   busy: boolean;
   /** The option of the card being answered, from the tap until its result is on screen. */
@@ -296,7 +299,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
     };
 
     /** Shows what a round did, as the ledger after it. */
-    const shown = (view: GameView, result: StepResult) => {
+    const shown = (view: GameView, result: StepResult, orders: Order[] = []) => {
       if (!session) return;
       set({
           view: result.view,
@@ -306,7 +309,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
           story: session.story(),
           earned: result.earned,
           unlocked: result.unlocked,
-          resolved: { before: view, events: result.events },
+          resolved: { before: view, events: result.events, orders },
           orders: [],
           undo: null,
           preview: null,
@@ -326,7 +329,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       set({ busy: true });
       try {
         // Only what the life's rules know is sent: an order of newer rules would be refused, as an action that does not exist.
-        shown(view, await session.playRound({ orders: knownOrders(session.rules ?? ENGINE_VERSION, orders) }));
+        const sent = knownOrders(session.rules ?? ENGINE_VERSION, orders);
+        shown(view, await session.playRound({ orders: sent }), sent);
       } catch (error) {
         await refused(error);
       } finally {

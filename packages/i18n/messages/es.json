@@ -154,6 +154,7 @@
     "statusCity": "Ciudad",
     "statusLifestyle": "Estilo de vida",
     "statusItems": "Cosas",
+    "statusLeft": "{rounds, plural, one {Última ronda} other {Quedan # rondas}}",
     "statusBonus": "Extras de las cartas",
     "statusNow": "Estatus ahora",
     "statusLived": "Media de la vida",
@@ -985,7 +986,13 @@
       "review": "Revisar",
       "playAnyway": "Jugar igualmente"
     },
-    "basketCount": "{count, plural, one {# orden} other {# órdenes}}"
+    "basketCount": "{count, plural, one {# orden} other {# órdenes}}",
+    "escapeAfter": {
+      "buy": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}",
+      "buyBack": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda.",
+      "change": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}",
+      "changeBack": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda."
+    }
   },
   "resolve": {
     "title": "Dos años después",
@@ -1018,6 +1025,7 @@
     "finish": "Ver cómo acabó",
     "lapsed": "Has perdido {item}.",
     "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada.",
+    "wornOff": "{item}: su estatus se ha acabado.",
     "movedRung": "Empiezas un puesto por debajo, hasta tu siguiente ascenso.",
     "movedSettling": "Esta ronda cobras un {pct} menos, hasta encontrar tu sitio.",
     "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo.",

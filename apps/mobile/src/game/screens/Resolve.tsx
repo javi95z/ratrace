@@ -1,5 +1,6 @@
-import { milestoneArt } from '@ratrace/content';
+import { itemArt, milestoneArt } from '@ratrace/content';
 import type { MilestoneScene } from '@ratrace/content';
+import { wornOff } from '@ratrace/core/game/fading';
 import { milestoneOf } from '@ratrace/core/game/milestones';
 import { ageAt, roundNotes } from '@ratrace/core/game/present';
 import type { RoundNote } from '@ratrace/core/game/present';
@@ -295,6 +296,8 @@ export function Resolve() {
   // Who did something to this life, in a game with friends, by the name the room shows.
   const whoIs = (userId: string) => names?.[userId] ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
   const notes = roundNotes(words, t, events, whoIs);
+  // The status that ran out with the round, a line each: the number fell, and this is why.
+  const faded = wornOff(content, before.player, resolved.orders ?? [], view.player).map((itemId): RoundNote => ({ tone: 'plain', icon: itemArt(itemId), title: t('wornOff', { item: words.names.items[itemId] }) }));
   const lines = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
   // A crisis that was on when the round was played and is not now has just ended.
   const ended = before.timeline[before.round]?.crisis && !view.timeline[view.round]?.crisis ? before.timeline[before.round].crisis : null;
@@ -325,7 +328,7 @@ export function Resolve() {
       {/* A milestone of the life gets its picture, on the round it happened in. */}
       {scene ? <Milestone scene={scene} /> : null}
       {ended ? <Note note={{ tone: 'good', icon: 'icon.economy', title: crisis('over', { crisis: text.crises[ended.id].name }), hint: crisis('overHint') }} /> : null}
-      {notes.map((note, i) => (
+      {[...notes, ...faded].map((note, i) => (
         <Note key={i} note={note} />
       ))}
 

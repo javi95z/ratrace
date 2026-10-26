@@ -344,6 +344,23 @@ describe('what the round brought besides the money', () => {
     expect(over?.querySelector('[data-sprite="icon.economy"]')).not.toBeNull();
   });
 
+  it('says when the status of something held for a while has worn off, and not of what still counts', async () => {
+    const trip = { itemId: 'travel_weekend', value: 0, roundsLeft: 1, paid: 0, age: 0 };
+    const charter = { itemId: 'sea_yacht_charter', value: 0, roundsLeft: 2, paid: 0, age: 0 };
+    // Its last round as the round began, and gone after it; the charter still there.
+    await inPlay({
+      world: (view) => {
+        view.player.life.items.push(...(view.round === 0 ? [trip, charter] : [{ ...charter, roundsLeft: 1 }]));
+        view.player.life.collection.push(trip.itemId, charter.itemId);
+      },
+    });
+    const notes = screen.getAllByRole('status');
+    const faded = notes.filter((note) => note.textContent?.includes('its status has worn off'));
+    expect(faded.map((note) => note.textContent)).toEqual(['Ryanair weekend: its status has worn off.']);
+    expect(faded[0].querySelector('[data-sprite="item.travel_weekend"]')).not.toBeNull();
+    expect(onGround(faded[0], 'night-700')).toBe(true);
+  });
+
   it('tells each piece of news in its colour, and cheers a promotion', async () => {
     await inPlay({ events: (all) => [...all, { kind: 'promoted', careerId: 'healthcare', level: 1 }, { kind: 'lent', to: 'abcd1234-ffff', amount: 100_000, rateBp: 500, rounds: 2 }] });
     const notes = screen.getAllByRole('status');
