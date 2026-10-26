@@ -1,7 +1,7 @@
 import { BADGE_RARITY, content, progressOf, rarityOf } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
+import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud, sceneMilestones, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud as memberCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
@@ -274,7 +274,9 @@ export const SCENE_SCREENS: SceneScreens = {
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
-  celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
+  // A milestone of the life (Milestones.tsx, the phone's own: the Next web had none) is drawn as the badges are: its whole screen over the Hud of the
+  // card that reached it, as a legendary badge's, or its banner where the result of the card has it (`celebrate-milestone-banner`).
+  celebrate: (scene) => (scene.name === 'celebrate-earned' || scene.name === 'celebrate-milestone-banner' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
   records: (scene) => <Records opened={scene.sheet} />,
   collection: (scene) => <Collection tab={collectionTabOf(scene)} />,
   challenge: () => <WeeklyChallenge />,
@@ -303,6 +305,7 @@ export const SCENE_SCREENS: SceneScreens = {
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
   const basket = sceneBasket(scene.name);
+  const milestones = sceneMilestones(scene.name);
   // The other players of a scene of the game online (the rankings', the front door's, the challenge's, an end's, a new life's), the same as the web's
   // page gives its screen (`sceneCommunity`).
   const community = sceneCommunity(scene.name);
@@ -312,6 +315,7 @@ export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneS
     ...speaking(memoryServices(store), scene.locale),
     now: () => SCENE_NOW,
     ...(basket ? { basket } : {}),
+    ...(milestones !== undefined ? { milestones } : {}),
     ...sceneCloud(scene.name),
     ...(community ? { community: () => community } : {}),
     ...(rooms ? { rooms: () => rooms } : {}),

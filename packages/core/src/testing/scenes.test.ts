@@ -514,6 +514,8 @@ describe('the list of scenes', () => {
       'amount-savings',
       'celebrate-legendary',
       'celebrate-earned',
+      'celebrate-milestone',
+      'celebrate-milestone-banner',
       'challenge-practice',
       'legal',
       'finance-lifestyle',
