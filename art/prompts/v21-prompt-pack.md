@@ -1,10 +1,32 @@
 # v21 prompt pack: characters who come back, a life's milestones, the guide
 
-Three pieces of work need new art: the recurring characters (`docs/superpowers/specs/2026-10-27-recurring-characters-design.md`), the celebration of a life's milestones, and the guide's "How to play" and glossary. Every size below is the size of a sprite in the game, the same as the art already there: portraits 64×64, card scenes 288×120, icons 32×32, animation frames 48×48. Draw each sheet as one image in the proportions given; the art tool cuts and scales it (`tools/art/src/sheets.ts` gets one entry per sheet when the work that uses it is built).
+Four pieces of work need new art: the cards dealt only to the rich (content 1.50), the recurring characters (`docs/superpowers/specs/2026-10-27-recurring-characters-design.md`), the celebration of a life's milestones, and the guide's "How to play" and glossary. Every size below is the size of a sprite in the game, the same as the art already there: portraits 64×64, card scenes 288×120, icons 32×32, animation frames 48×48. Draw each sheet as one image in the proportions given; the art tool cuts and scales it (`tools/art/src/sheets.ts` gets one entry per sheet when the work that uses it is built).
 
 Always attach the reference sheets named, so the style, the palette and the line match. No text anywhere in any image: a sign, a screen, a paper or a coin shows blank shapes.
 
 The card ids are provisional: they are the design's, and may be renamed when the cards are written. The order of the panels is what matters.
+
+## 0. The cards of the rich
+
+Content 1.50 deals ten cards only to players worth a million or more. They play now with stand-ins cut from older scenes (`art/raw/cards/cards-49.png`, already listed in `tools/art/src/sheets.ts` as 2 columns by 5 rows): draw the sheet and save it over the stand-in.
+
+Save as `art/raw/cards/cards-49.png`: `card.rich_lawsuit`, `card.rich_scandal`, `card.rich_tax_squad`, `card.rich_partner_swindle`, `card.rich_divorce`, `card.rich_gala`, `card.rich_uncle_castle`, `card.rich_yacht_rocks`, `card.rich_threat`, `card.rich_hostile_bid`
+
+Attach `art/raw/cards/cards-47.png` and `art/raw/cards/cards-48.png` so the style matches.
+
+```text
+Portrait image, 24:25 overall, made of 10 wide panels: 2 columns by 5 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets, the world of the very rich drawn with the game's satirical eye. No text anywhere: any sign, banner, screen, letter or paper shows blank shapes. Left to right, top to bottom:
+1. A lawsuit: a rich person in a suit on a courthouse's stone steps, surrounded by press cameras, as a stranger's lawyer waves a thick file at them.
+2. A scandal: a mansion's breakfast table with a newspaper and a phone, both showing the same blurry party photo of the owner, who has spilt their coffee.
+3. The tax squad: three grey inspectors with boxes and lanyards marching into a marble study full of filing cabinets, the owner holding the door open.
+4. A partner who swindles you: a back office at night, a smiling business partner stuffing a second pay envelope into his jacket under a desk lamp.
+5. An expensive divorce: a long glass table split down the middle by tape, two lawyers on each side, a wedding photo torn in two between them, paparazzi at the window.
+6. The charity gala: a chandeliered ballroom, a guest standing with a raised bidding paddle while an auctioneer points at a blank banner over a hospital drawing.
+7. A great-uncle's castle: a crumbling hilltop castle in the rain, a notary at the gate holding a big old key and a long scroll of debts trailing on the ground.
+8. The yacht on the rocks: a white sailing yacht tilted on rocks at dusk, party lights still on, guests in evening wear wading ashore and a sheepish skipper.
+9. A threatening letter: a letter made of cut-out shapes lying on the doormat of a grand hallway, two bodyguards in dark suits standing behind it.
+10. A hostile bid: a giant glossy corporate tower casting its shadow over a small family business, a suited executive holding out a contract to the owner.
+```
 
 ## 1. The characters' portraits
 
@@ -32,7 +54,7 @@ Landscape image, 4:3. Object sheet: 4 columns by 3 rows, 12 bust portraits (head
 
 Attach `art/raw/cards/cards-47.png` and `art/raw/cards/cards-48.png` so the style matches, and `art/raw/portraits/people-01.png` so the people are the same (once it is drawn). Every panel shows the player as the small figure of the earlier card sheets.
 
-Save as `art/raw/cards/cards-49.png`: `card.inlaw_coin`, `card.inlaw_moon`, `card.inlaw_rug`, `card.inlaw_dinner`, `card.inlaw_loan`, `card.inlaw_repay`
+Save as `art/raw/cards/cards-50.png`: `card.inlaw_coin`, `card.inlaw_moon`, `card.inlaw_rug`, `card.inlaw_dinner`, `card.inlaw_loan`, `card.inlaw_repay`
 
 ```text
 Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets, the brother-in-law of the attached portraits in every panel. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
@@ -44,7 +66,7 @@ Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each p
 6. He pays you back, or not: the brother-in-law at a café table sliding a thin envelope across to the player, a sheepish smile, and in the window behind, a second smaller scene of him running away with an empty wallet.
 ```
 
-Save as `art/raw/cards/cards-50.png`: `card.boss_weekend`, `card.boss_offer`, `card.boss_layoffs`, `card.landlord_damp`, `card.landlord_raise`, `card.landlord_sale`
+Save as `art/raw/cards/cards-51.png`: `card.boss_weekend`, `card.boss_offer`, `card.boss_layoffs`, `card.landlord_damp`, `card.landlord_raise`, `card.landlord_sale`
 
 ```text
 Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets, the boss and the landlord of the attached portraits. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
@@ -56,7 +78,7 @@ Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each p
 6. He offers you the flat: the landlord and the player shaking hands at a kitchen table over a blank contract, a ring of keys between them, a pot of coffee, the landlord smiling under his moustache.
 ```
 
-Save as `art/raw/cards/cards-51.png`: `card.founder_pitch`, `card.founder_more`, `card.founder_exit`, `card.founder_second`, `card.advisor_fund`, `card.advisor_insurance`
+Save as `art/raw/cards/cards-52.png`: `card.founder_pitch`, `card.founder_more`, `card.founder_exit`, `card.founder_second`, `card.advisor_fund`, `card.advisor_insurance`
 
 ```text
 Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets, the friend with a startup and the bank's adviser of the attached portraits. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
@@ -68,7 +90,7 @@ Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each p
 6. Insurance with the mortgage: the same bank desk, the adviser stacking three blank folders on top of a mortgage contract in front of the player, a smile too wide.
 ```
 
-Save as `art/raw/cards/cards-52.png`: `card.parents_help`, `card.parents_care`, `card.parents_inheritance`, `card.cousin_wedding`, `card.ex_new_car`, `card.classmate_job`
+Save as `art/raw/cards/cards-53.png`: `card.parents_help`, `card.parents_care`, `card.parents_inheritance`, `card.cousin_wedding`, `card.ex_new_car`, `card.classmate_job`
 
 ```text
 Landscape image, 8:5 overall, made of 6 wide panels: 2 columns by 3 rows, each panel 12:5. Scene sheet in the same painted pixel-art style as the attached sheets, the parents of the attached portraits. No text anywhere: any sign, screen or paper shows blank shapes. Left to right, top to bottom:
@@ -132,11 +154,12 @@ Square image, 1:1. Object sheet: 2 columns by 2 rows, 4 icons on a plain flat ba
 
 | # | File | What | Sprite size |
 |---|---|---|---|
+| 0 | `cards/cards-49.png` | The ten cards of the rich (over the stand-in) | 288×120 |
 | 1 | `portraits/people-01.png` | Six characters, pleased and upset | 64×64 |
-| 2 | `cards/cards-49.png` | The brother-in-law's cards | 288×120 |
-| 3 | `cards/cards-50.png` | The boss's and the landlord's cards | 288×120 |
-| 4 | `cards/cards-51.png` | The startup friend's and the adviser's cards | 288×120 |
-| 5 | `cards/cards-52.png` | The parents' cards and the player's people | 288×120 |
+| 2 | `cards/cards-50.png` | The brother-in-law's cards | 288×120 |
+| 3 | `cards/cards-51.png` | The boss's and the landlord's cards | 288×120 |
+| 4 | `cards/cards-52.png` | The startup friend's and the adviser's cards | 288×120 |
+| 5 | `cards/cards-53.png` | The parents' cards and the player's people | 288×120 |
 | 6 | `cards/milestones-01.png` | Milestones: 100k, 1M, 10M, debt free | 288×120 |
 | 7 | `cards/milestones-02.png` | Milestones: home, business, halfway, out | 288×120 |
 | 8 | `icons/anim-03.png` | A cheering rat and a firework, four frames each | 48×48 |
