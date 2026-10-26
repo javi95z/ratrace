@@ -1,5 +1,6 @@
 import { ratArt } from '@ratrace/content';
 import { isFirst, nextTip } from '@ratrace/core/game/guide';
+import { isHalfway } from '@ratrace/core/game/lifeMilestones';
 import { escapeProgress } from '@ratrace/engine';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -47,7 +48,7 @@ export function Guide() {
     creditCard: kinds.has('creditCard'),
     mortgage: kinds.has('mortgageFixed') || kinds.has('mortgageVariable'),
     margin: kinds.has('margin'),
-    halfway: escape !== null && escape.outgoings > 0 && escape.passiveAfterTax * 2 >= escape.outgoings && escape.passiveAfterTax < escape.outgoings,
+    halfway: escape !== null && isHalfway(escape) && escape.passiveAfterTax < escape.outgoings,
   };
   // While the game is being made, the guide shows whatever lives this device has finished, and even when it was turned off, so it can be seen and tried.
   const developing = process.env.NODE_ENV === 'development';

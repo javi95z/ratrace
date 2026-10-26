@@ -8,6 +8,7 @@ import { tellProfile } from '../session/profile';
 import { GRACE_MS, RoomRefused, RoomSessions } from '../session/room';
 import type { PublicPace, RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '../session/room';
 import type { PlayerStore } from '../session/types';
+import type { MilestoneKeep } from './lifeMilestones';
 import { createGameStore } from './store';
 import type { GameStore } from './store';
 
@@ -117,6 +118,8 @@ export interface RoomStoreOptions {
   /** The page's clock for telling taps apart, as the round store takes it. */
   tapClock?(): number;
   tapGuardMs?: number;
+  /** Where the milestones of lives are kept, the room's life among them (the round store's own). Left out, nowhere beyond the page. */
+  milestones?: MilestoneKeep;
   /** Runs `run` in `ms`; returns how to stop it. */
   schedule?(run: () => void, ms: number): () => void;
   /** What the page says of itself: shown again, back online. Each returns how to stop listening. */
@@ -222,7 +225,7 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
             else waiters.push({ round, resolve });
           }),
       });
-      const game = createGameStore({ sessions, content: options.content, now: options.tapClock, guardMs: options.tapGuardMs ?? 0 });
+      const game = createGameStore({ sessions, content: options.content, now: options.tapClock, guardMs: options.tapGuardMs ?? 0, ...(options.milestones ? { milestones: options.milestones } : {}) });
       void game.getState().boot().catch((error: unknown) => console.error('the life in the room could not be opened:', error));
       return game;
     };
