@@ -235,6 +235,8 @@ export async function waitFor(url: string, ms: number): Promise<void> {
 export const NUDGE = 'This command stopped to show the upgrade recommendation';
 /** How long a server that answers is watched for that stop: it comes once Next has asked the registry about its version. */
 const NUDGE_MS = 8_000;
+/** How long the web's server is given to answer its first page (`waitFor(probe, …)` in `withWebPage`). */
+const SERVER_READY_MS = 180_000;
 
 /** Whether a child process has stopped, or stops within `ms`. */
 export function stoppedWithin(child: ChildProcess, ms: number): Promise<boolean> {
@@ -273,8 +275,9 @@ export interface ServerParts<Child> {
  */
 export async function serveThroughNudge<Child>(parts: ServerParts<Child>): Promise<Child> {
   const first = parts.start();
-  await parts.ready();
-  if (!(await parts.stoppedWithin(first, NUDGE_MS))) return first;
+  // The nudge may come before the page answers: a stop while it is awaited is seen at once, not after the wait for the page has run out.
+  const stoppedFirst = await Promise.race([parts.ready().then(() => false), parts.stoppedWithin(first, SERVER_READY_MS)]);
+  if (!stoppedFirst && !(await parts.stoppedWithin(first, NUDGE_MS))) return first;
   if (!parts.log().includes(NUDGE)) throw new Error(`the web's server stopped: see ${parts.logFile}`);
   parts.stop(first);
   parts.tell(`the web's server stopped to recommend an upgrade of Next.js (${parts.logFile}); started again`);
@@ -458,7 +461,7 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
   try {
     server = await serveThroughNudge({
       start: () => (server = start()),
-      ready: () => waitFor(probe, 180_000),
+      ready: () => waitFor(probe, SERVER_READY_MS),
       stoppedWithin,
       log: () => readFileSync(logFile, 'utf8'),
       stop: stopGroup,

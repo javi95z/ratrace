@@ -396,6 +396,12 @@ test('the web\'s server: kept as it is when it serves on; started once more when
   await expect(serveThroughNudge(crashed.parts)).rejects.toThrow("the web's server stopped: see web-server.log");
   expect(crashed.started).toEqual([0]);
 
+  // Stopped by the nudge before its first page answered: seen at once, not after the wait for the page has run out.
+  const early = servers([true, false], [NUDGE, 'ready again']);
+  early.parts.ready = () => (early.started.length === 1 ? new Promise<undefined>(() => undefined) : Promise.resolve(undefined));
+  expect(await serveThroughNudge(early.parts)).toBe(1);
+  expect(early.stopped).toEqual([0]);
+
   const twice = servers([true, true], [`ready\n${NUDGE}`, `ready\n${NUDGE}`]);
   await expect(serveThroughNudge(twice.parts)).rejects.toThrow("the web's server stopped again: see web-server.log");
 });
