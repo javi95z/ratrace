@@ -168,8 +168,7 @@
       "cash": "The money you have on hand. Your expenses and purchases come out of it, and it earns nothing while it waits.",
       "flow": "What comes in less what goes out in a year, before tax. Green, you have money left over; red, you are eating into your cash.",
       "status": "Points for who you are and what you own. Within one ladder, your best thing counts in full and the rest only in part.",
-      "ratRace": "You leave the rat race when what you earn without working, after tax, pays all your outgoings. Cover them two rounds in a row and you are out; a round that falls short puts you back in.",
-      "focus": "Your free time each round, in points. You spend it studying, working overtime, looking for a job, learning, starting a business or moving, among other things. What you do not use is lost when the round is played."
+      "ratRace": "You leave the rat race when what you earn without working, after tax, pays all your outgoings. Cover them two rounds in a row and you are out; a round that falls short puts you back in."
     },
     "openSettings": "Open settings",
     "inJail": "In prison",
@@ -192,14 +191,7 @@
     "statusEstatesHint": "The two best grand homes you own besides the one you live in, at half.",
     "statusNetwork": "Contacts",
     "focus": "Focus",
-    "focusHint": "Focus left this round, of all you have",
-    "focusBase": "Your focus every round",
-    "focusRest": "A rest gave you",
-    "focusBurnout": "Burnout took",
-    "focusRound": "Focus this round",
-    "focusUsed": "Already chosen",
-    "focusLeft": "Left",
-    "toLifestyle": "Use it in Lifestyle"
+    "focusHint": "Focus left this round, of all you have"
   },
   "settings": {
     "version": "Version {content} · engine {engine}",

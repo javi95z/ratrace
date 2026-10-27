@@ -23,9 +23,15 @@ import type { Renders } from '../../testing/renders';
 afterEach(cleanup);
 
 /** A life begun on a device, and the Hud drawn over it as Play draws it: its lead, the figures that stick, and what hangs under them. */
-async function open(options: { locale?: 'en' | 'es' | 'ru'; life?: string; onProfile?: () => void; view?: (view: GameView) => GameView } = {}) {
+async function open(options: { locale?: 'en' | 'es' | 'ru'; life?: string; onProfile?: () => void; view?: (view: GameView) => GameView; finance?: boolean } = {}) {
   const services = memoryServices();
   const real = await services.sessions.start(options.life ?? 'nurse');
+  // The round's cards answered, for the finances to be open as the game is.
+  if (options.finance) {
+    while (real.view().phase === 'cards') await real.answerCard(0);
+    const session = realSession(real);
+    services.sessions.resume = async () => ({ lost: null, session });
+  }
   if (options.view) {
     // The game on the device, with its view changed as the test needs it (the web's Jail and Hud tests do the same).
     const change = options.view;
@@ -34,7 +40,8 @@ async function open(options: { locale?: 'en' | 'es' | 'ru'; life?: string; onPro
   }
   renderGame(<HudScene onProfile={options.onProfile} />, services, options.locale ?? 'en');
   // The game is opened as the Hud is drawn: the portrait hangs once it is.
-  await waitFor(() => expect(document.querySelector('[data-frame]')).toBeTruthy());
+  if (options.finance) await screen.findByRole('button', { name: /Focus/ });
+  else await waitFor(() => expect(document.querySelector('[data-frame]')).toBeTruthy());
   return services;
 }
 
@@ -164,26 +171,24 @@ describe('the figures of the HUD', () => {
     expect(score.querySelector(`[data-split="status"]`)?.getAttribute('style')).toContain(`width: ${share}%`);
   });
 
-  it('show the round\'s focus beside them, what is left of all there is, and what it is made of where a rest or a burnout changed it', async () => {
-    await open();
+  it('show the round\'s focus beside them, what is left of all there is, and spend it in its own sheet', async () => {
+    await open({ finance: true });
     const focus = screen.getByRole('button', { name: /Focus/ });
     expect(focus.textContent).toContain('3/3');
     fireEvent.click(focus);
     const sheet = sheetTitled('Focus');
-    expect(valueOf(sheet, 'Focus this round')).toBe('3');
-    expect(valueOf(sheet, 'Already chosen')).toBe('0');
-    expect(valueOf(sheet, 'Left')).toBe('3');
-    // Nothing changed it: one line says what there is, and none says what it is made of.
-    expect(within(sheet).queryByText('Your focus every round')).toBeNull();
+    expect(within(sheet).getByText('3/3')).toBeTruthy();
+    // Each use a switch, an order of the round's basket: chosen here, it is spent at once, the sheet left open.
+    const course = within(sheet).getByRole('switch', { name: /^Take a finance course/ });
+    fireEvent.click(course);
+    expect(course.getAttribute('aria-checked')).toBe('true');
+    expect(within(sheetTitled('Focus')).getByText('2/3')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Focus/ }).textContent).toContain('2/3');
+    // Nothing sends the player elsewhere to spend it.
+    expect(within(sheet).queryByRole('button', { name: /Lifestyle/ })).toBeNull();
     cleanup();
     await open({ view: (view) => ({ ...view, player: { ...view.player, life: { ...view.player.life, focusBonus: 1, focusUsed: 2 } } }) });
     expect(screen.getByRole('button', { name: /Focus/ }).textContent).toContain('2/4');
-    fireEvent.click(screen.getByRole('button', { name: /Focus/ }));
-    const changed = sheetTitled('Focus');
-    expect(valueOf(changed, 'Your focus every round')).toBe('3');
-    expect(valueOf(changed, 'A rest gave you')).toBe('+1');
-    expect(valueOf(changed, 'Focus this round')).toBe('4');
-    expect(valueOf(changed, 'Left')).toBe('2');
   });
 
   it('show no focus where there is none to spend: in prison', async () => {

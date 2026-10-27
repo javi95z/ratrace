@@ -168,8 +168,7 @@
       "cash": "El dinero que tienes a mano. De aquí salen tus gastos y tus compras, y mientras espera no rinde nada.",
       "flow": "Lo que entra menos lo que sale en un año, antes de impuestos. En verde te sobra; en rojo te comes el efectivo.",
       "status": "Puntos por quién eres y lo que tienes. Dentro de una misma gama, la mejor cosa cuenta entera y las demás solo una parte.",
-      "ratRace": "Sales de la rueda cuando lo que ganas sin trabajar, ya con impuestos, paga todos tus gastos. Dos rondas seguidas cubriéndolos y estás fuera; si una ronda no llega, vuelves a entrar.",
-      "focus": "Tu tiempo libre de cada ronda, en puntos. Lo gastas en estudiar, hacer horas extra, buscar trabajo, aprender, montar un negocio o mudarte, entre otras cosas. El que no uses se pierde al jugar la ronda."
+      "ratRace": "Sales de la rueda cuando lo que ganas sin trabajar, ya con impuestos, paga todos tus gastos. Dos rondas seguidas cubriéndolos y estás fuera; si una ronda no llega, vuelves a entrar."
     },
     "openSettings": "Abrir ajustes",
     "inJail": "En prisión",
@@ -192,14 +191,7 @@
     "statusEstatesHint": "Las dos mejores viviendas de lujo que tienes y en las que no vives, a la mitad.",
     "statusNetwork": "Contactos",
     "focus": "Foco",
-    "focusHint": "Foco que te queda esta ronda, de todo el que tienes",
-    "focusBase": "Tu foco de cada ronda",
-    "focusRest": "Un descanso te dio",
-    "focusBurnout": "El agotamiento te quitó",
-    "focusRound": "Foco de esta ronda",
-    "focusUsed": "Ya decidido",
-    "focusLeft": "Te queda",
-    "toLifestyle": "Usarlo en Vida"
+    "focusHint": "Foco que te queda esta ronda, de todo el que tienes"
   },
   "settings": {
     "version": "Versión {content} · motor {engine}",

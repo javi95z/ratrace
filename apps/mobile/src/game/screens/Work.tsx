@@ -579,7 +579,7 @@ export function LifeUses({ left, title }: { left: number; title: string }) {
  * What a round's focus can be spent on, and what each use is worth to this player as they stand.
  * While the finances are open each use is a switch, as in the Lifestyle tab: an order like any other.
  */
-function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
+export function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const t = useT('work');
   const words = useWords();
   const { text } = words;
