@@ -18,8 +18,11 @@ import { card, usd, yearly } from './build';
 const MEET = 8;
 /** How likely a story's next card is once it is due: high enough to come within a round or two. */
 const NEXT = 150;
-/** The parents come in every life, by age. */
-const FAMILY = 400;
+/**
+ * The parents come by age, in most lives and not all (seven in ten or so, with their visit): dealt in every life, their cards took
+ * the places of cards that cost, and the indexer topped too many lives.
+ */
+const FAMILY = 20;
 
 /** Every option of a person's card sets that they were met, whatever else it does. */
 function person(who: PersonId, options: CardOption[]): CardOption[] {
@@ -137,7 +140,7 @@ export const peopleCards: CardDef[] = [
     { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
   ])),
 
-  // The parents, in every life: help with a first home, care in their old age, and what they leave.
+  // The parents, in most lives: help with a first home, care in their old age, and what they leave.
   card('parents_help', 'family', { once: true, weight: FAMILY, when: { ownsHome: false, minRound: 1, maxRound: 5 } }, person('parents', [
     { effects: { status: 1, setFlags: ['parents_proud'] } },
     { effects: { cash: usd(6_000), setFlags: ['parents_helped'] } },
