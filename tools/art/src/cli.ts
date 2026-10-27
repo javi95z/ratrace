@@ -3,9 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { composeContact } from './contact';
-import { EXTRA_COLOURS, FIXED_PALETTE } from './fixed-palette';
+import { EXTRA_COLOURS, FIXED_PALETTE, GIVEN_COLOURS } from './fixed-palette';
 import type { Image, Rgb } from './image';
-import { buildPalette, Histogram, snap } from './palette';
+import { buildPalette, Histogram, snap, withGiven } from './palette';
 import { cutSheet } from './pipeline';
 import type { Sprite } from './pipeline';
 import { SHEETS } from './sheets';
@@ -105,6 +105,7 @@ async function main(): Promise<void> {
     for (const sprite of sprites) if (sprite.group === group) histogram.addImage(sprite.image);
     palettes[group] = buildPalette(FIXED_PALETTE, histogram, EXTRA_COLOURS);
   }
+  palettes = withGiven(palettes, GIVEN_COLOURS);
 
   await rm(CLEAN, { recursive: true, force: true });
   await rm(CONTACT, { recursive: true, force: true });

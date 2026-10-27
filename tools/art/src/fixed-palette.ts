@@ -16,3 +16,11 @@ export const FIXED_PALETTE: Rgb[] = [
 
 /** How many colours sprites may add to the fixed ones. */
 export const EXTRA_COLOURS = 33;
+
+/**
+ * Colours a group is given beyond the fixed ones and those taken from its art: a colour few of its pictures use, which the art alone
+ * would not bring in and would otherwise snap to its nearest (the prison jumpsuit's orange, and its shade and light, came out pink).
+ */
+export const GIVEN_COLOURS: Readonly<Record<string, readonly Rgb[]>> = {
+  cards: ['#e46428', '#b04a20', '#f08c50'].map(hex),
+};

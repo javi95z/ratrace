@@ -165,3 +165,15 @@ export function buildPalette(fixed: readonly Rgb[], histogram: Histogram, extra:
   }
   return palette;
 }
+
+/** Each group's palette with the colours it is given added where it lacks them; groups given none are left as they are. */
+export function withGiven(palettes: Readonly<Record<string, readonly Rgb[]>>, given: Readonly<Record<string, readonly Rgb[]>>): Record<string, Rgb[]> {
+  const same = (a: Rgb, b: Rgb) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+  const out: Record<string, Rgb[]> = {};
+  for (const [group, palette] of Object.entries(palettes)) {
+    const colours = [...palette];
+    for (const colour of given[group] ?? []) if (!colours.some((c) => same(c, colour))) colours.push(colour);
+    out[group] = colours;
+  }
+  return out;
+}

@@ -10,7 +10,7 @@ Sprites: 1202. Every group uses the 31 interface colours plus its own.
 | icons | 197 | 32×32 | 64 |
 | badges | 86 | 64×64 | 64 |
 | portraits | 132 | 64×64 | 64 |
-| cards | 357 | 288×120 | 64 |
+| cards | 357 | 288×120 | 67 |
 | skylines | 40 | 312×66 | 64 |
 | rat_body | 8 | 128×128 | 64 |
 | rat_face | 8 | 128×128 | 64 |

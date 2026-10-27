@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { blank, paint, pixel } from './image';
 import type { Rgb } from './image';
-import { buildPalette, Histogram, nearest, snap, toOklab } from './palette';
+import { GIVEN_COLOURS } from './fixed-palette';
+import { buildPalette, Histogram, nearest, snap, toOklab, withGiven } from './palette';
 
 const NAVY: Rgb = [20, 27, 51];
 const CREAM: Rgb = [244, 241, 228];
@@ -60,5 +61,21 @@ describe('palette', () => {
       return h;
     };
     expect(buildPalette([NAVY], fill(), 12)).toEqual(buildPalette([NAVY], fill(), 12));
+  });
+});
+
+describe('colours a group is given beyond those taken from its art', () => {
+  it('adds each one the group lacks, keeps those it has, and leaves the other groups as they are', () => {
+    const orange: Rgb = [228, 100, 40];
+    const palettes = { cards: [[0, 0, 0] as Rgb], items: [[0, 0, 0] as Rgb] };
+    const given = withGiven(palettes, { cards: [orange, [0, 0, 0]] });
+    expect(given.cards).toEqual([[0, 0, 0], orange]);
+    expect(given.items).toEqual([[0, 0, 0]]);
+  });
+
+  it('gives the cards a prison jumpsuit orange their art alone does not bring', () => {
+    const jumpsuit: Rgb = [228, 100, 40];
+    const cards = GIVEN_COLOURS.cards ?? [];
+    expect(cards[nearest(jumpsuit, cards)]).toEqual(jumpsuit);
   });
 });
