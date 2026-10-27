@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
+import { LIVES_DRAWN_AS_WOMEN } from '@ratrace/content';
 import { messagesFor } from '@ratrace/i18n';
 import { cleanup, screen } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
@@ -23,6 +24,11 @@ test('is the web\'s, line for line, but for where it reads the game from', () =>
   const asThePhone = web.replace("'use client';\n\n", '').replace("from '@/game/context';", "from './context';");
   expect(asThePhone).not.toBe(web);
   expect(phone).toBe(asThePhone);
+});
+
+test("draws as women the lives the card scenes do, so a card's ex is of the sex the paper names", () => {
+  const listed = /const WOMEN: ReadonlySet<string> = new Set\(\[([^\]]*)\]\)/.exec(read('./useRivals.ts'))?.[1] ?? '';
+  expect([...listed.matchAll(/'([a-z_]+)'/g)].map((match) => match[1])).toEqual([...LIVES_DRAWN_AS_WOMEN]);
 });
 
 /** Says who each rival is, in the words of the game. */

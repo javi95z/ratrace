@@ -13,6 +13,9 @@ import { CELEB_ART,
   ratArt,
   balanceArt,
   cardArt,
+  cardArtOf,
+  exAsManArt,
+  LIVES_DRAWN_AS_WOMEN,
   careerArt,
   CITY_LIGHTS,
   cityArt,
@@ -278,9 +281,21 @@ describe('content art', () => {
     expect(new Set(Object.values(cardArt)).size).toBe(content.cards.length);
   });
 
+  it("draws the player's ex as the other sex to the player: a man for a life drawn as a woman, a woman otherwise", () => {
+    for (const cardId of Object.keys(exAsManArt)) expect(cardArt[cardId], cardId).toBeDefined();
+    expect(cardArtOf('ex_new_car', 'nurse')).toBe('card.ex_new_car_man');
+    expect(cardArtOf('ex_new_car', 'engineer')).toBe('card.ex_new_car');
+    expect(cardArtOf('ex_new_car', null)).toBe('card.ex_new_car');
+    // Every other card is drawn the same for everyone.
+    expect(cardArtOf('cousin_wedding', 'nurse')).toBe(cardArt.cousin_wedding);
+    for (const lifeId of LIVES_DRAWN_AS_WOMEN) expect(lives.some((life) => life.id === lifeId), lifeId).toBe(true);
+  });
+
   it('points only at sprites that exist', () => {
     const wanted: string[] = [
       ...Object.values(cardArt),
+      // The ex as a man, for a player drawn as a woman.
+      ...Object.values(exAsManArt),
       // Each of the people who come back, in both moods.
       ...PEOPLE.flatMap((who) => [personArt(who, 'pleased'), personArt(who, 'upset')]),
       ...content.items.map((item) => itemArt(item.id)),
@@ -340,8 +355,8 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    // The cards (284) and the faces of the six people who come back, pleased and upset (6 * 2), first.
-    expect(wanted.length).toBe(284 + 6 * 2 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14 + 2 * 4 + (8 + 2 + 2));
+    // The cards (284), the ex as a man (1) and the faces of the six people who come back, pleased and upset (6 * 2), first.
+    expect(wanted.length).toBe(284 + 1 + 6 * 2 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14 + 2 * 4 + (8 + 2 + 2));
     // Every kind of property plain (26); as each of the ten cities draws its eleven homes and four kinds to let (15 * 10),
     // the block of the eight that sell one (8), and each city's own kind (10). Time with the family and a rest, a sign each: the 2.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.

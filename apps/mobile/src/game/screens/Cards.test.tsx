@@ -774,6 +774,14 @@ describe('the people who come back', () => {
     expect(screen.getByRole('article').querySelector('[data-sprite="person.inlaw.upset"]')).not.toBeNull();
   });
 
+  it("draws the ex as the other sex to the player: a man for a life drawn as a woman, a woman for one drawn as a man", async () => {
+    await onTheCards(await dealt('nurse', 'ex_new_car'));
+    expect(screen.getByRole('article').querySelector('[data-sprite="card.ex_new_car_man"]')).not.toBeNull();
+    cleanup();
+    await onTheCards(await dealt('engineer', 'ex_new_car'));
+    expect(screen.getByRole('article').querySelector('[data-sprite="card.ex_new_car"]')).not.toBeNull();
+  });
+
   it("names the player's own people as the paper does, and shows no face for them", async () => {
     await onTheCards(await dealt('nurse', 'cousin_wedding'));
     const card = screen.getByRole('article');

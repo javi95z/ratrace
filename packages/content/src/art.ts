@@ -310,6 +310,17 @@ export const cardArt: Record<string, string> = {
   rich_hostile_bid: scene('rich_hostile_bid'),
 };
 
+/**
+ * The lives drawn as women. The player's ex is of the other sex (the paper's people, `useRivals` in the app, holds the same list):
+ * a man for these lives, a woman for the rest.
+ */
+export const LIVES_DRAWN_AS_WOMEN: readonly string[] = ['nurse', 'civil_servant', 'newcomer', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson', 'private_banker'];
+/** A card that draws the player's ex: its own scene draws a woman, this one a man (cards-54). */
+export const exAsManArt: Readonly<Record<string, string>> = { ex_new_car: 'card.ex_new_car_man' };
+/** A card's scene in this life: the ex, where a card draws one, of the other sex to the player. */
+export const cardArtOf = (cardId: string, lifeId?: string | null): string | undefined =>
+  (lifeId != null && LIVES_DRAWN_AS_WOMEN.includes(lifeId) ? exAsManArt[cardId] : undefined) ?? cardArt[cardId];
+
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
 export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
 /** The kinds of home each city draws its own way, once its sheet is cut. */

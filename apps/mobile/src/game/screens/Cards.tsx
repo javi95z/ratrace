@@ -1,4 +1,4 @@
-import { cardArt, cardPeople, metFlag, personArt } from '@ratrace/content';
+import { cardArtOf, cardPeople, metFlag, personArt } from '@ratrace/content';
 import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
 import { previewCard, quoteItem } from '@ratrace/engine';
@@ -353,6 +353,8 @@ function Card({ def }: { def: CardDef }) {
   const rarity = cardRarity(def);
   const written = text.cards[def.id];
   const named = useNamed();
+  // The ex, where the card draws one, of the other sex to the player.
+  const lifeId = useGame((s) => s.lifeId);
   const picture = { w: 288 * art, h: 120 * art };
   return (
     <View role="article" style={{ width: picture.w + 4 }}>
@@ -360,7 +362,7 @@ function Card({ def }: { def: CardDef }) {
         {/* The web's `border-2 border-cream`, and inside it the box the light is clipped to. */}
         <View style={{ padding: 2 }}>
           <View style={{ overflow: 'hidden' }}>
-            <Sprite id={cardArt[def.id] ?? ''} scale="art" fallback={{ w: 288, h: 120 }}>
+            <Sprite id={cardArtOf(def.id, lifeId) ?? ''} scale="art" fallback={{ w: 288, h: 120 }}>
               {/* A rare card catches the light now and then; a legendary one shimmers all over. */}
               {rarity === 'legendary' ? <Holo width={picture.w} height={picture.h} held={held?.holo} /> : null}
             </Sprite>
@@ -557,6 +559,7 @@ function Answered({ event }: { event: Extract<GameEvent, { kind: 'card' }> }) {
   const words = useWords();
   const { text } = words;
   const offered = useGame((s) => s.offered);
+  const lifeId = useGame((s) => s.lifeId);
   const art = useContext(ArtScale);
   const rise = useRise();
   const written = text.cards[event.cardId];
@@ -574,7 +577,7 @@ function Answered({ event }: { event: Extract<GameEvent, { kind: 'card' }> }) {
       <View role="article" style={{ width: 288 * art + 4, maxWidth: '100%', alignSelf: 'center' }}>
         <Framed kind="frame" tone={CREAM} style={{ backgroundColor: COLORS.cream }}>
           <View style={{ padding: 2 }}>
-            <Sprite id={cardArt[event.cardId] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
+            <Sprite id={cardArtOf(event.cardId, lifeId) ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
           </View>
           <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
             <PersonLine cardId={event.cardId} />
