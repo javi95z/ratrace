@@ -140,19 +140,20 @@ export const peopleCards: CardDef[] = [
     { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
   ])),
 
-  // The parents, in most lives: help with a first home, care in their old age, and what they leave.
+  // The parents, in most lives: help with a first home, care in their old age, and what they leave. Their story costs, whatever is
+  // chosen: a care home its fees, caring for them a part of a year's pay as well; and what they leave as often brings debts.
   card('parents_help', 'family', { once: true, weight: FAMILY, when: { ownsHome: false, minRound: 1, maxRound: 5 } }, person('parents', [
     { effects: { status: 1, setFlags: ['parents_proud'] } },
     { effects: { cash: usd(6_000), setFlags: ['parents_helped'] } },
   ])),
   card('parents_care', 'family', { once: true, weight: FAMILY, when: { minRound: 9, maxRound: 14 } }, person('parents', [
     { effects: { recurring: [yearly('care_home', 'expense', 6_000, 4)], setFlags: ['parents_home'] } },
-    { effects: { focus: 1, recurring: [yearly('parents_care', 'expense', 1_500, 4)], ...warm('parents', 'parents_cared') } },
+    { effects: { focus: 1, salaryBoostPct: -30, recurring: [yearly('parents_care', 'expense', 1_500, 4)], ...warm('parents', 'parents_cared') } },
   ])),
   card('parents_inheritance', 'laterLife', { once: true, weight: FAMILY, when: { minRound: 15 } }, person('parents', [
     {},
-    { outcomes: [{ weight: 70, effects: { cash: usd(40_000) } }, { weight: 30, effects: { cash: usd(-8_000), setFlags: ['parents_debts'] } }] },
-    { when: { flags: ['parents_warm'] }, effects: { cash: usd(40_000) } },
+    { outcomes: [{ weight: 60, effects: { cash: usd(30_000) } }, { weight: 40, effects: { cash: usd(-10_000), setFlags: ['parents_debts'] } }] },
+    { when: { flags: ['parents_warm'] }, effects: { cash: usd(30_000) } },
   ])),
 
   // The player's own people, of the paper: the cousin's wedding, the ex's new car, the classmate's firm.
