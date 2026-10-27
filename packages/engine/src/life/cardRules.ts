@@ -169,6 +169,8 @@ export function validateCards(c: Content): string[] {
       return value.every(isRecurring) ? null : 'has a recurring entry that is not valid';
     },
     endRecurring: nameList, setFlags: nameList, clearFlags: nameList,
+    onceMore: (value) =>
+      isRecord(value) && Object.entries(value).every(([flag, then]) => idAllowed(flag) && idAllowed(then)) ? null : 'has a flag that is not allowed in onceMore',
     job: jobCheck,
     moveCity: oneOf(cities, 'city'),
     partner: (value) => (value === null || (isRecord(value) && isCount(value.salaryPct)) ? null : 'needs a whole, non-negative partner salary'),

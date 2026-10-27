@@ -752,6 +752,11 @@ export interface Effects {
   endRecurring?: string[];
   setFlags?: string[];
   clearFlags?: string[];
+  /**
+   * The second time of something: for each flag named here that is already set as the effect comes, the flag it points at is set too,
+   * before `setFlags`. A boss asked off twice, say: `{ setFlags: ['declined'], onceMore: { declined: 'declined_twice' } }`.
+   */
+  onceMore?: Record<string, string>;
   /** Changes the job. `leave` ends the career; otherwise the career, the level or both are set. */
   job?: { career?: string; level?: number; levelDelta?: number; leave?: boolean };
   /** The player moves here when the round has resolved. */

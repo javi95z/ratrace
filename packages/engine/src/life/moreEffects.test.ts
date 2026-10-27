@@ -136,3 +136,17 @@ describe('the rules of the new effects', () => {
     );
   });
 });
+
+describe('a thing done a second time', () => {
+  it('sets the flag it names only where the first flag was set already, at the round of the second time', () => {
+    const content = fixtureContent();
+    const state = game(content);
+    const p = structuredClone(state.player);
+    const decline = { setFlags: ['declined'], onceMore: { declined: 'declined_twice' } };
+    applyEffects(p, decline, at(content, state, 3));
+    expect(p.life.flags.declined).toBe(3);
+    expect(Object.hasOwn(p.life.flags, 'declined_twice')).toBe(false);
+    applyEffects(p, decline, at(content, state, 6));
+    expect(p.life.flags).toMatchObject({ declined: 6, declined_twice: 6 });
+  });
+});

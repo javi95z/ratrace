@@ -210,6 +210,7 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     life.recurring = life.recurring.filter((existing) => existing.tag !== entry.tag);
     life.recurring.push({ ...entry });
   }
+  for (const [flag, then] of Object.entries(effects.onceMore ?? {})) if (hasFlag(life.flags, flag)) life.flags[then] = round;
   for (const flag of effects.setFlags ?? []) life.flags[flag] = round;
   for (const flag of effects.clearFlags ?? []) delete life.flags[flag];
 

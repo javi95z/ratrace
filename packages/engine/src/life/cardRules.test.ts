@@ -159,6 +159,8 @@ describe('validateContent: cards', () => {
       expect(effect({ [field]: ['x y'] })).toEqual([`card offer option 1 has a name that is not allowed in ${field}: "x y"`]);
       expect(effect({ [field]: 'x' })).toEqual([`card offer option 1 needs a list for ${field}`]);
     }
+    expect(effect({ onceMore: { asked: 'x y' } })).toEqual(['card offer option 1 has a flag that is not allowed in onceMore']);
+    expect(effect({ onceMore: ['asked'] })).toEqual(['card offer option 1 has a flag that is not allowed in onceMore']);
     expect(effect({ job: { career: 'pirate' } })).toEqual(['card offer option 1 names an unknown career: pirate']);
     expect(effect({ job: { career: 'office', level: 3 } })).toEqual(['card offer option 1 names level 3, which career office does not have']);
     expect(effect({ job: {} })).toEqual(['card offer option 1 has a job change that changes nothing']);
