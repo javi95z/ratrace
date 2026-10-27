@@ -1318,12 +1318,12 @@ export const cards: Record<string, CardText> = {
     'Dejarlo pasar',
     ['Hacer que lo pague', 'Lo paga, de morros, y se queda.', 'Lo paga, y se muda al mes siguiente.'],
   ]),
-  lodger_leaves: c('El inquilino se muda', 'El inquilino ha encontrado un sitio propio, y te deja la llave, las plantas y una tarjeta.', [
+  lodger_leaves: c('El inquilino se muda', 'El inquilino ha encontrado un sitio propio, y te devuelve la llave con un regalito, una caja de plantas bajo el brazo.', [
     'Quedarte la fianza para pintar',
     'Devolverle la fianza',
   ]),
   // Content 1.50: a fortune's fake masterpiece.
-  rich_fake_art: c('Una obra maestra, más o menos', 'Una experta mira tu cuadro un buen rato, con los ojos entornados. Luego pregunta dónde lo compraste.', [
+  rich_fake_art: c('Una obra maestra, más o menos', 'Un experto mira tu cuadro con una lupa un buen rato. Luego pregunta dónde lo compraste.', [
     ['Callar, y dejarlo en la pared', 'Nadie más vuelve a mirarlo tan de cerca.', 'Un invitado a cenar lo mira así de cerca.'],
     ['Demandar a la galería', 'La galería paga, y se disculpa por escrito.', 'La galería ha desaparecido. Sus dueños, también.'],
     'Donarlo a un museo, como falso',

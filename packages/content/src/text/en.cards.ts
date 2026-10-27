@@ -1318,12 +1318,12 @@ export const cards: Record<string, CardText> = {
     'Let it go',
     ['Make the lodger pay for it', 'They pay, sulking, and stay.', 'They pay, and move out a month later.'],
   ]),
-  lodger_leaves: c('The lodger moves out', 'The lodger has found a place of their own, and leaves the key, the plants and a card.', [
+  lodger_leaves: c('The lodger moves out', 'The lodger has found a place of their own, and hands back the key with a small present, a box of plants under one arm.', [
     'Keep the deposit for the paint',
     'Give the deposit back',
   ]),
   // Content 1.50: a fortune's fake masterpiece.
-  rich_fake_art: c('A masterpiece, of sorts', 'An expert squints at your painting for a long time. Then she asks where you bought it.', [
+  rich_fake_art: c('A masterpiece, of sorts', 'An expert squints at your painting through a magnifying glass. Then he asks where you bought it.', [
     ['Keep quiet, and keep it on the wall', 'Nobody else ever looks that closely.', 'A guest at dinner looks that closely.'],
     ['Sue the gallery', 'The gallery pays, and apologises in print.', 'The gallery has vanished. So have its owners.'],
     'Give it to a museum, as a fake',
