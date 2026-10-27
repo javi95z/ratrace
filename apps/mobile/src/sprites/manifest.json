@@ -1489,6 +1489,16 @@
     "w": 288,
     "h": 120
   },
+  "card.lodger_leaves": {
+    "src": "cards/card.lodger_leaves.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lodger_party": {
+    "src": "cards/card.lodger_party.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lodger_room": {
     "src": "cards/card.lodger_room.png",
     "w": 288,
@@ -1841,6 +1851,11 @@
   },
   "card.rich_divorce": {
     "src": "cards/card.rich_divorce.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rich_fake_art": {
+    "src": "cards/card.rich_fake_art.png",
     "w": 288,
     "h": 120
   },

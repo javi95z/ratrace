@@ -408,6 +408,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-48', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['transfer_asia', 'digital_nomad', 'offer_madrid', 'tokyo_lifetime', 'zurich_savings', 'london_flatshare'].map((id) => `card.${id}`) },
   // Content 1.50: the troubles of a fortune. Stand-ins cut from older scenes until drawn.
   { file: 'cards/cards-49', group: 'cards', kind: 'scenes', cols: 2, rows: 5, width: 288, height: 120, ids: ['lawsuit', 'scandal', 'tax_squad', 'partner_swindle', 'divorce', 'gala', 'uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid'].map((id) => `card.rich_${id}`) },
+  // Content 1.50: three cards whose art is still to be drawn (art/prompts/v22-prompt-pack.md: cards-34 and cards-39), stand-ins cut from older scenes until then.
+  { file: 'cards/stand-ins-v22', group: 'cards', kind: 'scenes', cols: 3, rows: 1, width: 288, height: 120, ids: ['card.lodger_party', 'card.lodger_leaves', 'card.rich_fake_art'] },
   // v21: the people who come back in a life, pleased and upset, and their cards (drawn ahead of the cards that deal them).
   {
     file: 'portraits/people-01', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64,

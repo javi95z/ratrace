@@ -4566,6 +4566,21 @@
       "width": 288,
       "height": 120
     },
+    "card.lodger_party": {
+      "file": "cards/card.lodger_party.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lodger_leaves": {
+      "file": "cards/card.lodger_leaves.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rich_fake_art": {
+      "file": "cards/card.rich_fake_art.png",
+      "width": 288,
+      "height": 120
+    },
     "person.inlaw.pleased": {
       "file": "portraits/person.inlaw.pleased.png",
       "width": 64,
