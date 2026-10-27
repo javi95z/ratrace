@@ -293,8 +293,8 @@ describe('what the HUD says of the life', () => {
   it('names who lives it, how old they are, which round and where, and the job', async () => {
     await open();
     expect(screen.getByText('Age 22')).toBeTruthy();
-    expect(screen.getByText('Round 1 of 20 · Madrid')).toBeTruthy();
-    expect(screen.getByText('Nurse')).toBeTruthy();
+    expect(screen.getByText('Round 1 of 20')).toBeTruthy();
+    expect(screen.getByText('Nurse · Madrid')).toBeTruthy();
     // The city, on its banner, at the first light of the round's news.
     const banner = document.querySelector('[data-city-light]');
     expect(banner?.getAttribute('data-city-light')).toBe('day');
@@ -451,7 +451,7 @@ describe('what sticks to the top of a round', () => {
     scrollPast();
     await settled();
     // Whose life and which round are told only by the portrait's row, which has scrolled away: no strip says them again.
-    expect(screen.queryByText('Round 1 of 20')).toBeNull();
+    expect(screen.getAllByText('Round 1 of 20')).toHaveLength(1);
     expect(screen.getAllByText(/Age 22/)).toHaveLength(1);
     // The figures stick; the way out of the rat race, just under them, does not.
     for (const figure of [/Cash/, /Flow/, /Status/, /Focus/]) expect(stuckIn(screen.getByRole('button', { name: figure })), String(figure)).not.toBeNull();

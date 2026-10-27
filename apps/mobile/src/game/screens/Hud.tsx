@@ -509,14 +509,12 @@ function HudLead({ compact, skyline, flush, onProfile, open }: { compact: boolea
             <PixelText size={20} lineHeight={20} numberOfLines={1} style={{ flexShrink: 0 }}>{common('age', { age })}</PixelText>
           </View>
           <ReadText size={13} tone="ink-200" numberOfLines={1} style={{ marginTop: 4 }}>
-            {`${t('roundShort', { n: Math.min(life.round + 1, content.rounds), total: content.rounds })} · ${names.cities[life.cityId]}`}
+            {t('roundShort', { n: Math.min(life.round + 1, content.rounds), total: content.rounds })}
           </ReadText>
-          {/* The job on a line of its own: a long title is not cut short by the city. */}
-          {life.career ? (
-            <ReadText size={12} lineHeight={12 * 1.25} tone="ink-300" numberOfLines={1}>
-              {text.careers[life.career].levels[life.level]}
-            </ReadText>
-          ) : null}
+          {/* The job and the city on the line under the round: the round's line is short, so a long city's name is not cut short there. */}
+          <ReadText size={12} lineHeight={12 * 1.25} tone="ink-300" numberOfLines={1}>
+            {life.career ? `${text.careers[life.career].levels[life.level]} · ${names.cities[life.cityId]}` : names.cities[life.cityId]}
+          </ReadText>
           {/* Prison says so where the player always looks. */}
           {life.jailRounds > 0 ? (
             <Pressable
