@@ -79,6 +79,12 @@ export const richCards: CardDef[] = [
     { outcomes: [{ weight: 75, effects: {} }, { weight: 25, effects: { cashNetWorthPct: -5, status: -3 } }] },
     { effects: { status: 2, recurring: [yearly('bodyguards', 'expense', 25_000, 3)] } },
   ]),
+  // The masterpiece on the wall is a fake: kept quiet, fought over with the gallery, or given away for what it is.
+  card('rich_fake_art', 'lifestyle', { ...ONCE, when: { ownsLadder: 'art', minNetWorth: RICH } }, [
+    { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { status: -4 } }] },
+    { effects: { cashNetWorthPct: -1 }, outcomes: [{ weight: 50, effects: { cashNetWorthPct: 2, status: 1 } }, { weight: 50, effects: { status: -2 } }] },
+    { effects: { status: 2 } },
+  ]),
   // A larger rival wants the business, at a price, and makes life hard for whoever says no.
   card('rich_hostile_bid', 'business', { ...ONCE, when: { hasBusiness: true, minNetWorth: RICH } }, [
     { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { businessesPct: -15 } }] },

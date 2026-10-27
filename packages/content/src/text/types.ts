@@ -1,5 +1,6 @@
 import type { AssetClass, CardCategory, CryptoPhase, DebtKind, FocusAction, InsuranceKind, LedgerLine, OptionLock, Regime, RejectReason, SkillId, Trend } from '@ratrace/engine';
 import type { BadgeGroup } from '../badges';
+import type { PersonId } from '../people';
 
 /**
  * What the famous say of the coming round. Each line says the same as the plain headline it stands
@@ -54,6 +55,8 @@ export interface ContentText {
   crises: Record<string, { name: string; intro: string; years: string[] }>;
   categories: Record<CardCategory, string>;
   cards: Record<string, CardText>;
+  /** The people who come back in a life (`people.ts`): what each is to the player, the line that introduces them on their first card, and each ending of their story as a life's end tells it. */
+  people: Record<PersonId, { who: string; meet: string; endings: Record<string, string> }>;
   regimes: Record<Regime, string>;
   cryptoPhases: Record<CryptoPhase, string>;
   /** Headlines. The property ones contain {city}, which the interface fills in. */

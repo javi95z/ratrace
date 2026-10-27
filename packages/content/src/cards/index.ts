@@ -9,6 +9,7 @@ import { businessCards, careerCards, educationCards } from './work';
 import { celebCards } from './celebs';
 import { v20Cards } from './v20';
 import { richCards } from './rich';
+import { peopleCards } from './people';
 
 /** The hundred cards of v1, in the order of spec section 3.11. */
 export const cards: CardDef[] = [
@@ -45,4 +46,6 @@ export const cards: CardDef[] = [
   ...v20Cards,
   // Content 1.50: the troubles of a fortune, dealt only to the rich.
   ...richCards,
+  // Content 1.50: the people who come back, and the player's own.
+  ...peopleCards,
 ];

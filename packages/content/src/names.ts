@@ -1,3 +1,5 @@
+import type { PersonId } from './people';
+
 /**
  * The name pack: every real brand, company, coin and place the game mentions, per language.
  * Card text refers to these with placeholders such as {item:watch_rolex}, {asset:tesla},
@@ -12,6 +14,8 @@ export interface Names {
   assets: Record<string, { name: string; ticker: string }>;
   items: Record<string, string>;
   brands: Record<string, string>;
+  /** The people who come back in a life (`people.ts`), as each language calls them: made up, so a parody pack keeps them. */
+  people: Record<PersonId, string>;
 }
 
 const assets: Names['assets'] = {
@@ -124,6 +128,7 @@ export const names: Record<Locale, Names> = {
     assets,
     items,
     brands,
+    people: { inlaw: 'Toni', boss: 'Margaret', landlord: 'Mr Ferris', founder: 'Bea', advisor: 'Brandon', parents: 'Mum and Dad' },
   },
   es: {
     cities: { madrid: 'Madrid', london: 'Londres', new_york: 'Nueva York', dubai: 'Dubái', singapore: 'Singapur', bangkok: 'Bangkok', tokyo: 'Tokio', moscow: 'Moscú', mexico_city: 'Ciudad de México', zurich: 'Zúrich' },
@@ -184,6 +189,7 @@ export const names: Record<Locale, Names> = {
       tech_ai_workstation: 'Estación de trabajo de IA',
     },
     brands,
+    people: { inlaw: 'Toni', boss: 'Mercedes', landlord: 'don Julián', founder: 'Bea', advisor: 'Borja', parents: 'Mamá y papá' },
   },
   // Brands, cars, watches and coins keep their own letters. What is described, not named, is in Russian. A name is put
   // into a sentence as it stands here, undeclined: the ones cards use read well that way.
@@ -247,5 +253,6 @@ export const names: Record<Locale, Names> = {
       tech_ai_workstation: 'Рабочая станция для ИИ',
     },
     brands,
+    people: { inlaw: 'Тони', boss: 'Маргарита', landlord: 'Пётр Ильич', founder: 'Ника', advisor: 'Стас', parents: 'Мама и папа' },
   },
 };

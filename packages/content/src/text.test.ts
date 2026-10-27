@@ -64,6 +64,7 @@ import { CELEB_ART,
 } from './art';
 import { content } from './content';
 import { lives } from './lives';
+import { PEOPLE, personArt } from './people';
 import { names } from './names';
 import type { Locale } from './names';
 import { fillNames, homeName, rawText, textFor } from './text';
@@ -218,7 +219,8 @@ describe.each(LOCALES)('content text: %s', (locale) => {
     const { text: ready } = textFor(locale);
     for (const [path, sentence] of strings(ready)) {
       const left = sentence.match(/\{[^}]*\}/g) ?? [];
-      expect(left.filter((p) => p !== '{city}' && p !== '{asset}'), path).toEqual([]);
+      // The player's own people are named by the interface, from the life's rivals (`{rival:<who>}`).
+      expect(left.filter((p) => p !== '{city}' && p !== '{asset}' && !/^\{rival:(classmate|cousin|ex)\}$/.test(p)), path).toEqual([]);
     }
     expect(ready.cards.life_rolex_call.body).toContain(pack.items.watch_rolex);
     expect(ready.cards.inv_hot_tip.body).toContain('Tesla');
@@ -279,6 +281,8 @@ describe('content art', () => {
   it('points only at sprites that exist', () => {
     const wanted: string[] = [
       ...Object.values(cardArt),
+      // Each of the people who come back, in both moods.
+      ...PEOPLE.flatMap((who) => [personArt(who, 'pleased'), personArt(who, 'upset')]),
       ...content.items.map((item) => itemArt(item.id)),
       // Every kind plain, and as each city that sells it draws it.
       ...content.propertyTypes.flatMap((type) => [
@@ -336,7 +340,8 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(257 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14 + 2 * 4 + (8 + 2 + 2));
+    // The cards (284) and the faces of the six people who come back, pleased and upset (6 * 2), first.
+    expect(wanted.length).toBe(284 + 6 * 2 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14 + 2 * 4 + (8 + 2 + 2));
     // Every kind of property plain (26); as each of the ten cities draws its eleven homes and four kinds to let (15 * 10),
     // the block of the eight that sell one (8), and each city's own kind (10). Time with the family and a rest, a sign each: the 2.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.

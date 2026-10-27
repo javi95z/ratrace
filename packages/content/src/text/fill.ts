@@ -15,8 +15,8 @@ export function withAfter(text: ContentText, after: Record<string, ReadonlyArray
   return { ...text, cards: Object.fromEntries(cards) as ContentText['cards'] };
 }
 
-/** Placeholders that the name pack fills: {item:watch_rolex}, {asset:tesla}, {city:london}, {brand:google}. */
-const PLACEHOLDER = /\{(item|asset|city|brand):([a-z0-9_]+)\}/g;
+/** Placeholders that the name pack fills: {item:watch_rolex}, {asset:tesla}, {city:london}, {brand:google}, {person:inlaw}. */
+const PLACEHOLDER = /\{(item|asset|city|brand|person):([a-z0-9_]+)\}/g;
 
 function nameOf(pack: Names, kind: string, id: string): string | undefined {
   switch (kind) {
@@ -26,6 +26,8 @@ function nameOf(pack: Names, kind: string, id: string): string | undefined {
       return Object.hasOwn(pack.assets, id) ? pack.assets[id].name : undefined;
     case 'city':
       return Object.hasOwn(pack.cities, id) ? pack.cities[id] : undefined;
+    case 'person':
+      return Object.hasOwn(pack.people, id) ? pack.people[id as keyof Names['people']] : undefined;
     default:
       return Object.hasOwn(pack.brands, id) ? pack.brands[id] : undefined;
   }

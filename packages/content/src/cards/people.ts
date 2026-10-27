@@ -1,0 +1,167 @@
+import type { CardDef, CardOption, Effects } from '@ratrace/engine';
+import { metFlag } from '../people';
+import type { PersonId } from '../people';
+import { card, usd, yearly } from './build';
+
+/**
+ * Content 1.50: the people who come back (`people.ts`). Each story is a few cards that remember: the first is dealt like any other,
+ * the next ones only once the flags of the one before are set, a round or more ago (the hand is drawn before its cards are answered),
+ * and so likely then that they come within a round or two. The player's own three, the cousin, the ex and the classmate of the paper,
+ * step in through a card each, named in its words by `{rival:<who>}`, which the interface fills.
+ */
+
+/** How likely a story's first card is: like an everyday card, so a life meets some of the people and not all of them. */
+const MEET = 8;
+/** How likely a story's next card is once it is due: high enough to come within a round or two. */
+const NEXT = 150;
+/** The parents come in every life, by age. */
+const FAMILY = 400;
+
+/** Every option of a person's card sets that they were met, whatever else it does. */
+function person(who: PersonId, options: CardOption[]): CardOption[] {
+  return options.map((option) => ({ ...option, effects: { ...option.effects, setFlags: [metFlag(who), ...(option.effects?.setFlags ?? [])] } }));
+}
+
+/** The person liked it: warm, and no longer cold. And the other way. */
+const warm = (who: PersonId, ...flags: string[]): Effects => ({ setFlags: [`${who}_warm`, ...flags], clearFlags: [`${who}_cold`] });
+const cold = (who: PersonId, ...flags: string[]): Effects => ({ setFlags: [`${who}_cold`, ...flags], clearFlags: [`${who}_warm`] });
+
+/** Due once this flag has been set a round ago or more: never in the round that set it. */
+const after = (flag: string, rounds = 1) => ({ flags: [flag], notRecentFlag: { flag, rounds } });
+
+export const peopleCards: CardDef[] = [
+  // The brother-in-law and his coin: in early, it goes five times up; held, it most often vanishes and now and then goes twenty.
+  // Out, he boasts at dinner. Either way his own goes, and he comes for a loan, which he pays back or not.
+  card('inlaw_coin', 'investing', { once: true, weight: MEET, when: { minRound: 1, maxRound: 12 } }, person('inlaw', [
+    { effects: { setFlags: ['inlaw_out'] } },
+    { effects: { cash: usd(-2_000), ...warm('inlaw', 'inlaw_in') } },
+    { when: { minFinanceSkill: 1 }, effects: cold('inlaw', 'inlaw_out') },
+  ])),
+  card('inlaw_moon', 'investing', { once: true, weight: NEXT, when: after('inlaw_in') }, person('inlaw', [
+    { outcomes: [{ weight: 85, effects: { setFlags: ['inlaw_held', 'inlaw_bubble'] } }, { weight: 15, effects: { cash: usd(40_000), setFlags: ['inlaw_jackpot'] } }] },
+    { effects: { cash: usd(10_000), setFlags: ['inlaw_sold', 'inlaw_bubble'] } },
+    { effects: { cash: usd(5_000) }, outcomes: [{ weight: 85, effects: { setFlags: ['inlaw_held', 'inlaw_bubble'] } }, { weight: 15, effects: { cash: usd(20_000), setFlags: ['inlaw_jackpot'] } }] },
+  ])),
+  card('inlaw_dinner', 'family', { once: true, weight: NEXT, when: after('inlaw_out') }, person('inlaw', [
+    { effects: { setFlags: ['inlaw_bubble'] } },
+    { effects: { cash: usd(-3_000), setFlags: ['inlaw_bubble'] }, outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { cash: usd(9_000) } }] },
+    { effects: { status: -1, ...cold('inlaw', 'inlaw_bubble') } },
+  ])),
+  card('inlaw_rug', 'investing', { once: true, weight: NEXT, when: after('inlaw_bubble') }, person('inlaw', [
+    { effects: { setFlags: ['inlaw_broke'] } },
+    { effects: { focus: 1, ...warm('inlaw', 'inlaw_broke') } },
+  ])),
+  card('inlaw_loan', 'family', { once: true, weight: NEXT, when: after('inlaw_broke') }, person('inlaw', [
+    { effects: cold('inlaw') },
+    { effects: { cash: usd(-5_000), ...warm('inlaw', 'inlaw_owes') } },
+    { effects: { cash: usd(-1_000), ...warm('inlaw') } },
+  ])),
+  card('inlaw_repay', 'family', { once: true, weight: NEXT, when: after('inlaw_owes', 2) }, person('inlaw', [
+    { effects: { clearFlags: ['inlaw_owes'] }, outcomes: [{ weight: 60, effects: { cash: usd(5_000), setFlags: ['inlaw_repaid'] } }, { weight: 40, effects: { cash: usd(2_000), setFlags: ['inlaw_owes'] } }] },
+    { effects: { status: 1, clearFlags: ['inlaw_owes'], ...warm('inlaw', 'inlaw_forgiven') } },
+  ])),
+
+  // The boss: a weekend covered is remembered, with a rung abroad and, in a recession's layoffs, her word; asked twice in vain, she stops asking.
+  card('boss_weekend', 'career', { soon: true, cooldown: 3, weight: MEET, when: { employed: true, minRound: 1, notFlags: ['boss_covered', 'boss_cold'] } }, person('boss', [
+    { effects: { setFlags: ['boss_declined'], onceMore: { boss_declined: 'boss_cold' } } },
+    { effects: { focus: 1, careerSkill: 1, ...warm('boss', 'boss_covered') } },
+  ])),
+  card('boss_offer', 'career', { once: true, weight: NEXT, when: { employed: true, ...after('boss_covered', 2) } }, person('boss', [
+    {},
+    { when: { notCities: ['singapore'] }, effects: { job: { levelDelta: 1 }, moveCity: 'singapore', cash: usd(4_000), setFlags: ['boss_moved'] } },
+    { when: { cities: ['singapore'] }, effects: { job: { levelDelta: 1 }, moveCity: 'london', cash: usd(4_000), setFlags: ['boss_moved'] } },
+  ])),
+  card('boss_layoffs', 'career', { once: true, weight: NEXT / 2, when: { employed: true, flags: ['boss_met'], notFlags: ['layoff_proof'], regimes: ['recession'] } }, person('boss', [
+    { outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } }] },
+    { when: { flags: ['boss_warm'] }, effects: { status: 1, setFlags: ['boss_protected'] } },
+    { effects: { salaryBoostPct: -40, cashSalaryPct: 40, salaryModPct: -5 } },
+  ])),
+
+  // The landlord, while the player rents: a tenant who is no trouble pays the rises and is offered the flat at a friend's price.
+  // The tenancy is counted from the damp (`landlord_since`): every other card of his sets `landlord_met` again.
+  card('landlord_damp', 'housing', { once: true, weight: MEET, when: { ownsHome: false, minRound: 1 } }, person('landlord', [
+    { effects: { status: -1, ...warm('landlord', 'landlord_since') } },
+    { effects: { focus: 1, ...cold('landlord', 'landlord_since') }, outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { status: -1 } }] },
+    { effects: { cash: usd(-1_500), ...warm('landlord', 'landlord_since') } },
+  ])),
+  card('landlord_raise', 'housing', { soon: true, cooldown: 3, weight: NEXT / 4, when: { ownsHome: false, notFlags: ['landlord_left'], ...after('landlord_since', 2) } }, person('landlord', [
+    { effects: { cash: usd(-1_800), ...warm('landlord') } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { cash: usd(-600) } }, { weight: 40, effects: { cash: usd(-1_800), ...cold('landlord') } }] },
+    { effects: { cash: usd(-1_200), setFlags: ['landlord_left'] } },
+  ])),
+  card('landlord_sale', 'housing', { once: true, weight: NEXT, when: { ownsHome: false, flags: ['landlord_warm'], notFlags: ['landlord_left'], notCities: ['singapore'], notRecentFlag: { flag: 'landlord_since', rounds: 3 } } }, person('landlord', [
+    {},
+    { effects: { property: { typeId: 'flat', pricePct: 80, downPct: 20, rented: false }, setFlags: ['landlord_sold'] } },
+    { effects: { property: { typeId: 'flat', pricePct: 80, downPct: 100, rented: false }, setFlags: ['landlord_sold'] } },
+  ])),
+
+  // A friend's startup: a first cheque, a second, and two years on the news, which is most often a closing; then, maybe, a second idea.
+  card('founder_pitch', 'investing', { once: true, weight: MEET, when: { minRound: 2, maxRound: 14 } }, person('founder', [
+    {},
+    { effects: { cash: usd(-5_000), ...warm('founder', 'founder_in') } },
+    { effects: { focus: 1, skills: { network: 1 }, ...warm('founder') } },
+  ])),
+  card('founder_more', 'investing', { once: true, weight: NEXT, when: after('founder_in') }, person('founder', [
+    { effects: { setFlags: ['founder_closed'] } },
+    { effects: { cash: usd(-5_000), setFlags: ['founder_more'] } },
+  ])),
+  card('founder_exit', 'investing', { once: true, weight: NEXT, when: after('founder_more', 2) }, person('founder', [
+    {
+      outcomes: [
+        { weight: 62, effects: { setFlags: ['founder_closed'] } },
+        { weight: 28, effects: { cash: usd(20_000), setFlags: ['founder_sold'] } },
+        { weight: 10, effects: { cash: usd(100_000), setFlags: ['founder_rich'] } },
+      ],
+    },
+    { effects: { cash: usd(5_000), setFlags: ['founder_out'] } },
+  ])),
+  card('founder_second', 'investing', { once: true, weight: NEXT, when: after('founder_closed', 2) }, person('founder', [
+    {},
+    { effects: { cash: usd(-3_000) }, outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { cash: usd(15_000), setFlags: ['founder_won'] } }] },
+    { effects: { focus: 1, skills: { network: 1 }, ...warm('founder') } },
+  ])),
+
+  // The bank's adviser: a "guaranteed" fund whose fee runs every year, and the bank's own insurance on a mortgage. A word in time saves it.
+  card('advisor_fund', 'investing', { once: true, weight: MEET, when: { minRound: 2, minNetWorth: usd(15_000) } }, person('advisor', [
+    { effects: cold('advisor') },
+    { effects: { invest: { assetId: 'treasury_short', amount: usd(10_000) }, recurring: [yearly('fund_fee', 'expense', 400, null)], ...warm('advisor', 'advisor_fund') } },
+    { when: { minFinanceSkill: 2 }, effects: { invest: { assetId: 'msci_world', amount: usd(10_000) }, ...cold('advisor') } },
+  ])),
+  card('advisor_insurance', 'housing', { once: true, weight: MEET * 2, when: { hasMortgage: true } }, person('advisor', [
+    { effects: cold('advisor') },
+    { effects: { recurring: [yearly('bank_insurance', 'expense', 900, 10)], ...warm('advisor', 'advisor_insurance') } },
+    { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
+  ])),
+
+  // The parents, in every life: help with a first home, care in their old age, and what they leave.
+  card('parents_help', 'family', { once: true, weight: FAMILY, when: { ownsHome: false, minRound: 1, maxRound: 5 } }, person('parents', [
+    { effects: { status: 1, setFlags: ['parents_proud'] } },
+    { effects: { cash: usd(10_000), setFlags: ['parents_helped'] } },
+  ])),
+  card('parents_care', 'family', { once: true, weight: FAMILY, when: { minRound: 9, maxRound: 14 } }, person('parents', [
+    { effects: { recurring: [yearly('care_home', 'expense', 6_000, 4)], setFlags: ['parents_home'] } },
+    { effects: { focus: 1, recurring: [yearly('parents_care', 'expense', 1_500, 4)], ...warm('parents', 'parents_cared') } },
+  ])),
+  card('parents_inheritance', 'laterLife', { once: true, weight: FAMILY, when: { minRound: 15 } }, person('parents', [
+    {},
+    { outcomes: [{ weight: 70, effects: { cash: usd(40_000) } }, { weight: 30, effects: { cash: usd(-8_000), setFlags: ['parents_debts'] } }] },
+    { when: { flags: ['parents_warm'] }, effects: { cash: usd(40_000) } },
+  ])),
+
+  // The player's own people, of the paper: the cousin's wedding, the ex's new car, the classmate's firm.
+  card('cousin_wedding', 'family', { once: true, weight: MEET, when: { minRound: 2, maxRound: 10 } }, [
+    { effects: { status: -1 } },
+    { effects: { cash: usd(-400) } },
+    { effects: { cash: usd(-2_500), status: 3 } },
+  ]),
+  card('ex_new_car', 'lifestyle', { once: true, weight: MEET, when: { minRound: 3, maxRound: 12 } }, [
+    {},
+    { effects: { buyItem: { itemId: 'car_tesla_model_3', pricePct: 100 } } },
+    { effects: { cash: usd(-600), status: 1 } },
+  ]),
+  card('classmate_job', 'career', { once: true, weight: MEET, when: { employed: true, minRound: 3, maxRound: 14 } }, [
+    {},
+    { effects: { salaryModPct: 12, status: 1 } },
+    { when: { minSkills: { negotiation: 2 } }, effects: { salaryModPct: 18 } },
+  ]),
+];

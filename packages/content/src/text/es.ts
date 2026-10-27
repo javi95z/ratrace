@@ -609,4 +609,74 @@ export const es: ContentText = {
     business: 'Beneficio retirado de tus negocios',
     dividendsReinvested: 'Dividendos reinvertidos',
   },
+  people: {
+    inlaw: {
+      who: '{person:inlaw}, tu cuñado',
+      meet: 'Te presentamos a {person:inlaw}, tu cuñado',
+      endings: {
+        jackpot: '{person:inlaw} aún conduce el coche que le compró $RATA. Tú también te compraste algo.',
+        repaid: '{person:inlaw} te devolvió hasta el último céntimo, y no ha vuelto a decir «moneda».',
+        forgiven: 'Dejaste que {person:inlaw} se quedara el dinero. Él se quedó también el trabajo.',
+        unpaid: '{person:inlaw} aún te debe dinero, y lo saca en las cenas como si le debieras tú.',
+        estranged: '{person:inlaw} y tú ya no habláis de dinero. Ni de casi nada.',
+        coin: '{person:inlaw} está con una moneda nueva. Esta lleva una rana.',
+      },
+    },
+    boss: {
+      who: '{person:boss}, tu jefa',
+      meet: 'Te presentamos a {person:boss}, tu jefa',
+      endings: {
+        protected: '{person:boss} se jubiló el año después de los despidos. Tú sigues en el puesto que te salvó.',
+        moved: '{person:boss} manda una postal cada Navidad a la oficina adonde te mandó.',
+        covered: '{person:boss} te escribió una carta de recomendación para enmarcar.',
+        cold: '{person:boss} dejó de pedírtelo. Encontró a alguien que dice que sí.',
+        gone: '{person:boss} se fue a otra empresa, y nunca supo para qué eran tus fines de semana.',
+      },
+    },
+    landlord: {
+      who: '{person:landlord}, tu casero',
+      meet: 'Te presentamos a {person:landlord}, tu casero',
+      endings: {
+        sold: '{person:landlord} manda una postal desde la costa, al piso que ahora es tuyo.',
+        left: 'Dejaste el piso de {person:landlord}. La mancha se quedó.',
+        cold: '{person:landlord} se quedó tu fianza, por una mancha a la que llamaba carácter.',
+        warm: '{person:landlord} decía que eras su mejor inquilino, y te subía el alquiler igual.',
+        rent: 'Le pagaste el alquiler a {person:landlord} durante años. Se compró otro piso con él.',
+      },
+    },
+    founder: {
+      who: '{person:founder}, una amiga con una startup',
+      meet: 'Te presentamos a {person:founder}, una amiga con una startup',
+      endings: {
+        rich: 'La empresa de {person:founder} se vendió por millones. Tu nombre está en la pared de la primera oficina.',
+        won: 'La segunda empresa de {person:founder} salió adelante. Nunca olvidó quién la apoyó.',
+        sold: '{person:founder} vendió en pequeño y empezó de nuevo. Aún te manda sus presentaciones.',
+        out: 'Vendiste tus acciones antes de la noticia. {person:founder} lo entendió. Más o menos.',
+        closed: 'La empresa de {person:founder} cerró. Dice que le enseñó todo.',
+        passed: '{person:founder} encontró el dinero en otra parte. Lees sobre ella en los periódicos.',
+      },
+    },
+    advisor: {
+      who: '{person:advisor}, tu asesor del banco',
+      meet: 'Te presentamos a {person:advisor}, tu asesor del banco',
+      endings: {
+        both: '{person:advisor} cobró dos bonus gracias a ti. Te manda una cesta cada Navidad.',
+        fund: 'El fondo de {person:advisor} cobró su comisión todos y cada uno de los años. A él lo ascendieron.',
+        insurance: 'El seguro de {person:advisor} costó una fortuna con los años, y nunca pagó nada.',
+        cold: '{person:advisor} se rindió contigo, y pasó a tus vecinos.',
+        none: '{person:advisor} aún te manda folletos. Tú aún no los lees.',
+      },
+    },
+    parents: {
+      who: '{person:parents}',
+      meet: '{person:parents}',
+      endings: {
+        debts: 'Tus padres dejaron más deudas de las que te contaron nunca.',
+        cared: 'Estuviste con tus padres en sus últimos años. Te costó, y lo volverías a hacer.',
+        home: 'Tus padres estuvieron bien atendidos, y los visitabas los domingos.',
+        helped: 'La ayuda de tus padres fue a tu primera casa. O eso creyeron.',
+        fine: 'Tus padres siempre dijeron que te iría bien. Tenían razón, más o menos.',
+      },
+    },
+  },
 };

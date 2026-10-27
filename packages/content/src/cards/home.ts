@@ -194,6 +194,15 @@ export const lodgerCards: CardDef[] = [
     { effects: { endLodger: true } },
     { outcomes: [{ weight: 80, effects: { status: -2 } }, { weight: 20, effects: { partner: null } }] },
   ]),
+  // Content 1.50: a party thrown while the player was away, paid for or made a point of; and the day the lodger finds a place of their own.
+  card('lodger_party', 'lifestyle', { weight: 6, cooldown: 6, when: { lodger: true } }, [
+    { effects: { cash: usd(-900) } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { endLodger: true } }] },
+  ]),
+  card('lodger_leaves', 'lifestyle', { weight: 4, cooldown: 6, when: { lodger: true } }, [
+    { effects: { cash: usd(600), endLodger: true } },
+    { effects: { skills: { network: 1 }, endLodger: true } },
+  ]),
 ];
 
 /**

@@ -25,3 +25,5 @@ export { assetKind } from './kinds';
 export { CHALLENGE_DEBT, CHALLENGE_RULES, HEIR_CASH, challengeLimits, challengeOf, challengeStart, weekOf, weekStart } from './challenges';
 export type { Challenge, ChallengeRule } from './challenges';
 export type { AssetKind } from './kinds';
+export { cardPeople, metFlag, PEOPLE, personArt, personEndings } from './people';
+export type { Mood, PersonEnding, PersonId } from './people';

@@ -1199,4 +1199,133 @@ export const cards: Record<string, CardText> = {
     'Vender a su precio',
     'Plantarles cara',
   ]),
+  // Content 1.50: the people who come back, and the player's own.
+  inlaw_coin: c('Una moneda con una rata', '{person:inlaw} te enseña el móvil: $RATA, una moneda con una rata. «Solo puede subir», dice.', [
+    'Decirle que no, con educación',
+    'Meter un poco',
+    'Preguntarle para qué sirve',
+  ]),
+  inlaw_moon: c('Hasta la luna', 'Una captura a las tres de la mañana: $RATA vale cinco veces más. {person:inlaw} ha añadido cohetes.', [
+    ['Aguantar: solo puede subir', 'Aguantas. {person:inlaw} te manda un cohete cada mañana.', 'Se multiplica por veinte. Vendes en lo más alto, temblando.'],
+    'Venderlo todo',
+    ['Vender la mitad y aguantar el resto', 'La mitad, a salvo. La otra mitad viaja con {person:inlaw}.', 'La mitad que aguantas se multiplica por veinte. Vendes, temblando.'],
+  ]),
+  inlaw_dinner: c('Cena familiar', '{person:inlaw} se levanta en la cena, móvil en mano: $RATA vale cinco veces más. Todos te miran.', [
+    'Pasar las patatas',
+    ['Pedirle que te meta ahora', 'Compras en lo más alto. La semana siguiente, todo el mundo.', 'Vendes una semana después, en lo más alto. Pura suerte.'],
+    'Decir en la mesa que es una burbuja',
+  ]),
+  inlaw_rug: c('$RATA se va a cero', 'La moneda lo ha perdido todo en una noche. {person:inlaw} está en un banco del parque, actualizando el precio.', [
+    'Dejarle en paz',
+    'Llevar dos cafés y sentarte con él',
+  ]),
+  inlaw_loan: c('Llaman a la puerta bajo la lluvia', '{person:inlaw} en tu puerta, empapado. Necesita dinero para el alquiler y jura que es la última vez.', [
+    'Decirle que no',
+    'Prestarle lo que necesita',
+    'Darle un poco, como regalo',
+  ]),
+  inlaw_repay: c('Un sobre con tu nombre', '{person:inlaw} tiene trabajo, un corte de pelo nuevo y un sobre con tu nombre.', [
+    ['Coger el sobre', 'Todo, y el café lo paga él.', 'Una parte, y la promesa del resto.'],
+    'Decirle que se lo quede',
+  ]),
+  boss_weekend: c('El proyecto del fin de semana', 'Viernes, seis de la tarde. {person:boss} te deja un archivador en la mesa: el cliente lo quiere el lunes.', [
+    'Decir que tienes planes',
+    'Cubrir el fin de semana',
+  ]),
+  boss_offer: c('Una oficina fuera', '{person:boss} abre una oficina en el extranjero y quiere allí a alguien de confianza, un peldaño más arriba.', [
+    'Darle las gracias y quedarte',
+    'Hacer las maletas para {city:singapore}',
+    'Hacer las maletas para {city:london}',
+  ]),
+  boss_layoffs: c('Una lista en el pasillo', 'Cajas en el pasillo y un directivo con una lista. {person:boss} está en la sala donde se hace.', [
+    ['Esperar a la lista', 'Tu nombre no está.', 'Tu nombre está.'],
+    'Pedirle su palabra',
+    'Aceptar la baja voluntaria',
+  ]),
+  landlord_damp: c('Una mancha en el techo', 'Una mancha negra crece sobre la cama. {person:landlord} la mira y dice que tiene «carácter».', [
+    'Aguantarte',
+    ['Quejarte por escrito', 'La arregla, despacio, y se acuerda de quién se quejó.', 'No arregla nada, y se acuerda de quién se quejó.'],
+    'Arreglarla tú',
+  ]),
+  landlord_raise: c('Una carta del casero', '{person:landlord} en la puerta con una carta. Sube el alquiler, dice, como sube todo.', [
+    'Pagar el nuevo alquiler',
+    ['Negociar', 'Os quedáis a medias, entre gruñidos.', 'No cede, y encima se enfada.'],
+    'Buscar otro piso',
+  ]),
+  landlord_sale: c('El piso, a precio de amigo', '{person:landlord} se jubila y se va a la costa. Prefiere venderte el piso a ti antes que a un desconocido.', [
+    'Seguir de alquiler',
+    'Comprarlo con hipoteca',
+    'Comprarlo al contado',
+  ]),
+  founder_pitch: c('Una app para dividir gastos', '{person:founder}, de tu antigua clase, está creando una app para dividir gastos entre amigos. Necesita su primer dinero.', [
+    'Desearle suerte',
+    'Invertir un poco',
+    'Ayudarla los fines de semana',
+  ]),
+  founder_more: c('Un poco más', 'La app tiene usuarios y no le queda dinero. {person:founder} necesita otro tanto para aguantar dos años más.', [
+    'Decir que eso era todo',
+    'Poner otro tanto',
+  ]),
+  founder_exit: c('Noticias de la startup', 'Dos años después, {person:founder} te llama. Tiene noticias de la empresa, y son grandes, para bien o para mal.', [
+    ['Escuchar la noticia', 'Cierra. Ella misma saca la última caja.', 'Una venta pequeña: recuperas el doble.', 'La compra un gigante, por diez veces. Champán en la oficina.'],
+    'Vender antes tus acciones a un fondo',
+  ]),
+  founder_second: c('Una segunda idea', '{person:founder} ha vuelto, con cajas, pegatinas y una segunda idea: la misma app, para perros.', [
+    'Desearle suerte',
+    ['Invertir un poco otra vez', 'También cierra. Te da las gracias igualmente.', 'A la segunda va la vencida: cinco veces tu dinero.'],
+    'Presentarle a gente',
+  ]),
+  advisor_fund: c('Un fondo garantizado', '{person:advisor}, del banco, tiene un fondo para ti: garantizado, dice, y con una comisión pequeñísima.', [
+    'No, gracias',
+    'Contratarlo',
+    'Pedir un fondo indexado en su lugar',
+  ]),
+  advisor_insurance: c('Un seguro con la hipoteca', 'Para tu hipoteca, dice {person:advisor}, el banco recomienda encarecidamente su propio seguro.', [
+    'Dejarlo como está',
+    'Contratar el seguro del banco',
+    'Contratar la misma cobertura fuera',
+  ]),
+  parents_help: c('Una pequeña ayuda', '{person:parents} han ahorrado un poco. Si te ayuda con la entrada de una casa propia, es tuyo.', [
+    'Decir que te apañarás',
+    'Aceptarlo, con gratitud',
+  ]),
+  parents_care: c('Tus padres necesitan ayuda', 'Tu padre se ha caído por la escalera y tu madre no puede levantarlo. Ahora necesitan ayuda cada día.', [
+    'Pagar una residencia',
+    'Cuidarlos tú',
+  ]),
+  parents_inheritance: c('En el notario', 'Una foto, unas llaves y una carpeta: lo que dejaron tus padres, y lo que debían.', [
+    'Renunciar a todo',
+    ['Aceptarla', 'El piso, unos ahorros y ninguna deuda.', 'El piso estaba hipotecado dos veces. Pagas lo que queda.'],
+    'Aceptarla: conoces sus papeles',
+  ]),
+  cousin_wedding: c('Una invitación de boda', 'Una invitación con el borde dorado, de {rival:cousin}. Una boda, y una lista de regalos.', [
+    'Algo pequeño',
+    'Un regalo correcto',
+    'Algo espléndido',
+  ]),
+  ex_new_car: c('Tu ex en un descapotable', 'Un descapotable para junto a tu parada de autobús. Al volante, saludando: {rival:ex}.', [
+    'Saludar y esperar al autobús',
+    'Comprarte un coche a la altura',
+    'Alquilar uno un fin de semana y subirlo',
+  ]),
+  classmate_job: c('Trabajo en la empresa de un amigo', 'Un café con {rival:classmate}. En su empresa contratan, y el puesto es tuyo si lo quieres.', [
+    'Quedarte donde estás',
+    'Aceptar el puesto',
+    'Aceptarlo, a tu precio',
+  ]),
+  // Content 1.50: the lodger's party and leaving.
+  lodger_party: c('La fiesta del inquilino', 'Vuelves de un fin de semana fuera. El inquilino ha montado una fiesta. El sofá no ha sobrevivido.', [
+    'Dejarlo pasar',
+    ['Hacer que lo pague', 'Lo paga, de morros, y se queda.', 'Lo paga, y se muda al mes siguiente.'],
+  ]),
+  lodger_leaves: c('El inquilino se muda', 'El inquilino ha encontrado un sitio propio, y te deja la llave, las plantas y una tarjeta.', [
+    'Quedarte la fianza para pintar',
+    'Devolverle la fianza',
+  ]),
+  // Content 1.50: a fortune's fake masterpiece.
+  rich_fake_art: c('Una obra maestra, más o menos', 'Una experta mira tu cuadro un buen rato, con los ojos entornados. Luego pregunta dónde lo compraste.', [
+    ['Callar, y dejarlo en la pared', 'Nadie más vuelve a mirarlo tan de cerca.', 'Un invitado a cenar lo mira así de cerca.'],
+    ['Demandar a la galería', 'La galería paga, y se disculpa por escrito.', 'La galería ha desaparecido. Sus dueños, también.'],
+    'Donarlo a un museo, como falso',
+  ]),
 };

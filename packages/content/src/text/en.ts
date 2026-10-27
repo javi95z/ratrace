@@ -609,4 +609,74 @@ export const en: ContentText = {
     business: 'Business profit taken out',
     dividendsReinvested: 'Dividends reinvested',
   },
+  people: {
+    inlaw: {
+      who: '{person:inlaw}, your brother-in-law',
+      meet: 'Meet {person:inlaw}, your brother-in-law',
+      endings: {
+        jackpot: '{person:inlaw} still drives the car $RATA bought him. You bought something too.',
+        repaid: '{person:inlaw} paid back every cent, and has not said the word "coin" since.',
+        forgiven: 'You let {person:inlaw} keep the money. He kept the job, too.',
+        unpaid: '{person:inlaw} still owes you money, and talks about it at dinner as if you owed him.',
+        estranged: '{person:inlaw} and you no longer talk about money. Or about much else.',
+        coin: '{person:inlaw} is on to a new coin. This one has a frog on it.',
+      },
+    },
+    boss: {
+      who: '{person:boss}, your boss',
+      meet: 'Meet {person:boss}, your boss',
+      endings: {
+        protected: '{person:boss} retired the year after the layoffs. You still have the job she saved.',
+        moved: '{person:boss} sends a card every Christmas to the office she sent you to.',
+        covered: '{person:boss} wrote you a reference you could frame.',
+        cold: '{person:boss} stopped asking. She found someone who says yes.',
+        gone: '{person:boss} moved to another firm, and never learned what your weekends were for.',
+      },
+    },
+    landlord: {
+      who: '{person:landlord}, your landlord',
+      meet: 'Meet {person:landlord}, your landlord',
+      endings: {
+        sold: '{person:landlord} sends a postcard from the coast, to the flat that is now yours.',
+        left: 'You left the flat of {person:landlord}. The stain stayed.',
+        cold: '{person:landlord} kept your deposit, for a stain he once called character.',
+        warm: '{person:landlord} called you his best tenant, and raised the rent anyway.',
+        rent: 'You paid {person:landlord} rent for years. He bought another flat with it.',
+      },
+    },
+    founder: {
+      who: '{person:founder}, a friend with a startup',
+      meet: 'Meet {person:founder}, a friend with a startup',
+      endings: {
+        rich: 'The company of {person:founder} sold for millions. Your name is on the wall of the first office.',
+        won: 'The second company of {person:founder} made it. She never forgot who backed it.',
+        sold: '{person:founder} sold small, and started again. She still sends you her slides.',
+        out: 'You sold your shares before the news. {person:founder} understood. Mostly.',
+        closed: 'The company of {person:founder} closed. She says it taught her everything.',
+        passed: '{person:founder} found her money elsewhere. You read about her in the papers.',
+      },
+    },
+    advisor: {
+      who: '{person:advisor}, your adviser at the bank',
+      meet: 'Meet {person:advisor}, your adviser at the bank',
+      endings: {
+        both: '{person:advisor} earned a bonus on you twice over. He sends a hamper every Christmas.',
+        fund: 'The fund of {person:advisor} took its fee every single year. He was promoted.',
+        insurance: 'The insurance of {person:advisor} cost a fortune over the years, and never paid a thing.',
+        cold: '{person:advisor} gave up on you, and moved on to your neighbours.',
+        none: '{person:advisor} still sends you brochures. You still do not read them.',
+      },
+    },
+    parents: {
+      who: '{person:parents}',
+      meet: '{person:parents}',
+      endings: {
+        debts: 'Your parents left more debts than they ever told you about.',
+        cared: 'You were there in your parents\' last years. It cost you, and you would do it again.',
+        home: 'Your parents were well looked after, and you visited on Sundays.',
+        helped: 'Your parents\' help went into your first home. Or so they believed.',
+        fine: 'Your parents always said you would be fine. They were right, more or less.',
+      },
+    },
+  },
 };
