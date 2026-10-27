@@ -299,14 +299,15 @@ describe('what the investments pay', () => {
   });
 
   it('says so when the round leaves no cash to put back', async () => {
-    // The crypto kid, whose pay does not meet the bills: with all the cash put aside, the round leaves nothing.
+    // The crypto kid, whose pay does not meet a lavish life's bills: with all the cash put aside, the round leaves nothing.
     const { services, session } = await inFinance('crypto_kid', { taught: true });
     await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'setReinvest', on: true }] });
     await toFinance(session);
     played(services);
     const pays = await screen.findByLabelText('What you are paid');
     expect(within(pays).queryByText(en.finance.glance.reinvestShort)).toBeNull();
-    // Everything spent: nothing is left after the bills for what is paid to buy more of itself.
+    // Everything spent, and living grandly: nothing is left after the bills for what is paid to buy more of itself.
+    await settled(() => void probe.state!.addOrder({ type: 'setLifestyle', tier: 3 }));
     const cash = probe.state!.preview!.player.cash;
     await settled(() => void probe.state!.addOrder({ type: 'depositIn', amount: cash }));
     expect(probe.state!.preview!.reinvested).toBe(0);

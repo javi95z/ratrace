@@ -55,7 +55,7 @@ export async function putSceneRuns(name: string, copies: number): Promise<void> 
  * rat race at 36. For the device check of two sheets at once (the moment of leaving, and the legendary badge's). Found by playing every life with every
  * bot from a few seeds, since savings count half towards the way out (engine 0.45); held by this file's test.
  */
-export const EARLY_ESCAPE = { life: 'influencer', bot: 'landlord', seed: 'escape-influencer-landlord-174'.padEnd(64, '0'), round: 7 } as const;
+export const EARLY_ESCAPE = { life: 'influencer', bot: 'landlord', seed: 'escape-influencer-landlord-18'.padEnd(64, '0'), round: 7 } as const;
 
 /** That life, played on a store of its own (every life open to it) to its round, at the finances: the store, and its session. */
 export async function earlyEscape(): Promise<{ store: MemoryStore; session: NonNullable<Awaited<ReturnType<LocalSessions['resume']>>['session']> }> {

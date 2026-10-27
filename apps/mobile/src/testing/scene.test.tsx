@@ -322,7 +322,7 @@ test('the scene of a milestone reached for the first time ever is its whole scre
   render(<SceneView name="celebrate-milestone" />);
   const sheet = (await screen.findByRole('heading', { name: '100k net worth' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
   expect(sheet.textContent).toContain('First time ever!');
-  expect(sheet.textContent).toContain('100k net worth at 24!');
+  expect(sheet.textContent).toContain('100k net worth at 26!');
   expect(sheet.textContent).toContain('Viral by mistake');
   expect(sheet.querySelector('[data-milestone="worth100k"]')).toBeTruthy();
   // One moment for the step: no legendary badge's sheet, and none of the badges' small cards.
@@ -335,7 +335,7 @@ test('the scene of a milestone in a later life is its banner under the Hud, the 
   const [banner, ...rest] = await screen.findAllByRole('status', {}, WAIT);
   expect(rest).toEqual([]);
   expect(banner.textContent).toContain('100k net worth');
-  expect(banner.textContent).toContain('At 24');
+  expect(banner.textContent).toContain('At 26');
   expect(banner.textContent).not.toContain('New record');
   expect(screen.queryByRole('dialog')).toBeNull();
 });
@@ -420,9 +420,9 @@ test('the finances of a scene are drawn by Finance itself in Play: the portfolio
 test('the scene of the basket is its sheet open over the finances, beside Play as the web\'s page draws it, listing the saver\'s orders of the round', async () => {
   render(<SceneView name="finance-basket" />);
   const sheet = (await screen.findByRole('heading', { name: "This round's orders" }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
-  expect(within(sheet).getAllByRole('listitem')).toHaveLength(3);
+  expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
   expect(within(sheet).getByText(/^Save /)).toBeTruthy();
-  expect(screen.getByRole('button', { name: '3 orders' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '2 orders' })).toBeTruthy();
   // For a player who has read the guide: nothing of it under the sheet.
   expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
 });
@@ -456,7 +456,7 @@ test('the scenes of the market, property and debts are drawn by Finance on the t
   render(<SceneView name="finance-property" />);
   const property = await screen.findByRole('tabpanel', { name: 'Property' }, WAIT);
   expect(within(property).getByText('You own no property.')).toBeTruthy();
-  expect(within(property).getByLabelText('Homes in Tokyo')).toBeTruthy();
+  expect(within(property).getByLabelText('Homes in London')).toBeTruthy();
   cleanup();
 
   render(<SceneView name="finance-debt" />);
@@ -594,7 +594,7 @@ test('the scenes of the end of a life are its end screen, Play\'s last stage, wi
   expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
   cleanup();
   render(<SceneView name="end-bankrupt" />);
-  expect(await screen.findByText('Bankrupt 3 times', {}, WAIT)).toBeTruthy();
+  expect(await screen.findByText('Bankrupt once', {}, WAIT)).toBeTruthy();
   expect(screen.getByText('You never left the rat race.')).toBeTruthy();
   cleanup();
   render(<SceneView name="end-ru" />);
