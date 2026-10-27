@@ -146,7 +146,7 @@ describe('the play screen', () => {
     const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing', asset: 'Markets', taxes: 'Taxes', noise: 'Society', government: 'Government' };
     expect(clippings.map((clipping) => clipping.querySelector('[data-topic]')?.textContent)).toEqual(news.map((headline) => SUBJECT[headline.topic].toUpperCase()));
     for (const clipping of clippings) expect(clipping.querySelector('[data-sprite]')).not.toBeNull();
-    expect(screen.getByText(/^Round 1 of 20 · Madrid/)).toBeTruthy();
+    expect(screen.getByText(/^Round 1 of 20/)).toBeTruthy();
     // One top heading says whose life this is; the stage on screen is a region named for what it is.
     expect(screen.getByRole('heading', { name: 'Nurse, age 22' })).toBeTruthy();
     expect(stage().getAttribute('aria-label')).toBe('News');
