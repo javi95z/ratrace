@@ -107,6 +107,19 @@ export function registrySource(files: readonly string[], current: string, since?
  */
 export const ROOMS_SINCE = '0.36.0';
 
+/**
+ * The bundles the server's functions hold: every one in the folder but the retired (`retired.json`). A function's code must stay under
+ * Supabase's 5 MB, so the rules of lives no server has played for long are retired there. Their files are kept: the site and the app still
+ * carry them (`mirrorRules`), and a life a device lives under them is finished there, as ever.
+ */
+export function heldFiles(): string[] {
+  const retired = new Set(existsSync(RETIRED_FILE) ? (JSON.parse(readFileSync(RETIRED_FILE, 'utf8')) as string[]) : []);
+  return readdirSync(GAME_DIR).filter((file) => {
+    const match = /^v([\d.]+)-([\d.]+)\.js$/.exec(file);
+    return match === null || !retired.has(`${match[1]}/${match[2]}`);
+  });
+}
+
 /** Where the web finds the rules of older versions, to finish on a device a life begun under them. */
 export const WEB_RULES_DIR = join(GAME_DIR, '../../../../apps/web/public/rules');
 
@@ -136,8 +149,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1);
   }
   writeFileSync(join(GAME_DIR, name), code);
-  writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(readdirSync(GAME_DIR), versions));
-  writeFileSync(join(GAME_DIR, 'rooms.ts'), registrySource(readdirSync(GAME_DIR), versions, ROOMS_SINCE));
+  writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(heldFiles(), versions));
+  writeFileSync(join(GAME_DIR, 'rooms.ts'), registrySource(heldFiles(), versions, ROOMS_SINCE));
   mirrorRules(versions);
   // A shipped bundle that was forced is noted as it now is; `--shipped` notes one for the first time.
   if (flags.has('--shipped') || Object.hasOwn(shipped, versions)) keep({ ...shipped, [versions]: fingerprint(code) });

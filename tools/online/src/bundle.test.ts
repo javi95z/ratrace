@@ -5,7 +5,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, RETIRED_FILE, ROOMS_SINCE, SHIPPED_FILE } from './bundle';
+import { bundleGame, bundleName, fingerprint, GAME_DIR, heldFiles, mayWrite, registrySource, RETIRED_FILE, ROOMS_SINCE, SHIPPED_FILE } from './bundle';
 
 const current = bundleName(ENGINE_VERSION, CONTENT_VERSION);
 
@@ -79,8 +79,12 @@ describe('the game as the server holds it', () => {
   });
 
   it('lists every bundle in the folder under the versions it holds', () => {
-    const files = readdirSync(GAME_DIR);
-    expect(readFileSync(join(GAME_DIR, 'index.ts'), 'utf8')).toBe(registrySource(files, `${ENGINE_VERSION}/${CONTENT_VERSION}`));
+    // Every one the server holds: the retired are left out of it, and kept in the folder for the site and the app.
+    expect(readFileSync(join(GAME_DIR, 'index.ts'), 'utf8')).toBe(registrySource(heldFiles(), `${ENGINE_VERSION}/${CONTENT_VERSION}`));
+    const retired = JSON.parse(readFileSync(RETIRED_FILE, 'utf8')) as string[];
+    expect(retired).toContain('0.35.0/1.36.0');
+    expect(heldFiles()).not.toContain('v0.35.0-1.36.0.js');
+    expect(readdirSync(GAME_DIR)).toContain('v0.35.0-1.36.0.js');
     expect(registrySource(['v0.3.0-1.2.0.js', 'index.ts', 'types.ts', 'v0.4.0-1.3.0.js'], '0.4.0/1.3.0')).toContain("'0.3.0/1.2.0': g0 as unknown as GameModule,\n  '0.4.0/1.3.0': g1 as unknown as GameModule,");
   });
 
@@ -95,7 +99,7 @@ describe('the game as the server holds it', () => {
     expect(rooms).toContain("'0.9.0/1.2.0'");
     expect(rooms).toContain("'0.10.0/1.3.0'");
     expect(rooms).not.toContain("'0.2.0/1.1.0'");
-    expect(readFileSync(join(GAME_DIR, 'rooms.ts'), 'utf8')).toBe(registrySource(readdirSync(GAME_DIR), `${ENGINE_VERSION}/${CONTENT_VERSION}`, ROOMS_SINCE));
+    expect(readFileSync(join(GAME_DIR, 'rooms.ts'), 'utf8')).toBe(registrySource(heldFiles(), `${ENGINE_VERSION}/${CONTENT_VERSION}`, ROOMS_SINCE));
     expect(readFileSync(new URL('../../../supabase/functions/rooms/index.ts', import.meta.url), 'utf8')).toContain("from '../_shared/game/rooms.ts'");
   });
 
