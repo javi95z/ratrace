@@ -385,6 +385,12 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   cousin_wedding: ['Una ensaladera. Te da las gracias con mucha educación.', 'Algo de la lista, y un abrazo en la puerta.', 'Un fin de semana en París. Toda la mesa se entera.'],
   ex_new_car: ['El autobús llega tarde. Como siempre.', 'Un {item:car_tesla_model_3}, en un color del que te arrepentirás.', 'Dos días, tres fotos, cien «me gusta».'],
   classmate_job: ['Te quedas. Tu jefe nunca lo sabrá.', null, 'Dices una cifra. La pagan.'],
+  // The people, deeper (cards-54).
+  classmate_housewarming: ['Un helecho, una copa de cava y el búho. El alquiler vence el lunes.', 'Doce visitas, una hoja de cálculo y un ojo nuevo para las humedades.', 'Diez años ahorrando, sin coche y con muchas lentejas. Tomas nota.'],
+  cousin_yacht: ['Un resfriado repentino. Las fotos son de lluvia, y la cuenta, entre uno menos.', 'Sol, mar y una cuenta dividida al céntimo. Hasta las aceitunas.', 'Doscientos «me gusta» y una quemadura. La cuenta cuenta las aceitunas.'],
+  parents_visit: ['Un buen restaurante. Tu padre repasa la cuenta dos veces y te deja pagar.', 'Compran las piezas, arreglan el grifo y te dan una charla sobre radiadores.', 'Una semana de desayunos tempranos y opiniones. Te dejan la nevera llena.'],
+  founder_bell: ['Te encuentra entre el público y te señala.', null, null],
+  boss_retire: ['Una hora de tomates. La vas a echar de menos.', 'Cuarenta años de nombres. La mitad aún coge el teléfono.', 'Lee tus cuentas y frunce el ceño ante una línea. Tiene razón.'],
   // Content 1.50: the lodger's party and leaving.
   lodger_party: ['Un sofá nuevo, a tu cargo. Paz en casa.', null],
   lodger_leaves: ['Pintura nueva, y sobra un poco. La habitación vuelve a ser tuya.', 'Promete mandarte a sus amigos.'],

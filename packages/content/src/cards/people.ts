@@ -169,4 +169,40 @@ export const peopleCards: CardDef[] = [
     { outcomes: [{ weight: 70, effects: { salaryModPct: 12, status: 1 } }, { weight: 30, effects: { salaryModPct: -5 } }] },
     { when: { minSkills: { negotiation: 2 } }, effects: { salaryModPct: 15 } },
   ]),
+  // The people, deeper (cards-54): the classmate's new flat, the cousin's yacht, a visit from the parents, the founder's bell, the boss's retirement.
+  card('classmate_housewarming', 'housing', { once: true, weight: MEET, when: { ownsHome: false, minRound: 3, maxRound: 14 } }, [
+    { effects: { cash: usd(-50) } },
+    // The flats seen teach what a flat is worth; the classmate's lesson is how one is saved for.
+    { effects: { focus: 1, skills: { negotiation: 1 } } },
+    { when: { maxFinanceSkill: 1 }, effects: { focus: 1, financeSkill: 1 } },
+  ]),
+  card('cousin_yacht', 'lifestyle', { once: true, weight: MEET, when: { minRound: 4, maxRound: 14 } }, [
+    { effects: { status: -1 } },
+    { effects: { cash: usd(-1_500), status: 1 } },
+    { effects: { cash: usd(-2_200), status: 3 } },
+  ]),
+  card('parents_visit', 'family', { once: true, weight: MEET, when: { minRound: 3, maxRound: 8 } }, person('parents', [
+    { effects: { cash: usd(-300) } },
+    { effects: { cash: usd(400), status: -1 } },
+    { effects: { focus: 1, ...warm('parents') } },
+  ])),
+  // The bell rings only for the founder whose second company made it, two rounds on.
+  card('founder_bell', 'investing', { once: true, weight: NEXT, when: after('founder_won', 2) }, person('founder', [
+    { effects: warm('founder') },
+    {
+      effects: { cash: usd(-3_000) },
+      outcomes: [
+        { weight: 55, effects: { cash: usd(1_800) } },
+        { weight: 35, effects: { cash: usd(4_000) } },
+        { weight: 10, effects: { cash: usd(10_000) } },
+      ],
+    },
+    { when: { employed: true }, outcomes: [{ weight: 60, effects: { salaryModPct: 10, status: 1 } }, { weight: 40, effects: {} }] },
+  ])),
+  // The boss retires late in a life, and leaves her contacts to whoever covered for her.
+  card('boss_retire', 'career', { once: true, weight: NEXT, when: { flags: ['boss_warm'], minRound: 15 } }, person('boss', [
+    {},
+    { when: { employed: true }, effects: { careerSkill: 1, skills: { network: 1 } } },
+    { when: { hasBusiness: true }, effects: { focus: 1, businessesPct: 10 } },
+  ])),
 ];

@@ -1313,6 +1313,32 @@ export const cards: Record<string, CardText> = {
     ['Aceptar el puesto', 'Una tarjeta nueva, mejor sueldo y un amigo en la misma planta.', 'Al año, la empresa va mal, y tu sueldo también.'],
     'Aceptarlo, a tu precio',
   ]),
+  // The people, deeper (cards-54).
+  classmate_housewarming: c('La inauguración del piso', 'Copas en el piso que se acaba de comprar {rival:classmate}. Te enseña la caldera como si fuera un recién nacido.', [
+    'Llevar una planta y volver a casa',
+    'Ponerte a mirar pisos tú también',
+    'Preguntarle cómo lo ha hecho',
+  ]),
+  cousin_yacht: c('Un fin de semana en yate', 'Una invitación de {rival:cousin}: un fin de semana en un yate alquilado. La letra pequeña dice que la cuenta se divide.', [
+    'Poner una excusa a tiempo',
+    'Ir y pagar tu parte',
+    'Ir, pagar y subir las fotos',
+  ]),
+  parents_visit: c('Visita de casa', '{person:parents} vienen el fin de semana y miran tu casa de arriba abajo. Tu madre pasa el dedo por una estantería.', [
+    'Invitarlos a cenar fuera',
+    'Dejar que arreglen cosas, que insisten',
+    'Pedirles que se queden la semana',
+  ]),
+  founder_bell: c('El toque de campana', '{person:founder} toca la campana en el primer día de su empresa en bolsa. Te saluda desde el escenario.', [
+    'Aplaudir desde la sala',
+    ['Comprar acciones el primer día', 'Por la tarde, las acciones valen menos que la comida.', 'Un buen primer día, y un buen primer año.', 'Las acciones se van a la luna, y te llevan con ellas.'],
+    ['Pedirle trabajo', 'Te contrata, con mejor sueldo.', 'Se ríe, con cariño, y paga el café.'],
+  ]),
+  boss_retire: c('Una jubilación', '{person:boss} se jubila para cultivar tomates. Te tiende su agenda: «Yo ya no la voy a necesitar».', [
+    'Un café de despedida',
+    'Quedarte sus contactos',
+    'Pedirle que mire tu negocio',
+  ]),
   // Content 1.50: the lodger's party and leaving.
   lodger_party: c('La fiesta del inquilino', 'Vuelves de un fin de semana fuera. El inquilino ha montado una fiesta. El sofá no ha sobrevivido.', [
     'Dejarlo pasar',

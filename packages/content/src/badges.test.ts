@@ -455,7 +455,7 @@ describe('a whole life', () => {
       return Math.max(0, index);
     };
     const found: string[] = [];
-    for (let seed = 0; seed < 80 && found.length === 0; seed++) {
+    for (let seed = 0; seed < 300 && found.length === 0; seed++) {
       let state: GameState = createGame({ content, start: lives[1].start }, `family-${seed}`);
       let journal = journalStart(content, viewOf(state));
       while (!state.finished) {

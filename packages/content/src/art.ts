@@ -298,6 +298,12 @@ export const cardArt: Record<string, string> = {
   cousin_wedding: scene('cousin_wedding'),
   ex_new_car: scene('ex_new_car'),
   classmate_job: scene('classmate_job'),
+  // The people, deeper (cards-54).
+  classmate_housewarming: scene('classmate_housewarming'),
+  cousin_yacht: scene('cousin_yacht'),
+  parents_visit: scene('parents_visit'),
+  founder_bell: scene('founder_bell'),
+  boss_retire: scene('boss_retire'),
   rich_lawsuit: scene('rich_lawsuit'),
   rich_scandal: scene('rich_scandal'),
   rich_tax_squad: scene('rich_tax_squad'),

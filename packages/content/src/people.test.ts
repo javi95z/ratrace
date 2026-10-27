@@ -47,7 +47,20 @@ describe('the people who come back', () => {
     }
   });
 
-  it("names the player's own people only in the body of their three cards", () => {
+  it('deals the people, deeper, only where their stories put them', () => {
+    const when = (id: string) => byId.get(id)!.when ?? {};
+    // The housewarming is for a tenant; the parents visit before they need care; the bell rings once the founder made it;
+    // the boss retires late in a life, and offers her contacts only to someone she was warm to.
+    expect(when('classmate_housewarming').ownsHome).toBe(false);
+    expect(when('parents_visit').maxRound!).toBeLessThan(when('parents_care').minRound!);
+    expect(when('founder_bell').flags).toEqual(['founder_won']);
+    expect(when('founder_bell').notRecentFlag).toEqual({ flag: 'founder_won', rounds: 2 });
+    expect(when('boss_retire').flags).toEqual(['boss_warm']);
+    expect(when('boss_retire').minRound!).toBeGreaterThanOrEqual(14);
+    for (const id of ['classmate_housewarming', 'cousin_yacht', 'parents_visit', 'founder_bell', 'boss_retire']) expect(byId.get(id)!.once, id).toBe(true);
+  });
+
+  it("names the player's own people only in the body of their cards", () => {
     const named: string[] = [];
     for (const locale of ['en', 'es', 'ru'] as const)
       for (const [cardId, card] of Object.entries(rawText(locale).cards)) {
@@ -55,6 +68,6 @@ describe('the people who come back', () => {
         expect(elsewhere.filter((line) => line.includes('{rival:')), cardId).toEqual([]);
         if (card.body.includes('{rival:')) named.push(`${locale} ${cardId}`);
       }
-    expect(named.filter((entry) => entry.startsWith('en ')).sort()).toEqual(['en classmate_job', 'en cousin_wedding', 'en ex_new_car']);
+    expect(named.filter((entry) => entry.startsWith('en ')).sort()).toEqual(['en classmate_housewarming', 'en classmate_job', 'en cousin_wedding', 'en cousin_yacht', 'en ex_new_car']);
   });
 });

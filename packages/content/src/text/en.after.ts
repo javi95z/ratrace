@@ -397,6 +397,12 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   cousin_wedding: ['A salad bowl. She thanks you very politely.', 'Something from the list, and a hug at the door.', 'A weekend in Paris. Everyone at the table hears about it.'],
   ex_new_car: ['The bus is late. It always is.', 'A {item:car_tesla_model_3}, in a colour you will regret.', 'Two days, three photos, a hundred likes.'],
   classmate_job: ['You stay. Your boss never knows.', null, 'You name a figure. They pay it.'],
+  // The people, deeper (cards-54).
+  classmate_housewarming: ['A fern, a glass of cava and the night bus. The rent is due on Monday.', 'Twelve viewings, a spreadsheet and a new eye for damp.', 'Ten years of saving, no car and a lot of lentils. You take notes.'],
+  cousin_yacht: ['A sudden cold. The photos show rain, and a bill split one way fewer.', 'Sun, sea and a bill split to the cent. Even the olives.', 'Two hundred likes and a sunburn. The bill counts the olives.'],
+  parents_visit: ['A good restaurant. Your father checks the bill twice, and lets you pay.', 'They buy the parts, fix the tap and lecture you on radiators.', 'A week of early breakfasts and opinions. They leave the fridge full.'],
+  founder_bell: ['She finds you in the crowd, and points.', null, null],
+  boss_retire: ['An hour on tomatoes. You will miss her.', 'Forty years of names. Half of them still answer the phone.', 'She reads your accounts and frowns at one line. She is right.'],
   // Content 1.50: the lodger's party and leaving.
   lodger_party: ['A new sofa, at your expense. Peace at home.', null],
   lodger_leaves: ['Fresh paint, and a little over. The room is yours again.', 'They promise to send their friends your way.'],

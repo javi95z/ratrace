@@ -1313,6 +1313,32 @@ export const cards: Record<string, CardText> = {
     ['Take the job', 'A new badge, better pay, and a friend on the same floor.', 'A year in, the firm is in trouble, and so is your pay.'],
     'Take it, at your price',
   ]),
+  // The people, deeper (cards-54).
+  classmate_housewarming: c('A housewarming', 'Drinks at the flat just bought by {rival:classmate}. He shows you the boiler as if it were a newborn.', [
+    'Bring a plant and go home',
+    'Start looking at flats yourself',
+    'Ask him how he did it',
+  ]),
+  cousin_yacht: c('A weekend on a yacht', 'An invitation from {rival:cousin}: a weekend on a chartered yacht. The small print says the bill will be split.', [
+    'Make an excuse in time',
+    'Go, and pay your share',
+    'Go, pay, and post the photos',
+  ]),
+  parents_visit: c('A visit from home', '{person:parents} come for the weekend and look round your home. Your mother runs a finger along a shelf.', [
+    'Take them out for a nice dinner',
+    'Let them fix things, as they insist',
+    'Ask them to stay the week',
+  ]),
+  founder_bell: c('The opening bell', '{person:founder} rings the bell on her company\'s first day on the stock exchange. She waves at you from the stage.', [
+    'Cheer from the floor',
+    ['Buy some shares on day one', 'By evening the shares are worth less than lunch.', 'A good first day, and a good first year.', 'The shares go to the moon, and take you with them.'],
+    ['Ask her for a job', 'She takes you on, at a better salary.', 'She laughs, kindly, and pays for the coffee.'],
+  ]),
+  boss_retire: c('A retirement', '{person:boss} is retiring to grow tomatoes. She holds out her address book: "I won\'t need it any more."', [
+    'Have a farewell coffee',
+    'Take her contacts',
+    'Ask her to look over your business',
+  ]),
   // Content 1.50: the lodger's party and leaving.
   lodger_party: c('The lodger\'s party', 'You come back from a weekend away. The lodger threw a party. The sofa did not survive.', [
     'Let it go',

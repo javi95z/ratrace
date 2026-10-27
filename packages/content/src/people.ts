@@ -43,6 +43,9 @@ export const cardPeople: Readonly<Record<string, { who: PersonId; mood: Mood }>>
   parents_help: { who: 'parents', mood: 'pleased' },
   parents_care: { who: 'parents', mood: 'upset' },
   parents_inheritance: { who: 'parents', mood: 'upset' },
+  parents_visit: { who: 'parents', mood: 'pleased' },
+  founder_bell: { who: 'founder', mood: 'pleased' },
+  boss_retire: { who: 'boss', mood: 'pleased' },
 };
 
 /** How a person's story ended: the first whose flags hold, in order; the last of each holds always. */

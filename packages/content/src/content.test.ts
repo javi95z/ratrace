@@ -36,7 +36,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(284);
+    expect(content.cards).toHaveLength(289);
     expect(lives).toHaveLength(20);
   });
 
@@ -48,9 +48,10 @@ describe('the v1 content', () => {
       // And fourteen are of the wrong side of the law; six more of red tape and a bank freeze; fourteen of the famous;
       // ten of the troubles of a fortune: four in lifestyle, two in business and in family, one in luck and in tax.
       // And content 1.50's people who come back, the player's own three, the lodger's party and leaving, and a fake masterpiece:
-      // four in career, eight in investing, four in housing, six in family, four in lifestyle and one in later life.
-      career: 45, education: 9, business: 25, investing: 28, housing: 32, lifestyle: 45,
-      family: 27, health: 6, luck: 23, world: 18, tax: 14, laterLife: 12,
+      // four in career, eight in investing, four in housing, six in family, four in lifestyle and one in later life;
+      // and the people, deeper: one more in career, investing, housing, family and lifestyle.
+      career: 46, education: 9, business: 25, investing: 29, housing: 33, lifestyle: 46,
+      family: 28, health: 6, luck: 23, world: 18, tax: 14, laterLife: 12,
     });
   });
 
