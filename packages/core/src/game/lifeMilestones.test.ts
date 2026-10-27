@@ -1,4 +1,4 @@
-import { content, lives } from '@ratrace/content';
+import { content, LIFE_MILESTONE_ART, lives } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
 import { createGame, viewOf } from '@ratrace/engine';
 import type { Debt, GameEvent, GameView } from '@ratrace/engine';
@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { fixedSessions } from '../session/fixed';
 import type { FinishedRun } from '../session/types';
 import { runScene, sceneStore } from '../testing/scenes';
-import { bestsOfRuns, celebrationOf, EMPTY_BOOK, isHalfway, memoryMilestones, milestonesOfStep, readBook, withBests } from './lifeMilestones';
+import { bestsOfRuns, celebrationOf, EMPTY_BOOK, isHalfway, LIFE_MILESTONES, memoryMilestones, milestonesOfStep, readBook, withBests } from './lifeMilestones';
 import type { MilestoneBook, Reached } from './lifeMilestones';
 import { ageAt } from './present';
 import { createGameStore } from './store';
@@ -194,5 +194,11 @@ describe('the round store', () => {
     expect(readBook(JSON.parse(JSON.stringify(book)))).toEqual(book);
     expect(readBook({ lives: [{ gameId: 1 }, { gameId: 'h', reached: ['nonsense'] }], best: { nonsense: 3, home: 'x' } })).toEqual({ lives: [{ gameId: 'h', hadDebt: false, reached: [] }], best: {} });
     expect(readBook('nonsense')).toEqual(EMPTY_BOOK);
+  });
+});
+
+describe('the scenes of the milestones', () => {
+  it('draw every milestone the game celebrates, and none it does not', () => {
+    expect(Object.keys(LIFE_MILESTONE_ART).sort()).toEqual([...LIFE_MILESTONES].sort());
   });
 });

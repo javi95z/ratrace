@@ -7,6 +7,8 @@ export interface FocusNote {
   locked: boolean;
   /** A skill at its top: nothing more to learn, so it goes to the end of the list. */
   mastered: boolean;
+  /** Overtime that may burn the player out this round: its switch shows the warning's icon. */
+  burnout?: boolean;
 }
 
 /**
@@ -30,7 +32,8 @@ export function useFocusNote(): (work: WorkQuote, action: FocusAction, gives: st
           : [];
     const more = extra.filter(Boolean);
     // A sentence that goes on loses its full stop.
-    return { hint: [more.length > 0 ? gives.replace(/\.$/, '') : gives, ...more].join(' · '), locked: false, mastered: false };
+    const burnout = action === 'overtime' && toll.burnoutChancePct > 0;
+    return { hint: [more.length > 0 ? gives.replace(/\.$/, '') : gives, ...more].join(' · '), locked: false, mastered: false, ...(burnout ? { burnout } : null) };
   };
 }
 

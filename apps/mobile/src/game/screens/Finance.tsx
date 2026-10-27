@@ -1,4 +1,4 @@
-import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, saleSignArt, START_AGE, USED_ART } from '@ratrace/content';
+import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, RISK_ART, saleSignArt, START_AGE, USED_ART } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { escapeShift } from '@ratrace/core/game/escapeShift';
 import type { EscapeShift } from '@ratrace/core/game/escapeShift';
@@ -1719,7 +1719,7 @@ function Lifestyle() {
   const switchOf = (use: { action: FocusAction; label: string; note: FocusNote }) => {
     const on = has(use.action);
     if (use.note.locked && !on) return null;
-    return <FocusSwitch key={use.action} action={use.action} on={on} disabled={!on && left < 1} label={use.label} hint={use.note.hint} onFocus={focus} />;
+    return <FocusSwitch key={use.action} action={use.action} on={on} disabled={!on && left < 1} label={use.label} hint={use.note.hint} burnout={use.note.burnout} onFocus={focus} />;
   };
 
   return (
@@ -2346,7 +2346,12 @@ function Taxes() {
           // The web's `mt-1 border-t-2 border-night-900 pt-2 text-ink-300` on the line: its words in ink too.
           <Row
             style={{ marginTop: 4, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 }}
-            left={<ReadText numberOfLines={1} tone="ink-300" style={{ flexShrink: 1 }}>{t('inflationTax')}</ReadText>}
+            left={
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                <Sprite id={RISK_ART.inflation} />
+                <ReadText numberOfLines={1} tone="ink-300" style={{ flexShrink: 1 }}>{t('inflationTax')}</ReadText>
+              </View>
+            }
             sub={t('inflationHint', { cash: fmt.money(p.cash), pct: (eatenPct * 100).toFixed(1), years })}
             right={<Figure tone="ink-300">{fmt.signed(-eaten)}</Figure>}
           />

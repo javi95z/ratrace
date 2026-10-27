@@ -1,4 +1,4 @@
-import { portraitArt, rarityOf } from '@ratrace/content';
+import { LIFE_MILESTONE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { celebrationOf } from '@ratrace/core/game/lifeMilestones';
 import type { Carried as Carrying, Celebration, Reached } from '@ratrace/core/game/lifeMilestones';
 import { momentsOf } from '@ratrace/core/game/moments';
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
-import { useMedal, useRise } from '../../ui/animations';
+import { useMedal, useReveal, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Glow } from '../../ui/Glow';
@@ -15,6 +15,7 @@ import { Bare, Button } from '../../ui/kit';
 import { stepped } from '../../ui/motion';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
+import { spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useGame, useInRoom, useSettings, useStill, useT, useWords } from '../context';
@@ -171,12 +172,28 @@ export function MomentMilestones({ kind }: { kind: keyof typeof OF_MOMENT }) {
   );
 }
 
-/** Coins turning and confetti falling either side of the portrait, sparks thrown from it: all decoration, none of it where motion is left out. */
+/** The size a milestone's scene is drawn at when its art is missing (a card's). */
+const SCENE_FALLBACK = { w: 288, h: 120 };
+
+/** The scene of a milestone across the top of its big moment, uncovered from the left as the sheet comes up, as a moment's picture is. */
+function Scene({ id }: { id: string }) {
+  const reveal = useReveal();
+  const box = spriteBox(id, 1, 1, SCENE_FALLBACK);
+  return (
+    <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: box.w, height: box.h }}>
+      <Animated.View style={[{ height: box.h, overflow: 'hidden' }, reveal]}>
+        <Sprite id={id} fallback={SCENE_FALLBACK} />
+      </Animated.View>
+    </View>
+  );
+}
+
+/** Fireworks bursting and coins turning either side of the portrait, sparks thrown from it: all decoration, none of it where motion is left out. */
 function Fanfare({ lifeId, age }: { lifeId: string; age: number }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
       <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ alignItems: 'center', gap: 4 }}>
-        <Loop name="confetti" />
+        <Loop name="burst" ms={180} />
         <Loop name="coin" ms={90} />
       </View>
       <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -187,13 +204,13 @@ function Fanfare({ lifeId, age }: { lifeId: string; age: number }) {
       </View>
       <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ alignItems: 'center', gap: 4 }}>
         <Loop name="coin" ms={110} />
-        <Loop name="confetti" />
+        <Loop name="burst" ms={210} />
       </View>
     </View>
   );
 }
 
-/** The whole screen for a milestone: the portrait hopping in the middle of the fanfare, the headline, the record, the rest of the step, and on. */
+/** The whole screen for a milestone: its scene across the top, the portrait hopping in the middle of the fireworks, the headline, the record, the rest of the step, and on. */
 export function MilestoneBig({ plan, lifeId, onDone }: { plan: Carrying; lifeId: string; onDone(): void }) {
   const t = useT('milestone');
   const said = useSaid();
@@ -212,6 +229,7 @@ export function MilestoneBig({ plan, lifeId, onDone }: { plan: Carrying; lifeId:
       <PixelText size={13} tone="gold-500" style={{ letterSpacing: 13 * 0.14, textTransform: 'uppercase', textAlign: 'center' }}>
         {note ?? t('kicker')}
       </PixelText>
+      <Scene id={LIFE_MILESTONE_ART[plan.lead.id]} />
       <Fanfare lifeId={lifeId} age={plan.lead.age} />
       <PixelText size={20} lineHeight={20 * TIGHT} style={{ textAlign: 'center' }}>
         {headline}
@@ -264,7 +282,7 @@ export function MilestoneBanner({ plan, lifeId }: { plan: Carrying; lifeId: stri
               <ReadText size={13} tone="ink-200" lineHeight={13 * SNUG}>{line}</ReadText>
             </View>
             <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexShrink: 0, alignItems: 'center' }}>
-              <Loop name="confetti" />
+              <Loop name="cheer" ms={180} />
             </View>
           </View>
           <Carried others={plan.others} badges={plan.badges} />

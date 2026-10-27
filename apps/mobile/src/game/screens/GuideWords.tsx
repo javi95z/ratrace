@@ -1,3 +1,4 @@
+import { GUIDE_ART } from '@ratrace/content';
 import { marked, plain, TERMS, termsIn, type Term } from '@ratrace/core/game/glossary';
 import { FIRSTS, TIPS } from '@ratrace/core/game/guide';
 import { ageAt } from '@ratrace/core/game/present';
@@ -7,6 +8,7 @@ import { LEVEL_3 } from '../../ui/headingLevel';
 import { Button, pressDown, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet } from '../../ui/overlay';
+import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useT, useWords } from '../context';
@@ -86,20 +88,25 @@ export function TermSheet({ term, onClose }: { term: Term | null; onClose(): voi
   return (
     <Sheet open={term !== null} onClose={onClose} title={shown === null ? '' : t(`terms.${shown}.name`)} closeLabel={common('close')}>
       {shown === null ? null : (
-        <ReadText size={15} lineHeight={15 * SNUG}>
-          {t(`terms.${shown}.text`, values)}
-        </ReadText>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+          {/* The glossary's book: a word of it, looked up. */}
+          <Sprite id={GUIDE_ART.glossary} />
+          <ReadText size={15} lineHeight={15 * SNUG} style={{ flex: 1, minWidth: 0 }}>
+            {t(`terms.${shown}.text`, values)}
+          </ReadText>
+        </View>
       )}
     </Sheet>
   );
 }
 
-/** A section of How to play: its heading, under the sheet's title. */
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** A section of How to play: its heading, under the sheet's title, and the icon before it where it has one. */
+function Section({ title, icon, children }: { title: string; icon?: string; children: ReactNode }) {
   return (
     <View style={{ gap: 8 }}>
-      <View accessibilityRole="header" {...LEVEL_3}>
-        <PixelText size={15} tone="gold-500" style={{ letterSpacing: 15 * 0.1, textTransform: 'uppercase' }}>{title}</PixelText>
+      <View accessibilityRole="header" {...LEVEL_3} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {icon ? <Sprite id={icon} /> : null}
+        <PixelText size={15} tone="gold-500" style={{ letterSpacing: 15 * 0.1, textTransform: 'uppercase', flexShrink: 1 }}>{title}</PixelText>
       </View>
       {children}
     </View>
@@ -139,7 +146,7 @@ export function HowToPlaySheet({ open, onClose }: { open: boolean; onClose(): vo
   return (
     <Sheet open={open} onClose={onClose} half title={t('howTo.open')} closeLabel={common('close')}>
       <View style={{ gap: 20 }}>
-        <Section title={t('howTo.goalTitle')}>
+        <Section title={t('howTo.goalTitle')} icon={GUIDE_ART.howTo}>
           <Paragraph>{t('howTo.goal', values)}</Paragraph>
         </Section>
         <Section title={t('howTo.roundTitle')}>
@@ -162,7 +169,7 @@ export function HowToPlaySheet({ open, onClose }: { open: boolean; onClose(): vo
             ))}
           </List>
         </Section>
-        <Section title={t('howTo.termsTitle')}>
+        <Section title={t('howTo.termsTitle')} icon={GUIDE_ART.glossary}>
           <List>
             {TERMS.map((term) => (
               <View key={term} style={{ gap: 2 }}>
@@ -183,9 +190,15 @@ export function HowToPlay() {
   const [open, setOpen] = useState(false);
   return (
     <View style={{ gap: 4 }}>
-      <Button variant="secondary" wide onPress={() => setOpen(true)}>
-        {t('howTo.open')}
-      </Button>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {/* The open book of How to play. */}
+        <Sprite id={GUIDE_ART.howTo} />
+        <View style={{ flex: 1 }}>
+          <Button variant="secondary" wide onPress={() => setOpen(true)}>
+            {t('howTo.open')}
+          </Button>
+        </View>
+      </View>
       <ReadText size={12} tone="ink-300" lineHeight={12 * SNUG}>
         {t('howTo.openHint')}
       </ReadText>

@@ -1,4 +1,4 @@
-import { careerArt, focusArt, RETIRED_ART, skillArt, workArt } from '@ratrace/content';
+import { careerArt, focusArt, RETIRED_ART, RISK_ART, skillArt, workArt } from '@ratrace/content';
 import { ageAt, jobFocusName } from '@ratrace/core/game/present';
 import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
 import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
@@ -539,8 +539,9 @@ export function useSetFocus(): (action: FocusAction, on: boolean) => void {
  * A use of focus as a switch, with its sign: drawn again only when what it shows changes (whether it is on, whether it can be pressed, its words),
  * so ordering another use, or anything else, leaves it as it is.
  */
-export const FocusSwitch = memo(function FocusSwitch({ action, on, disabled, label, hint, onFocus }: { action: FocusAction; on: boolean; disabled: boolean; label: string; hint: string; onFocus(action: FocusAction, on: boolean): void }) {
-  return <Toggle on={on} onChange={(next) => onFocus(action, next)} disabled={disabled} label={label} hint={hint} icon={focusArt[action]} />;
+export const FocusSwitch = memo(function FocusSwitch({ action, on, disabled, label, hint, burnout = false, onFocus }: { action: FocusAction; on: boolean; disabled: boolean; label: string; hint: string; burnout?: boolean; onFocus(action: FocusAction, on: boolean): void }) {
+  // Overtime that may burn the player out wears the warning's icon, the risk its hint names.
+  return <Toggle on={on} onChange={(next) => onFocus(action, next)} disabled={disabled} label={label} hint={hint} icon={burnout ? RISK_ART.burnout : focusArt[action]} />;
 });
 
 /**
@@ -635,7 +636,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
             const on = ordered.includes(each.action);
             // What cannot be had now is not shown; what the focus left does not reach is, off.
             if (each.note.locked && !on) return null;
-            return <FocusSwitch key={each.action} action={each.action} on={on} disabled={!on && work.focus.left < 1} label={each.name} hint={each.note.hint} onFocus={focus} />;
+            return <FocusSwitch key={each.action} action={each.action} on={on} disabled={!on && work.focus.left < 1} label={each.name} hint={each.note.hint} burnout={each.note.burnout} onFocus={focus} />;
           })}
           <MasteredLine names={mastered} />
           <CareerMoves work={work} left={work.focus.left} />

@@ -470,6 +470,24 @@ export const milestoneArt: Record<MilestoneScene, string> = {
   promotion: 'card.moment_promotion',
 };
 
+/** The scene of each of a life's milestones (core's `LIFE_MILESTONES`), across the top of its big moment. */
+export const LIFE_MILESTONE_ART = {
+  escaped: 'milestone.escaped',
+  worth10m: 'milestone.worth_10m',
+  worth1m: 'milestone.worth_1m',
+  home: 'milestone.first_home',
+  business: 'milestone.first_business',
+  halfway: 'milestone.halfway',
+  debtFree: 'milestone.debt_free',
+  worth100k: 'milestone.worth_100k',
+} as const;
+
+/** The guide's way into How to play, and its glossary. */
+export const GUIDE_ART = { howTo: 'icon.howto', glossary: 'icon.glossary' } as const;
+
+/** The warnings of a risk: the cash that rising prices eat, and overtime that may burn the player out. */
+export const RISK_ART = { inflation: 'icon.inflation_tax', burnout: 'icon.burnout' } as const;
+
 /** The rat of the game, in the poses it takes on screen. */
 export type RatPose = 'cheer' | 'hide' | 'exit' | 'count' | 'sleep' | 'shock' | 'think' | 'wave';
 export const ratArt = (pose: RatPose): string => `rat.${pose}`;
@@ -562,8 +580,8 @@ export const frameArt = (status: number): string => FRAME_ART[FRAME_STATUS.reduc
 export const crestArt = (cityId: string): string => `crest.${cityId}`;
 
 /** A loop of four frames. */
-export type Loop = 'coin' | 'wheel' | 'confetti';
-export const LOOPS: readonly Loop[] = ['coin', 'wheel', 'confetti'];
+export type Loop = 'coin' | 'wheel' | 'confetti' | 'cheer' | 'burst';
+export const LOOPS: readonly Loop[] = ['coin', 'wheel', 'confetti', 'cheer', 'burst'];
 export const loopArt = (loop: Loop): string[] => [0, 1, 2, 3].map((frame) => `anim.${loop}.${frame}`);
 
 /** What the rat in the wheel wears: a tracksuit for a frugal life, the suit of the logo, and a tuxedo for a rich one. */

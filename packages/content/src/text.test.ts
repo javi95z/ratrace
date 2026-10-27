@@ -42,6 +42,9 @@ import { CELEB_ART,
   lifestyleArt,
   loopArt,
   LOOPS,
+  LIFE_MILESTONE_ART,
+  GUIDE_ART,
+  RISK_ART,
   momentArt,
   perkArt,
   PORTRAIT_AGES,
@@ -326,14 +329,19 @@ describe('content art', () => {
       MAP_ART,
       // v17: the famous, a portrait each.
       ...CELEB_ART,
+      // v21: a life's milestones, the guide and the warnings of a risk.
+      ...Object.values(LIFE_MILESTONE_ART),
+      ...Object.values(GUIDE_ART),
+      ...Object.values(RISK_ART),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(257 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
+    expect(wanted.length).toBe(257 + 67 + 5 + 4 + 2 + 3 + 6 + 26 + 15 * 10 + 8 + 10 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14 + 2 * 4 + (8 + 2 + 2));
     // Every kind of property plain (26); as each of the ten cities draws its eleven homes and four kinds to let (15 * 10),
     // the block of the eight that sell one (8), and each city's own kind (10). Time with the family and a rest, a sign each: the 2.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
+    // v21: two loops more, the cheer and the firework (2 * 4); the eight milestones' scenes, the guide's two icons and the two warnings of a risk.
     // A brand mark belongs to an asset the market has.
     for (const assetId of Object.keys(assetLogo)) expect(content.assets.some((asset) => asset.id === assetId), assetId).toBe(true);
     // Nobody is drawn at home with someone who lives alone; a couple, a family and a full house each have their picture.
