@@ -4,7 +4,7 @@ import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf, workModeOf, workModeRule } from './derive';
-import { FLAG_CAME_HOME_RICH } from './flags';
+import { FLAG_CAME_HOME_RICH, HERE_SUFFIX } from './flags';
 import { lapsingIn, raiseChance } from './orders';
 import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
 
@@ -215,6 +215,8 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
   if (life.movingTo !== null) {
     p.cityId = life.movingTo;
     life.movingTo = null;
+    // What belonged to the city left behind (`_here`: a landlord, a flat) stays there.
+    for (const flag of Object.keys(life.flags)) if (flag.endsWith(HERE_SUFFIX)) delete life.flags[flag];
     const landing = landingOf(p, content, life.movingTransfer);
     life.movingTransfer = false;
     if (life.career) life.career.level = landing.level ?? life.career.level;

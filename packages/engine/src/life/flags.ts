@@ -21,6 +21,9 @@ export const FLAG_CAME_HOME_RICH = 'came_home_rich';
 /** Set by a serious illness: no insurer takes on health cover for it afterwards. */
 export const FLAG_HAD_ILLNESS = 'had_illness';
 
+/** Flags that belong to the city the player lives in (a landlord, a flat): their names end so, and a move lets them all go. */
+export const HERE_SUFFIX = '_here';
+
 export function hasFlag(flags: Record<string, number>, flag: string): boolean {
   return Object.hasOwn(flags, flag);
 }

@@ -150,3 +150,18 @@ describe('a thing done a second time', () => {
     expect(p.life.flags).toMatchObject({ declined: 6, declined_twice: 6 });
   });
 });
+
+describe('what belongs to a place', () => {
+  it('is let go of with a move: the flags of the city left behind (`_here`) are cleared, every other flag kept', async () => {
+    const { turnPage } = await import('./roundEnd');
+    const content = fixtureContent();
+    const state = game(content);
+    const p = structuredClone(state.player);
+    p.life.flags = { landlord_here: 2, landlord_warm: 2, married: 1 };
+    turnPage(p, content, []);
+    expect(p.life.flags).toEqual({ landlord_here: 2, landlord_warm: 2, married: 1 });
+    p.life.movingTo = content.cities.find((city) => city.id !== p.cityId)!.id;
+    turnPage(p, content, []);
+    expect(p.life.flags).toEqual({ landlord_warm: 2, married: 1 });
+  });
+});
