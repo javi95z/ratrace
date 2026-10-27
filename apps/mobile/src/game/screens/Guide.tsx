@@ -2,6 +2,7 @@ import { ratArt } from '@ratrace/content';
 import type { Term } from '@ratrace/core/game/glossary';
 import { isFirst, nextTip } from '@ratrace/core/game/guide';
 import { isHalfway } from '@ratrace/core/game/lifeMilestones';
+import { escapeUnder } from '@ratrace/core/game/rules';
 import { escapeProgress } from '@ratrace/engine';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -33,6 +34,8 @@ export function Guide() {
   // The player as the orders of this round will leave them: someone who has just put money to work needs no telling.
   const player = useGame((s) => s.preview?.player ?? s.view?.player ?? null);
   const view = useGame((s) => s.view);
+  // The way out as the life's own rules measure it.
+  const rules = useGame((s) => s.rules);
   const preview = useGame((s) => s.preview);
   const { content } = useWords();
   const values = useGuideValues();
@@ -46,7 +49,7 @@ export function Guide() {
 
   const hasInvested = player.deposit > 0 || Object.keys(player.positions).length > 0;
   const kinds = new Set(player.debts.filter((debt) => debt.principal > 0).map((debt) => debt.kind));
-  const escape = view ? escapeProgress(content, view) : null;
+  const escape = view ? escapeUnder(rules, escapeProgress(content, view)) : null;
   const firsts = {
     crisis: view?.timeline[view.round]?.crisis != null,
     creditCard: kinds.has('creditCard'),

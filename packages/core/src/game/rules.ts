@@ -61,6 +61,18 @@ export function atLeast(a: string, b: string): boolean {
   return true;
 }
 
+/** The engine version from which savings interest counts half towards the way out (`market.depositEscapePct`). */
+export const SAVINGS_HALF_SINCE = '0.45.0';
+
+/**
+ * The way out as a life's own rules measure it. The page's engine works it out with savings counting half; a life under older rules (begun
+ * before 0.45, kept to its end) counts them whole, so what the engine left out is put back, and nothing is said to be left out.
+ */
+export function escapeUnder<T extends { passiveAfterTax: number; savingsUncounted?: number }>(rules: string, escape: T): T {
+  if (atLeast(rules, SAVINGS_HALF_SINCE)) return escape;
+  return { ...escape, passiveAfterTax: escape.passiveAfterTax + (escape.savingsUncounted ?? 0), savingsUncounted: 0 };
+}
+
 /** Whether rules of engine version `rules` know an order, named by its key. */
 export function rulesKnow(rules: string, key: string): boolean {
   const since = ORDERS_SINCE[key];

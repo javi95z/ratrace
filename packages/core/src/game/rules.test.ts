@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { content } from '@ratrace/content';
 import { FOCUS_ACTIONS } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { atLeast, knownOrders, ORDERS_SINCE, PROPERTIES_SINCE, rulesKnow, rulesSell } from './rules';
+import { atLeast, escapeUnder, knownOrders, ORDERS_SINCE, PROPERTIES_SINCE, rulesKnow, rulesSell } from './rules';
 
 const held = fileURLToPath(new URL('../../../../supabase/functions/_shared/game/', import.meta.url));
 const bundles = readdirSync(held)
@@ -44,5 +44,16 @@ describe('what the rules of each version know', () => {
     const orders = [{ type: 'focus', action: 'overtime' }, { type: 'focus', action: 'careerMove' }, { type: 'pensionOut' }, { type: 'setLifestyle' }] as const;
     expect(knownOrders('0.38.0', orders).map((order) => order.type + ('action' in order ? `:${order.action}` : ''))).toEqual(['focus:overtime', 'setLifestyle']);
     expect(knownOrders('0.40.0', orders)).toHaveLength(4);
+  });
+});
+
+describe('the way out as a life\'s rules measure it', () => {
+  const escape = { passiveAfterTax: 1_000, outgoings: 3_000, savingsUncounted: 400 };
+  it('counts savings half from engine 0.45, as the page\'s engine works it out', () => {
+    expect(escapeUnder('0.45.0', escape)).toEqual(escape);
+    expect(escapeUnder('0.46.1', escape)).toEqual(escape);
+  });
+  it('counts them whole under older rules: what the engine left out is put back, and nothing is said to be left out', () => {
+    expect(escapeUnder('0.44.0', escape)).toEqual({ passiveAfterTax: 1_400, outgoings: 3_000, savingsUncounted: 0 });
   });
 });

@@ -3,6 +3,7 @@ import { characterName } from '@ratrace/core/game/characters';
 import { fadingStatus } from '@ratrace/core/game/fading';
 import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
 import { ratOutfit } from '@ratrace/core/game/quips';
+import { escapeUnder } from '@ratrace/core/game/rules';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
@@ -219,12 +220,14 @@ function RatRace({ shown }: { shown: GameView }) {
   const preview = useGame((s) => s.preview);
   const p = shown.player;
   const years = content.yearsPerRound;
-  const escape = preview ? preview.escape : escapeProgress(content, shown);
+  // The way out as the life's own rules measure it: savings count half from engine 0.45, whole for a life begun before.
+  const rules = useGame((s) => s.rules);
+  const escape = escapeUnder(rules, preview ? preview.escape : escapeProgress(content, shown));
   const lines = cashflowLines(content, shown);
   const passive = Math.floor(escape.passiveAfterTax / years);
   const outgoings = Math.floor(escape.outgoings / years);
   const before = lines.dividends + lines.interest + lines.rent + lines.otherPassive;
-  // Savings interest counts half towards the way out (an older life's rules may not say so).
+  // Savings interest counts half towards the way out, under the rules that say so (none is left out under older ones).
   const savingsHalf = Math.floor((escape.savingsUncounted ?? 0) / years);
   const tax = Math.max(0, before - passive - savingsHalf);
   const gap = outgoings - passive;
@@ -573,7 +576,8 @@ function HudWayOut({ open }: { open?: HudOpen }) {
   const [showing, setShowing] = useState(open === 'ratRace');
   const p = shown.player;
   const years = content.yearsPerRound;
-  const escape = useMemo(() => (preview ? preview.escape : escapeProgress(content, shown)), [content, shown, preview]);
+  const rules = useGame((s) => s.rules);
+  const escape = useMemo(() => escapeUnder(rules, preview ? preview.escape : escapeProgress(content, shown)), [content, shown, preview, rules]);
   const escaped = p.escapedAtRound !== null;
   const [labelTop, figuresTop] = WAY_OUT(locale);
   const wayOut = usePress({ onPress: () => setShowing(true) });

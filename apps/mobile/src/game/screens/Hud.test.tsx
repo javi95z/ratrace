@@ -23,13 +23,13 @@ import type { Renders } from '../../testing/renders';
 afterEach(cleanup);
 
 /** A life begun on a device, and the Hud drawn over it as Play draws it: its lead, the figures that stick, and what hangs under them. */
-async function open(options: { locale?: 'en' | 'es' | 'ru'; life?: string; onProfile?: () => void; view?: (view: GameView) => GameView } = {}) {
+async function open(options: { locale?: 'en' | 'es' | 'ru'; life?: string; onProfile?: () => void; view?: (view: GameView) => GameView; rules?: string } = {}) {
   const services = memoryServices();
   const real = await services.sessions.start(options.life ?? 'nurse');
   if (options.view) {
     // The game on the device, with its view changed as the test needs it (the web's Jail and Hud tests do the same).
     const change = options.view;
-    const session: GameSession = { ...realSession(real), view: () => change(real.view()) };
+    const session: GameSession = { ...realSession(real), view: () => change(real.view()), ...(options.rules ? { rules: options.rules } : null) };
     services.sessions.resume = async () => ({ lost: null, session });
   }
   renderGame(<HudScene onProfile={options.onProfile} />, services, options.locale ?? 'en');
@@ -203,6 +203,24 @@ describe('the figures of the HUD', () => {
     expect(within(out).getByText(/^Getting out now would multiply your score by /)).toBeTruthy();
     // The rat runs in its wheel, dressed as the life is lived.
     expect(out.querySelector('[data-sprite^="anim.wheel"]')).toBeTruthy();
+  });
+
+  it('count savings towards the way out as the life\'s own rules do: half from engine 0.45, whole under older ones', async () => {
+    // Half a million in savings, whose interest is most of what the nurse is paid without working.
+    const saving = (view: GameView): GameView => ({ ...view, player: { ...view.player, deposit: 50_000_000 } });
+    const covered = (sheet: HTMLElement) => Number(within(sheet).getByText(/^\d+%$/).textContent?.replace('%', ''));
+    await open({ view: saving });
+    fireEvent.click(screen.getByRole('button', { name: /Rat race escape/ }));
+    const now = sheetTitled('Rat race escape');
+    expect(within(now).getByText('Savings count half')).toBeTruthy();
+    const half = covered(now);
+    cleanup();
+    // A life begun under engine 0.44 keeps its rules to the end: its savings count whole, and nothing says otherwise.
+    await open({ view: saving, rules: '0.44.0' });
+    fireEvent.click(screen.getByRole('button', { name: /Rat race escape/ }));
+    const older = sheetTitled('Rat race escape');
+    expect(within(older).queryByText('Savings count half')).toBeNull();
+    expect(covered(older)).toBeGreaterThan(half);
   });
 
   it('show the player\'s profile from the portrait, where the screen gives one', async () => {

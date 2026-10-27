@@ -1,6 +1,6 @@
 import { content, LIFE_MILESTONE_ART, lives } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
-import { createGame, viewOf } from '@ratrace/engine';
+import { createGame, escapeProgress, viewOf } from '@ratrace/engine';
 import type { Debt, GameEvent, GameView } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { fixedSessions } from '../session/fixed';
@@ -9,6 +9,7 @@ import { runScene, sceneStore } from '../testing/scenes';
 import { bestsOfRuns, celebrationOf, EMPTY_BOOK, isHalfway, LIFE_MILESTONES, memoryMilestones, milestonesOfStep, readBook, withBests } from './lifeMilestones';
 import type { MilestoneBook, Reached } from './lifeMilestones';
 import { ageAt } from './present';
+import { escapeUnder } from './rules';
 import { createGameStore } from './store';
 
 const DEBT: Debt = { id: 'd1', kind: 'creditCard', principal: 50_000, fixedRateBp: 0, roundsLeft: 0 };
@@ -85,6 +86,17 @@ describe('the milestones a step reaches', () => {
     expect(ids(first.reached)).toEqual(['halfway']);
     const slipped = step({ book: first.book, before: view(4, half), after: view(5) });
     expect(step({ book: slipped.book, before: view(5), after: view(6, half) }).reached).toEqual([]);
+  });
+
+  it('measures halfway out as the life\'s own rules do: savings count whole under engine 0.44, half from 0.45', () => {
+    // Savings whose interest is between half and all of half the outgoings: halfway only where it counts whole.
+    let deposit = 1_000_000;
+    const saved = (v: GameView) => void (v.player.deposit = deposit);
+    while (!isHalfway(escapeUnder('0.44.0', escapeProgress(content, view(4, saved))))) deposit += 1_000_000;
+    expect(isHalfway(escapeProgress(content, view(4, saved)))).toBe(false);
+    const steps = (rules?: string) => milestonesOfStep({ content, gameId: 'g1', book: EMPTY_BOOK, before: view(3), after: view(4, saved), story: { before: [], after: [] }, events: [], rules });
+    expect(ids(steps().reached)).toEqual([]);
+    expect(ids(steps('0.44.0').reached)).toEqual(['halfway']);
   });
 
   it('does not tell halfway out in the step that gets the life all the way out', () => {

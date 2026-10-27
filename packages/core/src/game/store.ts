@@ -293,7 +293,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
   const reachedBy = (before: GameView, after: GameView, storyBefore: RoundState['story'], storyAfter: RoundState['story'], events: readonly GameEvent[], gameId: string | null): Reached[] => {
     if (gameId === null || milestones === null) return [];
     try {
-      const { reached, book } = milestonesOfStep({ content, gameId, book: milestones.load(), before, after, story: { before: storyBefore, after: storyAfter }, events });
+      const { reached, book } = milestonesOfStep({ content, gameId, book: milestones.load(), before, after, story: { before: storyBefore, after: storyAfter }, events, rules: session?.rules ?? ENGINE_VERSION });
       milestones.save(book);
       return reached;
     } catch (error) {

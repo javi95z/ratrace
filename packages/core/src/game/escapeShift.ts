@@ -1,4 +1,5 @@
-import { previewRound } from '@ratrace/engine';
+import { ENGINE_VERSION, previewRound } from '@ratrace/engine';
+import { escapeUnder } from './rules';
 import type { Cents, Content, GameView, Order } from '@ratrace/engine';
 
 /**
@@ -17,15 +18,17 @@ const CLOSE_PCT = 50;
 
 /**
  * The escape test with the basket as `before`, and as `after`, both as the engine's own preview of the round works them out (no rule
- * of the game here). Null where there is nothing worth saying: outside the finances, for a life far from the way out, for a choice
+ * of the game here), measured as the life's own rules measure it (`escapeUnder`). Null where there is nothing worth saying: outside the finances, for a life far from the way out, for a choice
  * that changes neither side, or for one the round would refuse.
  */
-export function escapeShift(content: Content, view: GameView, before: readonly Order[], after: readonly Order[]): EscapeShift | null {
+export function escapeShift(content: Content, view: GameView, before: readonly Order[], after: readonly Order[], rules: string = ENGINE_VERSION): EscapeShift | null {
   if (view.finished || view.phase !== 'finance') return null;
   const was = previewRound(content, view, { orders: [...before] });
+  was.escape = escapeUnder(rules, was.escape);
   if (was.rejected.length > 0) return null;
   if (was.escape.outgoings <= 0 || was.escape.passiveAfterTax * 100 < was.escape.outgoings * CLOSE_PCT) return null;
   const now = previewRound(content, view, { orders: [...after] });
+  now.escape = escapeUnder(rules, now.escape);
   if (now.rejected.length > 0) return null;
   if (now.escape.passiveAfterTax === was.escape.passiveAfterTax && now.escape.outgoings === was.escape.outgoings) return null;
   const covered = (escape: { passiveAfterTax: Cents; outgoings: Cents }) => escape.passiveAfterTax >= escape.outgoings;

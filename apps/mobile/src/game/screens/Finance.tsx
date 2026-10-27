@@ -732,6 +732,7 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const { content, text, fmt } = useWords();
   const { view, shown } = useRound();
   const orders = useGame((s) => s.orders);
+  const rules = useGame((s) => s.rules);
   const addOrder = useGame((s) => s.addOrder);
   const quote = useMemo(() => quoteProperty(content, shown, typeId), [content, shown, typeId]);
   const [mortgage, setMortgage] = useState<'fixed' | 'variable' | 'none'>(quote.canBorrow ? 'fixed' : 'none');
@@ -741,7 +742,7 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const cashDown = mortgage === 'none' ? quote.price : down;
   const order = useMemo<Order>(() => ({ type: 'buyProperty', typeId, downPayment: mortgage === 'none' ? 0 : down, mortgage, rented }), [typeId, down, mortgage, rented]);
   // What the home would leave of the way out, as it is set up now: its taxes and upkeep, the mortgage's payments, a rent if let.
-  const shift = useMemo(() => escapeShift(content, view, orders, [...orders, order]), [content, view, orders, order]);
+  const shift = useMemo(() => escapeShift(content, view, orders, [...orders, order], rules), [content, view, orders, order, rules]);
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
   const { locale } = useSettings();
   const downLine = webLine([['pixel', 14, 14 * 1.1], ['pixel', 17, 17 * 1.1]], locale);
@@ -1825,9 +1826,10 @@ function LivingEscape({ type }: { type: 'setLifestyle' | 'setRentTier' }) {
   const { content } = useWords();
   const view = useGame((s) => s.view);
   const orders = useGame((s) => s.orders);
+  const rules = useGame((s) => s.rules);
   const shift = useMemo(
-    () => (view && orders.some((order) => order.type === type) ? escapeShift(content, view, orders.filter((order) => order.type !== type), orders) : null),
-    [content, view, orders, type],
+    () => (view && orders.some((order) => order.type === type) ? escapeShift(content, view, orders.filter((order) => order.type !== type), orders, rules) : null),
+    [content, view, orders, type, rules],
   );
   return shift ? (
     <View style={{ marginTop: 8 }}>
@@ -2032,6 +2034,7 @@ function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
   const { content, text, names, fmt } = useWords();
   const { view, shown, p } = useRound();
   const orders = useGame((s) => s.orders);
+  const rules = useGame((s) => s.rules);
   const inBasket = orders.some((order) => order.type === 'buyItem' && order.itemId === itemId);
   const addOrder = useGame((s) => s.addOrder);
   const setOrder = useGame((s) => s.setOrder);
@@ -2039,10 +2042,10 @@ function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
   const quote = useMemo(() => quoteItem(content, shown, itemId), [content, shown, itemId]);
   // What buying it would leave of the way out, its upkeep counted: paid at once, and on instalments, whose payments count too.
   const offered = quote.forSale && !inBasket && !p.life.items.some((owned) => owned.itemId === itemId);
-  const shift = useMemo(() => (offered ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId }]) : null), [content, view, orders, itemId, offered]);
+  const shift = useMemo(() => (offered ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId }], rules) : null), [content, view, orders, itemId, offered, rules]);
   const financedShift = useMemo(
-    () => (offered && quote.finance?.lock === null ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId, financed: true }]) : null),
-    [content, view, orders, itemId, offered, quote.finance],
+    () => (offered && quote.finance?.lock === null ? escapeShift(content, view, orders, [...orders, { type: 'buyItem', itemId, financed: true }], rules) : null),
+    [content, view, orders, itemId, offered, quote.finance, rules],
   );
   const item = content.items.find((x) => x.id === itemId);
   if (!item) return null;

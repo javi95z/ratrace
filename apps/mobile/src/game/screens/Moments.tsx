@@ -2,6 +2,7 @@ import { momentArt } from '@ratrace/content';
 import { momentsOf } from '@ratrace/core/game/moments';
 import type { Moment } from '@ratrace/core/game/moments';
 import { ageAt, escapeAge } from '@ratrace/core/game/present';
+import { escapeUnder } from '@ratrace/core/game/rules';
 import { escapeProgress, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState, type ReactNode } from 'react';
@@ -80,6 +81,8 @@ function Figures({ children }: { children: ReactNode }) {
 
 /** What each moment says, in the figures the game gave. */
 function Body({ moment, view }: { moment: Moment; view: GameView }) {
+  // The way out as the life's own rules measure it.
+  const rules = useGame((s) => s.rules);
   const t = useT('moments');
   const { content, fmt } = useWords();
   const age = ageAt(content, view.round);
@@ -89,7 +92,7 @@ function Body({ moment, view }: { moment: Moment; view: GameView }) {
 
   switch (moment.kind) {
     case 'escape': {
-      const escape = escapeProgress(content, view);
+      const escape = escapeUnder(rules, escapeProgress(content, view));
       return (
         <>
           {said(t('escape.body', { age: escapeAge(content, moment.round) }))}

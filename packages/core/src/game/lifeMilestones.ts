@@ -1,6 +1,7 @@
 import { WORTH_MARKS } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
-import { escapeProgress } from '@ratrace/engine';
+import { ENGINE_VERSION, escapeProgress } from '@ratrace/engine';
+import { escapeUnder } from './rules';
 import type { Content, GameEvent, GameView } from '@ratrace/engine';
 import type { FinishedRun } from '../session/types';
 import { ageAt, escapeAge, milestoneAge } from './present';
@@ -66,8 +67,8 @@ const KEPT_LIVES = 8;
 export const isHalfway = ({ passiveAfterTax, outgoings }: { passiveAfterTax: number; outgoings: number }): boolean => outgoings > 0 && passiveAfterTax * 2 >= outgoings;
 
 /** Where a life stands on the two milestones its story does not tell. */
-function standingOf(content: Content, view: GameView): { debt: boolean; halfway: boolean } {
-  return { debt: view.player.debts.some((debt) => debt.principal > 0), halfway: isHalfway(escapeProgress(content, view)) };
+function standingOf(content: Content, view: GameView, rules: string): { debt: boolean; halfway: boolean } {
+  return { debt: view.player.debts.some((debt) => debt.principal > 0), halfway: isHalfway(escapeUnder(rules, escapeProgress(content, view))) };
 }
 
 /** The milestone the story tells, if it is one the game celebrates and the first of its kind in the life. */
@@ -99,6 +100,8 @@ export interface MilestoneStep {
   /** The story before the step and after it: what it newly tells is what the step did. */
   story: { before: readonly Milestone[]; after: readonly Milestone[] };
   events: readonly GameEvent[];
+  /** The engine version of the rules the life is played under, which say how far out it is: this page's own unless it is older. */
+  rules?: string;
 }
 
 /**
@@ -109,8 +112,8 @@ export interface MilestoneStep {
  * milestones were celebrated) starts from where it stands before the step: what was true then is not celebrated, so an old life does not
  * celebrate everything it had already done.
  */
-export function milestonesOfStep({ content, gameId, book, before, after, story, events }: MilestoneStep): { reached: Reached[]; book: MilestoneBook } {
-  const was = standingOf(content, before);
+export function milestonesOfStep({ content, gameId, book, before, after, story, events, rules = ENGINE_VERSION }: MilestoneStep): { reached: Reached[]; book: MilestoneBook } {
+  const was = standingOf(content, before, rules);
   const known = book.lives.find((life) => life.gameId === gameId);
   const life: LifeMemory = known ?? { gameId, hadDebt: was.debt, reached: was.halfway ? ['halfway'] : [] };
   const found: Array<{ id: LifeMilestone; age: number }> = [];
@@ -123,7 +126,7 @@ export function milestonesOfStep({ content, gameId, book, before, after, story, 
     if (id) reach(id, milestoneAge(content, m));
   }
 
-  const now = standingOf(content, after);
+  const now = standingOf(content, after, rules);
   const age = ageAt(content, after.round);
   const kept = new Set(life.reached);
   const broke = events.some((event) => event.kind === 'bankrupt');
