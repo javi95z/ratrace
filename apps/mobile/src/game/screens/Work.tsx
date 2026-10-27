@@ -630,6 +630,8 @@ export function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuo
         <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{t('focusLeft')}</ReadText>
       </Framed>
       {work.level === null ? <ReadText size={14} lineHeight={14 * SNUG} tone="ink-200">{t('focusNoJob')}</ReadText> : null}
+      {/* Before the finances the uses are only listed: when they can be chosen is said before them, not under the whole list. */}
+      {open ? null : <ReadText size={14} lineHeight={14 * SNUG} tone="gold-200">{t('focusLater')}</ReadText>}
       {open ? (
         <View style={{ gap: 8 }}>
           {uses.map((each) => {
@@ -661,7 +663,7 @@ export function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuo
       )}
       {open ? null : <MasteredLine names={mastered} />}
       <Explain>{t('focusAlso')}</Explain>
-      <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{open ? t('focusPick') : t('focusWhere')}</ReadText>
+      {open ? <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{t('focusPick')}</ReadText> : null}
     </>
   );
 }

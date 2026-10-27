@@ -1567,6 +1567,7 @@
     "huntGives": "{pct}% chance of a {raise}% raise for good.",
     "focusAlso": "Moving city takes 1 focus, and some cards ask for 1 or 2 to take their best option.",
     "focusWhere": "It is spent in the Lifestyle tab, during the finances.",
+    "focusLater": "You choose its uses once the round's cards are answered: here, or in the Lifestyle tab.",
     "traits": "What sets this career apart",
     "cycleUp": "Your pay follows the economy: this round you earn {pct}% more.",
     "cycleDown": "Your pay follows the economy: this round you earn {pct}% less.",

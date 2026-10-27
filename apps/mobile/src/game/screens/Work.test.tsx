@@ -158,7 +158,7 @@ describe('the work panel of the profile', () => {
     expect(has(sheet, `${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBe(true);
     // At the news, nothing can be ordered: each use is a line, and the sheet says where focus is spent.
     expect(within(sheet).queryByRole('switch')).toBeNull();
-    expect(has(sheet, 'It is spent in the Lifestyle tab, during the finances.')).toBe(true);
+    expect(has(sheet, /^You choose its uses once the round.s cards are answered/)).toBe(true);
     fireEvent.click(within(sheet).getByRole('button', { name: 'What is this?' }));
     expect(has(sheetTitled('Focus'), /^Moving city takes 1 focus/)).toBe(true);
   });

@@ -153,11 +153,18 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const asks = numberOfLines !== 1 && Math.abs(off) > 1e-6;
   const hold = (numberOfLines === 1 || asks) && Math.abs(off) > 1e-6 ? lines * off : 0;
   const room = shift ? headroom(shift, size, flat) : null;
+  // One word (a figure: "$4,489", "3/3") is never wrapped. Android measures a text in letter spacing or in runs of several faces a hair narrower than it
+  // draws it, and breaks the word before its last letter where it has just the room it measured; held to one line it is drawn whole there, and where the
+  // phone's larger text leaves it truly no room, it is set a little smaller rather than cut.
+  const oneWord = Platform.OS === 'android' && numberOfLines === undefined && !/\s/.test([...runs, ...ran.flatMap((aside) => aside.runs)].map((run) => run.text).join(''));
+  const lineCount = oneWord ? 1 : numberOfLines;
   const held = hold === 0 ? null : { marginBottom: Number(room?.marginBottom ?? flat.marginBottom ?? flat.marginVertical ?? flat.margin ?? 0) + hold };
   return (
     <Text
       selectable={false}
-      numberOfLines={numberOfLines}
+      numberOfLines={lineCount}
+      adjustsFontSizeToFit={oneWord}
+      minimumFontScale={oneWord ? 0.7 : undefined}
       onTextLayout={
         asks || onLines !== undefined
           ? (event: TextLayoutEvent) => {

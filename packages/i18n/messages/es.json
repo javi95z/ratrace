@@ -1567,6 +1567,7 @@
     "huntGives": "{pct} % de probabilidad de una subida del {raise} % para siempre.",
     "focusAlso": "Mudarte de ciudad cuesta 1 de foco, y algunas cartas piden 1 o 2 para elegir su mejor opción.",
     "focusWhere": "Se gasta en la pestaña Vida, en la fase de finanzas.",
+    "focusLater": "Eliges en qué usarlo cuando respondas las cartas de la ronda: aquí o en la pestaña Vida.",
     "traits": "Lo propio de esta carrera",
     "cycleUp": "Tu sueldo sigue a la economía: esta ronda cobras un {pct} % más.",
     "cycleDown": "Tu sueldo sigue a la economía: esta ronda cobras un {pct} % menos.",

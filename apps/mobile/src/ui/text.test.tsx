@@ -18,13 +18,13 @@ vi.mock('./Sprite', () => ({ Sprite: () => null }));
 // Records the style every Text is given: react-native-web drops what only a phone reads (includeFontPadding). The outer Text of a text (the one that is
 // not selectable) is recorded whole, with what the phone is told of its lines, and the platform is the test's to say.
 const textStyles = vi.hoisted(() => [] as unknown[]);
-const outers = vi.hoisted(() => [] as Array<{ style: Record<string, unknown>; onTextLayout?: (event: { nativeEvent: { lines: unknown[] } }) => void }>);
+const outers = vi.hoisted(() => [] as Array<{ style: Record<string, unknown>; onTextLayout?: (event: { nativeEvent: { lines: unknown[] } }) => void; numberOfLines?: number; adjustsFontSizeToFit?: boolean }>);
 const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   const Recorded = (props: Record<string, unknown>) => {
     textStyles.push(rn.StyleSheet.flatten(props.style as never));
-    if (props.selectable === false) outers.push({ style: rn.StyleSheet.flatten(props.style as never) as Record<string, unknown>, onTextLayout: props.onTextLayout as never });
+    if (props.selectable === false) outers.push({ style: rn.StyleSheet.flatten(props.style as never) as Record<string, unknown>, onTextLayout: props.onTextLayout as never, numberOfLines: props.numberOfLines as never, adjustsFontSizeToFit: props.adjustsFontSizeToFit as never });
     return <rn.Text {...(props as Record<string, unknown>)} />;
   };
   return { ...rn, Text: Recorded, Platform: { ...rn.Platform, get OS() { return platform.OS; } }, PixelRatio: { get: () => 3 } };
@@ -417,4 +417,27 @@ test('a pixel span runs on in a reading text where the web sets one (the obituar
   expect(rest.style.letterSpacing).toBe('');
   expect((rest.firstElementChild as HTMLElement).style.fontFamily).toContain('ChakraPetch_400Regular_Slant');
   expect(parseFloat((rest.firstElementChild as HTMLElement).style.fontSize)).toBeCloseTo(13, 5);
+});
+
+test('on Android a word alone, a figure, is never broken over two lines: held to one, and set smaller only where there is truly no room; words with spaces wrap', () => {
+  platform.OS = 'android';
+  try {
+    for (const [words, one] of [['$4,489', true], ['3/3', true], ['Run it yourself · 1 focus', false]] as const) {
+      outers.length = 0;
+      render(<PixelText size={16}>{words}</PixelText>);
+      expect(outers[0].numberOfLines, words).toBe(one ? 1 : undefined);
+      expect(Boolean(outers[0].adjustsFontSizeToFit), words).toBe(one);
+    }
+    // A text that names its own lines keeps them.
+    outers.length = 0;
+    render(<PixelText size={16} numberOfLines={2}>{'$4,489'}</PixelText>);
+    expect(outers[0].numberOfLines).toBe(2);
+    // iOS draws what it measures: nothing is changed there.
+    platform.OS = 'ios';
+    outers.length = 0;
+    render(<PixelText size={16}>{'$4,489'}</PixelText>);
+    expect(outers[0].numberOfLines).toBeUndefined();
+  } finally {
+    platform.OS = 'web';
+  }
 });
