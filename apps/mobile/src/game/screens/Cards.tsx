@@ -1,4 +1,4 @@
-import { cardArt } from '@ratrace/content';
+import { cardArt, cardPeople, metFlag, personArt } from '@ratrace/content';
 import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
 import { previewCard, quoteItem } from '@ratrace/engine';
@@ -23,6 +23,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useHaptic } from '../../ui/haptic';
 import { useGame, useStill, useT, useWords } from '../context';
+import { useRivals } from '../useRivals';
 import { CareerPreview } from './CareerPreview';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins, useCoinTarget } from './FlyingCoins';
@@ -306,6 +307,42 @@ function Entrance({ legendary, children }: { legendary: boolean; children: React
 }
 
 /**
+ * Whose card it is, for one of the people who come back: their face in the mood of the card, in the newspaper's 44-point block (`News.tsx`),
+ * and who they are to the player, which on their first card of a life introduces them. The face says nothing to a screen reader: the words do.
+ */
+function PersonLine({ cardId }: { cardId: string }) {
+  const { text } = useWords();
+  const flags = useGame((s) => s.view?.player.life.flags);
+  const person = cardPeople[cardId];
+  if (person === undefined) return null;
+  const met = flags !== undefined && Object.hasOwn(flags, metFlag(person.who));
+  const words = text.people[person.who];
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+      <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 44, height: 44, flexShrink: 0, borderWidth: 1, borderColor: COLORS['ink-900'], overflow: 'hidden' }}>
+        <Sprite id={personArt(person.who, person.mood)} size={{ w: 42, h: 42 }} />
+      </View>
+      <PixelText size={14} tone="ink-700" style={{ flexShrink: 1 }}>{met ? words.who : words.meet}</PixelText>
+    </View>
+  );
+}
+
+/**
+ * A card's words with the player's own people named as the paper names them (`{rival:cousin}` is "Emily, your cousin"): only a card's body
+ * names them, and only once the life's rivals are known. Before that, as at no card that names them, the words are left as they are.
+ */
+function useNamed(): (sentence: string) => string {
+  const people = useRivals();
+  return (sentence) =>
+    people === null
+      ? sentence
+      : sentence.replace(/\{rival:(classmate|cousin|ex)\}/g, (whole, id: string) => {
+          const rival = people.rivals.find((candidate) => candidate.id === id);
+          return rival ? people.who(rival) : whole;
+        });
+}
+
+/**
  * The card itself, as wide as its picture (the web's `calc(288px * var(--art) + 4px)`): its picture in a cream mat, its title and its words. A
  * rare one is framed in gold and catches the light now and then; a legendary one shimmers all over and throws sparks.
  */
@@ -315,6 +352,7 @@ function Card({ def }: { def: CardDef }) {
   const held = useContext(HeldShine);
   const rarity = cardRarity(def);
   const written = text.cards[def.id];
+  const named = useNamed();
   const picture = { w: 288 * art, h: 120 * art };
   return (
     <View role="article" style={{ width: picture.w + 4 }}>
@@ -331,10 +369,11 @@ function Card({ def }: { def: CardDef }) {
         </View>
         {rarity === 'legendary' ? <Sparks colours={['gold-500', 'teal-300', 'cream', 'wine-300']} count={16} reach={150} size={4} delayMs={450} held={held?.spark} /> : null}
         <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
+          <PersonLine cardId={def.id} />
           <View accessibilityRole="header" {...LEVEL_2}>
             <PixelText size={19} tone="ink-900">{written.title}</PixelText>
           </View>
-          <ReadText size={14} lineHeight={14 * SNUG} tone="ink-700" style={{ marginTop: 4 }}>{written.body}</ReadText>
+          <ReadText size={14} lineHeight={14 * SNUG} tone="ink-700" style={{ marginTop: 4 }}>{named(written.body)}</ReadText>
         </View>
       </Framed>
     </View>
@@ -538,6 +577,7 @@ function Answered({ event }: { event: Extract<GameEvent, { kind: 'card' }> }) {
             <Sprite id={cardArt[event.cardId] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
           </View>
           <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
+            <PersonLine cardId={event.cardId} />
             <View accessibilityRole="header" {...LEVEL_3}>
               <PixelText size={19} tone="ink-900">{written.title}</PixelText>
             </View>

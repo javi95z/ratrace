@@ -1362,7 +1362,8 @@
       "heirs": "Leaves a fortune, and a family that will argue over it for years.",
       "alone": "Leaves a fortune, and nobody to argue over it.",
       "plain": "Paid every bill on time. Nobody mentions it."
-    }
+    },
+    "people": "What became of them"
   },
   "badges": {
     "earned": "Badge earned",
@@ -1390,7 +1391,11 @@
     "notOwned": "Not owned yet",
     "intro": "Everything you have ever owned, in any life, and every badge you have earned.",
     "rarity": "Rarity",
-    "rarityAll": "All"
+    "rarityAll": "All",
+    "people": "People",
+    "peopleCount": "{n} of {total} met",
+    "endingsCount": "{n} of {total} endings",
+    "notMet": "Not met yet"
   },
   "records": {
     "title": "History",

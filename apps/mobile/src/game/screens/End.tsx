@@ -1,7 +1,8 @@
-import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
+import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, personArt, portraitArt, rarityOf } from '@ratrace/content';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { epilogue } from '@ratrace/core/game/epilogue';
+import { peopleEpilogue } from '@ratrace/core/game/people';
 import { ageAt, endingOf, escapeAge, prizedBadge } from '@ratrace/core/game/present';
 import { obituary } from '@ratrace/core/game/quips';
 import { bestsOf } from '@ratrace/core/game/records';
@@ -171,6 +172,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   // The life in three paragraphs: where it began, what happened, how it ended.
   const life = lives.find((candidate) => candidate.id === lifeId);
   const told = useMemo(() => (life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : []), [life, words, tale, view, story, score.total, bankruptcies]);
+  // What became of each of the people who come back the life met, after its paragraphs.
+  const people = useMemo(() => peopleEpilogue(view.player.life.flags), [view]);
   const dead = obituary(content, view, bankruptcies);
   const standing = useStanding(lifeId, score.total);
   const prized = prizedBadge(earned.filter(isNew));
@@ -332,8 +335,22 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
               <ReadText size={14} lineHeight={14 * RELAXED}>{paragraph}</ReadText>
             </Rising>
           ))}
+          {people.length > 0 ? (
+            <Rising delayMs={300 + told.length * 350} style={{ marginTop: 12 }}>
+              <View role="list" aria-label={tale('people')} style={{ gap: 8 }}>
+                {people.map(({ who, ending, mood }) => (
+                  <View key={who} role="listitem" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 36, height: 36, flexShrink: 0, borderWidth: 1, borderColor: COLORS['night-900'], overflow: 'hidden' }}>
+                      <Sprite id={personArt(who, mood)} size={{ w: 34, h: 34 }} />
+                    </View>
+                    <ReadText size={14} lineHeight={14 * SNUG} style={{ flexShrink: 1 }}>{text.people[who].endings[ending] ?? ''}</ReadText>
+                  </View>
+                ))}
+              </View>
+            </Rising>
+          ) : null}
           {/* The life in one dry line, as a newspaper would have it, set off by a rule. */}
-          <Rising delayMs={300 + told.length * 350} style={{ marginTop: 12, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 10 }}>
+          <Rising delayMs={300 + (told.length + (people.length > 0 ? 1 : 0)) * 350} style={{ marginTop: 12, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 10 }}>
             <ReadText
               size={13}
               lineHeight={13 * SNUG}

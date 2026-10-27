@@ -754,3 +754,32 @@ describe('the money a card paid', () => {
     expect(coins()).toHaveLength(0);
   });
 });
+
+describe('the people who come back', () => {
+  /** The view with these flags set, as a life that has played on would have them. */
+  const flagged = (flags: Record<string, number>) => (view: GameView): GameView => ({ ...view, player: { ...view.player, life: { ...view.player.life, flags: { ...view.player.life.flags, ...flags } } } });
+
+  it('introduces a person on their first card, with their face, and says who they are on the next ones', async () => {
+    await onTheCards(await dealt('nurse', 'inlaw_coin'));
+    const card = screen.getByRole('article');
+    expect(within(card).getByText('Meet Toni, your brother-in-law')).toBeTruthy();
+    // The face is the card's own mood, and a screen reader hears the words, not the picture.
+    const face = card.querySelector('[data-sprite="person.inlaw.pleased"]');
+    expect(face).not.toBeNull();
+    expect(face!.closest('[aria-hidden="true"]')).not.toBeNull();
+    cleanup();
+    await onTheCards(await dealt('nurse', 'inlaw_rug', flagged({ inlaw_met: 0, inlaw_bubble: 0 })));
+    expect(within(screen.getByRole('article')).getByText('Toni, your brother-in-law')).toBeTruthy();
+    expect(screen.queryByText(/^Meet /)).toBeNull();
+    expect(screen.getByRole('article').querySelector('[data-sprite="person.inlaw.upset"]')).not.toBeNull();
+  });
+
+  it("names the player's own people as the paper does, and shows no face for them", async () => {
+    await onTheCards(await dealt('nurse', 'cousin_wedding'));
+    const card = screen.getByRole('article');
+    expect(within(card).getByText(/^An invitation with gold edges, from \S+, your cousin\. A wedding, and a list of gifts\.$/)).toBeTruthy();
+    expect(card.textContent).not.toContain('{');
+    expect(within(card).queryByText(/^Meet /)).toBeNull();
+    expect(card.querySelector('[data-sprite^="person."]')).toBeNull();
+  });
+});

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { badges, content, rarityOf } from '@ratrace/content';
+import { badges, content, personEndings, rarityOf } from '@ratrace/content';
 import { newProfile } from '@ratrace/core/session/types';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -36,13 +36,32 @@ async function opened(tab: string): Promise<Laid> {
 }
 
 describe('the collection', () => {
+  it('shows the people who come back, each met in any life with their face, their name and the endings of their story seen', async () => {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), people: ['inlaw', 'inlaw.repaid', 'parents', 'inlaw.coin'] });
+    renderGame(<Collection />, services);
+    fireEvent.click(screen.getByRole('tab', { name: 'People' }));
+    expect(await screen.findByText('2 of 6 met')).toBeTruthy();
+    const page = await opened('People');
+    expect(within(page).getAllByRole('listitem')).toHaveLength(6);
+    const inlaw = tileOf(within(page).getByText('Toni, your brother-in-law'));
+    expect(pictures(inlaw)).toEqual(['person.inlaw.pleased']);
+    expect(within(inlaw).getByText(`2 of ${personEndings.inlaw.length} endings`)).toBeTruthy();
+    expect(within(tileOf(within(page).getByText('Mum and Dad'))).getByText(`0 of ${personEndings.parents.length} endings`)).toBeTruthy();
+    // Not met: a shadow, no name, and nothing of the story.
+    const shadows = within(page).getAllByText('Not met yet').map(tileOf);
+    expect(shadows).toHaveLength(4);
+    expect(shadows.map((tile) => tile.querySelector('[data-silhouette]')?.getAttribute('data-sprite'))).toEqual(['person.boss.pleased', 'person.landlord.pleased', 'person.founder.pleased', 'person.advisor.pleased']);
+    expect(within(page).queryByText(/Margaret/)).toBeNull();
+  });
+
   it('shows every thing in the game, as a silhouette until it has been owned', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), gallery: ['watch_casio', 'car_seat_ibiza'] });
     renderGame(<Collection />, services);
 
     // The badges come first; the things are the second tab.
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Badges', 'Things']);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Badges', 'Things', 'People']);
     fireEvent.click(screen.getByRole('tab', { name: 'Things' }));
     expect(await screen.findByText(`2 of ${content.items.length} owned`)).toBeTruthy();
     const things = await opened('Things');

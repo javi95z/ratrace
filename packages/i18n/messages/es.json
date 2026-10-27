@@ -1362,7 +1362,8 @@
       "heirs": "Deja una fortuna y una familia que discutirá por ella durante años.",
       "alone": "Deja una fortuna y nadie con quien discutir por ella.",
       "plain": "Pagó todas las facturas a tiempo. Nadie lo menciona."
-    }
+    },
+    "people": "Qué fue de ellos"
   },
   "badges": {
     "earned": "Insignia conseguida",
@@ -1390,7 +1391,11 @@
     "notOwned": "Aún no lo has tenido",
     "intro": "Todo lo que has tenido alguna vez, en cualquier vida, y todas las insignias que has conseguido.",
     "rarity": "Rareza",
-    "rarityAll": "Todas"
+    "rarityAll": "Todas",
+    "people": "Gente",
+    "peopleCount": "{n} de {total} conocidas",
+    "endingsCount": "{n} de {total} finales",
+    "notMet": "Aún no la has conocido"
   },
   "records": {
     "title": "Historial",

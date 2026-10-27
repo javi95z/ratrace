@@ -1,4 +1,5 @@
-import { BADGE_RARITY, badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
+import { BADGE_RARITY, badges, itemArt, PEOPLE, personArt, personEndings, RARITIES, rarityOf } from '@ratrace/content';
+import type { PersonId } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { memo, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -19,7 +20,7 @@ import { Medal } from './Medal';
 import { RARITY_TONE } from './rarityStyle';
 import { Heading } from './Heading';
 
-type Tab = 'items' | 'badges';
+type Tab = 'items' | 'badges' | 'people';
 
 /**
  * How many to a row, by the width of the page's column inside its gutter: the web's container queries on its `main` (`@container`), which measure
@@ -41,7 +42,10 @@ type Tile = { id: string; on: boolean };
  * A line of the list, all that it shows: a group's heading, or a row of its things or badges, each owned or earned or not, the first of a group under
  * its heading with nothing between.
  */
-type Line = { kind: 'heading'; key: string; title: string } | { kind: 'things' | 'badges'; key: string; tiles: readonly Tile[]; columns: number; first: boolean };
+type Line =
+  | { kind: 'heading'; key: string; title: string }
+  | { kind: 'things' | 'badges'; key: string; tiles: readonly Tile[]; columns: number; first: boolean }
+  | { kind: 'people'; key: string; people: ReadonlyArray<{ who: PersonId; met: boolean; endings: number }>; columns: number; first: boolean };
 
 /** The lines of groups of ids: each group's heading, then its ids in rows of `columns`, each said to be owned or earned (`on`) or not. */
 function linesOf(kind: 'things' | 'badges', groups: ReadonlyArray<{ id: string; title: string; ids: readonly string[] }>, columns: number, on: (id: string) => boolean): Line[] {
@@ -64,6 +68,18 @@ function lineOf(line: Line): ReactElement {
     return (
       <View style={{ paddingTop: 16 }}>
         <Heading>{line.title}</Heading>
+      </View>
+    );
+  }
+  if (line.kind === 'people') {
+    return (
+      <View style={{ paddingTop: line.first ? 0 : 8, flexDirection: 'row', gap: 8 }}>
+        {line.people.map(({ who, met, endings }) => (
+          <Person key={who} who={who} met={met} endings={endings} />
+        ))}
+        {Array.from({ length: line.columns - line.people.length }, (_, i) => (
+          <View key={`empty-${i}`} style={{ flex: 1, minWidth: 0 }} />
+        ))}
       </View>
     );
   }
@@ -99,6 +115,32 @@ const Thing = memo(function Thing({ itemId, owned }: { itemId: string; owned: bo
           <ReadText size={13} lineHeight={13 * TIGHT} style={{ textAlign: 'center' }}>{names.items[itemId] ?? itemId}</ReadText>
         ) : (
           <SrOnly>{t('notOwned')}</SrOnly>
+        )}
+      </Framed>
+    </View>
+  );
+});
+
+/**
+ * One of the people who come back, as the things are drawn: once met in any life, their face, who they are and how many of their story's
+ * endings the player has seen; a shadow and no name until then.
+ */
+const Person = memo(function Person({ who, met, endings }: { who: PersonId; met: boolean; endings: number }) {
+  const t = useT('collection');
+  const { text } = useWords();
+  return (
+    <View role="listitem" style={{ flex: 1, minWidth: 0 }}>
+      <Framed kind={met ? 'bevel' : 'frame'} tone={met ? GOLD : undefined} style={{ flex: 1, backgroundColor: COLORS[met ? 'night-600' : 'night-700'], alignItems: 'center', gap: 4, padding: 8 }}>
+        <Bare style={{ width: '100%', paddingVertical: 6 }}>
+          <Sprite id={personArt(who, 'pleased')} silhouette={!met} fallback={FALLBACK} />
+        </Bare>
+        {met ? (
+          <>
+            <ReadText size={13} lineHeight={13 * TIGHT} style={{ textAlign: 'center' }}>{text.people[who].who}</ReadText>
+            <ReadText size={12} tone="ink-300" style={{ textAlign: 'center' }}>{t('endingsCount', { n: endings, total: personEndings[who].length })}</ReadText>
+          </>
+        ) : (
+          <SrOnly>{t('notMet')}</SrOnly>
         )}
       </Framed>
     </View>
@@ -159,7 +201,7 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   const t = useT('collection');
   const labels = useT('badges');
   const { content, text } = useWords();
-  const { gallery, badges: earned } = useProfile();
+  const { gallery, badges: earned, people: seen } = useProfile();
   const [tab, setTab] = useState<Tab>(first);
   // One rarity at a time, or all: the badges' tab's own, so it is all of them again whenever the tab is shown again.
   const [only, setOnly] = useState<BadgeRarity | 'all'>('all');
@@ -185,6 +227,13 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
     const lines = groups.map((group) => ({ id: group, title: text.badgeGroups[group], ids: shown.filter((badge) => badge.group === group).map((badge) => badge.id) }));
     return linesOf('badges', lines, columns.badges, (id) => Object.hasOwn(earned, id));
   }, [only, text, earned, columns.badges]);
+  // The people, as many to a row as the things: each met or not, and the endings of their story seen.
+  const people = useMemo(() => {
+    const all = PEOPLE.map((who) => ({ who, met: seen.includes(who), endings: personEndings[who].filter((ending) => seen.includes(`${who}.${ending.id}`)).length }));
+    const lines: Line[] = [];
+    for (let at = 0; at < all.length; at += columns.things) lines.push({ kind: 'people', key: `people-${at}`, people: all.slice(at, at + columns.things), columns: columns.things, first: at === 0 });
+    return lines;
+  }, [seen, columns.things]);
   const count = (list: typeof badges) => list.filter((badge) => Object.hasOwn(earned, badge.id)).length;
 
   const head = (
@@ -198,12 +247,14 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
       <ReadText size={13} tone="ink-300" style={{ marginBottom: 8 }}>{t('intro')}</ReadText>
       {/* The tabs run to the edges of the screen, their own gutter inside them (the web's `-mx-3`). */}
       <View style={{ marginHorizontal: -12 }}>
-        <Tabs<Tab> label={t('title')} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]} value={tab} onChange={choose} />
+        <Tabs<Tab> label={t('title')} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }, { id: 'people', label: t('people') }]} value={tab} onChange={choose} />
       </View>
       {/* The head of the tab's panel (the web's `pt-2`, then `gap-4`): its count, and for the badges one rarity at a time, each saying how many of it are won. */}
       <View style={{ paddingTop: 8, gap: 16 }}>
         {tab === 'items' ? (
           <Count>{t('itemsCount', { n: gallery.filter((id) => content.items.some((item) => item.id === id)).length, total: content.items.length })}</Count>
+        ) : tab === 'people' ? (
+          <Count>{t('peopleCount', { n: PEOPLE.filter((who) => seen.includes(who)).length, total: PEOPLE.length })}</Count>
         ) : (
           <>
             <Count>{t('badgesCount', { n: count(badges), total: badges.length })}</Count>
@@ -235,7 +286,7 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
       <ListScreen
         width={WIDE_COLUMN}
         head={head}
-        data={tab === 'items' ? things : shownBadges}
+        data={tab === 'items' ? things : tab === 'people' ? people : shownBadges}
         keyOf={keyOf}
         item={lineOf}
         onWidth={(width) => setBreakpoint(breakpointOf(width))}
