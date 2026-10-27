@@ -664,8 +664,7 @@ export const es: ContentText = {
         fund: 'El fondo de {person:advisor} cobró su comisión todos y cada uno de los años. A él lo ascendieron.',
         insurance: 'El seguro de {person:advisor} costó una fortuna con los años, y nunca pagó nada.',
         cold: '{person:advisor} se rindió contigo, y pasó a tus vecinos.',
-        none: '{person:advisor} aún te manda folletos. Tú aún no los lees.',
-      },
+        },
     },
     parents: {
       who: '{person:parents}',

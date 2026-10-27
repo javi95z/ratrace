@@ -1,4 +1,4 @@
-import { bots, cardPeople, content, lives, metFlag, PEOPLE } from '@ratrace/content';
+import { bots, cardPeople, content, endingOf, lives, metFlag, PEOPLE, personEndings } from '@ratrace/content';
 import type { Bot, PersonId } from '@ratrace/content';
 import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
 import type { Content, StartConfig } from '@ratrace/engine';
@@ -18,6 +18,8 @@ export interface PeopleReport {
   perLife: { mean: number; spread: number[] };
   /** Each later card of a story: the lives that could have reached it, and the share of those that did, in percent. */
   followUps: Record<string, { could: number; reachedPct: number }>;
+  /** How many lives ended each person's story each way (`<who>.<ending>`), every ending of `personEndings` listed, nought where none did. */
+  endings: Record<string, number>;
 }
 
 /** The flags a later card waits on: those it needs (but that the person was met) and the one it counts its rounds from. None for a story's first card. */
@@ -32,6 +34,7 @@ export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: strin
   const counts: number[] = [];
   const later = Object.keys(cardPeople).filter((id) => awaited(id).length > 0);
   const followUps: Record<string, { could: number; reached: number }> = Object.fromEntries(later.map((id) => [id, { could: 0, reached: 0 }]));
+  const endings: Record<string, number> = Object.fromEntries(PEOPLE.flatMap((who) => personEndings[who].map((ending) => [`${who}.${ending.id}`, 0])));
   for (const life of starting)
     for (const seed of seeds)
       for (const bot of playing) {
@@ -46,7 +49,10 @@ export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: strin
           state = applyRound(rules, state, { orders: bot.orders(rules, viewOf(state)) }).state;
         }
         const people = PEOPLE.filter((who) => Object.hasOwn(first, metFlag(who)));
-        for (const who of people) met[who] += 1;
+        for (const who of people) {
+          met[who] += 1;
+          endings[`${who}.${endingOf(who, state.player.life.flags).id}`] += 1;
+        }
         counts.push(people.length);
         for (const id of later) {
           const flags = awaited(id);
@@ -63,6 +69,7 @@ export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: strin
     met: Object.fromEntries(PEOPLE.map((who) => [who, pct(met[who], n)])) as Record<PersonId, number>,
     perLife: { mean: Math.round((100 * counts.reduce((a, b) => a + b, 0)) / n) / 100, spread },
     followUps: Object.fromEntries(Object.entries(followUps).map(([id, f]) => [id, { could: f.could, reachedPct: pct(f.reached, f.could) }])),
+    endings,
   };
 }
 
@@ -75,4 +82,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(`people met per life: mean ${report.perLife.mean}; none/1/2/3/4+: ${report.perLife.spread.join('% / ')}%`);
   for (const who of PEOPLE) console.log(`  ${who.padEnd(9)} met in ${report.met[who]}%`);
   for (const [id, f] of Object.entries(report.followUps)) console.log(`  ${id.padEnd(20)} reached in ${String(f.reachedPct).padStart(5)}% of ${f.could} lives that could`);
+  console.log(`endings: ${Object.entries(report.endings).map(([id, n]) => `${id} ${n}`).join(', ')}`);
 }

@@ -664,8 +664,7 @@ export const en: ContentText = {
         fund: 'The fund of {person:advisor} took its fee every single year. He was promoted.',
         insurance: 'The insurance of {person:advisor} cost a fortune over the years, and never paid a thing.',
         cold: '{person:advisor} gave up on you, and moved on to your neighbours.',
-        none: '{person:advisor} still sends you brochures. You still do not read them.',
-      },
+        },
     },
     parents: {
       who: '{person:parents}',

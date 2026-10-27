@@ -76,7 +76,8 @@ export const personEndings: Readonly<Record<PersonId, readonly PersonEnding[]>> 
     { id: 'sold', mood: 'pleased', flags: ['landlord_sold'] },
     { id: 'left', mood: 'upset', flags: ['landlord_left'] },
     { id: 'cold', mood: 'upset', flags: ['landlord_cold'] },
-    { id: 'warm', mood: 'pleased', flags: ['landlord_warm'] },
+    // The best tenant, whose rent he raised anyway; one he never got round to raising just paid it, year after year.
+    { id: 'warm', mood: 'pleased', flags: ['landlord_warm', 'landlord_paid'] },
     { id: 'rent', mood: 'upset' },
   ],
   founder: [
@@ -91,14 +92,23 @@ export const personEndings: Readonly<Record<PersonId, readonly PersonEnding[]>> 
     { id: 'both', mood: 'pleased', flags: ['advisor_fund', 'advisor_insurance'] },
     { id: 'fund', mood: 'pleased', flags: ['advisor_fund'] },
     { id: 'insurance', mood: 'pleased', flags: ['advisor_insurance'] },
-    { id: 'cold', mood: 'upset', flags: ['advisor_cold'] },
-    { id: 'none', mood: 'upset' },
+    { id: 'cold', mood: 'upset' },
   ],
   parents: [
+    // What is told of the parents is what was done for them, or else what they did for the player: their help with a first home, or their
+    // pride in one who managed alone. A care home is the ending of a life that never had the help offered (a home of one's own from the start).
     { id: 'debts', mood: 'upset', flags: ['parents_debts'] },
     { id: 'cared', mood: 'pleased', flags: ['parents_cared'] },
-    { id: 'home', mood: 'pleased', flags: ['parents_home'] },
     { id: 'helped', mood: 'pleased', flags: ['parents_helped'] },
-    { id: 'fine', mood: 'pleased' },
+    { id: 'fine', mood: 'pleased', flags: ['parents_proud'] },
+    { id: 'home', mood: 'pleased' },
   ],
 };
+
+/** How a person's story stands by a life's flags: the first ending whose flags hold (the last of each holds always). */
+export function endingOf(who: PersonId, flags: Readonly<Record<string, number>>): { id: string; mood: Mood } {
+  const has = (flag: string) => Object.hasOwn(flags, flag);
+  const endings = personEndings[who];
+  const ending = endings.find((e) => (e.flags ?? []).every(has) && !(e.notFlags ?? []).some(has)) ?? endings[endings.length - 1];
+  return { id: ending.id, mood: ending.mood };
+}

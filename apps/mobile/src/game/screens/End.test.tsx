@@ -170,15 +170,15 @@ describe('the end of a life, as it is drawn', () => {
     const flags = ((await services.store.loadGame()) as SavedGame).state.player.life.flags;
     renderGame(<Play />, services);
     const told = await screen.findByLabelText('Your life, told');
-    // The nurse, answering every card with its first choice, has her parents' help once and pays for their care home.
+    // The nurse, answering every card with its first choice, says she will manage without her parents' help: they are proud of her.
     expect(Object.hasOwn(flags, 'parents_met')).toBe(true);
-    const line = within(told).getByText(text.people.parents.endings.home);
+    const line = within(told).getByText(text.people.parents.endings.fine);
     const people = within(told).getByRole('list', { name: 'What became of them' });
     expect(people.contains(line)).toBe(true);
     expect(people.querySelector('[data-sprite="person.parents.pleased"]')?.closest('[aria-hidden="true"]')).not.toBeNull();
     // Only the people met are told of.
     expect(within(people).getAllByRole('listitem')).toHaveLength(Object.keys(flags).filter((flag) => /^(inlaw|boss|landlord|founder|advisor|parents)_met$/.test(flag)).length);
-    expect(told.textContent?.indexOf(text.people.parents.endings.home)).toBeLessThan(told.textContent?.indexOf('OBITUARY') ?? 0);
+    expect(told.textContent?.indexOf(text.people.parents.endings.fine)).toBeLessThan(told.textContent?.indexOf('OBITUARY') ?? 0);
   });
 
   it('draws the route, the figures and the badges of the life, and says why a badge is in it in its sheet', async () => {

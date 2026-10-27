@@ -43,3 +43,32 @@ it('carries each story on to its later cards, for a player who says yes', { time
   // The stories that open with money in are walked to their end by this player.
   for (const id of ['inlaw_moon', 'inlaw_rug', 'inlaw_loan', 'inlaw_repay', 'founder_more', 'founder_exit', 'boss_offer']) expect(report.followUps[id].could, id).toBeGreaterThanOrEqual(5);
 });
+
+/**
+ * Every ending of every story is one some life comes to, so a player's "n of m endings" can reach m: every life to begin with, played by
+ * every bot, by a player who says yes (as the saver otherwise, and again as the landlord, who has a mortgage), and by one who answers a
+ * person's cards at random among what is open.
+ */
+it('ends each story every way it can be told, in some life', { timeout: 600_000 }, () => {
+  const saver = bots.find((bot) => bot.id === 'saver')!;
+  // The landlord, who buys homes on a mortgage: the adviser's insurance needs one.
+  const landlord = bots.find((bot) => bot.id === 'landlord')!;
+  const answering = (id: string, as: Bot, choose: (open: number[], view: Parameters<Bot['pick']>[1], card: string) => number): Bot => ({
+    id,
+    orders: as.orders,
+    pick: (rules, view) => {
+      const card = view.hand[view.answered];
+      if (!Object.hasOwn(cardPeople, card)) return as.pick(rules, view);
+      const open = previewCard(rules, view, card).flatMap((preview, i) => (preview.available ? [i] : []));
+      return choose(open, view, card);
+    },
+  });
+  /** Yes to everyone, and to the founder's news too: a cheque already in is held, to hear how it ends. */
+  const yes = (open: number[], _view: unknown, card: string) => (card === 'founder_exit' ? 0 : open.includes(1) ? 1 : 0);
+  const willing = answering('willing', saver, yes);
+  const owner = answering('owner', landlord, yes);
+  // The life's own numbers decide, so the same lives are played every time.
+  const curious = answering('curious', saver, (open, view) => open[(view.round * 7 + view.answered * 3 + Math.round(view.player.cash / 100)) % open.length]);
+  const report = peopleReport(content, lives, seedsFor(3), [...bots, willing, owner, curious]);
+  expect(Object.entries(report.endings).filter(([, lived]) => lived === 0).map(([id]) => id)).toEqual([]);
+});

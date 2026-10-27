@@ -92,7 +92,7 @@ export const peopleCards: CardDef[] = [
     { effects: { cash: usd(-1_500), ...warm('landlord', 'landlord_since') } },
   ])),
   card('landlord_raise', 'housing', { soon: true, cooldown: 3, weight: NEXT / 4, when: { ownsHome: false, notFlags: ['landlord_left'], ...after('landlord_since', 2) } }, person('landlord', [
-    { effects: { cash: usd(-1_800), ...warm('landlord') } },
+    { effects: { cash: usd(-1_800), ...warm('landlord', 'landlord_paid') } },
     { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { cash: usd(-600) } }, { weight: 40, effects: { cash: usd(-1_800), ...cold('landlord') } }] },
     { effects: { cash: usd(-1_200), setFlags: ['landlord_left'] } },
   ])),

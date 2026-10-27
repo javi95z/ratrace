@@ -664,8 +664,7 @@ export const ru: ContentText = {
         fund: 'Фонд, который продал {person:advisor}, брал комиссию каждый год. Его повысили.',
         insurance: 'Страховка, которую продал {person:advisor}, стоила за эти годы целое состояние и ни разу ничего не выплатила.',
         cold: '{person:advisor} махнул на тебя рукой и взялся за соседей.',
-        none: '{person:advisor} до сих пор присылает буклеты. Ты до сих пор их не читаешь.',
-      },
+        },
     },
     parents: {
       who: '{person:parents}',

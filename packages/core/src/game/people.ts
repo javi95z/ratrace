@@ -1,4 +1,6 @@
-import { metFlag, PEOPLE, personEndings } from '@ratrace/content';
+import { endingOf, metFlag, PEOPLE } from '@ratrace/content';
+
+export { endingOf };
 import type { Mood, PersonId } from '@ratrace/content';
 
 /*
@@ -12,13 +14,6 @@ const has = (flags: Flags, flag: string) => Object.hasOwn(flags, flag);
 /** The people the life has met, in the order the collection shows them. */
 export function peopleMet(flags: Flags): PersonId[] {
   return PEOPLE.filter((who) => has(flags, metFlag(who)));
-}
-
-/** How a person's story stands: the first ending whose flags hold (the last of each holds always). */
-export function endingOf(who: PersonId, flags: Flags): { id: string; mood: Mood } {
-  const endings = personEndings[who];
-  const ending = endings.find((e) => (e.flags ?? []).every((flag) => has(flags, flag)) && !(e.notFlags ?? []).some((flag) => has(flags, flag))) ?? endings[endings.length - 1];
-  return { id: ending.id, mood: ending.mood };
 }
 
 /** What became of each person the life met, for its end: who, the ending (`text.people[who].endings`), and the face to show with it. */
