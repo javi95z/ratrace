@@ -73,7 +73,8 @@ function lineOf(line: Line): ReactElement {
   }
   if (line.kind === 'people') {
     return (
-      <View style={{ paddingTop: line.first ? 0 : 8, flexDirection: 'row', gap: 8 }}>
+      // The first row stands clear of the count, as the other tabs' first heading does (16 over it).
+      <View style={{ paddingTop: line.first ? 16 : 8, flexDirection: 'row', gap: 8 }}>
         {line.people.map(({ who, met, endings }) => (
           <Person key={who} who={who} met={met} endings={endings} />
         ))}
