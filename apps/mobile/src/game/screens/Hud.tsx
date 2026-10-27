@@ -471,13 +471,18 @@ function HudLead({ compact, skyline, flush, onProfile, open }: { compact: boolea
           framed
         )}
         <View style={{ flex: 1, minWidth: 0 }}>
-          {/* Who lives this life, by name, above how old they are. */}
-          {character ? (
-            <PixelText size={15} lineHeight={15} tone="gold-500" numberOfLines={1} style={{ marginBottom: 4 }}>
-              {character}
-            </PixelText>
-          ) : null}
-          <PixelText size={26} lineHeight={26}>{common('age', { age })}</PixelText>
+          {/* Who lives this life, by name, and how old they are, on one line: the name gives way to the age where the line is short. */}
+          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+            {character ? (
+              <>
+                <PixelText size={22} lineHeight={22} tone="gold-500" numberOfLines={1} style={{ flexShrink: 1 }}>
+                  {character}
+                </PixelText>
+                <PixelText size={22} lineHeight={22} tone="ink-300">{' · '}</PixelText>
+              </>
+            ) : null}
+            <PixelText size={22} lineHeight={22} numberOfLines={1} style={{ flexShrink: 0 }}>{common('age', { age })}</PixelText>
+          </View>
           <ReadText size={13} tone="ink-200" numberOfLines={1} style={{ marginTop: 4 }}>
             {`${t('roundShort', { n: Math.min(life.round + 1, content.rounds), total: content.rounds })} · ${names.cities[life.cityId]}`}
           </ReadText>
