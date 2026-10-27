@@ -19,9 +19,11 @@ export interface Progress {
   unlocked: Record<string, Earned>;
   /** The tips of the guide already read. */
   guide: { seen: string[] };
+  /** The people met and the endings of their stories seen, in any life. */
+  people: string[];
 }
 
-export const progressOf = (profile: Profile): Progress => ({ badges: profile.badges, gallery: profile.gallery, unlocked: profile.unlocked, guide: { seen: profile.guide.seen } });
+export const progressOf = (profile: Profile): Progress => ({ badges: profile.badges, gallery: profile.gallery, unlocked: profile.unlocked, guide: { seen: profile.guide.seen }, people: profile.people });
 
 /** The profile with this progress in it. What belongs to the device is left as it is. */
 export const withProgress = (profile: Profile, progress: Progress): Profile => ({
@@ -30,6 +32,7 @@ export const withProgress = (profile: Profile, progress: Progress): Profile => (
   gallery: progress.gallery,
   unlocked: progress.unlocked,
   guide: { ...profile.guide, seen: progress.guide.seen },
+  people: progress.people,
 });
 
 /** Reads progress as the cloud holds it, checked part by part like a stored profile. What is not progress is none. */
@@ -59,6 +62,7 @@ export function mergeProgress(a: Progress, b: Progress): Progress {
     gallery: joined(a.gallery, b.gallery),
     unlocked: earliest(a.unlocked, b.unlocked),
     guide: { seen: joined(a.guide.seen, b.guide.seen) },
+    people: joined(a.people, b.people),
   };
 }
 
@@ -68,7 +72,7 @@ const sameSet = (a: readonly string[], b: readonly string[]): boolean => a.lengt
 
 /** True if two copies hold the same, in whatever order: there is then nothing to write. */
 export function sameProgress(a: Progress, b: Progress): boolean {
-  return sameEarned(a.badges, b.badges) && sameEarned(a.unlocked, b.unlocked) && sameSet(a.gallery, b.gallery) && sameSet(a.guide.seen, b.guide.seen);
+  return sameEarned(a.badges, b.badges) && sameEarned(a.unlocked, b.unlocked) && sameSet(a.gallery, b.gallery) && sameSet(a.guide.seen, b.guide.seen) && sameSet(a.people, b.people);
 }
 
 /**

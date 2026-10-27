@@ -1,6 +1,7 @@
 import { badges, galleryBadges, unlockedLives } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
+import { peopleSeen } from '../game/people';
 import { rankAfter } from './rank';
 import { isDay } from './runs';
 import { newProfile, SAVE_FORMAT } from './types';
@@ -48,6 +49,7 @@ export function readProfile(raw: unknown): Profile {
     unlocked: earnedOf(raw.unlocked),
     guide: { seen: strings(guide.seen), off: guide.off === true },
     rank: rankOf(raw.rank),
+    people: strings(raw.people),
   };
 }
 
@@ -90,14 +92,21 @@ export async function tellProfile(
   store: PlayerStore,
   content: Content,
   lives: ReadonlyArray<LifeDef>,
-  life: { gameId: string; at: number; earned: readonly string[]; collection: readonly string[]; over: boolean },
+  life: { gameId: string; at: number; earned: readonly string[]; collection: readonly string[]; over: boolean; flags?: Readonly<Record<string, number>> },
 ): Promise<{ earned: string[]; unlocked: string[]; ofGallery: string[] }> {
   // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty. A step that does not end the life needs only
   // how many there are, which a store that keeps their ids apart tells without reading every life (`runIds`); the step that ends it reads them all, for
   // its rank.
   const runs = life.over || store.runIds === undefined ? await store.listRuns().catch(() => []) : undefined;
   const count = runs?.length ?? (await store.runIds!().catch(() => [])).length;
-  const step: LifeStep = { gameId: life.gameId, at: life.at, earned: life.earned, collection: life.collection, finished: Math.max(count, life.over ? 1 : 0) };
+  const step: LifeStep = {
+    gameId: life.gameId,
+    at: life.at,
+    earned: life.earned,
+    collection: life.collection,
+    finished: Math.max(count, life.over ? 1 : 0),
+    people: life.flags === undefined ? [] : peopleSeen(life.flags, life.over),
+  };
   let news = { earned: [] as string[], unlocked: [] as string[] };
   let profile = await updateProfile(store, (current) => {
     const after = profileAfter(content, lives, current, step);
@@ -120,6 +129,8 @@ export interface LifeStep {
   collection: readonly string[];
   /** Lives lived to the end, this one included if the step ended it. Zero when the step did not end a life. */
   finished: number;
+  /** The people the life has met, and once it is over how their stories ended (`peopleSeen`). None where a step says nothing of them. */
+  people?: readonly string[];
 }
 
 /**
@@ -144,5 +155,7 @@ export function profileAfter(content: Content, lives: ReadonlyArray<LifeDef>, pr
   const lifeStamps: Record<string, Earned> = { ...profile.unlocked };
   for (const id of unlocked) lifeStamps[id] = stamp;
 
-  return { profile: { ...profile, gallery, badges: held, unlocked: lifeStamps }, earned, unlocked };
+  const people = [...profile.people, ...(step.people ?? []).filter((id, i, all) => !profile.people.includes(id) && all.indexOf(id) === i)];
+
+  return { profile: { ...profile, gallery, badges: held, unlocked: lifeStamps, people }, earned, unlocked };
 }

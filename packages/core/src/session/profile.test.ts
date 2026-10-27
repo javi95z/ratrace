@@ -12,7 +12,7 @@ const step = (over: Partial<Parameters<typeof profileAfter>[3]> = {}) => ({ game
 
 describe('reading a profile', () => {
   it('starts a new player with nothing but the default settings', () => {
-    expect(newProfile()).toEqual({ format: 1, settings: { reducedMotion: false, sound: true }, badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false }, rank: { points: 0, lives: {} } });
+    expect(newProfile()).toEqual({ format: 1, settings: { reducedMotion: false, sound: true }, badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false }, rank: { points: 0, lives: {} }, people: [] });
     for (const junk of [null, undefined, 'profile', 7, [], {}, { format: 2 }, { format: 1, settings: null }, { format: 1, settings: {} }]) {
       // Not a profile at all, or one with nothing in it but broken settings: a fresh one either way.
       expect(readProfile(junk), JSON.stringify(junk)).toEqual(newProfile());
@@ -31,6 +31,7 @@ describe('reading a profile', () => {
       gallery: ['watch_rolex', 7, 'watch_rolex', 'car_bmw_m3'],
       unlocked: { rider: { at: 9, gameId: 'g' }, heir: null },
       guide: { seen: ['news', 4], off: 'yes' },
+      people: ['inlaw', 3, 'inlaw', 'inlaw.repaid'],
       extra: true,
     };
     expect(readProfile(stored)).toEqual({
@@ -41,6 +42,7 @@ describe('reading a profile', () => {
       unlocked: { rider: { at: 9, gameId: 'g' } },
       guide: { seen: ['news'], off: false },
       rank: { points: 0, lives: {} },
+      people: ['inlaw', 'inlaw.repaid'],
     });
   });
 
@@ -94,6 +96,15 @@ describe('changing a profile', () => {
 });
 
 describe('what a step of a life adds to the profile', () => {
+  it('keeps the people met and the endings seen, once each, from life to life', () => {
+    const first = profileAfter(content, lives, newProfile(), step({ people: ['inlaw', 'parents'] }));
+    expect(first.profile.people).toEqual(['inlaw', 'parents']);
+    const second = profileAfter(content, lives, first.profile, step({ gameId: 'g2', people: ['inlaw', 'inlaw.repaid', 'boss'] }));
+    expect(second.profile.people).toEqual(['inlaw', 'parents', 'inlaw.repaid', 'boss']);
+    // A step that says nothing of people (a game with friends) changes none.
+    expect(profileAfter(content, lives, second.profile, step({ gameId: 'g3' })).profile.people).toEqual(second.profile.people);
+  });
+
   it('adds what was owned to the gallery, once each, in the order first owned', () => {
     const first = profileAfter(content, lives, newProfile(), step({ collection: ['watch_casio', 'tech_phone'] }));
     expect(first.profile.gallery).toEqual(['watch_casio', 'tech_phone']);

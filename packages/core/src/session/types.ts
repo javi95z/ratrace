@@ -203,6 +203,8 @@ export interface Profile {
    * profile from before ranks has none; it is filled from the finished lives on the device.
    */
   rank: { points: number; lives: Record<string, number> };
+  /** The people who come back (`@ratrace/content`'s `people.ts`) met in any life (`<who>`), and the endings of their stories seen (`<who>.<ending>`). */
+  people: string[];
 }
 
 export const newProfile = (): Profile => ({
@@ -213,6 +215,7 @@ export const newProfile = (): Profile => ({
   unlocked: {},
   guide: { seen: [], off: false },
   rank: { points: 0, lives: {} },
+  people: [],
 });
 
 /** Where everything the player has is kept. Today that is this device. */

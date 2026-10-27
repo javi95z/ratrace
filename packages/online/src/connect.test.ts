@@ -302,7 +302,7 @@ describe('what the cloud keeps of a player', () => {
   it('writes what the player has unlocked as their own row', async () => {
     client.answers.getSession = signedIn;
     const cloud = await connectSupabase('u', 'k');
-    const progress = { badges: {}, gallery: ['watch_casio'], unlocked: {}, guide: { seen: [], off: false } };
+    const progress = { badges: {}, gallery: ['watch_casio'], unlocked: {}, guide: { seen: [], off: false }, people: [] };
     await cloud.saveProgress(progress);
     expect(client.asked).toEqual([['player_progress', ['upsert', { user_id: 'u-1', progress }, { onConflict: 'user_id' }]]]);
     client.answers.player_progress = { error: new Error('offline') };

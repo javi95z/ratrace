@@ -357,7 +357,7 @@ export class RoomSession implements GameSession {
     try {
       const { life } = this;
       const at = this.deps.now();
-      const told = await tellProfile(this.store, this.content, this.lives, { gameId: life.gameId, at, earned: life.record.journal.earned, collection: life.view.player.life.collection, over: life.view.finished });
+      const told = await tellProfile(this.store, this.content, this.lives, { gameId: life.gameId, at, earned: life.record.journal.earned, collection: life.view.player.life.collection, over: life.view.finished, flags: life.view.player.life.flags });
       this.ofGallery = told.ofGallery;
       if (life.run !== null && !this.kept) {
         await this.store.addRun(this.asRun(life.run));

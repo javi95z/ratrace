@@ -252,7 +252,7 @@ class RankedSession implements GameSession {
   async learn(): Promise<{ earned: string[]; unlocked: string[] }> {
     try {
       const { game } = this;
-      const told = await tellProfile(this.store, this.content, this.lives, { gameId: game.gameId, at: game.updatedAt, earned: game.journal.earned, collection: game.view.player.life.collection, over: game.view.finished });
+      const told = await tellProfile(this.store, this.content, this.lives, { gameId: game.gameId, at: game.updatedAt, earned: game.journal.earned, collection: game.view.player.life.collection, over: game.view.finished, flags: game.view.player.life.flags });
       this.ofGallery = told.ofGallery;
       return { earned: told.earned, unlocked: told.unlocked };
     } catch (error) {

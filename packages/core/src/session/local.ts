@@ -142,7 +142,7 @@ class LocalSession implements GameSession {
   async tellProfile(): Promise<{ earned: string[]; unlocked: string[] }> {
     const { save } = this;
     try {
-      const told = await tellProfile(this.store, this.content, this.lives, { gameId: save.gameId, at: save.updatedAt, earned: save.journal.earned, collection: save.state.player.life.collection, over: save.state.finished });
+      const told = await tellProfile(this.store, this.content, this.lives, { gameId: save.gameId, at: save.updatedAt, earned: save.journal.earned, collection: save.state.player.life.collection, over: save.state.finished, flags: save.state.player.life.flags });
       this.ofGallery = told.ofGallery;
       return { earned: told.earned, unlocked: told.unlocked };
     } catch (error) {

@@ -376,7 +376,8 @@ describe('the mirror', { timeout: 60_000 }, () => {
     // Whoever took it is not told of what they did themselves; the further copy that follows is news.
     expect(heard).toEqual([]);
     await second.later();
-    expect(heard).toEqual(['game']);
+    // And the people that life has met by now, which the other device told the account of.
+    expect(heard).toEqual(['game', 'profile']);
     expect(((await saved(second.store)) as SavedGame).state.round).toBe(5);
     expect(((await saved(first.store)) as SavedGame).state.round).toBe(5);
   });
@@ -562,7 +563,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(one.state.games).toHaveLength(1);
     expect(await store.listRuns()).toHaveLength(1);
     cloud = two.cloud;
-    two.state.progress = { badges: { millionaire: { at: 5, gameId: 'elsewhere' } }, gallery: [], unlocked: {}, guide: { seen: [] } };
+    two.state.progress = { badges: { millionaire: { at: 5, gameId: 'elsewhere' } }, gallery: [], unlocked: {}, guide: { seen: [] }, people: [] };
     await mirror.accountChanged();
     expect(two.state.games.map((game) => game.id)).toEqual(['life-1']);
     expect(Object.keys((await store.loadProfile()).badges)).toContain('millionaire');
@@ -651,7 +652,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
 
   it('joins what is unlocked on both sides, and leaves the device\'s settings alone', async () => {
     const { cloud, state } = fakeCloud();
-    state.progress = { badges: { millionaire: { at: 5, gameId: 'elsewhere' } }, gallery: ['watch_rolex'], unlocked: { heir: { at: 5, gameId: 'elsewhere' } }, guide: { seen: ['news'] } };
+    state.progress = { badges: { millionaire: { at: 5, gameId: 'elsewhere' } }, gallery: ['watch_rolex'], unlocked: { heir: { at: 5, gameId: 'elsewhere' } }, guide: { seen: ['news'] }, people: [] };
     const d = device(cloud);
     const profile = await d.store.loadProfile();
     await d.store.saveProfile({ ...profile, settings: { reducedMotion: true, sound: false }, badges: { first_100k: { at: 9, gameId: 'here' } }, gallery: ['watch_casio'] });

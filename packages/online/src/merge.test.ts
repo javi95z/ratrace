@@ -4,7 +4,7 @@ import type { FinishedRun, Profile } from '@ratrace/core/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 
-const progress = (over: Partial<Progress> = {}): Progress => ({ badges: {}, gallery: [], unlocked: {}, guide: { seen: [] }, ...over });
+const progress = (over: Partial<Progress> = {}): Progress => ({ badges: {}, gallery: [], unlocked: {}, guide: { seen: [] }, people: [], ...over });
 const earned = (at: number, gameId = 'g') => ({ at, gameId });
 
 describe('what is unlocked, from two places', () => {
@@ -18,7 +18,17 @@ describe('what is unlocked, from two places', () => {
       unlocked: { rider: earned(5), heir: earned(20) },
       // A tip seen anywhere is seen.
       guide: { seen: ['news', 'cards'] },
+      people: [],
     });
+  });
+
+  it('keeps every person met and every ending seen on either side', () => {
+    const merged = mergeProgress(progress({ people: ['inlaw', 'inlaw.repaid'] }), progress({ people: ['boss', 'inlaw'] }));
+    expect(merged.people).toEqual(['inlaw', 'inlaw.repaid', 'boss']);
+    expect(sameProgress(progress({ people: ['a', 'b'] }), progress({ people: ['b', 'a'] }))).toBe(true);
+    expect(sameProgress(progress({ people: ['a'] }), progress({ people: ['a', 'b'] }))).toBe(false);
+    // A cloud copy from before people opens with none, and takes nothing from the device.
+    expect(readProgress({ badges: {}, gallery: [] }).people).toEqual([]);
   });
 
   it('dates a badge both sides have by the day it was first earned', () => {
