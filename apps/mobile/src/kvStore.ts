@@ -17,6 +17,7 @@ const INDEX = 'ratrace:runs:index';
 const PROFILE = 'ratrace:profile';
 const LOCALE = 'ratrace:locale';
 const BASKET = 'ratrace:basket';
+const MILESTONES = 'ratrace:milestones';
 
 const read = async (key: string): Promise<unknown> => {
   const text = await Storage.getItem(key);
@@ -253,6 +254,15 @@ export const kvBasket: BasketText = {
   write: (text) => {
     if (text === null) Storage.removeItemSync(BASKET);
     else Storage.setItemSync(BASKET, text);
+  },
+};
+
+/** The milestones of lives (game/phoneMilestones.ts), as text: read and written at once, as the basket is, with each step of a life. */
+export const kvMilestones: BasketText = {
+  read: () => Storage.getItemSync(MILESTONES),
+  write: (text) => {
+    if (text === null) Storage.removeItemSync(MILESTONES);
+    else Storage.setItemSync(MILESTONES, text);
   },
 };
 

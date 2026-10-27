@@ -139,21 +139,20 @@ describe('a moment of a life', () => {
 });
 
 describe('a moment and a legendary badge of the same round', () => {
-  it('take their turns, one sheet at a time (iOS presents one Modal at a time): the moments first, as the web draws them on top, then the badge', async () => {
+  it('take their turns, one sheet at a time (iOS presents one Modal at a time), the badges of the round inside the first: one moment for the step', async () => {
     // The influencer of the early escape, at the finances of the round that takes her out of the rat race at 36 and earns `escaped_before_40`.
     const { store } = await earlyEscape();
     renderGame(<Play />, memoryServices(store));
     fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
     const moment = await sheet('Out of the rat race!');
-    // The badge's sheet waits its turn: not drawn while the moment's is.
-    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
+    // The legendary badge of the way out is carried in its moment (Milestones.tsx), never a sheet of its own after it.
+    expect(within(moment).getByText('Out before 40')).toBeTruthy();
+    expect(within(moment).getByText('First time ever!')).toBeTruthy();
     expect(screen.queryByText('Legendary badge')).toBeNull();
     fireEvent.click(within(moment).getByRole('button', { name: 'Carry on, for the fun of it' }));
-    const badge = await sheet('Out before 40');
-    expect(within(badge).getByText('Legendary badge')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Out of the rat race!' })).toBeNull();
-    fireEvent.click(within(badge).getByRole('button', { name: 'Continue' }));
+    // Under engine 0.45 her first million came in an earlier round: the way out is the step's one moment, and the badge never follows it.
     await waitFor(() => expect(sheetOpen()).toBeNull());
+    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
   }, 60_000);
 });
 

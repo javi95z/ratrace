@@ -1,5 +1,6 @@
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
+import { fadingStatus } from '@ratrace/core/game/fading';
 import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
 import { ratOutfit } from '@ratrace/core/game/quips';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
@@ -13,7 +14,7 @@ import { Rays } from '../../ui/Rays';
 import { usePop } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';
-import { Bar, KeyFigure, Raised, reach, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
+import { Bar, Figure as Tinted, KeyFigure, Raised, reach, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Glint } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
@@ -94,6 +95,9 @@ const STUCK: readonly Figure[] = ['cash', 'flow', 'status'];
  */
 export type HudOpen = Figure | 'jail' | 'settings' | 'news';
 
+/** A line that belongs to the one above it, a little in from it. */
+const FADING: ViewStyle = { paddingLeft: 12, paddingVertical: 2 };
+
 /** The web's `mt-1 border-t-2 border-night-900 pt-2` on a line that sums up the lines above it. */
 const TOTAL: ViewStyle = { marginTop: 4, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 };
 
@@ -110,7 +114,7 @@ const Coloured = ({ tone, children }: { tone: ColorToken; children: string }) =>
  */
 function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
   const t = useT('hud');
-  const { content, fmt } = useWords();
+  const { content, names, fmt } = useWords();
   const p = shown.player;
   const good = (cents: number) => <Coloured tone="teal-300">{fmt.signed(cents)}</Coloured>;
   const bad = (cents: number) => <Coloured tone="wine-300">{fmt.signed(-cents)}</Coloured>;
@@ -155,6 +159,16 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
         <Row size={14} left={t('statusCity')} right={points(status.city)} />
         <Row size={14} left={t('statusLifestyle')} right={points(status.lifestyle)} />
         <Row size={14} left={t('statusItems')} right={points(status.items)} />
+        {/* What among them gives its status only a while: each with the rounds it still counts, its last in the warning's colour. */}
+        {fadingStatus(p).map((fading) => (
+          <Row
+            key={fading.itemId}
+            size={13}
+            style={FADING}
+            left={names.items[fading.itemId]}
+            right={<Tinted tone={fading.roundsLeft === 1 ? 'wine-300' : 'ink-300'} size={13}>{t('statusLeft', { rounds: fading.roundsLeft })}</Tinted>}
+          />
+        ))}
         {status.network !== 0 ? <Row size={14} left={t('statusNetwork')} right={points(status.network)} /> : null}
         {status.bonus !== 0 ? <Row size={14} left={t('statusBonus')} right={points(status.bonus)} /> : null}
         <Row size={14} style={TOTAL} left={t('statusNow')} right={fmt.number(status.total)} />

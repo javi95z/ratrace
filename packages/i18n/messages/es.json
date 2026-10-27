@@ -151,6 +151,7 @@
     "statusCity": "Ciudad",
     "statusLifestyle": "Estilo de vida",
     "statusItems": "Cosas",
+    "statusLeft": "{rounds, plural, one {Última ronda} other {Quedan # rondas}}",
     "statusBonus": "Extras de las cartas",
     "statusNow": "Estatus ahora",
     "statusLived": "Media de la vida",
@@ -239,29 +240,107 @@
   },
   "guide": {
     "title": "Guía",
-    "news": "Cada ronda empieza con el Diario. Algunos titulares dan pistas de los próximos dos años, y no todos se cumplen; el resto es el mundo hablando. Puedes releerlo luego con el botón del periódico de arriba.",
-    "cards": "La vida te reparte unas cuantas cartas cada ronda. Antes de elegir, cada opción muestra lo que cuesta y lo que trae, y las probabilidades cuando hay dados. Una elección no se puede deshacer.",
-    "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea sobre el botón te dice el efectivo exacto que tendrás después. Empieza por Cartera.",
-    "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
-    "ratRace": "La barra de arriba es el juego entero: tus ingresos pasivos frente a lo que cuesta tu vida. Cubre ese coste dos rondas seguidas y sales de la rueda.",
-    "invest": "El efectivo no rinde nada. El ahorro da un poco y es seguro. Fondos, bonos y acciones están abiertos desde el principio; el oro y las criptomonedas piden más nivel de Finanzas, que se gana con un curso (pestaña Vida) o con años invirtiendo.",
-    "focus": "En la pestaña Vida está tu foco: estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
-    "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda con exactitud.",
     "gotIt": "Entendido",
     "skip": "Quitar la guía",
-    "debt": "Ya tienes Deuda e Impuestos. Un préstamo te dice lo que pagarás cada ronda antes de pedirlo; Impuestos muestra esta ronda al céntimo y lo que podrías esconder a Hacienda, con riesgo.",
+    "firstTitle": "Primera vez",
+    "news": "Cada ronda empieza con el Diario: algunos titulares dan pistas de los próximos dos años, y no todos se cumplen. Puedes releerlo con el botón del periódico de arriba.",
+    "cards": "La vida te reparte unas cartas cada ronda. Cada opción muestra antes lo que cuesta y lo que trae, con las probabilidades si hay dados, y no se puede deshacer.",
+    "finance": "Ahora, tu dinero. Nada ocurre hasta que juegas la ronda, y la línea sobre el botón te dice el [efectivo](cash) exacto que tendrás después. Empieza por Cartera.",
+    "ledger": "Han pasado dos años: esto es todo lo que entró y salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
+    "ratRace": "La barra de arriba es el juego entero: tus [ingresos pasivos](passive) frente a lo que cuesta tu vida. Cúbrelo dos rondas seguidas y sales de la rueda.",
+    "goal": "Una vida son {rounds} rondas de dos años, de los {from} a los {to}. Tu puntuación suma tu [patrimonio](netWorth), que da menos puntos por dólar cuanto más tienes, y tu [estatus](status) medio de todas las rondas, así que una ronda floja pesa. Acabar fuera de la rueda la multiplica, y más cuanto antes salgas.",
+    "invest": "El efectivo no rinde nada; el [ahorro](savings) da poco y es seguro. [Fondos](index), [bonos](bond) y acciones están abiertos desde el principio; el oro y las criptomonedas piden más Finanzas, que dan un curso (pestaña Vida) o años invirtiendo.",
+    "focus": "En la pestaña Vida está tu [foco](focus): estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
+    "status": "Tu [estatus](status) sale de tu puesto, tu casa, tu ciudad, cómo vives (pestaña Vida) y lo que compras (Tienda); la puntuación cuenta su media de toda la vida. Vivir mejor sube tu coste de vida, y muchas cosas cuestan mantenimiento cada año y pierden valor.",
+    "flow": "El [flujo](flow), arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. Impuestos te da esta ronda al céntimo.",
+    "debt": "Ya tienes Deuda e Impuestos. Un préstamo te dice lo que pagarás cada ronda antes de pedirlo; Impuestos muestra la ronda al céntimo y lo que podrías esconder a Hacienda, con riesgo.",
     "rivals": "«Tu gente» del Diario son tres personas de tu edad que viven a tu lado: alguien de tu clase, tu prima y tu ex. En tu perfil ves en qué puesto vas, y al final de la vida, el ranking.",
-    "property": "Ya puedes comprar vivienda. Pagas una entrada y un impuesto, y te ahorras el alquiler; si tiene una habitación de sobra, puedes alquilarla.",
-    "business": "Ya puedes montar negocios. Montar uno cuesta un punto de foco y dinero; llévalo tú o paga un encargado. Si te da casi todo tu sueldo dos rondas seguidas, puedes dejar tu trabajo por él.",
-    "move": "Mudarte a otra ciudad está en Vida, en dónde vives. Cada ciudad paga y cuesta distinto; volver a tu ciudad de origen tiene ventajas.",
+    "inflation": "Con la [inflación](inflation), precios y sueldos suelen subir cada año, pero tu efectivo no: cada ronda compra menos. Tu puntuación mide el patrimonio en dinero de cuando tenías {from}, así que lo que no crece, encoge.",
+    "property": "Ya puedes comprar vivienda: pagas una [entrada](downPayment) y un impuesto, y te ahorras el alquiler. Si tiene una habitación de sobra, puedes alquilarla.",
+    "business": "Ya puedes montar negocios: cuesta un punto de foco y dinero, y lo llevas tú o un encargado. Si te da al menos el {share} % de tu sueldo dos rondas seguidas, puedes dejar tu trabajo por él.",
+    "move": "Mudarte a otra ciudad está en Vida, en Tu ciudad. Cada ciudad paga y cuesta distinto, y volver a tu ciudad de origen tiene ventajas.",
     "workMode": "En Vida, Cómo trabajas: media jornada te deja más foco a cambio de sueldo; el teletrabajo llega unos escalones más arriba, en los oficios que lo permiten.",
     "taxes": "En Impuestos puedes cobrar parte en negro, abrir una sociedad fuera o callarte las ganancias en cripto. Ahorras ahora y levantas sospechas; una inspección se lo lleva todo con multa.",
-    "firstTitle": "Primera vez",
-    "firstCrisis": "Primera crisis. Los precios caen y algunos pierden el trabajo. Quien tiene efectivo y no vende con pánico suele salir ganando: lo que hoy está barato suele recuperarse.",
-    "firstCard": "Debes dinero en la tarjeta de crédito, al {rate} al año: la deuda más cara del juego. Págala antes de invertir, porque ninguna inversión rinde tanto.",
-    "firstMargin": "Has comprado con dinero del bróker: ganas y pierdes más deprisa. Si el activo cae lo bastante, el bróker lo vende todo sin preguntar. Vigila el indicador en Deuda.",
-    "firstMortgage": "Ya tienes hipoteca. Fija: pagas lo mismo pase lo que pase. Variable: sigue a los tipos, baja si bajan y duele si suben. Puedes cambiarla en Deuda.",
-    "firstHalfway": "Tus ingresos pasivos ya cubren la mitad de tus gastos. Cuando los cubran del todo dos rondas seguidas, sales de la rueda."
+    "firstCrisis": "Primera crisis: los precios caen y algunos pierden el trabajo. Quien tiene efectivo y no vende con pánico suele salir ganando, porque lo que hoy está barato suele recuperarse.",
+    "firstCard": "Debes dinero en la [tarjeta de crédito](creditCard), al {rate} al año: la deuda más cara del juego. Págala antes de invertir, porque ninguna inversión rinde tanto.",
+    "firstMargin": "Has comprado con [margen](margin): ganas y pierdes más deprisa. Si el activo cae lo bastante, el bróker lo vende todo sin preguntar; vigila el indicador en Deuda.",
+    "firstMortgage": "Ya tienes [hipoteca](mortgage). Fija: pagas lo mismo pase lo que pase. Variable: sigue a los tipos, baja si bajan y duele si suben. Puedes cambiarla en Deuda.",
+    "firstHalfway": "Tus [ingresos pasivos](passive) ya cubren la mitad de tus gastos. Cuando los cubran del todo dos rondas seguidas, sales de la rueda.",
+    "firstOvertime": "La ronda pasada hiciste horas extra. Dos rondas seguidas te cuestan salud, y desde la tercera hay un {chance} % de quemarte: más salud y un punto de foco menos la ronda siguiente. Descansar esa ronda corta la racha.",
+    "firstHiding": "Estás ocultando dinero a Hacienda: cada ronda sube la sospecha, y con ella la probabilidad de inspección. Una inspección se lleva lo oculto más un {fine} % de multa y estatus; si es mucho, hay juicio, y la prisión es sin sueldo y te baja un escalón.",
+    "firstShort": "Con estas órdenes te falta dinero: lo que no cubra tu ahorro irá a la [tarjeta de crédito](creditCard), al {rate}. Si esa deuda supera tres años de tus ingresos y debes más de lo que tienes, quiebras: se vende todo con descuento, pierdes estatus para siempre y pasas unos años sin préstamos.",
+    "whatIs": "¿Qué es «{term}»?",
+    "terms": {
+      "cash": {
+        "name": "Efectivo",
+        "text": "El dinero que tienes a mano. De aquí salen tus gastos y tus compras; mientras espera no rinde nada, y con la inflación cada año compra menos."
+      },
+      "netWorth": {
+        "name": "Patrimonio",
+        "text": "Todo lo que tienes menos todo lo que debes: efectivo, ahorro, pensión, inversiones, casas, negocios y lo que darían tus cosas al venderlas."
+      },
+      "flow": {
+        "name": "Flujo",
+        "text": "Lo que entra en un año menos lo que sale, antes de impuestos. En verde te sobra; en rojo te comes el efectivo."
+      },
+      "passive": {
+        "name": "Ingresos pasivos",
+        "text": "Lo que ganas sin trabajar: dividendos y cupones, intereses del ahorro, alquileres y negocios. Cuando, ya con impuestos, pagan todos tus gastos dos rondas seguidas, sales de la rueda."
+      },
+      "status": {
+        "name": "Estatus",
+        "text": "Puntos por quién eres y lo que tienes: tu puesto, tu casa, tu ciudad, cómo vives, tus cosas, tus contactos y lo que traen las cartas. La puntuación cuenta su media de toda la vida, no la del final."
+      },
+      "focus": {
+        "name": "Foco",
+        "text": "Tu tiempo libre de cada ronda, en puntos. Lo gastas en estudiar, hacer horas extra, buscar trabajo, aprender, montar un negocio o mudarte, entre otras cosas."
+      },
+      "savings": {
+        "name": "Ahorro",
+        "text": "Una cuenta segura que paga un interés pequeño, que sube y baja con los tipos. Si al final de una ronda te falta efectivo, sale primero de aquí."
+      },
+      "index": {
+        "name": "Fondo indexado",
+        "text": "Un fondo que compra un poco de todas las empresas de un mercado. Sube y baja con el mercado entero, sin depender de una sola empresa."
+      },
+      "bond": {
+        "name": "Bono",
+        "text": "Un préstamo a un Estado. Te paga un interés cada año, el cupón, que sigue a los tipos, y su precio se mueve menos que el de las acciones."
+      },
+      "creditCard": {
+        "name": "Tarjeta de crédito",
+        "text": "Cubre lo que falta cuando se acaban el efectivo y el ahorro, al {rate} al año: la deuda más cara. El efectivo que te sobra al final de una ronda la va pagando solo."
+      },
+      "margin": {
+        "name": "Margen",
+        "text": "Comprar con dinero que te presta el bróker, con lo comprado como garantía. Ganas y pierdes más deprisa, y si el precio cae demasiado, el bróker lo vende todo sin preguntar."
+      },
+      "mortgage": {
+        "name": "Hipoteca",
+        "text": "Un préstamo para comprar vivienda, que pagas a lo largo de muchos años. Fija: pagas lo mismo pase lo que pase. Variable: la cuota sigue a los tipos, arriba o abajo."
+      },
+      "downPayment": {
+        "name": "Entrada",
+        "text": "La parte del precio de una casa que pagas tú al comprarla; el resto puede ser hipoteca."
+      },
+      "inflation": {
+        "name": "Inflación",
+        "text": "Lo que suben los precios cada año, casi siempre. Tu sueldo y tus gastos suben con ellos, pero el efectivo no. Tu puntuación mide el patrimonio en dinero de cuando tenías {from}."
+      }
+    },
+    "howTo": {
+      "open": "Cómo se juega",
+      "openHint": "El objetivo, las rondas, la puntuación, todos los consejos y las palabras del juego.",
+      "goalTitle": "El objetivo",
+      "goal": "Vives una vida de {rounds} rondas de dos años, de los {from} a los {to}, y buscas acabarla con la mejor puntuación. Salir de la rueda la multiplica: tener [ingresos pasivos](passive) que paguen todos tus gastos.",
+      "roundTitle": "Una ronda",
+      "round": "Lees el Diario, con pistas de lo que viene. Respondes a las cartas que te reparte la vida. Decides qué hacer con tu dinero, y nada ocurre hasta que juegas la ronda. Entonces pasan dos años: cobras, pagas, los precios se mueven y ves en qué se fue todo.",
+      "scoreTitle": "La puntuación",
+      "score": "Tu [patrimonio](netWorth), en dinero de cuando tenías {from}, da puntos en una curva que se aplana: pasar de 10.000 a 100.000 dólares suma 100, y de 1 a 10 millones, otros 100. Se suma tu [estatus](status) medio de todas las rondas, no el del final: 40 durante diez rondas y 10 durante otras diez dan 25. Si acabas fuera de la rueda, el total se multiplica, y más cuanto antes saliste.",
+      "tipsTitle": "Los consejos",
+      "firstsTitle": "La primera vez",
+      "termsTitle": "Las palabras del juego"
+    }
   },
   "news": {
     "title": "Noticias",
@@ -326,6 +405,37 @@
     "crisis": {
       "kicker": "Crisis · dura {rounds} rondas",
       "go": "Afrontarla"
+    }
+  },
+  "milestone": {
+    "kicker": "Hito",
+    "first": "¡Por primera vez!",
+    "record": "¡Nuevo récord! Tu mejor marca: {age}",
+    "headline": "¡{name} a los {age}!",
+    "at": "A los {age}",
+    "also": "También",
+    "go": "¡A por más!",
+    "share": "Compartir",
+    "shareText": "{headline} ¿Lo superas? Juega a The Rat Race:",
+    "names": {
+      "escaped": "Fuera de la rueda",
+      "worth10m": "Diez millones",
+      "worth1m": "Un millón",
+      "home": "Casa propia",
+      "business": "Negocio propio",
+      "halfway": "A mitad de camino",
+      "debtFree": "Sin deudas",
+      "worth100k": "100.000 de patrimonio"
+    },
+    "lines": {
+      "escaped": "Tu dinero trabaja para que tú no tengas que hacerlo.",
+      "worth10m": "Ocho cifras. Las demás ratas te miran desde abajo.",
+      "worth1m": "Siete cifras, en dólares de los de verdad.",
+      "home": "Llaves en mano. Tu casero te va a echar de menos.",
+      "business": "Ahora mandas tú. Al menos, sobre ti.",
+      "halfway": "Tus rentas ya pagan media vida.",
+      "debtFree": "No le debes ni un céntimo a nadie.",
+      "worth100k": "Seis cifras a tu nombre."
     }
   },
   "cards": {
@@ -905,7 +1015,13 @@
       "review": "Revisar",
       "playAnyway": "Jugar igualmente"
     },
-    "basketCount": "{count, plural, one {# orden} other {# órdenes}}"
+    "basketCount": "{count, plural, one {# orden} other {# órdenes}}",
+    "escapeAfter": {
+      "buy": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}",
+      "buyBack": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda.",
+      "change": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}",
+      "changeBack": "Con este cambio: ingresos pasivos {passive} / gastos {outgoings}. Vuelves a la rueda."
+    }
   },
   "resolve": {
     "title": "Dos años después",
@@ -938,6 +1054,7 @@
     "finish": "Ver cómo acabó",
     "lapsed": "Has perdido {item}.",
     "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada.",
+    "wornOff": "{item}: su estatus se ha acabado.",
     "movedRung": "Empiezas un puesto por debajo, hasta tu siguiente ascenso.",
     "movedSettling": "Esta ronda cobras un {pct} menos, hasta encontrar tu sitio.",
     "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo.",
@@ -1677,6 +1794,28 @@
       "blow": "{who} tiene un año horrible: despido, avería y multa",
       "boom": "{who} estrena coche y lo sube a todas las redes",
       "bust": "{who} lo pierde casi todo en bolsa y cripto"
+    },
+    "asides": {
+      "copyCar": "{who} ve tu coche nuevo y se compra uno mejor: {thing}|{who} estrena coche justo después que tú, por pura casualidad: {thing}|{who} aparca a tu lado y no dice nada. No hace falta: {thing}",
+      "copyWatch": "{who} se pasa la cena mirando la hora en su reloj nuevo: {thing}|{who} ha visto tu reloj y ha subido la apuesta: {thing}|{who} se remanga en cada foto para que se vea: {thing}",
+      "copyFashion": "{who} copia tu estilo, pero un escalón más arriba: {thing}|{who} aparece en la comida familiar con algo mejor que lo tuyo: {thing}|{who} sube a Instagram su última compra: {thing}",
+      "copyArt": "{who} cuelga en el salón algo más caro que lo tuyo: {thing}|{who} se hace coleccionista justo ahora: {thing}|{who} te invita a ver su nueva adquisición: {thing}",
+      "copyTravel": "{who} se entera de tu viaje y se va a uno mejor: {thing}|{who} te llena el móvil de fotos de sus vacaciones: {thing}|{who} no para de hablar de su viaje: {thing}",
+      "copyCharter": "{who} te manda fotos desde el agua: {thing}|{who} hace lo mismo que tú, pero a lo grande: {thing}|{who} ya no veranea como antes: {thing}",
+      "copyHome": "{who} se muda a algo más grande que lo tuyo: {thing}|{who} firma hipoteca una semana después que tú: {thing}|{who} te invita a la inauguración de su casa nueva: {thing}",
+      "soldCopy": "{who} vende a escondidas lo que se compró para no ser menos que tú: {thing}|{who} vende su capricho para pagar la tarjeta: {thing}|{who} ya no presume tanto. Se vende: {thing}",
+      "luckInheritance": "{who} hereda de un tío de América y vuelve a la carrera|{who} cobra una herencia que nadie esperaba y ya te pisa los talones|{who} se queda con el piso de la abuela, y con todo lo demás, y se te acerca",
+      "luckStartup": "{who} vende su startup a una multinacional y vuelve a la carrera|{who} vende por fin la app que nadie entendía y ya te pisa los talones|{who} vende su empresa a un fondo americano y se te acerca",
+      "luckCoin": "{who} compró una cripto de broma y ahora vale una fortuna: vuelve a la carrera|{who} apuesta por una moneda con un perro en el logo y se te acerca|{who} cobra su apuesta en cripto y ya te pisa los talones"
+    },
+    "needles": {
+      "needleTopic": "En la cena",
+      "needleBankrupt": "{who} pregunta en el grupo de la familia si necesitas algo|{who} te ofrece su sofá, por si acaso|{who} dice que una bancarrota le pasa a cualquiera. Sonriendo",
+      "needleJail": "{who} pregunta si en la cárcel hay wifi|{who} te escribe una carta. Es un folleto de su gimnasio|{who} le cuenta a todo el mundo que estás de retiro espiritual",
+      "needleTrial": "{who} pregunta si el abogado era caro|{who} ha visto tu caso en las noticias y lo comparte|{who} te recomienda un buen asesor fiscal. El suyo, claro",
+      "needleDrop": "{who} pregunta qué tal te va en bolsa. Ya lo sabe|{who} te manda un artículo: diez errores del inversor novato|{who} dice que el dinero no da la felicidad, de todas formas",
+      "needleBurnout": "{who} te recomienda una app de meditación|{who} dice que tienes mala cara|{who} comenta que en su trabajo hacen semana de cuatro días",
+      "needleRenting": "{who} pregunta si sigues de alquiler|{who} dice que alquilar es tirar el dinero. Otra vez|{who} te enseña fotos de su cocina nueva y te pregunta por tu casero"
     },
     "title": "Tus rivales",
     "you": "Tú",

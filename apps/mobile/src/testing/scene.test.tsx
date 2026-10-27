@@ -318,6 +318,28 @@ test('the scene of the badges a step earned is their small cards under the Hud, 
   expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
 });
 
+test('the scene of a milestone reached for the first time ever is its whole screen, the step\'s two badges inside it, and no badge\'s sheet besides', async () => {
+  render(<SceneView name="celebrate-milestone" />);
+  const sheet = (await screen.findByRole('heading', { name: '100k net worth' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(sheet.textContent).toContain('First time ever!');
+  expect(sheet.textContent).toContain('100k net worth at 24!');
+  expect(sheet.textContent).toContain('Viral by mistake');
+  expect(sheet.querySelector('[data-milestone="worth100k"]')).toBeTruthy();
+  // One moment for the step: no legendary badge's sheet, and none of the badges' small cards.
+  expect(screen.queryByText('Legendary badge')).toBeNull();
+  expect(screen.getAllByRole('dialog')).toHaveLength(1);
+});
+
+test('the scene of a milestone in a later life is its banner under the Hud, the badge of the step in it', async () => {
+  render(<SceneView name="celebrate-milestone-banner" />);
+  const [banner, ...rest] = await screen.findAllByRole('status', {}, WAIT);
+  expect(rest).toEqual([]);
+  expect(banner.textContent).toContain('100k net worth');
+  expect(banner.textContent).toContain('At 24');
+  expect(banner.textContent).not.toContain('New record');
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
 test('the scenes of the cards are drawn by the card stage itself, each at its card, nothing taken', async () => {
   const cards = [
     { name: 'play-cards-r1', choices: /^Your choices: The betting app$/, count: 3, swipe: false, tip: true },

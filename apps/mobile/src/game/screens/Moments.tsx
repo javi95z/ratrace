@@ -17,6 +17,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useGame, useStill, useT, useWords } from '../context';
 import { CrisisDetails } from './Crisis';
+import { MomentMilestones } from './Milestones';
 
 /** Where each piece of confetti starts across the sheet, in percent, and how long it waits. Fixed, so it falls the same every time. */
 const CONFETTI: ReadonlyArray<readonly [left: number, delayMs: number, colour: ColorToken]> = [
@@ -167,6 +168,8 @@ export function Moments() {
           </View>
         </Framed>
         <Body moment={moment} view={view} />
+        {/* The milestone it is, with its record, and whatever else the same step reached and earned: one moment for the step (Milestones.tsx). */}
+        {moment.kind === 'escape' || moment.kind === 'million' ? <MomentMilestones kind={moment.kind} /> : null}
         <Button variant={good ? 'primary' : 'secondary'} wide onPress={close}>
           {t(`${moment.kind}.go`)}
         </Button>
