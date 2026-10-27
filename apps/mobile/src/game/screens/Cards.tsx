@@ -1,7 +1,7 @@
 import { cardArtOf, cardPeople, metFlag, personArt } from '@ratrace/content';
 import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
-import { previewCard, quoteItem } from '@ratrace/engine';
+import { homeOf, previewCard, quoteItem } from '@ratrace/engine';
 import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
@@ -113,6 +113,8 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
   // What the player is paid or pays every year: an outcome may end one of them.
   const owned = useGame((s) => s.view?.player.life.recurring);
   const itemStatus = useItemStatus(useGame((s) => s.view));
+  // The home an option would sell, named on its tag.
+  const livedIn = useGame((s) => (s.view ? homeOf(s.view.player, words.content) : null));
   const written = words.text.cards[def.id].options[index];
   let total = 0;
   for (const outcome of preview.outcomes) total += outcome.weight;
@@ -153,10 +155,10 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
       </View>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <ReadText size={13} lineHeight={13 * SNUG}>{lockWords(preview.lock)}</ReadText> : null}
-      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus), ...covers]} dim={dim} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...covers]} dim={dim} />
       {(option.outcomes ?? []).map((outcome, k) => {
         const outcomeTags = (said: typeof outcome.effects) => {
-          const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus);
+          const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus, livedIn);
           // Nothing more on top of an option that only cost: what was put in is gone, and that is said in red.
           return tags.length === 0 && preview.outcomes[k].cash === 0 && onlyCosts(option.effects) ? [{ tone: 'bad' as const, text: t('lostStake') }] : tags;
         };

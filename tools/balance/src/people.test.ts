@@ -46,7 +46,7 @@ it('carries each story on to its later cards, for a player who says yes', { time
 
 /**
  * Every ending of every story is one some life comes to, so a player's "n of m endings" can reach m: every life to begin with, played by
- * every bot, by a player who says yes (as the saver otherwise, and again as the landlord, who has a mortgage), and by one who answers a
+ * every bot, by a player who says yes (as the saver otherwise, again taking the founder's cheque, and again as the landlord, who has a mortgage), and by one who answers a
  * person's cards at random among what is open.
  */
 it('ends each story every way it can be told, in some life', { timeout: 600_000 }, () => {
@@ -66,9 +66,11 @@ it('ends each story every way it can be told, in some life', { timeout: 600_000 
   /** Yes to everyone, and to the founder's news too: a cheque already in is held, to hear how it ends. */
   const yes = (open: number[], _view: unknown, card: string) => (card === 'founder_exit' ? 0 : open.includes(1) ? 1 : 0);
   const willing = answering('willing', saver, yes);
+  // Yes to everyone, and out of the founder's company with the cheque when it is offered: the one way the founder's story ends "out".
+  const seller = answering('seller', saver, (open, view, card) => (card === 'founder_exit' ? (open.includes(1) ? 1 : 0) : yes(open, view, card)));
   const owner = answering('owner', landlord, yes);
   // The life's own numbers decide, so the same lives are played every time.
   const curious = answering('curious', saver, (open, view) => open[(view.round * 7 + view.answered * 3 + Math.round(view.player.cash / 100)) % open.length]);
-  const report = peopleReport(content, lives, seedsFor(3), [...bots, willing, owner, curious]);
+  const report = peopleReport(content, lives, seedsFor(3), [...bots, willing, seller, owner, curious]);
   expect(Object.entries(report.endings).filter(([, lived]) => lived === 0).map(([id]) => id)).toEqual([]);
 });

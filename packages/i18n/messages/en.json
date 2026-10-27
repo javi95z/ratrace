@@ -498,6 +498,7 @@
     "refinanceFixed": "Your variable mortgages go fixed, at {rate}",
     "refinanceVariable": "Your fixed mortgages go variable",
     "sellHome": "You sell your home",
+    "sellHomeNamed": "You sell {home}, where you live",
     "homeValue": "Home value {amount}",
     "lose": "Lose {pct}% of your {what}",
     "savings": "savings",

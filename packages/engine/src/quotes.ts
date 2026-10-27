@@ -6,7 +6,7 @@ import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { lodgerOf, workModeOf } from './life/derive';
-import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt, statusParts } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lesserShare, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt, statusParts } from './life/derive';
 import { helpedHome, raiseChance, workModeLock } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
@@ -242,7 +242,7 @@ function itemStatusReal(content: Content, view: GameView, itemId: string, age = 
   if (place === 0) return mine;
   const rule = content.life.lesserItems?.[item.ladder];
   if (place >= (rule?.counted ?? Number.POSITIVE_INFINITY)) return 0;
-  return mulDiv(mine, rule?.pct ?? content.life.lesserItemPct, 100);
+  return lesserShare(mine, rule?.pct ?? content.life.lesserItemPct);
 }
 
 export function quoteItem(content: Content, view: GameView, itemId: string): ItemQuote {

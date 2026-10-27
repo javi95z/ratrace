@@ -201,7 +201,7 @@ type Reach = {
   seed?: string;
   /**
    * The option taken on a card, by its id, where the scene needs another answer than the saver's (the saver answers every other card as it
-   * would): on `screen-seed-2174` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
+   * would): on `screen-seed-190` the nurse is wrongly accused in her ninth round, goes to court and loses, and is in prison for the round.
    */
   picks?: Readonly<Record<string, number>>;
   /**
@@ -262,7 +262,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
   'hud-race': { life: 'engineer', round: 1, stage: 'news' },
   'hud-status-ru': { life: 'engineer', round: 1, stage: 'news' },
-  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-2174', picks: { crime_wrongly_accused: 0 } },
+  'hud-jailed': { life: 'nurse', round: 9, stage: 'finance', seed: 'screen-seed-190', picks: { crime_wrongly_accused: 0 } },
   'hud-crisis': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'hud-crisis-details': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'amount-savings': { life: 'engineer', round: 6, stage: 'finance' },

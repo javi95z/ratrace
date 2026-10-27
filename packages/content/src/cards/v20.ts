@@ -86,8 +86,9 @@ export const v20Cards: CardDef[] = [
     { effects: { focus: 1, careerSkill: 2, salaryModPct: 3 } },
     { effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { salaryModPct: -3 } }] },
   ]),
-  // Weekends for an app: money now, paid for in health; with a car of one's own, more money and a risk on the road.
-  card('life_gig_apps', 'lifestyle', { cooldown: 12, when: { minRound: 1, maxRound: 14 } }, [
+  // Weekends for an app: money now, paid for in health; with a car of one's own, more money and a risk on the road. Only on a career's first two rungs:
+  // a manager does not deliver on a bike at weekends.
+  card('life_gig_apps', 'lifestyle', { cooldown: 12, when: { minRound: 1, maxRound: 14, maxLevel: 1 } }, [
     {},
     { effects: { cash: usd(5_000), skills: { health: -1 } } },
     { when: { ownsLadder: 'car' }, effects: { cash: usd(8_000), skills: { health: -1 } }, outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { cash: usd(-2_500) } }] },

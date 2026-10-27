@@ -498,6 +498,7 @@
     "refinanceFixed": "Tus hipotecas variables pasan a fijo, al {rate}",
     "refinanceVariable": "Tus hipotecas fijas pasan a variable",
     "sellHome": "Vendes tu casa",
+    "sellHomeNamed": "Vendes {home}, donde vives",
     "homeValue": "Valor de tu casa {amount}",
     "lose": "Pierdes el {pct} % de tu {what}",
     "savings": "ahorro",

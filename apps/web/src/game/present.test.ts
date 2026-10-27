@@ -231,6 +231,10 @@ describe('effectTags', () => {
     expect(rolex(3)).toContain('Status +3');
     expect(rolex(0)).toContain('Adds no status');
     expect(rolex(0).some((text) => text.startsWith('Status +'))).toBe(false);
+    // A card that sells the home names the one lived in, where the screen knows it; a landlord's flats are kept.
+    const home = words('en').text.propertyTypes.studio;
+    expect(effectTags(words('en'), t('en', 'effects'), world, { sellHome: true }, false, [], undefined, { typeId: 'studio', cityId: 'nowhere' }).map((tag) => tag.text)).toEqual([`You sell ${home}, where you live`]);
+    expect(tags({ sellHome: true }).map((tag) => tag.text)).toEqual(['You sell your home']);
     expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } }, 'es').map((tag) => tag.text.replace(/\u00a0/g, ' '))).toEqual([
       'Business de Emirates', 'Estatus +6 durante 4 años', '+1 de foco en la ronda siguiente', 'Precio normal 6k $',
     ]);

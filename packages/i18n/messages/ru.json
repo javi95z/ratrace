@@ -498,6 +498,7 @@
     "refinanceFixed": "Плавающая ипотека станет фиксированной: {rate}",
     "refinanceVariable": "Фиксированная ипотека станет плавающей",
     "sellHome": "Ты продаёшь своё жильё",
+    "sellHomeNamed": "Вы продаёте {home}, где живёте",
     "homeValue": "Цена жилья {amount}",
     "lose": "Теряешь {pct}%: {what}",
     "savings": "сбережения",

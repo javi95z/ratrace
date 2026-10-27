@@ -254,6 +254,15 @@ export function lifestyleStatusAt(content: Content, round: number): [number, num
   return [statusStepAt(content.life.agedStatus.frugal, round), normal, comfortable, lavish];
 }
 
+/**
+ * What a lesser item of a ladder adds to the status: a share of its own, and never nothing while it gives any and the ladder counts it (a coach
+ * beside a degree, a second watch). A share that rounds to nothing would make a dear thing worth no standing at all.
+ */
+export function lesserShare(status: number, pct: number): number {
+  if (status <= 0 || pct <= 0) return 0;
+  return Math.max(1, mulDiv(status, pct, 100));
+}
+
 export function statusParts(p: PlayerState, content: Content, round: number): StatusParts {
   const life = p.life;
   const rules = content.life;
@@ -275,7 +284,7 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     const ranked = [...group].sort((a, b) => b - a);
     ranked.forEach((status, at) => {
       if (at === 0) items += status;
-      else if (at < counted) items += mulDiv(status, pct, 100);
+      else if (at < counted) items += lesserShare(status, pct);
     });
   }
 
