@@ -3729,11 +3729,6 @@
     "w": 32,
     "h": 32
   },
-  "icon.inflation_tax": {
-    "src": "icons/icon.inflation_tax.png",
-    "w": 32,
-    "h": 32
-  },
   "icon.insurance": {
     "src": "icons/icon.insurance.png",
     "w": 32,

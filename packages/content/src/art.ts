@@ -514,7 +514,7 @@ export const LIFE_MILESTONE_ART = {
 export const GUIDE_ART = { howTo: 'icon.howto', glossary: 'icon.glossary' } as const;
 
 /** The warnings of a risk: the cash that rising prices eat, and overtime that may burn the player out. */
-export const RISK_ART = { inflation: 'icon.inflation_tax', burnout: 'icon.burnout' } as const;
+export const RISK_ART = { inflation: 'icon.inflation', burnout: 'icon.burnout' } as const;
 
 /** The rat of the game, in the poses it takes on screen. */
 export type RatPose = 'cheer' | 'hide' | 'exit' | 'count' | 'sleep' | 'shock' | 'think' | 'wave';

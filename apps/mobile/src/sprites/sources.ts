@@ -748,7 +748,6 @@ export const SOURCES: Record<string, ImageSourcePropType> = {
   'icon.health_risk': require('../../assets/sprites/icons/icon.health_risk.png'),
   'icon.howto': require('../../assets/sprites/icons/icon.howto.png'),
   'icon.inflation': require('../../assets/sprites/icons/icon.inflation.png'),
-  'icon.inflation_tax': require('../../assets/sprites/icons/icon.inflation_tax.png'),
   'icon.insurance': require('../../assets/sprites/icons/icon.insurance.png'),
   'icon.insure_health': require('../../assets/sprites/icons/icon.insure_health.png'),
   'icon.insure_home': require('../../assets/sprites/icons/icon.insure_home.png'),

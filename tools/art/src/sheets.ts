@@ -157,7 +157,8 @@ export const SHEETS: SheetSpec[] = [
     ids: [
       'icon.cash', 'icon.cashflow', 'icon.status', 'icon.skill',
       'icon.job', 'icon.family', 'icon.city', 'icon.news',
-      'icon.mood', 'icon.inflation', 'icon.rates', 'icon.calendar',
+      // The inflation drawn here first was drawn again on icons-13 (v21): its cell is left unused.
+      'icon.mood', '', 'icon.rates', 'icon.calendar',
       'icon.locked', 'icon.star', 'icon.settings', 'icon.trophy',
     ],
   },
@@ -425,8 +426,8 @@ export const SHEETS: SheetSpec[] = [
     file: 'icons/anim-03', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 48, height: 48,
     ids: ['cheer', 'burst'].flatMap((name) => [0, 1, 2, 3].map((frame) => `anim.${name}.${frame}`)),
   },
-  // v21: the guide's how to play and glossary, and the warnings of inflation and burnout (`icon.inflation` is the news' older one: this is the cash it eats).
-  { file: 'icons/icons-13', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 32, height: 32, ids: ['icon.howto', 'icon.glossary', 'icon.inflation_tax', 'icon.burnout'] },
+  // v21: the guide's how to play and glossary, and the warnings of inflation and burnout. Its inflation is the game's one, everywhere (icons-02's is no longer used).
+  { file: 'icons/icons-13', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 32, height: 32, ids: ['icon.howto', 'icon.glossary', 'icon.inflation', 'icon.burnout'] },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

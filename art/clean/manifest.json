@@ -911,11 +911,6 @@
       "width": 32,
       "height": 32
     },
-    "icon.inflation": {
-      "file": "icons/icon.inflation.png",
-      "width": 32,
-      "height": 32
-    },
     "icon.rates": {
       "file": "icons/icon.rates.png",
       "width": 32,
@@ -4851,8 +4846,8 @@
       "width": 32,
       "height": 32
     },
-    "icon.inflation_tax": {
-      "file": "icons/icon.inflation_tax.png",
+    "icon.inflation": {
+      "file": "icons/icon.inflation.png",
       "width": 32,
       "height": 32
     },
