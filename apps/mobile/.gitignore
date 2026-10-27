@@ -36,9 +36,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
+# generated native folders, and what a local build makes of the app's own native modules
 /ios
 /android
+/modules/*/android/build/
 
 # sprites copied from art/clean by scripts/sprites.ts (on install: postinstall, and eas-build-post-install on EAS), for Metro and for the web export
 /assets/sprites/
