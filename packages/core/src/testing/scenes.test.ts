@@ -296,7 +296,7 @@ describe('the scenes of the HUD', () => {
     expect(await saveOf(await sceneStore('hud-flow'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
   });
 
-  it('hud-jailed is a life in prison: the nurse of screen-seed-25, wrongly accused in her eighth round, who went to court and lost, at the finances of that round', async () => {
+  it('hud-jailed is a life in prison: the nurse of screen-seed-577, wrongly accused in her eighth round, who went to court and lost, at the finances of that round', async () => {
     const store = await sceneStore('hud-jailed');
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'finance' });
@@ -304,10 +304,10 @@ describe('the scenes of the HUD', () => {
     // In for the rest of the round: a sentence of one round is served at its end.
     expect(state.view?.player.life.jailRounds).toBe(1);
     const save = (await saveOf(store)) as SavedGame;
-    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-25' });
-    // The accusation was the third card of the round, answered with its first option (to court); every other card as the saver answers it.
-    expect(state.view?.hand[2]).toBe('crime_wrongly_accused');
-    expect(save.log[7].picks[2]).toBe(0);
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-577' });
+    // The accusation was the first card of the round, answered with its first option (to court); every other card as the saver answers it.
+    expect(state.view?.hand[0]).toBe('crime_wrongly_accused');
+    expect(save.log[7].picks[0]).toBe(0);
   });
 
   it('hud-crisis is a life whose world has a crisis, at its second year, at the finances (where the strip of the crisis hangs under the HUD)', async () => {
@@ -387,8 +387,8 @@ describe('the scenes of the finances', () => {
     const state = game.getState();
     expect(state).toMatchObject({ stage: 'finance', refusal: null });
     expect(roundOf(state)).toBe(6);
-    // The focus a card of the round left (one thing done with it) and the cash moved to savings: more than one line, and the cash they leave.
-    expect(state.orders.map((order) => order.type)).toEqual(['focus', 'depositIn']);
+    // The round's focus (two things done with it) and the cash moved to savings: more than one line, and the cash they leave.
+    expect(state.orders.map((order) => order.type)).toEqual(['focus', 'focus', 'depositIn']);
     expect(state.preview?.player.cash).toBeLessThan(state.view?.player.cash ?? 0);
   });
 

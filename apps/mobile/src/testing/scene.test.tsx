@@ -420,9 +420,9 @@ test('the finances of a scene are drawn by Finance itself in Play: the portfolio
 test('the scene of the basket is its sheet open over the finances, beside Play as the web\'s page draws it, listing the saver\'s orders of the round', async () => {
   render(<SceneView name="finance-basket" />);
   const sheet = (await screen.findByRole('heading', { name: "This round's orders" }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
-  expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
+  expect(within(sheet).getAllByRole('listitem')).toHaveLength(3);
   expect(within(sheet).getByText(/^Save /)).toBeTruthy();
-  expect(screen.getByRole('button', { name: '2 orders' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '3 orders' })).toBeTruthy();
   // For a player who has read the guide: nothing of it under the sheet.
   expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
 });

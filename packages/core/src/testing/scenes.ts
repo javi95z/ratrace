@@ -201,7 +201,7 @@ type Reach = {
   seed?: string;
   /**
    * The option taken on a card, by its id, where the scene needs another answer than the saver's (the saver answers every other card as it
-   * would): on `screen-seed-25` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
+   * would): on `screen-seed-577` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
    */
   picks?: Readonly<Record<string, number>>;
   /**
@@ -243,7 +243,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-guide-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-fault': { life: 'engineer', round: 1, stage: 'finance' },
   'play-pageturn': { life: 'engineer', round: 2, stage: 'news' },
-  // The finances of play-finance-r6's sixth round: the saver's orders in the basket (a focus, the cash to savings), its sheet open.
+  // The finances of play-finance-r6's sixth round: the saver's orders in the basket (two focus, the cash to savings), its sheet open.
   'finance-basket': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }], ends: 'finance' },
   // The same, the pension plan's sheet open: nothing in it yet, and room for this round.
   'finance-pension': { life: 'engineer', round: 6, stage: 'finance' },
@@ -262,7 +262,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
   'hud-race': { life: 'engineer', round: 1, stage: 'news' },
   'hud-status-ru': { life: 'engineer', round: 1, stage: 'news' },
-  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-25', picks: { crime_wrongly_accused: 0 } },
+  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-577', picks: { crime_wrongly_accused: 0 } },
   'hud-crisis': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'hud-crisis-details': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'amount-savings': { life: 'engineer', round: 6, stage: 'finance' },
