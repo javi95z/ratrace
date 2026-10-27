@@ -4336,6 +4336,16 @@
       "width": 288,
       "height": 120
     },
+    "card.biz_freelance_gig": {
+      "file": "cards/card.biz_freelance_gig.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.career_remote_work": {
+      "file": "cards/card.career_remote_work.png",
+      "width": 288,
+      "height": 120
+    },
     "card.barn_car": {
       "file": "cards/card.barn_car.png",
       "width": 288,

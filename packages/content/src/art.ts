@@ -67,7 +67,7 @@ export const cardArt: Record<string, string> = {
   career_switch: scene('two_ladders'),
   career_big_offer: scene('tower_lobby'),
   career_shares_vs_salary: scene('shares_or_salary'),
-  career_remote_work: scene('sunrise_balcony'),
+  career_remote_work: scene('career_remote_work'),
   career_boss_leaves: scene('boss_leaves'),
   career_become_manager: scene('meeting_room'),
   career_headhunter: scene('headhunter_call'),
@@ -86,7 +86,7 @@ export const cardArt: Record<string, string> = {
   edu_bootcamp: scene('bootcamp'),
   edu_language: scene('language_class'),
 
-  biz_freelance_gig: scene('kitchen_laptop'),
+  biz_freelance_gig: scene('biz_freelance_gig'),
   biz_self_employed: scene('shopfront'),
   biz_bar: scene('bar'),
   biz_online_shop: scene('parcels'),

@@ -784,6 +784,11 @@
     "w": 288,
     "h": 120
   },
+  "card.biz_freelance_gig": {
+    "src": "cards/card.biz_freelance_gig.png",
+    "w": 288,
+    "h": 120
+  },
   "card.black_card": {
     "src": "cards/card.black_card.png",
     "w": 288,
@@ -861,6 +866,11 @@
   },
   "card.care_home": {
     "src": "cards/card.care_home.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.career_remote_work": {
+    "src": "cards/card.career_remote_work.png",
     "w": 288,
     "h": 120
   },

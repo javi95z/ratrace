@@ -400,7 +400,7 @@ export const SHEETS: SheetSpec[] = [
   // v22: the troubles of a fortune, two, the fake masterpiece among them, and the shop across the street.
   { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid', 'fake_art'].map((id) => `card.rich_${id}`), 'card.celeb_ortiga'] },
   // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 40 to 48 are drawn.
-  { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
+  { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter', 'card.biz_freelance_gig', 'card.career_remote_work'] },
   { file: 'cards/cards-41', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['barn_car', 'mlm', 'squatters', 'solar', 'village_house', 'company_ipo'].map((id) => `card.${id}`) },
   { file: 'cards/cards-42', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['metro_works', 'strike', 'school_reunion', 'child_streamer', 'linkedin_post', 'podcast'].map((id) => `card.${id}`) },
   { file: 'cards/cards-43', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['ai_agent', 'gig_apps', 'copy_trading', 'hacked', 'signal_group', 'remote_outskirts'].map((id) => `card.${id}`) },
