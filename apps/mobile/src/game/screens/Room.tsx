@@ -689,6 +689,8 @@ function Waiting() {
         <ReadText size={13} tone="ink-200" style={{ textAlign: 'center' }}>{t('waitingCount', { ready: here.length - choosing.length, total: here.length })}</ReadText>
         {choosing.length > 0 ? <ReadText size={13} tone="ink-300" style={{ textAlign: 'center' }}>{t('choosing', { names: choosing.join(', ') })}</ReadText> : null}
       </View>
+      {/* The basket can still change, and is sent again: the round turns with it as it is left. */}
+      <ReadText size={13} tone="ink-300" style={{ textAlign: 'center' }}>{t('stillCounts')}</ReadText>
     </View>
   );
 }

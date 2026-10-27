@@ -1892,6 +1892,7 @@
     "stay": "Stay",
     "bar": "The game: {time} left, {ready} of {total} have played",
     "waiting": "Waiting for the others",
+    "stillCounts": "Until then, what you change still counts.",
     "waitingCount": "{ready} of {total} have played",
     "choosing": "Still playing: {names}",
     "afterRound": "After round {n}",

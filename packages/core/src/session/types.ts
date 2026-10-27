@@ -52,6 +52,11 @@ export interface GameSession {
    * round played since the page last saw the life, or null if none was. Left out, there never is one.
    */
   catchUp?(): Promise<StepResult | null>;
+  /**
+   * For a life in a room whose round is played and waits for the others: the orders sent again, to replace the ones kept until the round
+   * turns. True once the server keeps them, false where it does not (the round turned, or a server of before). Left out, a played round is final.
+   */
+  amendRound?(choices: RoundChoices): Promise<boolean>;
 }
 
 /**

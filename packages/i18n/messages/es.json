@@ -1892,6 +1892,7 @@
     "stay": "Quedarme",
     "bar": "La partida: quedan {time}, han jugado {ready} de {total}",
     "waiting": "Esperando a los demás",
+    "stillCounts": "Hasta entonces, lo que cambies sigue contando.",
     "waitingCount": "Han jugado {ready} de {total}",
     "choosing": "Aún juegan: {names}",
     "afterRound": "Tras la ronda {n}",

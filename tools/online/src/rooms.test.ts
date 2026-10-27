@@ -185,9 +185,25 @@ describe('a round in a room', () => {
     const seen = await server.ask(B, { action: 'state', roomId: room });
     expect(roomOf(seen).members[0]).toMatchObject({ ready: true, standing: null });
     expect(JSON.stringify(seen.body)).not.toContain('sp500');
-    // The same orders again change nothing; others are refused, as is a card.
+    // The same orders again change nothing.
     expect((await server.ask(HOST, { action: 'submit', roomId: room, step, orders })).status).toBe(200);
-    expect(await server.ask(HOST, { action: 'submit', roomId: room, step, orders: [] })).toMatchObject({ status: 409, body: { error: 'ready' } });
+  });
+
+  it('lets a member who has played change their orders while the others still choose: the last ones sent are the round\'s', async () => {
+    const { server, room } = await begun();
+    const step = await answerHand(server, HOST, room);
+    await server.ask(HOST, { action: 'submit', roomId: room, step, orders: [{ type: 'buy', assetId: 'sp500', amount: 100_000 }] });
+    const changed = [{ type: 'buy', assetId: 'sp500', amount: 50_000 }];
+    const again = await server.ask(HOST, { action: 'submit', roomId: room, step, orders: changed });
+    expect(again.status).toBe(200);
+    expect(again.body.result).toBeNull();
+    // Still ready, still waiting: the change is kept, and nobody is told the host played again.
+    expect(roomOf(again).members[0]).toMatchObject({ userId: HOST, ready: true });
+    // The round turns with what the host sent last.
+    await server.ask(B, { action: 'submit', roomId: room, step: await answerHand(server, B, room), orders: [] });
+    expect(server.logOf(HOST, room)[0].orders).toEqual(changed);
+    // Once it has turned, orders for that round are too late.
+    expect(await server.ask(HOST, { action: 'submit', roomId: room, step, orders: [] })).not.toMatchObject({ status: 200 });
   });
 
   it('turns the round in the call of the last to play, and answers that member their round', async () => {

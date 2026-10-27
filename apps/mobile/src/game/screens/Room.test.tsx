@@ -441,6 +441,24 @@ describe('a round in a room', () => {
     expect(router.dismissTo).not.toHaveBeenCalled();
   });
 
+  it('counts what the player changes after playing, while the others still choose: the round turns with the basket as it was left', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    press(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance();
+    press(button(/Play the round/));
+    expect(await screen.findByText('Waiting for the others')).toBeTruthy();
+    // Waiting, the focus of the round is spent: a finance course, from the figure's sheet.
+    press(screen.getByRole('button', { name: /Focus/ }));
+    press(within(screen.getByRole('heading', { name: 'Focus' }).closest('[aria-modal="true"]') as HTMLElement).getByRole('switch', { name: /^Take a finance course/ }));
+    await waitFor(() => expect(server.keptOrders(HOST, room.id)).toEqual([{ type: 'focus', action: 'studyFinance' }]));
+    await bPlays(server, room.id);
+    await screen.findByRole('region', { name: 'After round 1' }, { timeout: 5_000 });
+    expect(server.logOf(HOST, room.id)[0].orders).toEqual([{ type: 'focus', action: 'studyFinance' }]);
+  });
+
   it('stays on the room while its life cannot be opened yet, and opens it at the next look: never home', async () => {
     const server = roomServer();
     const room = await lobby(server);

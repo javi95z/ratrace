@@ -844,11 +844,14 @@ begin
   nm := nm || ' ' || public.room_step(room_r, 0, b, ga, now(), '[]', 0);
   if nm = 'ok moved moved closed' and (select log from public.games where id = ga) = '[{"picks":[0],"orders":null}]'
     then passed := passed + 1; else failed := array_append(failed, format('a card was written out of turn, or not written in turn: %s', nm)); end if;
-  -- Orders wait: A is ready, the same orders again change nothing, other orders are refused, and a card is no longer taken.
+  -- Orders wait: A is ready, the same orders again change nothing, other orders replace them until the round turns (and again,
+  -- back to none), and a card is no longer taken.
   j := public.room_submit(room_r, 0, a, '[]');
   nm := (public.room_submit(room_r, 0, a, '[]')) ->> 'kept';
   nm := nm || ' ' || ((public.room_submit(room_r, 0, a, '[{"type":"x"}]')) ->> 'kept');
-  if j ->> 'kept' = 'new' and not (j ->> 'all')::boolean and nm = 'same other'
+  nm := nm || ' ' || ((public.room_submit(room_r, 0, a, '[]')) ->> 'kept');
+  if j ->> 'kept' = 'new' and not (j ->> 'all')::boolean and nm = 'same changed changed'
+     and (select orders from public.room_orders where room_id = room_r and user_id = a and round = 0) = '[]'::jsonb
      and (select ready_round from public.room_players where room_id = room_r and user_id = a) = 0
     then passed := passed + 1; else failed := array_append(failed, format('A''s orders answered %s', j)); end if;
   select updated_at into t from public.games where id = ga;

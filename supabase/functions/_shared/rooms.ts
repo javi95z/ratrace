@@ -207,7 +207,7 @@ export interface RoomsDeps {
   /** Writes a card of a member's life, if the room is still in that round, the member is not ready, and the game is as read. */
   step(roomId: string, round: number, userId: string, gameId: string, asRead: string, log: LoggedRound[], gameRound: number): Promise<'ok' | 'moved' | 'closed' | 'ready'>;
   /** Keeps a member's orders for a round and marks them ready. `all` once everyone still in the room is. */
-  submit(roomId: string, round: number, userId: string, orders: unknown[]): Promise<{ kept: 'new' | 'same' | 'other' | 'moved' | 'closed'; all: boolean }>;
+  submit(roomId: string, round: number, userId: string, orders: unknown[]): Promise<{ kept: 'new' | 'same' | 'changed' | 'other' | 'moved' | 'closed'; all: boolean }>;
   /** Writes the turn of a round, every life of it, or nothing. With no deadline the room is over. `invalid` if a log could not be held. */
   turn(roomId: string, round: number, deadline: Date | null, lives: TurnLife[]): Promise<'ok' | 'moved' | 'closed' | 'invalid'>;
   /** Writes the run unless one with its id is already there. */
@@ -1234,6 +1234,8 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     console.error('room orders refused:', error instanceof Error ? error.message : error);
     return { status: 422, body: { error: 'cannot-play' } };
   }
+  // Orders sent again while the others still choose replace the kept ones ('changed'): what is bought or sold while waiting counts.
+  // A database of before that change refuses them ('other').
   const kept = await deps.submit(room.id, room.round, userId, picked.orders);
   if (kept.kept === 'other') return { status: 409, body: { error: 'ready' } };
   if (kept.kept === 'moved') return moved;

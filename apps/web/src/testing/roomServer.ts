@@ -320,10 +320,11 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       const m = memberOf(roomId, user);
       if (!m || m.left_at !== null) return { kept: 'closed', all: false };
       const key = orderKey(roomId, user, round);
-      let kept: 'new' | 'same' = 'new';
+      // As room_submit: other orders replace the kept ones until the round turns; the same ones change nothing.
+      let kept: 'new' | 'same' | 'changed' = 'new';
       if (orders.has(key)) {
-        if (canonical(orders.get(key)) !== canonical(chosen)) return { kept: 'other', all: false };
-        kept = 'same';
+        kept = canonical(orders.get(key)) === canonical(chosen) ? 'same' : 'changed';
+        if (kept === 'changed') orders.set(key, structuredClone(chosen));
       } else orders.set(key, structuredClone(chosen));
       m.ready_round = round;
       return { kept, all: active(roomId).every((one) => one.ready_round === round) };
@@ -416,6 +417,11 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     /** Moves the server's clock on. */
     wait: (ms: number) => {
       state.now += ms;
+    },
+    /** The orders a member has kept for the room's round as it stands, or undefined where they have not played it. */
+    keptOrders: (user: string, room: string): unknown => {
+      const now = roomsById.get(room);
+      return now ? structuredClone(orders.get(orderKey(room, user, now.round))) : undefined;
     },
     /** A member's log as the database holds it, as the engine reads a log. */
     logOf: (user: string, room: string): LoggedRound[] => {

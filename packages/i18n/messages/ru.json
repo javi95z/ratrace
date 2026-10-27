@@ -1892,6 +1892,7 @@
     "stay": "Остаться",
     "bar": "Партия: осталось {time}, сыграли {ready} из {total}",
     "waiting": "Ждём остальных",
+    "stillCounts": "До тех пор всё, что вы измените, засчитывается.",
     "waitingCount": "Сыграли {ready} из {total}",
     "choosing": "Ещё играют: {names}",
     "afterRound": "После раунда {n}",

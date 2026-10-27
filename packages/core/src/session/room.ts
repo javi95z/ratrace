@@ -313,6 +313,23 @@ export class RoomSession implements GameSession {
     });
   }
 
+  /**
+   * The orders of the round already played, sent again while the room waits for the others: outside the queue, which the waiting round holds.
+   * The life's step is the one the round was sent at, so a round that has turned since is refused, and changes nothing.
+   */
+  async amendRound(choices: RoundChoices): Promise<boolean> {
+    const api = this.api();
+    if (api === null) return false;
+    try {
+      const reply = await api.submit(this.roomId, this.life.step, choices.orders);
+      if (reply === 'moved') return false;
+      this.deps.onRoom(reply.room);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** The round the room turned since this page last saw the life, if it turned exactly one: the clock played it, or it was played before the page was opened again. */
   catchUp(): Promise<StepResult | null> {
     const run = async (): Promise<StepResult | null> => {

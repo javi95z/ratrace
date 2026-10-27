@@ -260,6 +260,14 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
   let changedAt = Number.NEGATIVE_INFINITY;
   /** False while a tap may still be the tail of the one that brought this screen. */
   const settled = () => now() - changedAt >= guardMs;
+  /**
+   * The orders the server keeps for a round played in a room while it waits for the others, or null when no round waits: the basket can
+   * still change then, and each change is sent again (`amendRound`), the last one kept counting when the round turns.
+   */
+  let waiting: Order[] | null = null;
+  /** True while a change is on its way; another made meanwhile is sent once it is answered, the basket as it then stands. */
+  let amending = false;
+  let amendAgain = false;
 
   /** The basket with every order the round would refuse taken out, and the preview of what is left. */
   const settle = (view: GameView, orders: Order[]): { orders: Order[]; preview: RoundPreview } => {
@@ -358,10 +366,16 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       try {
         // Only what the life's rules know is sent: an order of newer rules would be refused, as an action that does not exist.
         const sent = knownOrders(session.rules ?? ENGINE_VERSION, orders);
-        shown(view, await session.playRound({ orders: sent }), sent);
+        waiting = session.amendRound ? sent : null;
+        const result = await session.playRound({ orders: sent });
+        // The round has turned: what empties the basket now is not a change to send.
+        const kept = waiting ?? sent;
+        waiting = null;
+        shown(view, result, kept);
       } catch (error) {
         await refused(error);
       } finally {
+        waiting = null;
         set({ busy: false });
       }
     };
@@ -622,8 +636,30 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
     };
   });
 
+  /** Sends the basket again while a round played in a room waits for the others, one change at a time. */
+  const amend = async () => {
+    if (amending) {
+      amendAgain = true;
+      return;
+    }
+    amending = true;
+    try {
+      do {
+        amendAgain = false;
+        const current = session;
+        if (waiting === null || !current?.amendRound) return;
+        const sent = knownOrders(current.rules ?? ENGINE_VERSION, store.getState().orders);
+        if ((await current.amendRound({ orders: sent })) && waiting !== null) waiting = sent;
+      } while (amendAgain);
+    } finally {
+      amending = false;
+    }
+  };
+
   // Every change of screen starts the short wait in which a tap is taken for the tail of the last one.
   store.subscribe((state, before) => {
+    // A change of the basket while a round played in a room waits for the others counts: it is sent again.
+    if (state.orders !== before.orders && waiting !== null) void amend();
     if (state.stage !== before.stage) changedAt = now();
     // The basket is kept as it changes, and emptied once the round it was for is played.
     if (state.orders !== before.orders && state.gameId !== null && state.view !== null && state.stage === 'finance') basket.save(state.gameId, state.view.round, state.orders);
