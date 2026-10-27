@@ -377,8 +377,8 @@ const trio = () => (
 const icons = () => document.querySelectorAll('[data-sprite]').length;
 
 test.each([
-  [330, 0, '16px'],
-  [340, 0, '16px'],
+  [330, 3, '15px'],
+  [340, 3, '15px'],
   [341, 3, '14px'],
   [350, 3, '14px'],
   [357, 3, '14px'],
@@ -394,17 +394,36 @@ test.each([
   expect(textOf('1').style.fontSize).toBe(size);
 });
 
+test('a narrow row puts each Stat\'s icon, small, beside its label under the number; a row of four on a phone so', () => {
+  render(
+    <StatRow>
+      <Stat icon="coin" value="8.394 $" label="Cash" />
+      <Stat icon="flow" value="+2.495 $" label="Flow" />
+      <Stat icon="star" value="14" label="Status" />
+      <Stat icon="focus" value="2/3" label="Focus" />
+    </StatRow>,
+  );
+  // A phone's row: 378 points for four, 90 each.
+  layOut(screen.getByTestId('stat-row'), 378);
+  expect(icons()).toBe(4);
+  expect(textOf('8.394 $').style.fontSize).toBe('15px');
+  layOut(screen.getByTestId('stat-row'), 330);
+  expect(textOf('8.394 $').style.fontSize).toBe('14px');
+});
+
 test('Stats in a row share it equally', () => {
   render(trio());
   for (const stat of screen.getAllByTestId('stat')) expect(stat.style.flexGrow).toBe('1');
 });
 
-test('a Stat alone measures itself: icon at 360, none at 300', () => {
+test('a Stat alone measures itself, as a row of three as wide: its icon beside the number at 360, small under it at 300', () => {
   render(<Stat icon="coin" value="1" label="Cash" />);
   layOut(screen.getByTestId('stat'), 300);
-  expect(icons()).toBe(0);
+  expect(icons()).toBe(1);
+  expect(textOf('1').style.fontSize).toBe('15px');
   layOut(screen.getByTestId('stat'), 360);
   expect(icons()).toBe(1);
+  expect(textOf('1').style.fontSize).toBe('15px');
 });
 
 test('a Stat reads as one element, with its hint; the pressable one as a button with the same words', () => {
