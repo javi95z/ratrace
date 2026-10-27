@@ -205,14 +205,14 @@ export const SHEETS: SheetSpec[] = [
   { file: 'portraits/portraits-04', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_D) },
   { file: 'portraits/portraits-05', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_E) },
   { file: 'portraits/portraits-06', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_F) },
-  // Three badges of the later cities, and the two transfers abroad.
+  // Three badges of the later cities (the two transfers abroad are on cards-30 since v22).
   { file: 'badges/badges-06', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.swiss_banker', 'badge.world_tour', 'badge.ronin'] },
-  { file: 'cards/cards-26', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.office_east', 'card.office_west'] },
   // Two cards for each city, dealt only there.
   { file: 'cards/cards-27', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_madrid_cana', 'card.city_madrid_tourist_flat', 'card.city_london_tube_strike', 'card.city_london_club', 'card.city_new_york_rent_hike', 'card.city_new_york_elevator_pitch'] },
   { file: 'cards/cards-28', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_dubai_visa', 'card.city_dubai_golden_visa', 'card.city_singapore_ballot', 'card.city_singapore_gum', 'card.city_bangkok_flood', 'card.city_bangkok_beach_bar'] },
   { file: 'cards/cards-29', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_tokyo_earthquake', 'card.city_tokyo_karaoke', 'card.city_moscow_rouble', 'card.city_moscow_dacha', 'card.city_mexico_city_mordida', 'card.city_mexico_city_taqueria'] },
-  { file: 'cards/cards-30', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.city_zurich_numbered_account', 'card.city_zurich_referendum'] },
+  // v22 (art/prompts/v22-prompt-pack.md): Zurich's two, laundering, the two offices abroad and the cold call, six panels as every card sheet now is.
+  { file: 'cards/cards-30', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_zurich_numbered_account', 'card.city_zurich_referendum', 'card.crime_laundering', 'card.office_east', 'card.office_west', 'card.celeb_bellfort'] },
   {
     // A sign for each career, and five for careers to come.
     file: 'icons/icons-06', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
@@ -380,11 +380,12 @@ export const SHEETS: SheetSpec[] = [
   // The wrong side of the law: trials, prison and small cheats, and the badges of a life that went there.
   { file: 'cards/cards-31', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.crime_wrongly_accused', 'card.crime_jail_cellmate', 'card.crime_jail_commissary', 'card.crime_jail_library', 'card.crime_memoirs', 'card.crime_fake_mba'] },
   { file: 'cards/cards-32', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.crime_fake_mba_found', 'card.crime_ham_smuggling', 'card.crime_memecoin', 'card.crime_illegal_betting', 'card.crime_enchufe', 'card.crime_insider_tip'] },
-  { file: 'cards/cards-33', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 288, height: 120, ids: ['card.crime_laundering'] },
+  // v22: the troubles of a fortune, one.
+  { file: 'cards/cards-33', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['lawsuit', 'scandal', 'tax_squad', 'partner_swindle', 'divorce', 'gala'].map((id) => `card.rich_${id}`) },
   { file: 'items/items-08', group: 'items', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['item.tech_smartwatch', 'item.tech_drone', 'item.tech_ai_workstation'] },
   { file: 'badges/badges-07', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.fiscally_creative', 'badge.ex_convict', 'badge.truly_innocent'] },
-  // The sheet came with two more scenes, of a book; the cards they were for were left out of the game.
-  { file: 'cards/cards-34', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.lodger_good', 'card.lodger_unpaid', 'card.lodger_friend', 'card.lodger_tension', '', ''] },
+  // v22: the lodger, the same one in all six, the party and the leaving with them.
+  { file: 'cards/cards-34', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['good', 'unpaid', 'friend', 'tension', 'party', 'leaves'].map((id) => `card.lodger_${id}`) },
   { file: 'items/business-01', group: 'items', kind: 'objects', cols: 5, rows: 1, width: 64, height: 64, ids: ['business.services', 'business.shop', 'business.app', 'business.bar', 'business.franchise'] },
   { file: 'icons/rules-02', group: 'icons', kind: 'objects', cols: 5, rows: 1, width: 32, height: 32, ids: ['icon.rule_no_business', 'icon.rule_frugal', 'icon.rule_minimalist', 'icon.rule_honest', 'icon.rule_rich_heir'] },
   { file: 'cards/cards-35', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.red_licence', 'card.red_appointment', 'card.red_works_stopped', 'card.red_inheritance', 'card.red_grant', 'card.refuge_bank_freeze'] },
@@ -395,7 +396,8 @@ export const SHEETS: SheetSpec[] = [
   { file: 'portraits/celebs-02', group: 'portraits', kind: 'portraits', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `celeb.${id}`) },
   { file: 'cards/cards-37', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot'].map((id) => `card.celeb_${id}`) },
   { file: 'cards/cards-38', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly'].map((id) => `card.celeb_${id}`) },
-  { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.celeb_bellfort', 'card.celeb_ortiga'] },
+  // v22: the troubles of a fortune, two, the fake masterpiece among them, and the shop across the street.
+  { file: 'cards/cards-39', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid', 'fake_art'].map((id) => `card.rich_${id}`), 'card.celeb_ortiga'] },
   // v20: new cards, to see fewer of the same (art/prompts/v20-prompt-pack.md). 40 to 48 are drawn.
   { file: 'cards/cards-40', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['card.retreat', 'card.trendy_area', 'card.boss_leaves', 'card.tax_letter'] },
   { file: 'cards/cards-41', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['barn_car', 'mlm', 'squatters', 'solar', 'village_house', 'company_ipo'].map((id) => `card.${id}`) },
@@ -406,10 +408,6 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-46', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['stag_party', 'viral_bad', 'influencer_review', 'smartwatch', 'festival_rental', 'school_treasurer'].map((id) => `card.${id}`) },
   { file: 'cards/cards-47', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['drone_crash', 'concert', 'police_auction', 'protected_flat', 'startup_advisor', 'upstairs_leak'].map((id) => `card.${id}`) },
   { file: 'cards/cards-48', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['transfer_asia', 'digital_nomad', 'offer_madrid', 'tokyo_lifetime', 'zurich_savings', 'london_flatshare'].map((id) => `card.${id}`) },
-  // Content 1.50: the troubles of a fortune. Stand-ins cut from older scenes until drawn.
-  { file: 'cards/cards-49', group: 'cards', kind: 'scenes', cols: 2, rows: 5, width: 288, height: 120, ids: ['lawsuit', 'scandal', 'tax_squad', 'partner_swindle', 'divorce', 'gala', 'uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid'].map((id) => `card.rich_${id}`) },
-  // Content 1.50: three cards whose art is still to be drawn (art/prompts/v22-prompt-pack.md: cards-34 and cards-39), stand-ins cut from older scenes until then.
-  { file: 'cards/stand-ins-v22', group: 'cards', kind: 'scenes', cols: 3, rows: 1, width: 288, height: 120, ids: ['card.lodger_party', 'card.lodger_leaves', 'card.rich_fake_art'] },
   // v21: the people who come back in a life, pleased and upset, and their cards (drawn ahead of the cards that deal them).
   {
     file: 'portraits/people-01', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64,
@@ -469,7 +467,7 @@ export const SHEETS: SheetSpec[] = [
   { file: 'brand/rats-01', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['rat.head.plain', 'rat.head.cap', 'rat.head.beanie', 'rat.head.top_hat', 'rat.head.headphones', 'rat.head.crown', 'rat.head.sunglasses', 'rat.head.chef'] },
   // A backdrop behind a portrait, one for each city, to tell lives apart at a glance.
   { file: 'portraits/backdrops-01', group: 'portraits', kind: 'scenes', cols: 5, rows: 2, width: 64, height: 64, ids: ['backdrop.madrid', 'backdrop.london', 'backdrop.new_york', 'backdrop.dubai', 'backdrop.singapore', 'backdrop.bangkok', 'backdrop.tokyo', 'backdrop.moscow', 'backdrop.mexico_city', 'backdrop.zurich'] },
-  // The milestones of a life, told on the round they happen in.
+  // The milestones of a life, told on the round they happen in (drawn again at the standard size in v22).
   { file: 'cards/cards-36', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.moment_home', 'card.moment_wedding', 'card.moment_child', 'card.moment_business_sold', 'card.moment_retired', 'card.moment_promotion'] },
   // Every business at three sizes: just started, doing well, thriving.
   { file: 'items/business-02', group: 'items', kind: 'objects', cols: 3, rows: 5, width: 64, height: 64, ids: ['business.services.1', 'business.services.2', 'business.services.3', 'business.shop.1', 'business.shop.2', 'business.shop.3', 'business.app.1', 'business.app.2', 'business.app.3', 'business.bar.1', 'business.bar.2', 'business.bar.3', 'business.franchise.1', 'business.franchise.2', 'business.franchise.3'] },
