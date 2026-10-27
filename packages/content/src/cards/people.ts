@@ -154,7 +154,8 @@ export const peopleCards: CardDef[] = [
   ])),
   card('parents_inheritance', 'laterLife', { once: true, weight: FAMILY, when: { minRound: 15 } }, person('parents', [
     {},
-    { outcomes: [{ weight: 60, effects: { cash: usd(30_000) } }, { weight: 40, effects: { cash: usd(-10_000), setFlags: ['parents_debts'] } }] },
+    // Someone who knows their papers is offered only the sure way of accepting it.
+    { when: { unless: { flags: ['parents_warm'] } }, outcomes: [{ weight: 60, effects: { cash: usd(30_000) } }, { weight: 40, effects: { cash: usd(-10_000), setFlags: ['parents_debts'] } }] },
     { when: { flags: ['parents_warm'] }, effects: { cash: usd(30_000) } },
   ])),
 
@@ -172,7 +173,8 @@ export const peopleCards: CardDef[] = [
   card('classmate_job', 'career', { once: true, weight: MEET, when: { employed: true, minRound: 3, maxRound: 14 } }, [
     {},
     // A friend's firm is a bet: most often a better job, now and then a firm in trouble a year later.
-    { outcomes: [{ weight: 70, effects: { salaryModPct: 12, status: 1 } }, { weight: 30, effects: { salaryModPct: -5 } }] },
+    // Someone who can bargain is offered only the job at their price.
+    { when: { unless: { minSkills: { negotiation: 2 } } }, outcomes: [{ weight: 70, effects: { salaryModPct: 12, status: 1 } }, { weight: 30, effects: { salaryModPct: -5 } }] },
     { when: { minSkills: { negotiation: 2 } }, effects: { salaryModPct: 15 } },
   ]),
   // The people, deeper (cards-54): the classmate's new flat, the cousin's yacht, a visit from the parents, the founder's bell, the boss's retirement.

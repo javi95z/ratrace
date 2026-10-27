@@ -22,7 +22,8 @@ export const careerCards: CardDef[] = [
   card('career_raise', 'career', { cooldown: 3, when: { employed: true } }, [
     {},
     { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 40, effects: {} }, { weight: 10, effects: { status: -2 } }] },
-    { effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 70, effects: { salaryModPct: 5 } }, { weight: 30, effects: {} }] },
+    // The same case, made by someone who can bargain: they are offered only the better way of making it.
+    { when: { unless: { minSkills: { negotiation: 2 } } }, effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 70, effects: { salaryModPct: 5 } }, { weight: 30, effects: {} }] },
     // Someone who has learnt to bargain comes with figures nobody can wave away.
     { when: { minSkills: { negotiation: 2 } }, effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 80, effects: { salaryModPct: 7 } }, { weight: 20, effects: { salaryModPct: 3 } }] },
   ]),
@@ -175,17 +176,18 @@ export const educationCards: CardDef[] = [
 export const businessCards: CardDef[] = [
   card('biz_freelance_gig', 'business', { cooldown: 2 }, [
     {},
-    { effects: { focus: 1, cash: usd(2_500), careerSkill: 1 } },
-    // With a car the client's other site, an hour out of town, is within reach too.
+    // With a car the client's other site, an hour out of town, is within reach too: the gig is then offered only with both.
+    { when: { unless: { ownsLadder: 'car' } }, effects: { focus: 1, cash: usd(2_500), careerSkill: 1 } },
     { when: { ownsLadder: 'car' }, effects: { focus: 1, cash: usd(4_500), careerSkill: 1 } },
   ]),
   card('biz_self_employed', 'business', { once: true, when: { employed: true, minLevel: 1, minFinanceSkill: 1 } }, [
     {},
+    // Someone who is a member somewhere starts with people who already know them: the same leap, with better odds, and the only one offered them.
     {
+      when: { unless: { ownsLadder: 'membership' } },
       effects: { focus: 2, setFlags: ['self_employed'] },
       outcomes: [{ weight: 40, effects: { salaryModPct: 15 } }, { weight: 35, effects: { salaryModPct: 4 } }, { weight: 25, effects: { salaryModPct: -10 } }],
     },
-    // Someone who is a member somewhere starts with people who already know them: the same leap, with better odds.
     {
       when: { ownsLadder: 'membership' },
       effects: { focus: 2, setFlags: ['self_employed'] },

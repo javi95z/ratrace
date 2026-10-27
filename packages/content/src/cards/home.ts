@@ -97,8 +97,8 @@ export const lifestyleCards: CardDef[] = [
     {},
     // A stake in a friend's restaurant: a share of it every year, or nothing.
     { effects: { cash: usd(-5_000) }, outcomes: [{ weight: 45, effects: { recurring: [yearly('club_deal', 'passive', 1_200, null)] } }, { weight: 55, effects: {} }] },
-    // Introductions: contacts for anyone; for someone already well connected, now and then the one who decides.
-    { effects: { skills: { network: 1 } } },
+    // Introductions: contacts for anyone; for someone already well connected and in work, the same contacts and now and then the one who decides, offered instead.
+    { when: { unless: { employed: true, minSkills: { network: 2 } } }, effects: { skills: { network: 1 } } },
     { when: { employed: true, minSkills: { network: 2 } }, effects: { skills: { network: 1 } }, outcomes: [{ weight: 50, effects: { job: { levelDelta: 1 } } }, { weight: 50, effects: {} }] },
   ]),
   card('life_bottle_service', 'lifestyle', { cooldown: 3 }, [

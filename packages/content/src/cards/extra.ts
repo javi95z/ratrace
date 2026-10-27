@@ -118,7 +118,8 @@ export const moreLaterLifeCards: CardDef[] = [
   card('late_scam_call', 'laterLife', { weight: 6, cooldown: 6, risk: 'scam', when: { minRound: 8, minChildren: 1 } }, [
     { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { status: -2 } }] },
     { outcomes: [{ weight: 85, effects: { cash: usd(-3_000) } }, { weight: 15, effects: { status: 2 } }] },
-    { effects: { focus: 1 } },
+    // Someone who knows money spots it at once, and is not offered the call that checks it.
+    { when: { unless: { minFinanceSkill: 2 } }, effects: { focus: 1 } },
     { when: { minFinanceSkill: 2 }, effects: {} },
   ]),
 ];

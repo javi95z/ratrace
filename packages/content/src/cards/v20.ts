@@ -90,7 +90,8 @@ export const v20Cards: CardDef[] = [
   // a manager does not deliver on a bike at weekends.
   card('life_gig_apps', 'lifestyle', { cooldown: 12, when: { minRound: 1, maxRound: 14, maxLevel: 1 } }, [
     {},
-    { effects: { cash: usd(5_000), skills: { health: -1 } } },
+    // Someone with a car is offered only the car's rounds, which pay more for the same weekends.
+    { when: { unless: { ownsLadder: 'car' } }, effects: { cash: usd(5_000), skills: { health: -1 } } },
     { when: { ownsLadder: 'car' }, effects: { cash: usd(8_000), skills: { health: -1 } }, outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { cash: usd(-2_500) } }] },
   ]),
   // Copying a trader from social media who shows 400% a year: sometimes good, often not, sometimes gone with the money.

@@ -69,7 +69,8 @@ export const celebCards: CardDef[] = [
   // Money for a photo with a bottle of water: a little dignity for anyone, a star's fee for an influencer.
   card('celeb_kardashion', 'lifestyle', { ...RARE, when: { minRound: 1 } }, [
     {},
-    { effects: { cash: usd(6_000), status: -3, setFlags: [met('kardashion')] } },
+    // An influencer is offered only the post done properly: the same post, better paid and no shame in it.
+    { when: { unless: { careers: ['influencer'] } }, effects: { cash: usd(6_000), status: -3, setFlags: [met('kardashion')] } },
     { when: { careers: ['influencer'] }, effects: { cash: usd(25_000), status: 4, setFlags: [met('kardashion')] } },
   ]),
   // A week in a circle of light: three in a hundred win a fortune; the rest are a clip millions laugh at.

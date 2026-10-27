@@ -1,4 +1,4 @@
-import { applyRound, assetYieldBp, businessRound, createGame, depositRateBp, INDEX_START, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
+import { applyRound, assetYieldBp, previewCard, businessRound, createGame, depositRateBp, INDEX_START, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './kinds';
 import { START_AGE } from './badges';
@@ -234,6 +234,44 @@ describe('the v1 content', () => {
     };
     expect(option('biz_self_employed', 2)?.when).toEqual({ ownsLadder: 'membership' });
     expect(odds(2)).toBeGreaterThan(odds(1));
+  });
+
+  // A perk that does what an option does, only better, takes that option's place: the card shows one or the other, never both.
+  // [card, the plain option, the option that does it better]; indexes stay where they were, as answers are kept by index.
+  const UPGRADES: Array<[string, number, number]> = [
+    ['career_raise', 2, 3],
+    ['biz_freelance_gig', 1, 2],
+    ['biz_self_employed', 1, 2],
+    ['life_club_contacts', 2, 3],
+    ['late_scam_call', 2, 3],
+    ['celeb_kardashion', 1, 2],
+    ['life_gig_apps', 1, 2],
+    ['parents_inheritance', 1, 2],
+    ['classmate_job', 1, 2],
+  ];
+
+  it('closes an option while the one that does it better is open, and only those', () => {
+    const found: Array<[string, number, number]> = [];
+    for (const card of content.cards)
+      card.options.forEach((option, plain) => {
+        if (option.when?.unless === undefined) return;
+        const better = card.options.findIndex((other) => JSON.stringify(other.when) === JSON.stringify(option.when?.unless));
+        expect(better, `${card.id} option ${plain}`).toBeGreaterThan(0);
+        // Nothing else stands between the player and the plain option: it is open exactly where the better one is not.
+        expect(option.when, `${card.id} option ${plain}`).toEqual({ unless: card.options[better].when });
+        found.push([card.id, plain, better]);
+      });
+    expect(found.sort()).toEqual([...UPGRADES].sort());
+  });
+
+  it('offers the plain gig to someone without a car, and only the better one to someone with one', () => {
+    const open = (car: boolean) => {
+      const state = createGame({ content, start: lives[0].start }, 'perk');
+      if (car) state.player.life.items.push({ itemId: 'car_seat_ibiza', value: 1, roundsLeft: null, paid: 0, age: 0 });
+      return previewCard(content, viewOf({ ...state, hand: ['biz_freelance_gig'], answered: 0 }), 'biz_freelance_gig').map((option) => option.available);
+    };
+    expect(open(false)).toEqual([true, true, false]);
+    expect(open(true)).toEqual([true, false, true]);
   });
 
   it('gives every insurance a card that it softens or opens', () => {
