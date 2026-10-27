@@ -7,19 +7,17 @@ import { seedsFor } from './simulate';
 
 /**
  * The people who come back are met, and their stories go on. Every bot plays the three lives of Madrid: a life meets two or three of
- * the people (the parents in most lives, seven in ten or so), and none of them is a rarity or met by all. The bots seldom say yes to a person, so the stories'
+ * the people (the parents always), and none of them is a rarity or met by all. The bots seldom say yes to a person, so the stories'
  * later cards are measured on a player who does: one who takes the second choice of a person's card wherever it is open, and plays as
  * the saver otherwise. Each later card comes in most of the lives that reach what it waits for.
  */
 const starting = lives.filter((life) => ['nurse', 'engineer', 'civil_servant'].includes(life.id));
 
-it('meets two or three people in a life, the parents in most, and each of the others in a fair share of lives', { timeout: 300_000 }, () => {
+it('meets two or three people in a life, the parents always, and each of the others in a fair share of lives', { timeout: 300_000 }, () => {
   const report = peopleReport(content, starting, seedsFor(15), bots);
   expect(report.perLife.mean).toBeGreaterThanOrEqual(2.3);
   expect(report.perLife.mean).toBeLessThanOrEqual(3.3);
-  // The parents are met in most lives, not all: their cards leave room for the cards that cost.
-  expect(report.met.parents).toBeGreaterThanOrEqual(60);
-  expect(report.met.parents).toBeLessThanOrEqual(85);
+  expect(report.met.parents).toBeGreaterThanOrEqual(95);
   for (const who of ['inlaw', 'boss', 'landlord', 'founder', 'advisor'] as const) {
     expect(report.met[who], who).toBeGreaterThanOrEqual(15);
     expect(report.met[who], who).toBeLessThanOrEqual(60);

@@ -19,10 +19,10 @@ const MEET = 8;
 /** How likely a story's next card is once it is due: high enough to come within a round or two. */
 const NEXT = 150;
 /**
- * The parents come by age, in most lives and not all (seven in ten or so, with their visit): dealt in every life, their cards took
- * the places of cards that cost, and the indexer topped too many lives.
+ * The parents come in every life, by age. Met in seven lives in ten (a weight of 20), the indexer topped more lives, not fewer (300 seeds:
+ * 39.8 % against 37.7 %; at 14, 41.9 %): its cards cost every strategy, and fewer of them left the indexer ahead more often.
  */
-const FAMILY = 20;
+const FAMILY = 400;
 
 /** Every option of a person's card sets that they were met, whatever else it does. */
 function person(who: PersonId, options: CardOption[]): CardOption[] {
@@ -140,7 +140,7 @@ export const peopleCards: CardDef[] = [
     { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
   ])),
 
-  // The parents, in most lives: help with a first home, care in their old age, and what they leave. Their story costs, whatever is
+  // The parents, in every life: help with a first home, care in their old age, and what they leave. Their story costs, whatever is
   // chosen: a care home its fees, caring for them a part of a year's pay as well; and what they leave as often brings debts.
   card('parents_help', 'family', { once: true, weight: FAMILY, when: { ownsHome: false, minRound: 1, maxRound: 5 } }, person('parents', [
     { effects: { status: 1, setFlags: ['parents_proud'] } },
