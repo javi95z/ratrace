@@ -4566,6 +4566,286 @@
       "width": 288,
       "height": 120
     },
+    "person.inlaw.pleased": {
+      "file": "portraits/person.inlaw.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.inlaw.upset": {
+      "file": "portraits/person.inlaw.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.boss.pleased": {
+      "file": "portraits/person.boss.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.boss.upset": {
+      "file": "portraits/person.boss.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.landlord.pleased": {
+      "file": "portraits/person.landlord.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.landlord.upset": {
+      "file": "portraits/person.landlord.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.founder.pleased": {
+      "file": "portraits/person.founder.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.founder.upset": {
+      "file": "portraits/person.founder.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.advisor.pleased": {
+      "file": "portraits/person.advisor.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.advisor.upset": {
+      "file": "portraits/person.advisor.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.parents.pleased": {
+      "file": "portraits/person.parents.pleased.png",
+      "width": 64,
+      "height": 64
+    },
+    "person.parents.upset": {
+      "file": "portraits/person.parents.upset.png",
+      "width": 64,
+      "height": 64
+    },
+    "card.inlaw_coin": {
+      "file": "cards/card.inlaw_coin.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inlaw_moon": {
+      "file": "cards/card.inlaw_moon.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inlaw_rug": {
+      "file": "cards/card.inlaw_rug.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inlaw_dinner": {
+      "file": "cards/card.inlaw_dinner.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inlaw_loan": {
+      "file": "cards/card.inlaw_loan.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inlaw_repay": {
+      "file": "cards/card.inlaw_repay.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_weekend": {
+      "file": "cards/card.boss_weekend.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_offer": {
+      "file": "cards/card.boss_offer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_layoffs": {
+      "file": "cards/card.boss_layoffs.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.landlord_damp": {
+      "file": "cards/card.landlord_damp.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.landlord_raise": {
+      "file": "cards/card.landlord_raise.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.landlord_sale": {
+      "file": "cards/card.landlord_sale.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.founder_pitch": {
+      "file": "cards/card.founder_pitch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.founder_more": {
+      "file": "cards/card.founder_more.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.founder_exit": {
+      "file": "cards/card.founder_exit.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.founder_second": {
+      "file": "cards/card.founder_second.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.advisor_fund": {
+      "file": "cards/card.advisor_fund.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.advisor_insurance": {
+      "file": "cards/card.advisor_insurance.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.parents_help": {
+      "file": "cards/card.parents_help.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.parents_care": {
+      "file": "cards/card.parents_care.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.parents_inheritance": {
+      "file": "cards/card.parents_inheritance.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cousin_wedding": {
+      "file": "cards/card.cousin_wedding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.ex_new_car": {
+      "file": "cards/card.ex_new_car.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.classmate_job": {
+      "file": "cards/card.classmate_job.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.worth_100k": {
+      "file": "cards/milestone.worth_100k.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.worth_1m": {
+      "file": "cards/milestone.worth_1m.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.worth_10m": {
+      "file": "cards/milestone.worth_10m.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.debt_free": {
+      "file": "cards/milestone.debt_free.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.first_home": {
+      "file": "cards/milestone.first_home.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.first_business": {
+      "file": "cards/milestone.first_business.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.halfway": {
+      "file": "cards/milestone.halfway.png",
+      "width": 288,
+      "height": 120
+    },
+    "milestone.escaped": {
+      "file": "cards/milestone.escaped.png",
+      "width": 288,
+      "height": 120
+    },
+    "anim.cheer.0": {
+      "file": "icons/anim.cheer.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.cheer.1": {
+      "file": "icons/anim.cheer.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.cheer.2": {
+      "file": "icons/anim.cheer.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.cheer.3": {
+      "file": "icons/anim.cheer.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.burst.0": {
+      "file": "icons/anim.burst.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.burst.1": {
+      "file": "icons/anim.burst.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.burst.2": {
+      "file": "icons/anim.burst.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.burst.3": {
+      "file": "icons/anim.burst.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "icon.howto": {
+      "file": "icons/icon.howto.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.glossary": {
+      "file": "icons/icon.glossary.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.inflation_tax": {
+      "file": "icons/icon.inflation_tax.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.burnout": {
+      "file": "icons/icon.burnout.png",
+      "width": 32,
+      "height": 32
+    },
     "badge.celeb_mosk": {
       "file": "badges/badge.celeb_mosk.png",
       "width": 64,

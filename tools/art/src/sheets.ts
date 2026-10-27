@@ -408,6 +408,25 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-48', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['transfer_asia', 'digital_nomad', 'offer_madrid', 'tokyo_lifetime', 'zurich_savings', 'london_flatshare'].map((id) => `card.${id}`) },
   // Content 1.50: the troubles of a fortune. Stand-ins cut from older scenes until drawn.
   { file: 'cards/cards-49', group: 'cards', kind: 'scenes', cols: 2, rows: 5, width: 288, height: 120, ids: ['lawsuit', 'scandal', 'tax_squad', 'partner_swindle', 'divorce', 'gala', 'uncle_castle', 'yacht_rocks', 'threat', 'hostile_bid'].map((id) => `card.rich_${id}`) },
+  // v21: the people who come back in a life, pleased and upset, and their cards (drawn ahead of the cards that deal them).
+  {
+    file: 'portraits/people-01', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64,
+    ids: ['inlaw', 'boss', 'landlord', 'founder', 'advisor', 'parents'].flatMap((who) => [`person.${who}.pleased`, `person.${who}.upset`]),
+  },
+  { file: 'cards/cards-50', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['inlaw_coin', 'inlaw_moon', 'inlaw_rug', 'inlaw_dinner', 'inlaw_loan', 'inlaw_repay'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-51', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['boss_weekend', 'boss_offer', 'boss_layoffs', 'landlord_damp', 'landlord_raise', 'landlord_sale'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-52', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['founder_pitch', 'founder_more', 'founder_exit', 'founder_second', 'advisor_fund', 'advisor_insurance'].map((id) => `card.${id}`) },
+  { file: 'cards/cards-53', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['parents_help', 'parents_care', 'parents_inheritance', 'cousin_wedding', 'ex_new_car', 'classmate_job'].map((id) => `card.${id}`) },
+  // v21: a life's milestones, the big moment's scene.
+  { file: 'cards/milestones-01', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['worth_100k', 'worth_1m', 'worth_10m', 'debt_free'].map((id) => `milestone.${id}`) },
+  { file: 'cards/milestones-02', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['first_home', 'first_business', 'halfway', 'escaped'].map((id) => `milestone.${id}`) },
+  // v21: a cheering rat and a firework, four frames each, for the milestones.
+  {
+    file: 'icons/anim-03', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 48, height: 48,
+    ids: ['cheer', 'burst'].flatMap((name) => [0, 1, 2, 3].map((frame) => `anim.${name}.${frame}`)),
+  },
+  // v21: the guide's how to play and glossary, and the warnings of inflation and burnout (`icon.inflation` is the news' older one: this is the cash it eats).
+  { file: 'icons/icons-13', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 32, height: 32, ids: ['icon.howto', 'icon.glossary', 'icon.inflation_tax', 'icon.burnout'] },
   { file: 'badges/badges-11', group: 'badges', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro'].map((id) => `badge.celeb_${id}`) },
   { file: 'badges/badges-12', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `badge.celeb_${id}`) },
   // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).

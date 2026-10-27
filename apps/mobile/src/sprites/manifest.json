@@ -19,6 +19,46 @@
     "w": 48,
     "h": 48
   },
+  "anim.burst.0": {
+    "src": "icons/anim.burst.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.burst.1": {
+    "src": "icons/anim.burst.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.burst.2": {
+    "src": "icons/anim.burst.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.burst.3": {
+    "src": "icons/anim.burst.3.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.cheer.0": {
+    "src": "icons/anim.cheer.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.cheer.1": {
+    "src": "icons/anim.cheer.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.cheer.2": {
+    "src": "icons/anim.cheer.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.cheer.3": {
+    "src": "icons/anim.cheer.3.png",
+    "w": 48,
+    "h": 48
+  },
   "anim.coin.0": {
     "src": "icons/anim.coin.0.png",
     "w": 48,
@@ -659,6 +699,16 @@
     "w": 96,
     "h": 48
   },
+  "card.advisor_fund": {
+    "src": "cards/card.advisor_fund.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.advisor_insurance": {
+    "src": "cards/card.advisor_insurance.png",
+    "w": 288,
+    "h": 120
+  },
   "card.advisor_office": {
     "src": "cards/card.advisor_office.png",
     "w": 288,
@@ -754,8 +804,23 @@
     "w": 288,
     "h": 120
   },
+  "card.boss_layoffs": {
+    "src": "cards/card.boss_layoffs.png",
+    "w": 288,
+    "h": 120
+  },
   "card.boss_leaves": {
     "src": "cards/card.boss_leaves.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.boss_offer": {
+    "src": "cards/card.boss_offer.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.boss_weekend": {
+    "src": "cards/card.boss_weekend.png",
     "w": 288,
     "h": 120
   },
@@ -999,6 +1064,11 @@
     "w": 288,
     "h": 120
   },
+  "card.classmate_job": {
+    "src": "cards/card.classmate_job.png",
+    "w": 288,
+    "h": 120
+  },
   "card.classroom": {
     "src": "cards/card.classroom.png",
     "w": 288,
@@ -1046,6 +1116,11 @@
   },
   "card.courtroom": {
     "src": "cards/card.courtroom.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.cousin_wedding": {
+    "src": "cards/card.cousin_wedding.png",
     "w": 288,
     "h": 120
   },
@@ -1199,6 +1274,11 @@
     "w": 288,
     "h": 120
   },
+  "card.ex_new_car": {
+    "src": "cards/card.ex_new_car.png",
+    "w": 288,
+    "h": 120
+  },
   "card.family_dinner": {
     "src": "cards/card.family_dinner.png",
     "w": 288,
@@ -1216,6 +1296,26 @@
   },
   "card.for_sale_signs": {
     "src": "cards/card.for_sale_signs.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.founder_exit": {
+    "src": "cards/card.founder_exit.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.founder_more": {
+    "src": "cards/card.founder_more.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.founder_pitch": {
+    "src": "cards/card.founder_pitch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.founder_second": {
+    "src": "cards/card.founder_second.png",
     "w": 288,
     "h": 120
   },
@@ -1279,6 +1379,36 @@
     "w": 288,
     "h": 120
   },
+  "card.inlaw_coin": {
+    "src": "cards/card.inlaw_coin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inlaw_dinner": {
+    "src": "cards/card.inlaw_dinner.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inlaw_loan": {
+    "src": "cards/card.inlaw_loan.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inlaw_moon": {
+    "src": "cards/card.inlaw_moon.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inlaw_repay": {
+    "src": "cards/card.inlaw_repay.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inlaw_rug": {
+    "src": "cards/card.inlaw_rug.png",
+    "w": 288,
+    "h": 120
+  },
   "card.inspector": {
     "src": "cards/card.inspector.png",
     "w": 288,
@@ -1296,6 +1426,21 @@
   },
   "card.labour_inspector": {
     "src": "cards/card.labour_inspector.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.landlord_damp": {
+    "src": "cards/card.landlord_damp.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.landlord_raise": {
+    "src": "cards/card.landlord_raise.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.landlord_sale": {
+    "src": "cards/card.landlord_sale.png",
     "w": 288,
     "h": 120
   },
@@ -1541,6 +1686,21 @@
   },
   "card.parcels": {
     "src": "cards/card.parcels.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.parents_care": {
+    "src": "cards/card.parents_care.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.parents_help": {
+    "src": "cards/card.parents_help.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.parents_inheritance": {
+    "src": "cards/card.parents_inheritance.png",
     "w": 288,
     "h": 120
   },
@@ -3249,6 +3409,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.burnout": {
+    "src": "icons/icon.burnout.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.business": {
     "src": "icons/icon.business.png",
     "w": 32,
@@ -3519,6 +3684,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.glossary": {
+    "src": "icons/icon.glossary.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.gold": {
     "src": "icons/icon.gold.png",
     "w": 32,
@@ -3534,8 +3704,18 @@
     "w": 32,
     "h": 32
   },
+  "icon.howto": {
+    "src": "icons/icon.howto.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.inflation": {
     "src": "icons/icon.inflation.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.inflation_tax": {
+    "src": "icons/icon.inflation_tax.png",
     "w": 32,
     "h": 32
   },
@@ -4288,6 +4468,106 @@
     "src": "cards/map.world.png",
     "w": 576,
     "h": 240
+  },
+  "milestone.debt_free": {
+    "src": "cards/milestone.debt_free.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.escaped": {
+    "src": "cards/milestone.escaped.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.first_business": {
+    "src": "cards/milestone.first_business.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.first_home": {
+    "src": "cards/milestone.first_home.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.halfway": {
+    "src": "cards/milestone.halfway.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.worth_100k": {
+    "src": "cards/milestone.worth_100k.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.worth_10m": {
+    "src": "cards/milestone.worth_10m.png",
+    "w": 288,
+    "h": 120
+  },
+  "milestone.worth_1m": {
+    "src": "cards/milestone.worth_1m.png",
+    "w": 288,
+    "h": 120
+  },
+  "person.advisor.pleased": {
+    "src": "portraits/person.advisor.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.advisor.upset": {
+    "src": "portraits/person.advisor.upset.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.boss.pleased": {
+    "src": "portraits/person.boss.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.boss.upset": {
+    "src": "portraits/person.boss.upset.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.founder.pleased": {
+    "src": "portraits/person.founder.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.founder.upset": {
+    "src": "portraits/person.founder.upset.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.inlaw.pleased": {
+    "src": "portraits/person.inlaw.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.inlaw.upset": {
+    "src": "portraits/person.inlaw.upset.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.landlord.pleased": {
+    "src": "portraits/person.landlord.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.landlord.upset": {
+    "src": "portraits/person.landlord.upset.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.parents.pleased": {
+    "src": "portraits/person.parents.pleased.png",
+    "w": 64,
+    "h": 64
+  },
+  "person.parents.upset": {
+    "src": "portraits/person.parents.upset.png",
+    "w": 64,
+    "h": 64
   },
   "portrait.banker.22": {
     "src": "portraits/portrait.banker.22.png",
