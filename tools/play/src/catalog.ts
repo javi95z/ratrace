@@ -29,6 +29,7 @@ import {
 import type { ChallengeRule } from '@ratrace/content';
 import { STUDY_OF } from '@ratrace/engine';
 import type { ItemDef } from '@ratrace/engine';
+import { namedRivals, ui } from './strings';
 
 /**
  * Writes docs/catalogo.md: everything the game holds, with its picture and its numbers, read
@@ -392,7 +393,7 @@ for (const category of categories) {
       ['', 'Carta', 'Opciones'],
       cards.map((card) => {
         const written = text.cards[card.id];
-        return [img(cardArt[card.id], written.title), `**${written.title}**<br>${written.body}`, written.options.map((option, i) => `${i + 1}. ${option.label}`).join('<br>')];
+        return [img(cardArt[card.id], written.title), `**${written.title}**<br>${namedRivals(written.body, ui.es)}`, written.options.map((option, i) => `${i + 1}. ${option.label}`).join('<br>')];
       }),
     ),
   );

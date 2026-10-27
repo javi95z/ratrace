@@ -44,6 +44,8 @@ export interface Ui {
   /** A label inside the quotation marks of the language. */
   quoted: (text: string) => string;
   nothing: string;
+  /** The player's own people, as a card names them (`{rival:<who>}`): the terminal tells no rivals, so they go by what they are to the player. */
+  rivals: Record<'classmate' | 'cousin' | 'ex', string>;
   finance: string;
   financeHint: string;
   prompt: string;
@@ -141,6 +143,7 @@ const en: Ui = {
   youChose: 'You chose',
   quoted: (text) => `“${text}”`,
   nothing: 'nothing happens',
+  rivals: { classmate: 'an old classmate', cousin: 'your cousin', ex: 'your ex' },
   finance: 'FINANCE',
   financeHint: "Type an order, 'help' for the list, 'done' to play the round.",
   prompt: '> ',
@@ -265,6 +268,7 @@ const es: Ui = {
   youChose: 'Elegiste',
   quoted: (text) => `“${text}”`,
   nothing: 'no pasa nada',
+  rivals: { classmate: 'un compañero de clase', cousin: 'tu prima', ex: 'tu ex' },
   finance: 'FINANZAS',
   financeHint: "Escribe una orden, 'ayuda' para ver la lista, 'listo' para jugar la ronda.",
   prompt: '> ',
@@ -402,6 +406,7 @@ const ru: Ui = {
   // Angle quotes, and low ones for what is already quoted inside them.
   quoted: (text) => `«${text.replace(/«/g, '„').replace(/»/g, '“')}»`,
   nothing: 'ничего не меняется',
+  rivals: { classmate: 'одноклассник', cousin: 'двоюродная сестра', ex: 'твоя бывшая любовь' },
   finance: 'ФИНАНСЫ',
   financeHint: 'Вводи планы на раунд: «помощь» покажет команды, «готово» сыграет раунд.',
   prompt: '> ',
@@ -486,3 +491,6 @@ const ru: Ui = {
 };
 
 export const ui: Record<Locale, Ui> = { en, es, ru };
+
+/** A card's words with the player's own people named as the terminal names them. */
+export const namedRivals = (sentence: string, words: Ui): string => sentence.replace(/\{rival:(classmate|cousin|ex)\}/g, (_, who: 'classmate' | 'cousin' | 'ex') => words.rivals[who]);

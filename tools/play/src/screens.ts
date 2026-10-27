@@ -21,6 +21,7 @@ import { START_AGE } from '@ratrace/content';
 import type { ContentText, Locale, Names } from '@ratrace/content';
 import { padEnd, padStart } from './format';
 import type { Format } from './format';
+import { namedRivals } from './strings';
 import type { Ui } from './strings';
 
 /** Everything a screen needs to turn a state into lines of text. */
@@ -293,7 +294,7 @@ export function card(pen: Pen, state: GameState, def: CardDef, position: number,
   const written = text.cards[def.id];
   const previews = previewCard(pen.content, state, def.id);
   const kind = def.category === 'world' ? `${text.categories.world} · ${ui.worldCard}` : text.categories[def.category];
-  const lines = [THIN, ` ${ui.card(position, total)} · ${kind}`, ` ${written.title}`, ` ${written.body}`];
+  const lines = [THIN, ` ${ui.card(position, total)} · ${kind}`, ` ${written.title}`, ` ${namedRivals(written.body, ui)}`];
   def.options.forEach((option, i) => {
     const preview = previews[i];
     const fixed = joined(preview.cash, effectPhrases(pen, state, option.effects), pen);
