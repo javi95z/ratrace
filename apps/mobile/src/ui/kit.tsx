@@ -573,6 +573,8 @@ export function Stat({
   const [own, setOwn] = useState<number | null>(null);
   // Alone, it is laid out by the web's rules for a row of three as wide as it is.
   const { icon: look, size } = statLook(row ? row.width : own === null ? null : (own - 2 * STAT_GAP) / 3);
+  // Under the number with its icon, the label is a touch larger, as the icon is: it reads at a phone's arm's length.
+  const labelSize = look === 'small' ? 12 : 11;
   const press = usePress({ onPress: onOpen ?? (() => {}), disabled: false });
   const said = [`${String(value)}, ${String(label)}`, hint].filter(Boolean).join('. ');
   const body = (
@@ -586,9 +588,9 @@ export function Stat({
         <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} tracking={false}>
           {String(value)}
         </PixelText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-          {look === 'small' ? <Sprite id={icon} size={{ w: 12, h: 12 }} /> : null}
-          <ReadText size={11} tone="ink-200" numberOfLines={1} lineHeight={11 * TIGHT} style={{ flexShrink: 1 }}>{String(label)}</ReadText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {look === 'small' ? <Sprite id={icon} size={{ w: 16, h: 16 }} /> : null}
+          <ReadText size={labelSize} tone="ink-200" numberOfLines={1} lineHeight={labelSize * TIGHT} style={{ flexShrink: 1 }}>{String(label)}</ReadText>
         </View>
       </View>
     </>

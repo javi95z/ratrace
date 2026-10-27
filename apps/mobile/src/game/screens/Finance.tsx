@@ -41,7 +41,6 @@ import { splitMastered, useFocusNote, type FocusNote } from './focusNote';
 import { Payouts, portfolioQuote, PortfolioGlance } from './Glance';
 import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
-import { FinanceTab, TABS, type TabId } from './financeTab';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
 import { realStatus, StatusNote } from './StatusNote';
@@ -64,7 +63,8 @@ import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetF
  * the one long list: its shelves are drawn a few a frame and its tiles are memoised (`Shop`, and why not a FlatList there).
  */
 
-
+type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
+const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
 
 /** The game before this round's orders, the game with them applied, and the preview of the round. */
 function useRound() {
@@ -2543,6 +2543,7 @@ function useTabs(): TabId[] {
 }
 
 /** The tab on screen, shared by the row of tabs and the panel under it. */
+const FinanceTab = createContext<{ tab: TabId; setTab(tab: TabId): void } | null>(null);
 function useFinanceTab() {
   const value = useContext(FinanceTab);
   if (!value) throw new Error('the finances must be inside a FinanceShell');
