@@ -1319,7 +1319,7 @@ export const cards: Record<string, CardText> = {
     'Start looking at flats yourself',
     'Ask him how he did it',
   ]),
-  cousin_yacht: c('A weekend on a yacht', 'An invitation from {rival:cousin}: a weekend on a chartered yacht. The small print says the bill will be split.', [
+  cousin_yacht: c('A weekend on a yacht', 'From {rival:cousin}: her new boyfriend has chartered a yacht and is already toasting everyone. The small print says the bill is split.', [
     'Make an excuse in time',
     'Go, and pay your share',
     'Go, pay, and post the photos',

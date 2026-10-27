@@ -1319,7 +1319,7 @@ export const cards: Record<string, CardText> = {
     'Ponerte a mirar pisos tú también',
     'Preguntarle cómo lo ha hecho',
   ]),
-  cousin_yacht: c('Un fin de semana en yate', 'Una invitación de {rival:cousin}: un fin de semana en un yate alquilado. La letra pequeña dice que la cuenta se divide.', [
+  cousin_yacht: c('Un fin de semana en yate', 'De parte de {rival:cousin}: su novio nuevo ha alquilado un yate y ya brinda por todos. La cuenta, dice la letra pequeña, se divide.', [
     'Poner una excusa a tiempo',
     'Ir y pagar tu parte',
     'Ir, pagar y subir las fotos',
