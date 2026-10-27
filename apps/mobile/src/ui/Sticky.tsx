@@ -73,8 +73,15 @@ export function useScrolledPast(px: number): boolean {
   return useSyncExternalStore(offset.subscribe, () => offset.get() > px, () => false);
 }
 
-/** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
-const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER };
+/**
+ * How far a sticky row's ground reaches above it, over what is above (the row before it, the top inset's band): a row stuck to the top, or meeting
+ * another as they close, stands at a fraction of the screen's pixels while the page scrolls, and two grounds that only meet leave a seam there that
+ * the page shows through. Its own room is the same (`paddingTop` gives back what `marginTop` takes): nothing in it moves.
+ */
+const OVERLAP = 1;
+
+/** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden, and over the seam above it. */
+const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER, marginTop: -OVERLAP, paddingTop: OVERLAP };
 
 /**
  * The second row, and what stands above it under the first (`between`, the gap), which close the room under the first as the page scrolls up
