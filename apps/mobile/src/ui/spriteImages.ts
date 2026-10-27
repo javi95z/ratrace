@@ -4,19 +4,25 @@ import { Image, type ImageSourcePropType } from 'react-native';
 import { SOURCES } from '../sprites/sources';
 import { forgetComposed } from './ratPicture';
 import { reportMissing } from './sprites';
+import { isPiece, sheetReader, type SpriteSource } from './spriteSheets';
 
-/** What Skia is given for a sprite's file (a Metro asset id). */
-export const sourceOf = (id: string): ImageSourcePropType | undefined => (Object.hasOwn(SOURCES, id) ? SOURCES[id] : undefined);
+/** What Skia is given for a sprite: its file (a Metro asset id), or its piece of a sheet. */
+export const sourceOf = (id: string): SpriteSource | undefined => (Object.hasOwn(SOURCES, id) ? SOURCES[id] : undefined);
 
-/** Reads a sprite's file and decodes it: null when it does not decode. */
-export type LoadSprite = (source: ImageSourcePropType) => Promise<SkImage | null>;
+/** Reads a sprite's file, or its sheet, and decodes it: null when it does not decode. */
+export type LoadSprite = (source: SpriteSource) => Promise<SkImage | null>;
 
-/** The phone's: the bundled file by its asset's address, read and decoded by Skia (what Skia's own `useImage` does). */
-const readAndDecode: LoadSprite = async (source) => {
+/** A bundled file by its asset's address, read and decoded by Skia (what Skia's own `useImage` does). */
+const readFile = async (source: ImageSourcePropType): Promise<SkImage | null> => {
   const uri = typeof source === 'number' ? Image.resolveAssetSource(source)?.uri : (source as { uri?: string }).uri;
   if (!uri) throw new Error('no address for this asset');
   return Skia.Image.MakeImageFromEncoded(await Skia.Data.fromURI(uri));
 };
+/** A sprite of a sheet: the sheet read once for the pieces asked of it together, the sprite cut out of it (spriteSheets.ts). */
+const readPiece = sheetReader(readFile);
+
+/** The phone's: the sprite's own file, or its piece of its sheet. */
+const readAndDecode: LoadSprite = (source) => (isPiece(source) ? readPiece(source) : readFile(source));
 
 /** A sprite's picture: still loading (null, not failed), decoded, or failed (a read refused or a file that did not decode). */
 export interface SpriteImage {
@@ -91,7 +97,7 @@ function trim(): void {
 }
 
 /** The entry of a sprite that has a file, its read begun the first time it is asked for. Asked for, it is the last one drawn. */
-function entryOf(id: string, source: ImageSourcePropType): Entry {
+function entryOf(id: string, source: SpriteSource): Entry {
   const known = cache.get(id);
   if (known) {
     cache.delete(id);

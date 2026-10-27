@@ -86,8 +86,8 @@
     "icons": "tsx scripts/appIcons.ts",
     "play:graphics": "tsx scripts/playGraphics.ts",
     "typecheck": "tsc --noEmit",
-    "update:preview": "RATRACE_UPDATE=preview eas update --channel preview --environment preview --auto",
-    "update:production": "RATRACE_UPDATE=production eas update --channel production --environment production --auto"
+    "update:preview": "tsx scripts/easUpdate.ts preview",
+    "update:production": "tsx scripts/easUpdate.ts production"
   },
   "private": true
 }
