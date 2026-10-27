@@ -53,7 +53,7 @@ The world of the very rich, drawn with the game's satirical eye; the player is t
 
 Save as `art/raw/cards/cards-34.png`: `card.lodger_good`, `card.lodger_unpaid`, `card.lodger_friend`, `card.lodger_tension`, `card.lodger_party`, `card.lodger_leaves`
 
-The same lodger in all six: a young person with a messy dark bun, a striped jumper and round glasses.
+The same lodger in all six, as drawn: a young man in a hoodie.
 
 ```text
 [the block above]
@@ -97,6 +97,22 @@ The world of the very rich, drawn with the game's satirical eye; the player is t
 6. The shop across the street: the player's small clothes shop on one side of a street, and opposite a big bright new fashion store opening with balloons, the quiet magnate of the attached portraits cutting its ribbon with tailor's scissors.
 ```
 
+## cards-54: the people, deeper
+
+Save as `art/raw/cards/cards-54.png`: `card.ex_new_car_man`, `card.classmate_housewarming`, `card.cousin_yacht`, `card.parents_visit`, `card.founder_bell`, `card.boss_retire`
+
+Attach `art/raw/cards/cards-53.png` (the style, the parents, the cousin and the ex's scene) and `art/raw/portraits/people-01.png` (the faces of the founder, the boss and the parents). Who is who: the classmate a man of the player's age with short hair; the cousin the woman of cards-53's panel 4, in the same style; Bea, the founder, curly-haired with glasses, as on cards-52; Margaret, the boss, with a grey bob and glasses, as on cards-51; the parents as on cards-53.
+
+```text
+[the block above]
+1. The ex in the convertible: at night in the rain, the player at a bus stop with a backpack and scarf; a gleaming red convertible stops in front; at the wheel a young man in sunglasses and an expensive jacket waves with a satisfied smile; city lights reflected on the wet road.
+2. The classmate's housewarming: a small new flat full of guests holding glasses, the classmate proudly showing the player a gleaming boiler in a cupboard as if it were a baby; the player holding a potted fern, unopened moving boxes stacked in a corner.
+3. The cousin's yacht: a white chartered yacht at sunset with string lights, the cousin in sunglasses raising a glass of champagne on deck; in the foreground the player at a little table on the deck, staring at a long blank bill unrolled to the floor, a waiter holding a card machine.
+4. The parents' visit: the player's small living room, the mother running a finger along a shelf and inspecting it, the father on a stepladder fixing a dripping tap in the open kitchen with a toolbox, the player holding two suitcases at the door with a weak smile.
+5. The founder's bell: a stock exchange's balcony above a crowded trading floor, the founder ringing a big brass bell with both hands, confetti falling, a screen with a blank rising line behind her; the player in the crowd below, cheering.
+6. The boss retires: an office farewell at dusk, a cake and a few colleagues, the boss in a cardigan holding a box with a potted tomato plant on top, handing the player a thick old address book with both hands.
+```
+
 ## Where each goes
 
 | Sheet | Save as | Size |
@@ -106,3 +122,4 @@ The world of the very rich, drawn with the game's satirical eye; the player is t
 | The lodger | `art/raw/cards/cards-34.png` | 1586×992, 6 cards of 288×120 |
 | A life's moments | `art/raw/cards/cards-36.png` | 1586×992, 6 cards of 288×120 |
 | The rich, two, and the shop | `art/raw/cards/cards-39.png` | 1586×992, 6 cards of 288×120 |
+| The people, deeper | `art/raw/cards/cards-54.png` | 1586×992, 6 cards of 288×120 |
