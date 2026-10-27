@@ -165,7 +165,8 @@ export const peopleCards: CardDef[] = [
   ]),
   card('classmate_job', 'career', { once: true, weight: MEET, when: { employed: true, minRound: 3, maxRound: 14 } }, [
     {},
-    { effects: { salaryModPct: 12, status: 1 } },
-    { when: { minSkills: { negotiation: 2 } }, effects: { salaryModPct: 18 } },
+    // A friend's firm is a bet: most often a better job, now and then a firm in trouble a year later.
+    { outcomes: [{ weight: 70, effects: { salaryModPct: 12, status: 1 } }, { weight: 30, effects: { salaryModPct: -5 } }] },
+    { when: { minSkills: { negotiation: 2 } }, effects: { salaryModPct: 15 } },
   ]),
 ];

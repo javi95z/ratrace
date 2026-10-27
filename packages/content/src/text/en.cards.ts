@@ -1310,7 +1310,7 @@ export const cards: Record<string, CardText> = {
   ]),
   classmate_job: c('A job at a friend\'s firm', 'Coffee with {rival:classmate}. The firm is hiring, and the job is yours if you want it.', [
     'Stay where you are',
-    'Take the job',
+    ['Take the job', 'A new badge, better pay, and a friend on the same floor.', 'A year in, the firm is in trouble, and so is your pay.'],
     'Take it, at your price',
   ]),
   // Content 1.50: the lodger's party and leaving.

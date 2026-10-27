@@ -396,7 +396,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   parents_inheritance: ['You keep the photo. The rest goes to the bank.', null, 'You kept their papers for years. No surprises.'],
   cousin_wedding: ['A salad bowl. She thanks you very politely.', 'Something from the list, and a hug at the door.', 'A weekend in Paris. Everyone at the table hears about it.'],
   ex_new_car: ['The bus is late. It always is.', 'A {item:car_tesla_model_3}, in a colour you will regret.', 'Two days, three photos, a hundred likes.'],
-  classmate_job: ['You stay. Your boss never knows.', 'A new badge, better pay, and a friend on the same floor.', 'You name a figure. They pay it.'],
+  classmate_job: ['You stay. Your boss never knows.', null, 'You name a figure. They pay it.'],
   // Content 1.50: the lodger's party and leaving.
   lodger_party: ['A new sofa, at your expense. Peace at home.', null],
   lodger_leaves: ['Fresh paint, and a little over. The room is yours again.', 'They promise to send their friends your way.'],

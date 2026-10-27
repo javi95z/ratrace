@@ -384,7 +384,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   parents_inheritance: ['Te quedas con la foto. Lo demás, para el banco.', null, 'Llevaste sus papeles durante años. Ninguna sorpresa.'],
   cousin_wedding: ['Una ensaladera. Te da las gracias con mucha educación.', 'Algo de la lista, y un abrazo en la puerta.', 'Un fin de semana en París. Toda la mesa se entera.'],
   ex_new_car: ['El autobús llega tarde. Como siempre.', 'Un {item:car_tesla_model_3}, en un color del que te arrepentirás.', 'Dos días, tres fotos, cien «me gusta».'],
-  classmate_job: ['Te quedas. Tu jefe nunca lo sabrá.', 'Una tarjeta nueva, mejor sueldo y un amigo en la misma planta.', 'Dices una cifra. La pagan.'],
+  classmate_job: ['Te quedas. Tu jefe nunca lo sabrá.', null, 'Dices una cifra. La pagan.'],
   // Content 1.50: the lodger's party and leaving.
   lodger_party: ['Un sofá nuevo, a tu cargo. Paz en casa.', null],
   lodger_leaves: ['Pintura nueva, y sobra un poco. La habitación vuelve a ser tuya.', 'Promete mandarte a sus amigos.'],
