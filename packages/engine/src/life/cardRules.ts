@@ -87,6 +87,15 @@ export function validateCards(c: Content): string[] {
     mortgage: (value) => (value === 'fixed' || value === 'variable' ? null : 'needs a kind of mortgage: fixed or variable'),
     notRecentFlag: (value) => (isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && (value.rounds as number) >= 1 ? null : 'needs a flag and a positive number of rounds for notRecentFlag'),
   };
+  // The better option's condition, whole: checked as any condition is, one level deep.
+  const plainChecks = { ...conditionChecks };
+  conditionChecks.unless = (value) => {
+    if (!isRecord(value)) return 'unless is not a record';
+    // An empty one would hold for everyone, and close the option for good.
+    if (Object.keys(value).length === 0) return 'unless has no part';
+    const problems = checkRecord(value, plainChecks, (key) => `has an unknown part: ${key}`);
+    return problems.length === 0 ? null : problems.map((problem) => `unless ${problem}`).join('; ');
+  };
   const triggerChecks: Record<string, Check> = {
     regimeBegan: listOf(REGIMES, 'regime'), regimes: listOf(REGIMES, 'regime'), cryptoBegan: listOf(PHASES, 'crypto phase'),
     rateChangeAtLeastBp: whole, rateChangeAtMostBp: whole, inflationAtLeastBp: whole, anyPropertyReturnAtMostBp: whole,

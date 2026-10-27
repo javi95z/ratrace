@@ -701,6 +701,11 @@ export interface Condition {
   regimes?: Regime[];
   /** Property in the player's city returned this or less in the round that just ended. */
   cityPropertyReturnAtMostBp?: Bp;
+  /**
+   * Holds unless this whole condition holds. On a card option it is the condition of the option that does the same, only better:
+   * the plain one is closed while the better one is open, so the card never offers both.
+   */
+  unless?: Omit<Condition, 'unless'>;
 }
 
 /** What must be true of the world for a world card to appear. Every part that is present must hold. */

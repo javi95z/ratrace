@@ -136,6 +136,20 @@ describe('conditionHolds', () => {
     expect(holds({ notItems: ['watch_gold', 'car_basic'] }, p)).toBe(false);
   });
 
+  it('holds unless another condition holds as a whole: what a better option of the card asks', () => {
+    const p = player((x) => {
+      x.life.items.push({ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0, age: 0 });
+    });
+    expect(holds({ unless: { ownsLadder: 'car' } }, p)).toBe(false);
+    expect(holds({ unless: { ownsLadder: 'car' } })).toBe(true);
+    // Every part of it must hold for it to close: a car and no partner is not a car and a partner.
+    expect(holds({ unless: { ownsLadder: 'car', partner: true } }, p)).toBe(true);
+    expect(holds({ unless: { ownsLadder: 'car', partner: false } }, p)).toBe(false);
+    // Beside the other parts, as any part.
+    expect(holds({ minRound: 9, unless: { ownsLadder: 'car' } })).toBe(false);
+    expect(holds({ unless: { minSkills: { negotiation: 3 } } })).toBe(true);
+  });
+
   it('checks the world the player lives in', () => {
     expect(holds({ regimes: ['expansion'] })).toBe(true);
     expect(holds({ regimes: ['recession', 'slowdown'] })).toBe(false);

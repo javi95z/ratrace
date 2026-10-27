@@ -15,7 +15,7 @@ const good: CardDef = {
     minRound: 2, maxRound: 18, cities: ['home'], notCities: ['haven'], employed: true, careers: ['office'], minLevel: 0, maxLevel: 2,
     partner: false, minChildren: 0, maxChildren: 3, ownsHome: false, landlord: false, hasMortgage: false, minNetWorth: -500_000,
     maxNetWorth: 900_000_000, minFinanceSkill: 0, maxFinanceSkill: 2, flags: ['asked'], notFlags: ['retired'], holds: 'deposit',
-    ownsLadder: 'car', notItems: ['watch_gold'], insured: 'health', regimes: ['boom'], cityPropertyReturnAtMostBp: -500,
+    ownsLadder: 'car', notItems: ['watch_gold'], insured: 'health', regimes: ['boom'], cityPropertyReturnAtMostBp: -500, unless: { partner: true },
   },
   options: [
     { effects: { cash: -10_000, protection: { insurance: 'health', coverPct: 50 } } },
@@ -104,6 +104,12 @@ describe('validateContent: cards', () => {
     expect(when({ ownsLadder: 'boat' })).toEqual(['card offer condition names an unknown ladder: boat']);
     expect(when({ lacksLadder: 'boat' })).toEqual(['card offer condition names an unknown ladder: boat']);
     expect(when({ lacksLadder: 'car' })).toEqual([]);
+    expect(when({ unless: { ownsLadder: 'car', minSkills: { negotiation: 2 } } })).toEqual([]);
+    expect(when({ unless: { ownsLadder: 'boat' } })).toEqual(['card offer condition unless names an unknown ladder: boat']);
+    expect(when({ unless: { mood: 'sad' } })).toEqual(['card offer condition unless has an unknown part: mood']);
+    expect(when({ unless: 'car' })).toEqual(['card offer condition unless is not a record']);
+    expect(when({ unless: {} })).toEqual(['card offer condition unless has no part']);
+    expect(when({ unless: { unless: { ownsLadder: 'car' } } })).toEqual(['card offer condition unless has an unknown part: unless']);
     expect(when({ notItems: ['jetpack'] })).toEqual(['card offer condition names an unknown item: jetpack']);
     expect(when({ holds: 'land' })).toEqual(['card offer condition names an unknown holding: land']);
     expect(when({ regimes: ['panic'] })).toEqual(['card offer condition names an unknown regime: panic']);

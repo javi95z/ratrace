@@ -97,6 +97,7 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
   if (when.cityPropertyReturnAtMostBp !== undefined) {
     if ((world.propertyReturnBp[p.cityId] ?? 0) > when.cityPropertyReturnAtMostBp) return false;
   }
+  if (when.unless !== undefined && conditionHolds(when.unless, p, at)) return false;
   return true;
 }
 
