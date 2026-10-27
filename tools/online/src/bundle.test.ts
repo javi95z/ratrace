@@ -5,7 +5,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, RETIRED_FILE, SHIPPED_FILE } from './bundle';
+import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, RETIRED_FILE, ROOMS_SINCE, SHIPPED_FILE } from './bundle';
 
 const current = bundleName(ENGINE_VERSION, CONTENT_VERSION);
 
@@ -90,6 +90,13 @@ describe('the game as the server holds it', () => {
     expect(registry.CURRENT).toBe(`${ENGINE_VERSION}/${CONTENT_VERSION}`);
     expect(Object.keys(registry.GAMES)).toContain(registry.CURRENT);
     expect(registrySource(['v0.3.0-1.2.0.js', 'v0.4.0-1.3.0.js'], '0.4.0/1.3.0')).toContain("export const CURRENT = '0.4.0/1.3.0';");
+    // The rooms' registry: only the engines from its floor on (by number, not by text: 0.10 is after 0.9), and the rooms function reads it.
+    const rooms = registrySource(['v0.9.0-1.2.0.js', 'v0.10.0-1.3.0.js', 'v0.2.0-1.1.0.js'], '0.10.0/1.3.0', '0.9.0');
+    expect(rooms).toContain("'0.9.0/1.2.0'");
+    expect(rooms).toContain("'0.10.0/1.3.0'");
+    expect(rooms).not.toContain("'0.2.0/1.1.0'");
+    expect(readFileSync(join(GAME_DIR, 'rooms.ts'), 'utf8')).toBe(registrySource(readdirSync(GAME_DIR), `${ENGINE_VERSION}/${CONTENT_VERSION}`, ROOMS_SINCE));
+    expect(readFileSync(new URL('../../../supabase/functions/rooms/index.ts', import.meta.url), 'utf8')).toContain("from '../_shared/game/rooms.ts'");
   });
 
   it('plays the same lives to the same end as the source does', { timeout: 60_000 }, async () => {

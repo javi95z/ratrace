@@ -11,7 +11,7 @@ import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
 import { noting } from '../_deno/errors.ts';
 import type { RunRow } from '../_shared/finish.ts';
-import { CURRENT, GAMES } from '../_shared/game/index.ts';
+import { CURRENT, GAMES } from '../_shared/game/rooms.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { allowed } from '../_shared/rate.ts';
