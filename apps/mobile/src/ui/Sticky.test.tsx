@@ -93,7 +93,8 @@ test('StickyScreen: the header is the first child of what scrolls, and the one t
       <Text>the page</Text>
     </StickyScreen>,
   );
-  expect(last().stickyHeaderIndices).toEqual([0]);
+  // On the phone it keeps itself at the top (StickyBlock.tsx): React Native's own sticky child is never asked for.
+  expect(last().stickyHeaderIndices).toBeUndefined();
   const header = getByText('the figures').parentElement!;
   // night-800 over the ground, so the page does not show through it; out over the 12 gutter, where a frame's 2 point outline would
   const block = [header, header.parentElement!].find((el) => el.style.backgroundColor === 'rgb(20, 27, 51)')!;
@@ -120,8 +121,8 @@ test('a second row, the Finance tabs, stands under the first and sticks with it:
       <Text>the page</Text>
     </StickyScreen>,
   );
-  // one sticky child holds both, the figures over the tabs, each on night-800 across the gutter
-  expect(last().stickyHeaderIndices).toEqual([0]);
+  // one block that sticks holds both, the figures over the tabs, each on night-800 across the gutter
+  expect(last().stickyHeaderIndices).toBeUndefined();
   const figures = getByText('the figures');
   const tabs = getByText('the tabs');
   expect(figures.compareDocumentPosition(tabs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -142,7 +143,6 @@ test('a lead scrolls away above what sticks: the sticky child is the one after i
       <Text>the page</Text>
     </StickyScreen>,
   );
-  expect(last().stickyHeaderIndices).toEqual([1]);
   const lead = getByText('the portrait');
   const figures = getByText('the figures');
   const page = getByText('the page');
@@ -153,12 +153,19 @@ test('a lead scrolls away above what sticks: the sticky child is the one after i
   expect(stuck.contains(lead)).toBe(false);
 });
 
-test('with no lead, or one that is not shown this time, the first child is the one that sticks', () => {
-  wrap(<StickyScreen header={<Text>h</Text>} lead={null}><Text>page</Text></StickyScreen>);
-  expect(last().stickyHeaderIndices).toEqual([0]);
-  cleanup();
-  wrap(<StickyScreen header={<Text>h</Text>} lead={false}><Text>page</Text></StickyScreen>);
-  expect(last().stickyHeaderIndices).toEqual([0]);
+test('with no lead, or one that is not shown this time, the first child is the one that sticks, from the column\'s top', () => {
+  for (const lead of [null, false]) {
+    const { getByText } = wrap(<StickyScreen header={<Text>h</Text>} lead={lead}><Text>page</Text></StickyScreen>);
+    const column = getByText('page').parentElement!;
+    expect(column.children[0].contains(getByText('h'))).toBe(true);
+    // It sticks once the page has scrolled past the column's room on top (16).
+    scroll(16);
+    expect(stuck()).toBe(0);
+    scroll(40);
+    expect(stuck()).toBe(24);
+    cleanup();
+    rea.styles.length = 0;
+  }
 });
 
 test('the Hud\'s "away" strip: the page has scrolled past the lead once the offset is more than the lead is tall', () => {
@@ -185,6 +192,38 @@ const rise = () => {
   const style = rea.styles[rea.styles.length - 1]() as { transform: Array<{ translateY: number }> };
   return Math.abs(style.transform[0].translateY);
 };
+
+/** How far down the block that sticks has been moved to stay at the top, in points: its animated style (the first the screen draws), worked out again. */
+const stuck = () => {
+  const style = rea.styles[0]() as { transform: Array<{ translateY: number }> };
+  return style.transform[0].translateY;
+};
+
+test('on the phone the block keeps itself at the top, moved on the UI thread, and is back in its place in the column as soon as the page is back over it, however it got there', () => {
+  // React Native's sticky header tells the screen's tree its place a moment late, and loses the 0 that takes it back to its place when the page
+  // comes back over it in one step: the tree kept the place it stuck at, and a press that moved at all on the Hud's figures or the finances' tabs
+  // was lost (Android measures a moving press in that tree). So it is not used on the phone: the block is moved by Reanimated, which writes each place.
+  wrap(
+    <StickyScreen lead={<Text>the portrait</Text>} header={<Text>the figures</Text>} subHeader={<Text>the tabs</Text>}>
+      <Text>page</Text>
+    </StickyScreen>,
+  );
+  expect(last().stickyHeaderIndices).toBeUndefined();
+  // The lead stands 16 down and is 100 tall: the block sticks at 116, and follows the page down from there.
+  lay(16, 100);
+  scroll(0);
+  expect(stuck()).toBe(0);
+  scroll(116);
+  expect(stuck()).toBe(0);
+  scroll(500);
+  expect(stuck()).toBe(384);
+  // A long tab left for a short one: the page shrinks and is back at its top in one step. The block is back in its place.
+  scroll(0);
+  expect(stuck()).toBe(0);
+  // Pulled down past its top (iOS's bounce, the phone's refresh), it goes down with the page, as the column does.
+  scroll(-40);
+  expect(stuck()).toBe(0);
+});
 
 test('the room between the rows (the 12 the web leaves under the Hud) is there at scroll 0 and closes as the page scrolls up under the stuck header', () => {
   const { getByText, container } = wrap(
@@ -319,7 +358,6 @@ test('what stands between the rows (the strip of a crisis, a tip of the guide) i
   expect(figures.compareDocumentPosition(tip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(tip.compareDocumentPosition(tabs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect((tabs.parentElement!.previousElementSibling as HTMLElement).style.height).toBe('12px');
-  expect(last().stickyHeaderIndices).toEqual([1]);
   // The figures are drawn over what scrolls up under them.
   expect(Number(figures.parentElement!.style.zIndex)).toBeGreaterThan(0);
   // The lead stands 16 down and is 100 tall: the sticky row begins at 116. The tabs stand 150 under the figures' foot (the tip, then the gap):
@@ -350,7 +388,6 @@ test('what sticks takes no touch where it draws nothing: the room left under the
     </StickyScreen>,
   );
   const sticky = getByText('the figures').parentElement!.parentElement as HTMLElement;
-  // As a style too: React Native's sticky header takes its child's style as its own, and with it this.
   expect(sticky.classList.contains(touchClass('box-none'))).toBe(true);
   const closing = getByText('the tabs').parentElement!.parentElement as HTMLElement;
   expect(closing.classList.contains(touchClass('box-none'))).toBe(true);
