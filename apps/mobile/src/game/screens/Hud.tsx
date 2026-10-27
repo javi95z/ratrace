@@ -4,9 +4,9 @@ import { fadingStatus } from '@ratrace/core/game/fading';
 import { ageAt, cityLight, escapeAge, portraitAge } from '@ratrace/core/game/present';
 import { ratOutfit } from '@ratrace/core/game/quips';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
+import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, focusLeft, focusTotal, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
@@ -14,7 +14,7 @@ import { Rays } from '../../ui/Rays';
 import { usePop } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';
-import { Bar, Figure as Tinted, KeyFigure, Raised, reach, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
+import { Bar, Button, Figure as Tinted, KeyFigure, Raised, reach, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Glint } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
@@ -24,6 +24,7 @@ import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useSettings, useT, useWords } from '../context';
 import { CityBanner } from './CityBanner';
 import { Explain } from './Explain';
+import { useFinanceTabSetter } from './financeTab';
 import { useCoinTarget } from './FlyingCoins';
 import { JailSheet } from './Jail';
 import { Loop } from './Loop';
@@ -85,9 +86,9 @@ function Backdrop({ tier, size }: { tier: number; size: number }) {
   );
 }
 
-type Figure = 'cash' | 'flow' | 'status' | 'ratRace';
+type Figure = 'cash' | 'flow' | 'status' | 'focus' | 'ratRace';
 /** The figures of the part that sticks, each a sheet: the way out of the rat race is a part of its own (`HudWayOut`). */
-const STUCK: readonly Figure[] = ['cash', 'flow', 'status'];
+const STUCK: readonly Figure[] = ['cash', 'flow', 'status', 'focus'];
 
 /**
  * What a scene shows open over the Hud at the start (a client draws a scene by a screen's own initial state, never by a tap): the
@@ -149,6 +150,8 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
     );
   } else if (figure === 'ratRace') {
     rows = <RatRace shown={shown} />;
+  } else if (figure === 'focus') {
+    rows = <FocusRows shown={shown} />;
   } else {
     const status = statusBreakdown(content, shown);
     rows = (
@@ -185,6 +188,52 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
     </>
   );
 }
+
+/**
+ * The focus of the round: the player's own each round, what a rest gave and a burnout took, all there is this round, what the orders so far have
+ * chosen, and what is left; and the way to the finances' tab where it is used, where they are on screen (the sheet closed first).
+ */
+function FocusRows({ shown }: { shown: GameView }) {
+  const t = useT('hud');
+  const { fmt } = useWords();
+  const toTab = useFinanceTabSetter();
+  const close = useContext(CloseFigure);
+  const life = shown.player.life;
+  const total = focusTotal(shown.player);
+  const lost = Math.max(0, life.focusBase + life.focusBonus - total);
+  return (
+    <>
+      {/* What the round's focus is made of, where a rest or a burnout changed it: else it is the player's own, and one line says so. */}
+      {life.focusBonus > 0 || lost > 0 ? (
+        <>
+          <Row size={14} left={t('focusBase')} right={fmt.number(life.focusBase)} />
+          {life.focusBonus > 0 ? <Row size={13} style={FADING} left={t('focusRest')} right={`+${fmt.number(life.focusBonus)}`} /> : null}
+          {lost > 0 ? <Row size={13} style={FADING} left={t('focusBurnout')} right={<Tinted tone="wine-300" size={13}>{`−${fmt.number(lost)}`}</Tinted>} /> : null}
+        </>
+      ) : null}
+      <Row size={14} style={life.focusBonus > 0 || lost > 0 ? TOTAL : undefined} left={t('focusRound')} right={fmt.number(total)} />
+      <Row size={14} left={t('focusUsed')} right={fmt.number(Math.min(total, life.focusUsed))} />
+      <Row size={14} left={t('focusLeft')} right={<Coloured tone="gold-500">{fmt.number(focusLeft(shown.player))}</Coloured>} />
+      {toTab && shown.phase === 'finance' ? (
+        <View style={{ marginTop: 12 }}>
+          <Button
+            variant="secondary"
+            wide
+            onPress={() => {
+              close();
+              toTab('lifestyle');
+            }}
+          >
+            {t('toLifestyle')}
+          </Button>
+        </View>
+      ) : null}
+    </>
+  );
+}
+
+/** Closes the sheet of the figure open, for what in it moves the player on. */
+const CloseFigure = createContext<() => void>(() => undefined);
 
 /**
  * Two texts side by side that share a baseline (the web's `items-baseline`): the room above each, so that, laid from the top, their
@@ -533,6 +582,7 @@ function HudFigures({ flush, open }: { flush: boolean; open?: HudOpen }) {
   const [figure, setFigure] = useState<Figure>(opened ?? 'cash');
   const [showing, setShowing] = useState(opened !== undefined);
   const p = shown.player;
+  const focus = focusTotal(p);
   const yearly = useMemo(() => {
     const flow = cashflow(content, shown);
     return flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual - taxAnnual(content, shown);
@@ -552,10 +602,14 @@ function HudFigures({ flush, open }: { flush: boolean; open?: HudOpen }) {
           <Stat ref={cashTarget} icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => show('cash')} />
           <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} onOpen={() => show('flow')} />
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => show('status')} />
+          {/* The round's free time, where there is any to spend: what is left of it, of all there is. */}
+          {focus > 0 ? <Stat icon="icon.focus" value={`${focusLeft(p)}/${focus}`} label={t('focus')} hint={t('focusHint')} onOpen={() => show('focus')} /> : null}
         </StatRow>
       </View>
       <Sheet open={showing} onClose={() => setShowing(false)} title={t(figure)} closeLabel={common('close')}>
-        <Details figure={figure} shown={shown} />
+        <CloseFigure.Provider value={() => setShowing(false)}>
+          <Details figure={figure} shown={shown} />
+        </CloseFigure.Provider>
       </Sheet>
     </>
   );

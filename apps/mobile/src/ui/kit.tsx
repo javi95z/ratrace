@@ -508,28 +508,37 @@ export function KeyFigure({ children, tone = 'gold' }: { children: Words; tone?:
 /** The width of the row a Stat stands in, which is what the web's container queries ask. Null until measured. */
 const StatRowWidth = createContext<{ width: number | null } | null>(null);
 
+/** The room between the figures of a row. */
+const STAT_GAP = 6;
+
 /**
- * The HUD's row of figures: three Stats of equal width. It measures itself and tells them how much
- * room there is, as the web's `@container` does, so a narrow phone drops the icons and shrinks the numbers.
+ * The HUD's row of figures, of equal width. It measures itself and tells each figure the room it has, as the web's `@container` does, so a narrow
+ * row puts each figure's icon beside its label, under its number (`statLook`).
  */
 export function StatRow({ children }: { children: ReactNode }) {
   const [width, setWidth] = useState<number | null>(null);
+  const count = Children.toArray(children).length;
+  const each = width === null || count === 0 ? null : (width - STAT_GAP * (count - 1)) / count;
   return (
-    <StatRowWidth.Provider value={{ width }}>
-      <View testID="stat-row" onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', gap: 6 }}>
+    <StatRowWidth.Provider value={{ width: each }}>
+      <View testID="stat-row" onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', gap: STAT_GAP }}>
         {children}
       </View>
     </StatRowWidth.Provider>
   );
 }
 
-/** The web's rules for a figure by the width of its container (all inclusive at the top): icon gone to 340, 14 pt to 357, 15 pt to 371. */
-function statLook(width: number | null): { icon: boolean; size: number } {
-  if (width === null) return { icon: true, size: 16 };
-  if (width <= 340) return { icon: false, size: 16 };
-  if (width <= 357) return { icon: true, size: 14 };
-  if (width <= 371) return { icon: true, size: 15 };
-  return { icon: true, size: 16 };
+/**
+ * How a figure is laid out in the room it has (`width`, its own): its icon beside the number and the label where there is room for both (the web's
+ * rules for three figures: 16 pt from a row of 372, 15 pt to 371, 14 pt to 357, by the figure's own share of it); narrower (four figures on a phone,
+ * three on a small one), the number across the whole figure and a small icon beside the label under it.
+ */
+function statLook(width: number | null): { icon: 'side' | 'small'; size: number } {
+  if (width === null) return { icon: 'side', size: 16 };
+  if (width <= (340 - 2 * STAT_GAP) / 3) return { icon: 'small', size: width < 84 ? 14 : 15 };
+  if (width <= (357 - 2 * STAT_GAP) / 3) return { icon: 'side', size: 14 };
+  if (width <= (371 - 2 * STAT_GAP) / 3) return { icon: 'side', size: 15 };
+  return { icon: 'side', size: 16 };
 }
 
 const STAT_TONE = { good: 'teal-300', bad: 'wine-300' } as const satisfies Record<string, ColorToken>;
@@ -562,12 +571,13 @@ export function Stat({
   const row = useContext(StatRowWidth);
   // Until the first measure the icon is shown, as on a roomy phone.
   const [own, setOwn] = useState<number | null>(null);
-  const { icon: showIcon, size } = statLook(row ? row.width : own);
+  // Alone, it is laid out by the web's rules for a row of three as wide as it is.
+  const { icon: look, size } = statLook(row ? row.width : own === null ? null : (own - 2 * STAT_GAP) / 3);
   const press = usePress({ onPress: onOpen ?? (() => {}), disabled: false });
   const said = [`${String(value)}, ${String(label)}`, hint].filter(Boolean).join('. ');
   const body = (
     <>
-      {showIcon ? (
+      {look === 'side' ? (
         <View style={{ width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
           <Sprite id={icon} />
         </View>
@@ -576,7 +586,10 @@ export function Stat({
         <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} tracking={false}>
           {String(value)}
         </PixelText>
-        <ReadText size={11} tone="ink-200" numberOfLines={1} lineHeight={11 * TIGHT}>{String(label)}</ReadText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          {look === 'small' ? <Sprite id={icon} size={{ w: 12, h: 12 }} /> : null}
+          <ReadText size={11} tone="ink-200" numberOfLines={1} lineHeight={11 * TIGHT} style={{ flexShrink: 1 }}>{String(label)}</ReadText>
+        </View>
       </View>
     </>
   );
@@ -586,7 +599,7 @@ export function Stat({
     alignItems: 'center',
     gap: 6,
     padding: 4,
-    ...(showIcon ? null : { paddingHorizontal: 8 }),
+    ...(look === 'side' ? null : { paddingHorizontal: 8 }),
   };
   return (
     <View

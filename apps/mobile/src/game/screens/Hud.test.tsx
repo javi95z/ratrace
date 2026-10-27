@@ -164,6 +164,33 @@ describe('the figures of the HUD', () => {
     expect(score.querySelector(`[data-split="status"]`)?.getAttribute('style')).toContain(`width: ${share}%`);
   });
 
+  it('show the round\'s focus beside them, what is left of all there is, and what it is made of where a rest or a burnout changed it', async () => {
+    await open();
+    const focus = screen.getByRole('button', { name: /Focus/ });
+    expect(focus.textContent).toContain('3/3');
+    fireEvent.click(focus);
+    const sheet = sheetTitled('Focus');
+    expect(valueOf(sheet, 'Focus this round')).toBe('3');
+    expect(valueOf(sheet, 'Already chosen')).toBe('0');
+    expect(valueOf(sheet, 'Left')).toBe('3');
+    // Nothing changed it: one line says what there is, and none says what it is made of.
+    expect(within(sheet).queryByText('Your focus every round')).toBeNull();
+    cleanup();
+    await open({ view: (view) => ({ ...view, player: { ...view.player, life: { ...view.player.life, focusBonus: 1, focusUsed: 2 } } }) });
+    expect(screen.getByRole('button', { name: /Focus/ }).textContent).toContain('2/4');
+    fireEvent.click(screen.getByRole('button', { name: /Focus/ }));
+    const changed = sheetTitled('Focus');
+    expect(valueOf(changed, 'Your focus every round')).toBe('3');
+    expect(valueOf(changed, 'A rest gave you')).toBe('+1');
+    expect(valueOf(changed, 'Focus this round')).toBe('4');
+    expect(valueOf(changed, 'Left')).toBe('2');
+  });
+
+  it('show no focus where there is none to spend: in prison', async () => {
+    await open({ view: (view) => ({ ...view, player: { ...view.player, life: { ...view.player.life, jailRounds: 2 } } }) });
+    expect(screen.queryByRole('button', { name: /Focus/ })).toBeNull();
+  });
+
   it('hang the portrait in the frame its status has earned', async () => {
     await open();
     // A nurse of twenty-two has the status of a job and a city, and a plain frame.
@@ -394,7 +421,7 @@ describe('what sticks to the top of a round', () => {
     return null;
   };
 
-  it('is the three figures alone: once the portrait has scrolled away nothing says whose life or which round it is, and the way out scrolls with the page', async () => {
+  it('is the figures alone: once the portrait has scrolled away nothing says whose life or which round it is, and the way out scrolls with the page', async () => {
     // The page is laid out as it is drawn (jsdom lays out nothing: every box is at 0, the lead too).
     vi.stubGlobal('ResizeObserver', LaidOut);
     await open();
@@ -404,7 +431,7 @@ describe('what sticks to the top of a round', () => {
     expect(screen.queryByText('Round 1 of 20')).toBeNull();
     expect(screen.getAllByText(/Age 22/)).toHaveLength(1);
     // The figures stick; the way out of the rat race, just under them, does not.
-    for (const figure of [/Cash/, /Flow/, /Status/]) expect(stuckIn(screen.getByRole('button', { name: figure })), String(figure)).not.toBeNull();
+    for (const figure of [/Cash/, /Flow/, /Status/, /Focus/]) expect(stuckIn(screen.getByRole('button', { name: figure })), String(figure)).not.toBeNull();
     const wayOut = screen.getByRole('button', { name: /Rat race escape/ });
     expect(stuckIn(wayOut)).toBeNull();
     expect(stuckIn(screen.getByRole('button', { name: /Cash/ }))!.compareDocumentPosition(wayOut) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
