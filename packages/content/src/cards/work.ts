@@ -51,10 +51,11 @@ export const careerCards: CardDef[] = [
     { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { salaryModPct: -2 } }] },
     { effects: { focus: 1, cashSalaryPct: 12, careerSkill: 1 } },
   ]),
-  card('career_layoff', 'career', { cooldown: 6, risk: 'job', when: { employed: true, notFlags: ['layoff_proof'], regimes: ['slowdown', 'recession'] } }, [
-    { effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } },
-    { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -50, cashSalaryPct: 10, salaryModPct: -5 } }] },
-    { effects: { focus: 2, salaryBoostPct: -50, cashSalaryPct: 25, careerSkill: 3 } },
+  // Content 1.50: it marks the round (`laid_off`), so the boss's layoffs never come in the same one.
+  card('career_layoff', 'career', { cooldown: 6, risk: 'job', when: { employed: true, notFlags: ['layoff_proof'], regimes: ['slowdown', 'recession'], notRecentFlag: { flag: 'laid_off', rounds: 1 } } }, [
+    { effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5, setFlags: ['laid_off'] } },
+    { effects: { focus: 1, setFlags: ['laid_off'] }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -50, cashSalaryPct: 10, salaryModPct: -5 } }] },
+    { effects: { focus: 2, salaryBoostPct: -50, cashSalaryPct: 25, careerSkill: 3, setFlags: ['laid_off'] } },
   ]),
   // From 50 a firm looks again at who it pays most: a step down, a way out with a cheque, or a fight for the post.
   // Whoever answers nothing keeps a job, a rung lower. A post nobody can be dismissed from is never in question.

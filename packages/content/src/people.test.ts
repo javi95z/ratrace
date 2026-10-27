@@ -71,3 +71,25 @@ describe('the people who come back', () => {
     expect(named.filter((entry) => entry.startsWith('en ')).sort()).toEqual(['en classmate_housewarming', 'en classmate_job', 'en cousin_wedding', 'en cousin_yacht', 'en ex_new_car']);
   });
 });
+
+describe('what the people\'s cards leave behind', () => {
+  const card = (id: string) => byId.get(id)!;
+  it('lets a forgiven loan go: nothing is still owed, and he is not cold', () => {
+    const forgiven = card('inlaw_repay').options[1].effects!;
+    expect(forgiven.clearFlags).toEqual(expect.arrayContaining(['inlaw_owes', 'inlaw_cold']));
+    expect(forgiven.setFlags).toEqual(expect.arrayContaining(['inlaw_warm', 'inlaw_forgiven']));
+  });
+
+  it('never deals two layoffs in one round: each marks the player laid off, and neither comes the round one did', () => {
+    for (const id of ['career_layoff', 'boss_layoffs']) {
+      const layoff = card(id);
+      expect(layoff.when?.notRecentFlag, id).toEqual({ flag: 'laid_off', rounds: 1 });
+      for (const [i, option] of layoff.options.entries()) expect(option.effects?.setFlags ?? [], `${id} option ${i}`).toContain('laid_off');
+    }
+  });
+
+  it('keeps the landlord in the city the tenancy began in: his later cards need the flag a move clears', () => {
+    for (const id of ['landlord_raise', 'landlord_sale']) expect(card(id).when?.flags ?? [], id).toContain('landlord_here');
+    for (const option of card('landlord_damp').options) expect(option.effects?.setFlags ?? []).toContain('landlord_here');
+  });
+});

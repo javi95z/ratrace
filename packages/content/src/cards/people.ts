@@ -65,7 +65,7 @@ export const peopleCards: CardDef[] = [
   ])),
   card('inlaw_repay', 'family', { once: true, weight: NEXT, when: after('inlaw_owes', 2) }, person('inlaw', [
     { effects: { clearFlags: ['inlaw_owes'] }, outcomes: [{ weight: 60, effects: { cash: usd(5_000), setFlags: ['inlaw_repaid'] } }, { weight: 40, effects: { cash: usd(2_000), setFlags: ['inlaw_owes'] } }] },
-    { effects: { status: 1, clearFlags: ['inlaw_owes'], ...warm('inlaw', 'inlaw_forgiven') } },
+    { effects: { status: 1, setFlags: ['inlaw_warm', 'inlaw_forgiven'], clearFlags: ['inlaw_cold', 'inlaw_owes'] } },
   ])),
 
   // The boss: a weekend covered is remembered, with a rung abroad (no bonus on top: the rung is the reward, and no tax haven) and, in a recession's layoffs, her word; asked twice in vain, she stops asking.
@@ -78,25 +78,27 @@ export const peopleCards: CardDef[] = [
     { when: { notCities: ['london'] }, effects: { job: { levelDelta: 1 }, moveCity: 'london', setFlags: ['boss_moved'] } },
     { when: { cities: ['london'] }, effects: { job: { levelDelta: 1 }, moveCity: 'new_york', setFlags: ['boss_moved'] } },
   ])),
-  card('boss_layoffs', 'career', { once: true, weight: NEXT / 2, when: { employed: true, flags: ['boss_met'], notFlags: ['layoff_proof'], regimes: ['recession'] } }, person('boss', [
-    { outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } }] },
-    { when: { flags: ['boss_warm'] }, effects: { status: 1, setFlags: ['boss_protected'] } },
-    { effects: { salaryBoostPct: -40, cashSalaryPct: 40, salaryModPct: -5 } },
+  // Never in the round another layoff came (`laid_off`, set by both): a hand may hold both, and the second is then taken back.
+  card('boss_layoffs', 'career', { once: true, weight: NEXT / 2, when: { employed: true, flags: ['boss_met'], notFlags: ['layoff_proof'], regimes: ['recession'], notRecentFlag: { flag: 'laid_off', rounds: 1 } } }, person('boss', [
+    { effects: { setFlags: ['laid_off'] }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } }] },
+    { when: { flags: ['boss_warm'] }, effects: { status: 1, setFlags: ['boss_protected', 'laid_off'] } },
+    { effects: { salaryBoostPct: -40, cashSalaryPct: 40, salaryModPct: -5, setFlags: ['laid_off'] } },
   ])),
 
   // The landlord, while the player rents: a tenant who is no trouble pays the rises and is offered the flat at a friend's price.
-  // The tenancy is counted from the damp (`landlord_since`): every other card of his sets `landlord_met` again.
+  // The tenancy is counted from the damp (`landlord_since`): every other card of his sets `landlord_met` again. It is in one city
+  // (`landlord_here`, which a move lets go of): he does not follow the player to another.
   card('landlord_damp', 'housing', { once: true, weight: MEET, when: { ownsHome: false, minRound: 1 } }, person('landlord', [
-    { effects: { status: -1, ...warm('landlord', 'landlord_since') } },
-    { effects: { focus: 1, ...cold('landlord', 'landlord_since') }, outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { status: -1 } }] },
-    { effects: { cash: usd(-1_500), ...warm('landlord', 'landlord_since') } },
+    { effects: { status: -1, ...warm('landlord', 'landlord_since', 'landlord_here') } },
+    { effects: { focus: 1, ...cold('landlord', 'landlord_since', 'landlord_here') }, outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { status: -1 } }] },
+    { effects: { cash: usd(-1_500), ...warm('landlord', 'landlord_since', 'landlord_here') } },
   ])),
-  card('landlord_raise', 'housing', { soon: true, cooldown: 3, weight: NEXT / 4, when: { ownsHome: false, notFlags: ['landlord_left'], ...after('landlord_since', 2) } }, person('landlord', [
+  card('landlord_raise', 'housing', { soon: true, cooldown: 3, weight: NEXT / 3, when: { ownsHome: false, notFlags: ['landlord_left'], ...after('landlord_since', 2), flags: ['landlord_since', 'landlord_here'] } }, person('landlord', [
     { effects: { cash: usd(-1_800), ...warm('landlord', 'landlord_paid') } },
     { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { cash: usd(-600) } }, { weight: 40, effects: { cash: usd(-1_800), ...cold('landlord') } }] },
     { effects: { cash: usd(-1_200), setFlags: ['landlord_left'] } },
   ])),
-  card('landlord_sale', 'housing', { once: true, weight: NEXT, when: { ownsHome: false, flags: ['landlord_warm'], notFlags: ['landlord_left'], notCities: ['singapore'], notRecentFlag: { flag: 'landlord_since', rounds: 3 } } }, person('landlord', [
+  card('landlord_sale', 'housing', { once: true, weight: NEXT, when: { ownsHome: false, flags: ['landlord_warm', 'landlord_here'], notFlags: ['landlord_left'], notCities: ['singapore'], notRecentFlag: { flag: 'landlord_since', rounds: 3 } } }, person('landlord', [
     {},
     { effects: { property: { typeId: 'flat', pricePct: 80, downPct: 20, rented: false }, setFlags: ['landlord_sold'] } },
     { effects: { property: { typeId: 'flat', pricePct: 80, downPct: 100, rented: false }, setFlags: ['landlord_sold'] } },

@@ -616,7 +616,7 @@ export const es: ContentText = {
       endings: {
         jackpot: '{person:inlaw} aún conduce el coche que le compró $RATA. Tú también te compraste algo.',
         repaid: '{person:inlaw} te devolvió hasta el último céntimo, y no ha vuelto a decir «moneda».',
-        forgiven: 'Dejaste que {person:inlaw} se quedara el dinero. Él se quedó también el trabajo.',
+        forgiven: 'Dejaste que {person:inlaw} se quedara el dinero. Él se quedó también con su trabajo nuevo.',
         unpaid: '{person:inlaw} aún te debe dinero, y lo saca en las cenas como si le debieras tú.',
         estranged: '{person:inlaw} y tú ya no habláis de dinero. Ni de casi nada.',
         coin: '{person:inlaw} está con una moneda nueva. Esta lleva una rana.',
@@ -626,7 +626,7 @@ export const es: ContentText = {
       who: '{person:boss}, tu jefa',
       meet: 'Te presentamos a {person:boss}, tu jefa',
       endings: {
-        protected: '{person:boss} se jubiló el año después de los despidos. Tú sigues en el puesto que te salvó.',
+        protected: '{person:boss} tachó tu nombre de la lista de despidos. El puesto que te salvó fue tuyo durante años.',
         moved: '{person:boss} manda una postal cada Navidad a la oficina adonde te mandó.',
         covered: '{person:boss} te escribió una carta de recomendación para enmarcar.',
         cold: '{person:boss} dejó de pedírtelo. Encontró a alguien que dice que sí.',

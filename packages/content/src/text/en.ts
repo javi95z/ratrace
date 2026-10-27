@@ -616,7 +616,7 @@ export const en: ContentText = {
       endings: {
         jackpot: '{person:inlaw} still drives the car $RATA bought him. You bought something too.',
         repaid: '{person:inlaw} paid back every cent, and has not said the word "coin" since.',
-        forgiven: 'You let {person:inlaw} keep the money. He kept the job, too.',
+        forgiven: 'You let {person:inlaw} keep the money. He kept his new job, too.',
         unpaid: '{person:inlaw} still owes you money, and talks about it at dinner as if you owed him.',
         estranged: '{person:inlaw} and you no longer talk about money. Or about much else.',
         coin: '{person:inlaw} is on to a new coin. This one has a frog on it.',
@@ -626,7 +626,7 @@ export const en: ContentText = {
       who: '{person:boss}, your boss',
       meet: 'Meet {person:boss}, your boss',
       endings: {
-        protected: '{person:boss} retired the year after the layoffs. You still have the job she saved.',
+        protected: '{person:boss} kept your name off the layoffs\' list. The job she saved was yours for years.',
         moved: '{person:boss} sends a card every Christmas to the office she sent you to.',
         covered: '{person:boss} wrote you a reference you could frame.',
         cold: '{person:boss} stopped asking. She found someone who says yes.',

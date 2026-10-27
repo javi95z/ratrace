@@ -8,7 +8,7 @@ import { seedsFor } from './simulate';
 /**
  * How often lives meet the people who come back (`@ratrace/content`'s `people.ts`), and how far their stories go: for each person,
  * the share of lives that meet them; how many a life meets; and for each later card of a story, how often it is dealt in the lives
- * where what it waits for was set (the flags it needs, and the one it counts from) early enough to come, two rounds before the end at least.
+ * where what it waits for (the flags it needs, and the one it counts from) was held two rounds running, early enough to come.
  */
 export interface PeopleReport {
   lives: number;
@@ -41,11 +41,14 @@ export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: strin
         let state = createGame({ content: rules, start: life.start }, seed);
         // The round each flag was first set in, and every card dealt.
         const first: Record<string, number> = {};
+        // The flags held at the end of each round's cards: a flag may be let go of (a move lets a city's go).
+        const held: Array<Set<string>> = [];
         const dealt = new Set<string>();
         while (!state.finished) {
           for (const id of state.phase === 'cards' ? state.hand : []) dealt.add(id);
           while (state.phase === 'cards') state = applyCard(rules, state, bot.pick(rules, viewOf(state))).state;
           for (const flag of Object.keys(state.player.life.flags)) first[flag] ??= state.round;
+          held[state.round] = new Set(Object.keys(state.player.life.flags));
           state = applyRound(rules, state, { orders: bot.orders(rules, viewOf(state)) }).state;
         }
         const people = PEOPLE.filter((who) => Object.hasOwn(first, metFlag(who)));
@@ -56,7 +59,9 @@ export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: strin
         counts.push(people.length);
         for (const id of later) {
           const flags = awaited(id);
-          if (!flags.every((flag) => Object.hasOwn(first, flag) && first[flag] <= rules.rounds - 3)) continue;
+          // It could come where what it waits for was held two rounds running, early enough in the life.
+          const due = held.some((now, round) => round <= rules.rounds - 3 && flags.every((flag) => now.has(flag) && (held[round + 1]?.has(flag) ?? false)));
+          if (!due) continue;
           followUps[id].could += 1;
           if (dealt.has(id)) followUps[id].reached += 1;
         }
