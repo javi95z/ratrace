@@ -1,16 +1,15 @@
 // @vitest-environment jsdom
 import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
 import { formatFor } from '@ratrace/core/lib/format';
-import type { ChallengeRow, Community, Friend, Friends, RankedLifeDetail, RankingQuery, RankingRow } from '@ratrace/online/types';
+import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clipboard } from '../../testing/fakes';
 import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { useGame } from '../context';
-import { CODE_REACH, friendLines, Rankings } from './Rankings';
+import { Rankings } from './Rankings';
 import type { Kind } from './Rankings';
 import { useState, type ReactElement } from 'react';
 
@@ -136,22 +135,8 @@ const sheetOf = (title: string) => screen.getByRole('heading', { name: title }).
  * The friends' panel, once it is drawn: its lines are rows of the page's list and its foot is the list's footer, so the panel is no one box. It is
  * found by its title, and asked of as the page.
  */
-const friendsPanel = async () => {
-  await screen.findByText('YOUR FRIENDS');
-  return document.body;
-};
-/**
- * Does `work` and lets everything it starts come to its end, inside `act` (which draws what it brings before it returns): every promise already
- * answered is followed to its last `then`, however many there are in a row. No timer: it waits on nothing but what is already settled.
- */
-async function drained(work: () => unknown = () => undefined): Promise<void> {
-  await act(async () => {
-    work();
-    for (let i = 0; i < 50; i++) await Promise.resolve();
-  });
-}
-/** Types into a field, as the keyboard does: the whole of what it then holds. */
-const type = (field: HTMLElement, text: string) => fireEvent.change(field, { target: { value: text } });
+/** The page pulled down past its top, as the phone's spinner asks it to read itself again. */
+const pullDown = () => act(() => (listed.at(-1)!.refreshControl as ReactElement<{ onRefresh(): void }>).props.onRefresh());
 
 describe('the rankings', () => {
   it('says what they need where there is no account to ask', async () => {
@@ -181,13 +166,13 @@ describe('the rankings', () => {
     const { community: c, asked } = community();
     show(c);
     await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
-    await linesOf('This week');
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
+    await linesOf('Best this week');
     fireEvent.click(screen.getByRole('tab', { name: 'Friends' }));
     await linesOf('Friends');
     expect(asked).toEqual(['ranking all everyone any', 'ranking week everyone any', 'ranking all friends any']);
     expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true');
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['All time', 'This week', 'Friends', "This week's challenge"]);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['All time', 'Best this week', 'Friends', 'Weekly challenge']);
     expect(screen.getByRole('tablist', { name: 'Which ranking' })).toBeTruthy();
   });
 
@@ -196,7 +181,9 @@ describe('the rankings', () => {
     show(c, 'en', { tab: 'friends' });
     await linesOf('Friends');
     expect(asked).toEqual(['ranking all friends any']);
-    expect(await friendsPanel()).toBeTruthy();
+    // The friends themselves are where they are played with.
+    fireEvent.click(screen.getByRole('button', { name: 'Your friends and their requests' }));
+    expect(router.push).toHaveBeenCalledWith('/en/room');
     cleanup();
     const other = community();
     show(other.community, 'en', { tab: 'challenge' });
@@ -217,7 +204,7 @@ describe('the rankings', () => {
     fireEvent.click(within(list).getByRole('radio', { name: 'Nurse' }));
     await waitFor(() => expect(asked).toContain('ranking all everyone nurse'));
     // The life chosen stays chosen from one ranking to the next.
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
     await waitFor(() => expect(asked).toContain('ranking week everyone nurse'));
     fireEvent.click(screen.getByRole('button', { name: 'Starting life: Nurse' }));
     fireEvent.click(within(within(sheetOf('Starting life')).getByRole('radiogroup', { name: 'Starting life' })).getByRole('radio', { name: /^Any life/ }));
@@ -229,14 +216,14 @@ describe('the rankings', () => {
     const { community: c } = community({ ranking: (query) => new Promise((answer) => waiting.push({ query, answer })) });
     show(c);
     await waitFor(() => expect(waiting).toHaveLength(1));
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
     await waitFor(() => expect(waiting).toHaveLength(2));
     // The week answers first, and all time after it: the week is what the player is looking at.
     await act(async () => waiting[1].answer([row(1, 'week0000-0000')]));
-    await linesOf('This week');
+    await linesOf('Best this week');
     await act(async () => waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]));
     await settled();
-    expect((await linesOf('This week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
+    expect((await linesOf('Best this week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
   });
 
   it('is read again when pulled down: the ranking on screen asked anew, kept until the new one comes, the spinner turning until it has', async () => {
@@ -268,19 +255,15 @@ describe('the rankings', () => {
     expect(asked.filter((one) => one.startsWith('ranking'))).toEqual(['ranking all everyone any', 'ranking all everyone any']);
   });
 
-  it('reads the friends again with their ranking, and the week\'s challenge on its own, when pulled down on their tabs', async () => {
+  it('reads the ranking among friends again, and the week\'s challenge on its own, when pulled down on their tabs', async () => {
     let boards = 0;
-    const { community: withFriends, asked, state } = community({ challengeRanking: async () => ((boards += 1), { rows: [], entrants: 0 }) });
-    const friendsRead = vi.spyOn(withFriends, 'friends');
+    const { community: withFriends, asked } = community({ challengeRanking: async () => ((boards += 1), { rows: [], entrants: 0 }) });
     show(withFriends, 'en', { tab: 'friends' });
-    await waitFor(() => expect(friendsRead).toHaveBeenCalledTimes(1));
-    state.friends = { ...state.friends, friends: [{ userId: 'dddd4444-0000', nickname: 'Amiga_Rata', avatar: null }] };
+    await linesOf('Friends');
     const pull = () => listed.at(-1)!.refreshControl as ReactElement<{ refreshing: boolean; onRefresh(): void }>;
     act(() => pull().props.onRefresh());
-    await screen.findByText('Amiga_Rata');
-    expect(friendsRead).toHaveBeenCalledTimes(2);
-    expect(asked.filter((one) => one === 'ranking all friends any')).toHaveLength(2);
-    fireEvent.click(screen.getByRole('tab', { name: "This week's challenge" }));
+    await waitFor(() => expect(asked.filter((one) => one === 'ranking all friends any')).toHaveLength(2));
+    fireEvent.click(screen.getByRole('tab', { name: 'Weekly challenge' }));
     await waitFor(() => expect(boards).toBe(1));
     act(() => pull().props.onRefresh());
     await waitFor(() => expect(boards).toBe(2));
@@ -314,48 +297,15 @@ describe('the rankings', () => {
     expect(screen.getByText('The best ranked life of each player. Only lives played on the server count.')).toBeTruthy();
   });
 
-  it('lets the player choose the name they appear under, and checks how it is written before it asks', async () => {
-    const { community: c, asked } = community();
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    // Until one is chosen, the name the rankings give: Rat, and four characters.
-    await waitFor(() => expect(you.textContent).toMatch(/Rat /));
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    const field = within(you).getByRole('textbox', { name: 'Name' });
-    type(field, 'a b');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters, digits or underscores.');
-    expect(asked.filter((line) => line.startsWith('rename'))).toEqual([]);
-    type(field, 'Rata_Uno');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(you.textContent).toContain('Rata_Uno'));
-    expect(asked).toContain('rename Rata_Uno');
-    expect(within(you).queryByRole('textbox')).toBeNull();
-    // The rankings are read again: the player's line now carries the name.
-    await waitFor(() => expect(asked.filter((line) => line.startsWith('ranking'))).toHaveLength(2));
-  });
-
-  it('sends the name from the keyboard too, as the web\'s form is sent by Enter', async () => {
-    const { community: c, asked } = community();
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(within(you).getByRole('button', { name: 'Change it' })).toBeTruthy());
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    const field = within(you).getByRole('textbox', { name: 'Name' });
-    type(field, 'Rata_Dos');
-    fireEvent.keyDown(field, { key: 'Enter', code: 'Enter', keyCode: 13 });
-    await waitFor(() => expect(asked).toContain('rename Rata_Dos'));
-  });
-
   it('shows nothing of one ranking under the name of another while that other is on its way', async () => {
     const { community: c } = community({ ranking: (query) => (query.period === 'all' ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
     show(c);
     await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
     // The week has not answered: what is on screen is that it is being read, not the lines of all time.
     expect(anyLines()).toEqual([]);
     expect(rankingOf('All time')).toBeNull();
-    expect(rankingOf('This week')).toBeNull();
+    expect(rankingOf('Best this week')).toBeNull();
     expect(screen.getByText('Loading…')).toBeTruthy();
     // Back where the answer is known, it is there at once.
     fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
@@ -368,240 +318,11 @@ describe('the rankings', () => {
     const { community: c } = community({ ranking: () => ((asks += 1) === 1 ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
     show(c);
     await linesOf('All time');
-    const you = screen.getByRole('region', { name: 'You' });
-    await waitFor(() => expect(within(you).getByRole('button', { name: 'Change it' })).toBeTruthy());
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
+    // Pulled down, it is read again.
+    pullDown();
     await waitFor(() => expect(asks).toBe(2));
     // The second answer never comes here: the first is still what is shown.
     expect(await linesOf('All time')).toHaveLength(1);
-  });
-
-  it('lets a name that is already chosen be changed, starting from it, and lets the player think better of it', async () => {
-    const { community: c, asked, state } = community();
-    state.me = { nickname: 'Rata_Uno', friendCode: 'ABCD2345', avatar: null };
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(you.textContent).toContain('Rata_Uno'));
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    expect((within(you).getByRole('textbox', { name: 'Name' }) as HTMLInputElement).value).toBe('Rata_Uno');
-    type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno!');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    expect(within(you).getByRole('alert')).toBeTruthy();
-    fireEvent.click(within(you).getByRole('button', { name: 'Cancel' }));
-    expect(within(you).queryByRole('textbox')).toBeNull();
-    expect(within(you).queryByRole('alert')).toBeNull();
-    expect(asked.filter((line) => line.startsWith('rename'))).toEqual([]);
-    // Opened again, the form says nothing of the last try.
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    expect(within(you).queryByRole('alert')).toBeNull();
-  });
-
-  it('says nothing of a name where the player\'s own could not be read', async () => {
-    const { community: c } = community({ me: async () => null });
-    show(c);
-    await linesOf('All time');
-    expect(screen.queryByRole('region', { name: 'You' })).toBeNull();
-  });
-
-  it('takes a name of three to sixteen characters, without the spaces typed around it', async () => {
-    const { community: c, asked } = community();
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(within(you).getByRole('button', { name: 'Change it' })).toBeTruthy());
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    const field = within(you).getByRole('textbox', { name: 'Name' });
-    type(field, 'ab');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters, digits or underscores.');
-    // The field takes no more than a name can hold, pasted too.
-    type(field, 'abcdefghijklmnopq');
-    expect((field as HTMLInputElement).value).toBe('abcdefghijklmnop');
-    type(field, ' abc ');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(you.textContent).toContain('abc'));
-    expect(asked.filter((line) => line.startsWith('rename'))).toEqual(['rename abc']);
-  });
-
-  it('says why a name was not taken', async () => {
-    for (const [answer, said] of [['taken', 'Someone already has that name.'], ['refused', 'That name is not accepted.'], ['failed', 'The name could not be saved. Try again.']] as const) {
-      const { community: c } = community({ rename: async () => answer });
-      show(c);
-      const you = await screen.findByRole('region', { name: 'You' });
-      await waitFor(() => expect(within(you).getByRole('button', { name: 'Change it' })).toBeTruthy());
-      fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-      type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
-      fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-      expect((await within(you).findByRole('alert')).textContent, answer).toBe(said);
-      cleanup();
-    }
-  });
-
-  it('shows the player their friend code, which opens their invitation: its QR code, the link to share, the code to copy', async () => {
-    const { community: c } = community();
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(you.textContent).toContain('Your friend code: ABCD2345'));
-    fireEvent.click(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' }));
-    const sheet = screen.getByRole('heading', { name: 'Your friend code' }).closest('[aria-modal="true"]') as HTMLElement;
-    // The QR code another phone's camera reads: the friends' page with the code ready to send, which Android opens in the app.
-    expect(within(sheet).getByRole('img', { name: /Scan it with another phone's camera/ })).toBeTruthy();
-    expect(within(sheet).getByText('ABCD2345')).toBeTruthy();
-    expect(within(sheet).getByRole('button', { name: 'Share' })).toBeTruthy();
-    // Copied, the sheet goes and the page says so.
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Copy' }));
-    expect(await screen.findByRole('alert')).toBeTruthy();
-    expect(screen.getByRole('alert').textContent).toBe('Code copied');
-    expect(clipboard.text).toBe('ABCD2345');
-  });
-
-  it('says nothing where the clipboard does not take the code: it is on screen to be read', async () => {
-    clipboard.refuses = true;
-    const { community: c } = community();
-    show(c);
-    const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' })).toBeTruthy());
-    fireEvent.click(within(you).getByRole('button', { name: 'Your friend code: ABCD2345' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-    await settled();
-    expect(screen.queryByRole('alert')).toBeNull();
-  });
-
-  it('opens on the friends with a friend\'s code written in, from their link (their QR code), for the player to send', async () => {
-    const { community: c, asked } = community();
-    show(c, 'en', { tab: 'friends', friend: 'WXYZ6789' });
-    const friends = await friendsPanel();
-    expect((within(friends).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
-    expect(asked.some((one) => one.startsWith('befriend'))).toBe(false);
-    fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
-    await waitFor(() => expect(asked).toContain('befriend WXYZ6789'));
-  });
-
-  it('answers a friend request from its notice\'s button, once the friends are read, and once only', async () => {
-    const { community: c, asked, state } = community();
-    state.friends = { friends: [], incoming: [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }], outgoing: [] };
-    show(c, 'en', { tab: 'friends', answering: { userId: 'bbbb2222-0000', yes: true } });
-    await waitFor(() => expect(asked).toContain('answer bbbb2222-0000 yes'));
-    await settled();
-    expect(asked.filter((one) => one.startsWith('answer'))).toHaveLength(1);
-    // One who is no longer asking (answered elsewhere) is left alone.
-    cleanup();
-    const other = community();
-    show(other.community, 'en', { tab: 'friends', answering: { userId: 'cccc3333-0000', yes: false } });
-    await friendsPanel();
-    await settled();
-    expect(other.asked.filter((one) => one.startsWith('answer'))).toEqual([]);
-  });
-
-  it('asks another player to be friends by their code', async () => {
-    const { community: c, asked } = community();
-    show(c);
-    expect((await screen.findByRole('region', { name: 'You' })).textContent).toBeDefined();
-    // The friends belong with the ranking they decide, and are not shown beside the others.
-    expect(screen.queryByText('YOUR FRIENDS')).toBeNull();
-    fireEvent.click(screen.getByRole('tab', { name: 'Friends' }));
-    const friends = await friendsPanel();
-    await waitFor(() => expect(friends.textContent).toContain('No friends yet.'));
-    type(within(friends).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-    // A code is written in capitals, as the web shows it.
-    expect((within(friends).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
-    fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
-    expect((await within(friends).findByRole('status')).textContent).toBe('Request sent. Once they accept, you are friends.');
-    expect(asked).toContain('befriend WXYZ6789');
-    expect((within(friends).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('');
-    // A request waits, apart from the friends, under a heading of its own, until it is answered.
-    expect(await within(friends).findByRole('heading', { name: 'Requests sent' })).toBeTruthy();
-    expect(within(friends).getByRole('button', { name: 'Otra_Rata Waiting' })).toBeTruthy();
-    expect(within(friends).queryByRole('button', { name: 'Otra_Rata' })).toBeNull();
-  });
-
-  it('accepts a request where it is read, and ends a friendship only from the friend\'s sheet', async () => {
-    const { community: c, asked, state } = community();
-    state.friends.incoming = [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }, { userId: 'dddd4444-0000', nickname: null, avatar: null }];
-    show(c);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Friends' }));
-    const friends = await friendsPanel();
-    expect(await within(friends).findByRole('heading', { name: 'Friend requests' })).toBeTruthy();
-    expect(friends.textContent).toContain('Rat DDDD');
-    fireEvent.click(within(friends).getAllByRole('button', { name: 'Accept' })[0]);
-    expect((await within(friends).findByRole('status')).textContent).toBe('You are friends now!');
-    expect(asked).toContain('answer bbbb2222-0000 yes');
-    await waitFor(() => expect(within(friends).getAllByRole('button', { name: 'Decline' })).toHaveLength(1));
-    fireEvent.click(within(friends).getByRole('button', { name: 'Decline' }));
-    await waitFor(() => expect(within(friends).queryByRole('heading', { name: 'Friend requests' })).toBeNull());
-    expect(asked).toContain('answer dddd4444-0000 no');
-    // A friend is a line to tap, with nothing on it that ends the friendship.
-    const friend = await within(friends).findByRole('button', { name: 'Tercera' });
-    expect(within(friends).queryByRole('button', { name: /Remove|Stop/ })).toBeNull();
-    fireEvent.click(friend);
-    const sheet = sheetOf('Tercera');
-    expect(sheet.textContent).toContain("You will no longer see each other's lives among friends.");
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Remove friend' }));
-    await waitFor(() => expect(friends.textContent).toContain('No friends yet.'));
-    expect(asked).toContain('unfriend bbbb2222-0000');
-    // Each change of the friends reads the friends' ranking again.
-    expect(asked.filter((line) => line === 'ranking all friends any').length).toBeGreaterThanOrEqual(4);
-  });
-
-  it('takes back a request the player sent from its sheet', async () => {
-    const { community: c, asked, state } = community();
-    state.friends.outgoing = [{ userId: 'eeee5555-0000', nickname: 'Cuarta', avatar: null }];
-    show(c, 'en', { tab: 'friends' });
-    const friends = await friendsPanel();
-    fireEvent.click(await within(friends).findByRole('button', { name: 'Cuarta Waiting' }));
-    const sheet = sheetOf('Cuarta');
-    expect(sheet.textContent).toContain('Waiting');
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Cancel request' }));
-    await waitFor(() => expect(within(friends).queryByRole('heading', { name: 'Requests sent' })).toBeNull());
-    expect(asked).toContain('unfriend eeee5555-0000');
-  });
-
-  it('asks nobody for an empty code, and trims a pasted one', async () => {
-    const { community: c, asked } = community();
-    show(c);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Friends' }));
-    const friends = await friendsPanel();
-    type(within(friends).getByRole('textbox', { name: 'Friend code' }), '   ');
-    fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
-    await settled();
-    expect(asked.filter((line) => line.startsWith('befriend'))).toEqual([]);
-    type(within(friends).getByRole('textbox', { name: 'Friend code' }), ' wxyz6789 ');
-    fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
-    await waitFor(() => expect(asked).toContain('befriend WXYZ6789'));
-  });
-
-  it('says nothing of friends that could not be read, and still asks by code', async () => {
-    const { community: c, asked } = community({ friends: async () => null });
-    show(c);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Friends' }));
-    const friends = await friendsPanel();
-    await waitFor(() => expect(asked).toContain('ranking all friends any'));
-    await settled();
-    expect(within(friends).queryByRole('alert')).toBeNull();
-    expect(friends.textContent).not.toContain('No friends yet.');
-    expect(within(friends).getByRole('button', { name: 'Send request' })).toBeTruthy();
-  });
-
-  it('says what a request came to', async () => {
-    for (const [answer, said, role] of [
-      ['accepted', 'You are friends now!', 'status'],
-      ['pending', 'You had already sent them a request.', 'status'],
-      ['friends', 'You are friends already.', 'status'],
-      ['unknown', 'No player has that code.', 'alert'],
-      ['self', 'That is your own code.', 'alert'],
-      ['full', 'You already have as many friends or waiting requests as one can.', 'alert'],
-      ['failed', 'That did not work. Try again.', 'alert'],
-    ] as const) {
-      const { community: c } = community({ befriend: async () => answer });
-      show(c);
-      fireEvent.click(await screen.findByRole('tab', { name: 'Friends' }));
-      const friends = await friendsPanel();
-      type(within(friends).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-      fireEvent.click(within(friends).getByRole('button', { name: 'Send request' }));
-      expect((await within(friends).findByRole(role)).textContent, answer).toBe(said);
-      cleanup();
-    }
   });
 
   it('opens the life behind a line: how it ended, what it was worth, where it was lived and what it earned', async () => {
@@ -665,7 +386,7 @@ describe('the ranking of the weekly challenge', () => {
       },
     });
     show(everyone);
-    fireEvent.click(await screen.findByRole('tab', { name: "This week's challenge" }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Weekly challenge' }));
     const lines = await linesOf("This week's challenge");
     expect(asked).toEqual([week.week]);
     expect(screen.getByText(textFor('en').text.lives[week.lifeId].name)).toBeTruthy();
@@ -703,16 +424,16 @@ describe('what the rankings are drawn again for', () => {
     state.board = same;
     show(c);
     await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
-    await linesOf('This week');
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
+    await linesOf('Best this week');
     fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
     await linesOf('All time');
     await settled();
     // Each answer known, a ranking switched to is drawn from it at once: the line that is the same in both is the same line, not drawn again.
     const engineer = spriteRenders.get('portrait.engineer.22');
     const civil = spriteRenders.get('portrait.civil_servant.22');
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
-    await linesOf('This week');
+    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
+    await linesOf('Best this week');
     await settled();
     expect(spriteRenders.get('portrait.engineer.22')).toBe(engineer);
     expect(spriteRenders.get('portrait.heir.22')).toBeGreaterThan(0);
@@ -729,11 +450,8 @@ describe('what the rankings are drawn again for', () => {
     await linesOf('All time');
     await settled();
     const portraits = spriteRenders.get('portrait.nurse.22');
-    // The name changed: the ranking is read again, and answers the same lines.
-    const you = screen.getByRole('region', { name: 'You' });
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
+    // Pulled down: the ranking is read again, and answers the same lines.
+    pullDown();
     await waitFor(() => expect(asks).toBe(2));
     await settled();
     expect(spriteRenders.get('portrait.nurse.22')).toBe(portraits);
@@ -766,61 +484,9 @@ describe('what the rankings are drawn again for', () => {
     expect(probe.state?.view?.answered).toBe(1);
     expect(renders.count).toBe(before);
   });
-
-  it('draws no friend\'s line again when a request is answered: only the request\'s line is told an answer is on its way', async () => {
-    // Every answer of the cloud is the test's to give (`friendsAsked`), and each is given inside `act`, which draws everything it brings before it
-    // returns: the test reads the page once it is drawn, never after a wait of so long, however slow the machine.
-    const friendsAsked: Array<(found: Friends) => void> = [];
-    const { community: c, state } = community({ friends: () => new Promise((answer) => friendsAsked.push(answer)) });
-    const friend: Friend = { userId: 'ffff6666-0000', nickname: 'Amiga', avatar: 'rat_teal' };
-    state.friends = { friends: [friend], incoming: [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }], outgoing: [] };
-    show(c, 'en', { tab: 'friends' });
-    await drained();
-    expect(friendsAsked).toHaveLength(1);
-    await drained(() => friendsAsked[0](state.friends));
-    const line = screen.getByRole('button', { name: 'Amiga' });
-    const look = line.querySelector('[data-rat]')!.getAttribute('data-rat')!;
-    const before = rats.get(look);
-    expect(before).toBeGreaterThan(0);
-    // The request declined: the answer on its way (only the request's line is told), then the friends read again.
-    await drained(() => fireEvent.click(screen.getByRole('button', { name: 'Decline' })));
-    expect(friendsAsked).toHaveLength(2);
-    await drained(() => friendsAsked[1](state.friends));
-    expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Amiga' })).toBe(line);
-    expect(rats.get(look)).toBe(before);
-  });
 });
 
-describe('a long list of friends', () => {
-  it('draws only the friends near the screen: each is a row of the page\'s list, not all two hundred at once', async () => {
-    windowed.on = true;
-    const { community: c, state } = community();
-    const many = (n: number, prefix: string): Friend[] => Array.from({ length: n }, (_, i) => ({ userId: `${prefix}${String(i).padStart(4, '0')}-0000`, nickname: `${prefix}_${i}`, avatar: null }));
-    state.friends = { friends: many(200, 'Amigo'), incoming: many(50, 'Pide'), outgoing: many(50, 'Espera') };
-    state.board = () => [];
-    show(c, 'en', { tab: 'friends' });
-    await friendsPanel();
-    await screen.findAllByRole('button', { name: 'Accept' });
-    await settled();
-    // The first lines are drawn, with their rats; the rest wait for the page to come to them.
-    expect(screen.getAllByRole('button', { name: 'Accept' }).length).toBeGreaterThan(0);
-    expect(rats.size).toBeGreaterThan(0);
-    expect(rats.size).toBeLessThan(30);
-    expect(screen.queryByRole('button', { name: 'Amigo_199' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Espera_49 Waiting' })).toBeNull();
-    // The code to ask with is the panel's foot: there whatever is drawn of the lines.
-    expect(screen.getByRole('textbox', { name: 'Friend code' })).toBeTruthy();
-  });
-});
 
-describe('the rankings with the keyboard up', () => {
-  it('gives a tap to the button tapped while a field has the keyboard up, and keeps the field above it: the page\'s list is the kit\'s', async () => {
-    show(community().community);
-    await linesOf('All time');
-    expect(listed.at(-1)).toMatchObject({ keyboardShouldPersistTaps: 'handled', automaticallyAdjustKeyboardInsets: true });
-  });
-});
 
 describe('the rankings, followed and kept up to date', () => {
   it('opens on the ranking a link names when it is followed with the page open (a notice tapped)', async () => {
@@ -830,51 +496,5 @@ describe('the rankings, followed and kept up to date', () => {
     act(() => followed.to?.('friends'));
     await waitFor(() => expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true'));
     await waitFor(() => expect(asked).toContain('ranking all friends any'));
-  });
-
-  it('lets go of the other rankings it knows once the name changes: none is shown under the old name while it is read again', async () => {
-    let weeks = 0;
-    const { community: c, state } = community({
-      ranking: async (query) => {
-        if (query.period === 'week' && (weeks += 1) > 1) return new Promise(() => {});
-        return [row(1, 'me', { mine: true, nickname: state.me.nickname })];
-      },
-    });
-    show(c);
-    await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
-    expect((await linesOf('This week'))[0].textContent).toContain('Rat ME');
-    fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
-    const you = screen.getByRole('region', { name: 'You' });
-    await waitFor(() => expect(within(you).getByRole('button', { name: 'Change it' })).toBeTruthy());
-    fireEvent.click(within(you).getByRole('button', { name: 'Change it' }));
-    type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
-    fireEvent.click(within(you).getByRole('button', { name: 'Save' }));
-    await waitFor(async () => expect((await linesOf('All time'))[0].textContent).toContain('Rata_Uno'));
-    // The week known before the change is not shown: it is read again, and it is being read.
-    fireEvent.click(screen.getByRole('tab', { name: 'This week' }));
-    expect(rankingOf('This week')).toBeNull();
-    expect(screen.getByText('Loading…')).toBeTruthy();
-    expect(document.body.textContent).not.toContain('Rat ME');
-  });
-
-  it('gives the friend code a box a thumb can press: 44 points, none short', () => {
-    expect(CODE_REACH.short).toBe(0);
-    expect(CODE_REACH.box).toBeGreaterThanOrEqual(44);
-    expect([CODE_REACH.top, CODE_REACH.bottom]).toEqual([8, 20]);
-  });
-
-  it('keeps the room between two lines of the friends\' panel in the upper line\'s part, where its frame\'s shadow is drawn, not under the next part', () => {
-    const friend = (userId: string): Friend => ({ userId, nickname: userId, avatar: null });
-    const rows = friendLines({ incoming: [friend('in-1')], friends: [friend('f-1'), friend('f-2')], outgoing: [friend('out-1')] }, (f) => f.nickname ?? '', false, { requests: 'Requests', nobody: 'Nobody', sent: 'Sent' });
-    // The web's gaps: 6 inside a group, 8 between the groups, 8 over the foot; each the room under the line above it.
-    expect(rows.map((row) => [row.key, row.under])).toEqual([
-      ['group-requests', 6],
-      ['incoming-in-1', 8],
-      ['friend-f-1', 6],
-      ['friend-f-2', 8],
-      ['group-sent', 6],
-      ['outgoing-out-1', 8],
-    ]);
   });
 });

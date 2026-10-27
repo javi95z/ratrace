@@ -406,9 +406,9 @@ class LaidOut {
 
 // Last: the layout it brings stays with the page's library for the rest of the file.
 describe('what sticks to the top of a round', () => {
-  /** The block of the page that sticks to its top, where this element is in it (React Native Web draws a sticky row `position: sticky`). */
+  /** The block of the page that sticks to its top, where this element is in it: on the phone the one `StickyBlock` keeps there, drawn over the page. */
   const stuckIn = (el: HTMLElement) => {
-    for (let up: HTMLElement | null = el; up; up = up.parentElement) if (getComputedStyle(up).position === 'sticky') return up;
+    for (let up: HTMLElement | null = el; up; up = up.parentElement) if (up.style.zIndex === '10' && up.style.transform.includes('translateY')) return up;
     return null;
   };
 

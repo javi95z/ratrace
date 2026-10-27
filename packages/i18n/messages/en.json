@@ -1643,7 +1643,7 @@
     "code": "Your friend code",
     "kinds": "Which ranking",
     "all": "All time",
-    "week": "This week",
+    "week": "Best this week",
     "friends": "Friends",
     "life": "Starting life",
     "anyLife": "Any life",
@@ -1668,7 +1668,7 @@
     "runBankruptcies": "Bankruptcies",
     "runCities": "Lived in",
     "runBadges": "Badges of this life",
-    "challenge": "This week's challenge",
+    "challenge": "Weekly challenge",
     "requests": "Friend requests",
     "accept": "Accept",
     "decline": "Decline",
@@ -1683,7 +1683,9 @@
     "unfriendAbout": "You will no longer see each other's lives among friends. To be friends again takes a new request.",
     "answerGone": "That request is no longer there.",
     "inviteScan": "Scan it with another phone's camera: it opens the game with your code ready to send.",
-    "inviteText": "Be my friend in The Rat Race. My friend code is {code}"
+    "inviteText": "Be my friend in The Rat Race. My friend code is {code}",
+    "toFriends": "Your friends and their requests",
+    "declined": "Request declined."
   },
   "keyboard": {
     "title": "Keyboard controls",
@@ -1839,8 +1841,8 @@
     "openNow": "{count, plural, one {# game is looking for players right now} other {# games are looking for players right now}}",
     "quickAgain": "Another quick game",
     "publicPace": "Pace",
-    "paceTogether": "Together",
-    "paceSlow": "Now and then",
+    "paceTogether": "Quick",
+    "paceSlow": "Turn-based",
     "quickSlow": "Game now and then",
     "quickSlowAbout": "A round a day with whoever is looking for a game: you play yours when you can, and a notice tells you when it is your turn. If nobody turns up, bot rats fill the table.",
     "quickAgainSlow": "Another game now and then",
@@ -1858,7 +1860,7 @@
       "chaser": "Show-off Rat",
       "landlord": "Landlord Rat"
     },
-    "open": "Start a game",
+    "open": "Start a game for friends",
     "life": "The life everyone lives",
     "pace": "Time for each round",
     "create": "Start the game",
@@ -2063,7 +2065,9 @@
       "others": "During the game you can tease a rival from your focus, or lend them money and borrow it by tapping their name in the standings."
     },
     "worthShort": "Net worth",
-    "olderRules": "This game began on an earlier version of the game: it plays the same, but the figures forecast on screen may be a little off."
+    "olderRules": "This game began on an earlier version of the game: it plays the same, but the figures forecast on screen may be a little off.",
+    "playNow": "Play now",
+    "haveCode": "Have a game code?"
   },
   "player": {
     "title": "Your profile",
@@ -2273,11 +2277,26 @@
     },
     "noticeActions": {
       "accept": "Accept",
-      "decline": "Decline"
+      "decline": "Decline",
+      "join": "Join"
     }
   },
   "notFound": {
     "title": "Page not found",
     "body": "There is nothing at this address. Your life is where you left it."
+  },
+  "friends": {
+    "playing": "Playing now",
+    "waiting": "Looking for players",
+    "together": "{n, plural, =0 {No games together yet} one {# game together} other {# games together}}",
+    "best": "Best ranked life",
+    "noBest": "No ranked lives yet.",
+    "join": "Join their game",
+    "invite": "Invite to a game",
+    "inviteShort": "Invite",
+    "invited": "Invite sent",
+    "inviteTitle": "Invite your friends",
+    "inviteFailed": "Could not invite. Try again.",
+    "willInvite": "{name} will be invited as soon as the game is created."
   }
 }

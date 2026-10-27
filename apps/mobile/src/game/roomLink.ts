@@ -10,7 +10,7 @@ import { SITE_URL } from './site';
 export const roomLink = (locale: string, code: string): string => `${SITE_URL.origin}/${locale}/room?code=${code}`;
 
 /**
- * The link that asks the player for friendship: the friends' page with the player's code ready to send (`?friend=`), on the web or, where Android
+ * The link that asks the player for friendship: the games with others' page, where the friends are, with the player's code ready to send (`?friend=`), on the web or, where Android
  * hands the site's pages to the app (app.json's `intentFilters`), in the app. What the friend code's QR holds, and what is shared beside the code.
  */
-export const friendLink = (locale: string, code: string): string => `${SITE_URL.origin}/${locale}/rankings?tab=friends&friend=${code}`;
+export const friendLink = (locale: string, code: string): string => `${SITE_URL.origin}/${locale}/room?friend=${code}`;

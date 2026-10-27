@@ -71,6 +71,8 @@ export function sceneCloud(name: string) {
     setAvatar: async () => true,
     // The lives of others a life that ends is compared with (a game with others' end): none told, so the end says nothing of them.
     compare: async () => null,
+    // The member's friends, beside the games with others: none yet, so the door shows their code and the way to ask for one.
+    friends: async () => ({ friends: [], incoming: [], outgoing: [] }),
   };
   return { member, account, community };
 }

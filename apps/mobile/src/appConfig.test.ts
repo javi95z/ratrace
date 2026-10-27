@@ -83,10 +83,7 @@ describe('a store build (EAS preview or production) carries the live project, ne
     const live = { EXPO_PUBLIC_SUPABASE_URL: 'https://abcdefgh.supabase.co', EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live' };
     expect(serverProblem({ RATRACE_UPDATE: 'production' })).toMatch(/production update has no EXPO_PUBLIC_SUPABASE_URL/);
     expect(serverProblem({ ...live, RATRACE_UPDATE: 'preview' })).toBeNull();
-    const scripts = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { scripts: Record<string, string> }).scripts;
-    for (const channel of ['preview', 'production']) {
-      expect(scripts[`update:${channel}`]).toBe(`RATRACE_UPDATE=${channel} eas update --channel ${channel} --environment ${channel} --auto`);
-    }
+    // (The scripts set it, with the channel's variables pulled first: scripts/easUpdate.test.ts.)
   });
 });
 

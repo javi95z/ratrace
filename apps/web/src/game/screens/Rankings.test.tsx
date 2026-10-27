@@ -106,8 +106,8 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     await screen.findByRole('list', { name: 'All time' });
-    await user.click(screen.getByRole('tab', { name: 'This week' }));
-    await screen.findByRole('list', { name: 'This week' });
+    await user.click(screen.getByRole('tab', { name: 'Best this week' }));
+    await screen.findByRole('list', { name: 'Best this week' });
     await user.click(screen.getByRole('tab', { name: 'Friends' }));
     await screen.findByRole('list', { name: 'Friends' });
     expect(asked).toEqual(['ranking all everyone any', 'ranking week everyone any', 'ranking all friends any']);
@@ -131,7 +131,7 @@ describe('the rankings', () => {
     expect(screen.queryByRole('dialog', { name: 'Starting life' })).toBeNull();
     await waitFor(() => expect(asked).toContain('ranking all everyone nurse'));
     // The life chosen stays chosen from one ranking to the next.
-    await user.click(screen.getByRole('tab', { name: 'This week' }));
+    await user.click(screen.getByRole('tab', { name: 'Best this week' }));
     await waitFor(() => expect(asked).toContain('ranking week everyone nurse'));
     await user.click(screen.getByRole('button', { name: 'Starting life: Nurse' }));
     await user.click(within(screen.getByRole('listbox', { name: 'Starting life' })).getByRole('option', { name: /^Any life/ }));
@@ -144,14 +144,14 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     await waitFor(() => expect(waiting).toHaveLength(1));
-    await user.click(screen.getByRole('tab', { name: 'This week' }));
+    await user.click(screen.getByRole('tab', { name: 'Best this week' }));
     await waitFor(() => expect(waiting).toHaveLength(2));
     // The week answers first, and all time after it: the week is what the player is looking at.
     waiting[1].answer([row(1, 'week0000-0000')]);
-    await screen.findByRole('list', { name: 'This week' });
+    await screen.findByRole('list', { name: 'Best this week' });
     waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]);
     await new Promise((done) => setTimeout(done, 20));
-    expect(within(screen.getByRole('list', { name: 'This week' })).getAllByRole('listitem').map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
+    expect(within(screen.getByRole('list', { name: 'Best this week' })).getAllByRole('listitem').map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
   });
 
   it('says so when nobody is in a ranking yet, and when it could not be read', async () => {
@@ -194,9 +194,9 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     await screen.findByRole('list', { name: 'All time' });
-    await user.click(screen.getByRole('tab', { name: 'This week' }));
+    await user.click(screen.getByRole('tab', { name: 'Best this week' }));
     // The week has not answered: what is on screen is that it is being read, not the lines of all time.
-    const week = screen.getByRole('tabpanel', { name: 'This week' });
+    const week = screen.getByRole('tabpanel', { name: 'Best this week' });
     expect(within(week).queryByRole('list')).toBeNull();
     expect(within(week).getByText('Loading…')).toBeTruthy();
     // Back where the answer is known, it is there at once.
@@ -423,7 +423,7 @@ describe('the ranking of the weekly challenge', () => {
     });
     const user = userEvent.setup();
     show(everyone);
-    await user.click(await screen.findByRole('tab', { name: "This week's challenge" }));
+    await user.click(await screen.findByRole('tab', { name: 'Weekly challenge' }));
     expect(asked).toEqual([week.week]);
     expect(screen.getByText(textFor('en').text.lives[week.lifeId].name)).toBeTruthy();
     expect(screen.getByText('20 players · the best 2 are in the top 10%')).toBeTruthy();

@@ -101,9 +101,10 @@ const USER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const PAGES: Partial<Record<Page, Record<string, RegExp>>> = {
   challenge: {},
   play: {},
-  // A room's code: six letters and digits (Room.tsx's `codeOf`).
-  room: { code: /^[A-Za-z0-9]{6}$/ },
-  // A friend request's notice's buttons answer it (`?accept=<id>`, `?decline=<id>`): the asker's id.
+  // A room's code: six letters and digits (Room.tsx's `codeOf`); and the friends, on the same page, answering a request from its notice's buttons.
+  room: { code: /^[A-Za-z0-9]{6}$/, accept: USER_ID, decline: USER_ID },
+  // A friend request's notice's buttons answer it (`?accept=<id>`, `?decline=<id>`): the asker's id. Sent here before the friends moved to the games
+  // with others' page, which the rankings' page leads them to.
   rankings: { tab: /^(all|week|friends|challenge)$/, accept: USER_ID, decline: USER_ID },
 };
 /** Longer than any link the server sends. */
@@ -132,10 +133,10 @@ export function pageOf(url: unknown): NoticePage | null {
 }
 
 /**
- * The buttons a notice may show, by the name the server gives them (`categoryId`, `FRIEND_REQUEST` in `_shared/notice.ts`), each opening the app on
+ * The buttons a notice may show, by the name the server gives them (`categoryId`, `FRIEND_REQUEST` and `ROOM_INVITE` in `_shared/notice.ts`), each opening the app on
  * the link the server gave it (`data.actions`), its words the game's.
  */
-const BUTTONS: Record<string, ReadonlyArray<'accept' | 'decline'>> = { 'friend-request': ['accept', 'decline'] };
+const BUTTONS: Record<string, ReadonlyArray<'accept' | 'decline' | 'join'>> = { 'friend-request': ['accept', 'decline'], 'room-invite': ['join'] };
 
 /** The Android channel the server's notices are shown in: Expo's own default, which a message with no channel goes to. */
 const CHANNEL = 'default';

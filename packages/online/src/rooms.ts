@@ -214,6 +214,13 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       const said = isRecord(reply.body) ? reply.body.report : null;
       return { room: room(reply), report: said === 'cleared' || said === 'nameless' ? said : 'ok' };
     },
+    async invite(roomId, userId) {
+      const reply = await ask({ action: 'invite', roomId, userId });
+      const error = isRecord(reply.body) ? reply.body.error : null;
+      if (reply.status === 409 && (error === 'not-friend' || error === 'full')) return error;
+      if (reply.status === 404 || reply.status === 409 || reply.status === 400) return 'gone';
+      return { room: room(reply), invite: isRecord(reply.body) && reply.body.invite === 'here' ? 'here' : 'sent' };
+    },
     async follow(roomId, userId) {
       const reply = await ask({ action: 'follow', roomId, userId });
       if (reply.status === 409 && isRecord(reply.body) && reply.body.error === 'full') return 'full';

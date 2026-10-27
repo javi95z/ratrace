@@ -6,7 +6,6 @@ import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clipboard } from '../../testing/fakes';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
@@ -82,10 +81,16 @@ describe('the player\'s profile', () => {
     expect(screen.getByRole('link', { name: 'Back' })).toBeTruthy();
   });
 
-  it('asks a player with no Google account to sign in, and offers nothing to change', async () => {
+  it('is a guest\'s too: the rat and the name the others see are theirs to change before any Google account', async () => {
     show({ kind: 'guest', userId: 'g', notice: null }, profile().community);
-    expect(await screen.findByText('Sign in with Google to have a profile others can see.')).toBeTruthy();
-    expect(screen.queryByRole('radiogroup')).toBeNull();
+    expect(await screen.findByRole('radiogroup', { name: 'Fur' })).toBeTruthy();
+    expect(screen.queryByText('Sign in with Google to have a profile others can see.')).toBeNull();
+  });
+
+  it('keeps the friend code with the friends, on the games with others\' page: none here', async () => {
+    show(member, profile().community);
+    await screen.findByRole('radiogroup', { name: 'Fur' });
+    expect(screen.queryByText('ABCD2345')).toBeNull();
   });
 
   it('keeps the rat the player dresses, a part at a time, and shows each part chosen', async () => {
@@ -194,23 +199,6 @@ describe('the player\'s profile', () => {
     expect(await screen.findByText('Saved')).toBeTruthy();
   });
 
-  it('copies the friend code on a tap, and says so', async () => {
-    show(member, profile().community);
-    const code = await screen.findByRole('button', { name: /ABCD2345/ });
-    expect(code.textContent).toBe('Your friend codeABCD2345· Copy');
-    fireEvent.click(code);
-    await waitFor(() => expect(clipboard.text).toBe('ABCD2345'));
-    expect(await screen.findByText('Code copied')).toBeTruthy();
-  });
-
-  it('says nothing where the phone does not take the code: it is on screen to be copied by hand', async () => {
-    clipboard.refuses = true;
-    show(member, profile().community);
-    fireEvent.click(await screen.findByRole('button', { name: /ABCD2345/ }));
-    await settled();
-    expect(screen.queryByText('Code copied')).toBeNull();
-  });
-
   it('shows what the player has lived at a glance: lives, the best score, badges, games with others', async () => {
     const services = memoryServices();
     await services.store.addRun(run('a', { score: 1200 }));
@@ -258,12 +246,6 @@ describe('the player\'s profile', () => {
     expect(renders.count).toBe(before);
   });
 
-  it('is given the code just copied, for a scene: the toast says so from the start', async () => {
-    const { community } = profile();
-    renderGame(<PlayerProfile copied />, { ...memoryServices(), account: accountAs(member), community: () => community });
-    expect(await screen.findByText('Code copied')).toBeTruthy();
-    await act(async () => undefined);
-  });
 });
 
 describe('a player\'s rat', () => {

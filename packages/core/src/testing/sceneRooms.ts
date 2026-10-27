@@ -249,6 +249,7 @@ export function sceneRooms(name: string): RoomsLink | null {
     leave: refused,
     report: refused,
     follow: refused,
+    invite: refused,
     view: async () => (plan.life === undefined ? 'gone' : shown(await theLife(), step)),
     card: refused,
     // The one round a scene plays: the engine plays it on the scene's life, and the room turns with it, the player the last to play.

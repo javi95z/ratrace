@@ -695,7 +695,7 @@ describe('the front door of a player with an account', () => {
     expect(router.push).toHaveBeenLastCalledWith('/en/rankings');
     expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
     // Across the row under the collection and the records, as the web's `col-span-2`.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings']);
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings', 'Your profile']);
   });
 
   it('keeps the way to the rankings with no connection: they are the account\'s, and say so themselves', async () => {
@@ -711,7 +711,7 @@ describe('the front door of a player with an account', () => {
     const requests = await screen.findByRole('link', { name: '2 friend requests' });
     expect(requests.querySelector('[data-sprite="icon.multiplayer"]')).not.toBeNull();
     fireEvent.click(requests);
-    expect(router.push).toHaveBeenLastCalledWith('/en/rankings#friends');
+    expect(router.push).toHaveBeenLastCalledWith('/en/room');
     expect(asked).toEqual(['friends']);
     cleanup();
     renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => othersOf({ friends: async () => ({ friends: [friend('c')], incoming: [], outgoing: [] }) }) });
@@ -728,7 +728,7 @@ describe('the front door of a player with an account', () => {
     expect(asked).toEqual([]);
   });
 
-  it('leads a member to their profile with their rat on it, beside the account at the foot; a guest has no profile there', async () => {
+  it('leads a member to their profile with their rat on it, beside the account at the foot; a guest to theirs too', async () => {
     const asked: string[] = [];
     const services = { ...memoryServices(), community: () => othersOf({ me: async () => (asked.push('me'), { nickname: 'Rata', friendCode: 'ABCD2345', avatar: null }) }) };
     renderGame(<Home />, { ...services, account: accountOf(MEMBER).account });
@@ -744,13 +744,12 @@ describe('the front door of a player with an account', () => {
     await waitFor(() => expect(asked).toContain('me'));
     cleanup();
     renderGame(<Home />, { ...services, account: accountOf(GUEST).account });
-    await screen.findByRole('link', { name: 'Rankings' });
-    await settled();
-    expect(screen.queryByRole('link', { name: 'Your profile' })).toBeNull();
+    fireEvent.click(await screen.findByRole('link', { name: 'Your profile' }));
+    expect(router.push).toHaveBeenLastCalledWith('/en/player');
   });
 
   it('asks the other players again each time it is shown again, as the web asks on every visit: requests answered and a rat dressed on the screens over it', async () => {
-    // The front door stays drawn under the rankings and the profile; what was done there is told when it is shown again.
+    // The front door stays drawn under the friends and the profile; what was done there is told when it is shown again.
     let incoming = [friend('a'), friend('b')];
     let avatar: string | null = null;
     let entered = false;
@@ -762,10 +761,10 @@ describe('the front door of a player with an account', () => {
     });
     renderGame(<Home />, { ...memoryServices(), account: accountOf(MEMBER).account, community: () => others });
     fireEvent.click(await screen.findByRole('link', { name: '2 friend requests' }));
-    expect(router.push).toHaveBeenLastCalledWith('/en/rankings#friends');
+    expect(router.push).toHaveBeenLastCalledWith('/en/room');
     await screen.findByText(/^(Ends today|\d days? left)$/);
     const before = { friends: asked.filter((what) => what === 'friends').length, me: asked.filter((what) => what === 'me').length };
-    // On the rankings' page both requests are answered; on the profile's the rat is dressed; and today's attempt is played.
+    // On the games with others' page both requests are answered; on the profile's the rat is dressed; and today's attempt is played.
     incoming = [];
     avatar = 'rat_gold';
     entered = true;

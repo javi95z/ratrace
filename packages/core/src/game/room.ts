@@ -96,6 +96,8 @@ export interface RoomActions {
   report(userId: string): Promise<'ok' | 'cleared' | 'nameless' | 'failed'>;
   /** Follows another player of the room. `full` at the most one may follow; `failed` if it did not get through. */
   follow(userId: string): Promise<'ok' | 'full' | 'failed'>;
+  /** Asks a friend into the room while it waits for its players. `here` if they are in it; `failed` if it did not get through (not a friend, no seat, no lobby). */
+  invite(userId: string): Promise<'sent' | 'here' | 'failed'>;
   clearDropped(): void;
   /** Asks the server how the room stands now. */
   refresh(): Promise<void>;
@@ -527,6 +529,21 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           if (said === 'gone') return 'failed';
           if (get().room?.id === said.room.id) adopt(said.room);
           return said.report;
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      async invite(userId) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const said = await rooms.invite(room.id, userId);
+          if (typeof said === 'string') return 'failed';
+          if (get().room?.id === said.room.id) adopt(said.room);
+          return said.invite;
         } catch (error) {
           if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
           throw error;

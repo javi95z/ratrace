@@ -3,6 +3,7 @@ import { View, type ViewStyle } from 'react-native';
 import Animated, { measure, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { SCREEN_TOP, Screen, type ScreenScroller } from './Page';
+import { SCROLL_STICKS, StickyBlock } from './StickyBlock';
 import { COLORS, GUTTER } from './theme';
 
 /**
@@ -72,8 +73,15 @@ export function useScrolledPast(px: number): boolean {
   return useSyncExternalStore(offset.subscribe, () => offset.get() > px, () => false);
 }
 
-/** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
-const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER };
+/**
+ * How far a sticky row's ground reaches above it, over what is above (the row before it, the top inset's band): a row stuck to the top, or meeting
+ * another as they close, stands at a fraction of the screen's pixels while the page scrolls, and two grounds that only meet leave a seam there that
+ * the page shows through. Its own room is the same (`paddingTop` gives back what `marginTop` takes): nothing in it moves.
+ */
+const OVERLAP = 1;
+
+/** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden, and over the seam above it. */
+const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER, marginTop: -OVERLAP, paddingTop: OVERLAP };
 
 /**
  * The second row, and what stands above it under the first (`between`, the gap), which close the room under the first as the page scrolls up
@@ -93,10 +101,11 @@ function Closing({ scrollY, stuckAt, room, children }: { scrollY: SharedValue<nu
 
 /**
  * A `Screen` whose `header` stays at the top, under the top inset, while the column scrolls (the web's `sticky top-safe`):
- * the scroll's sticky child is the header's block (`stickyHeaderIndices`). What is above it in the column is the `lead`,
+ * the header's block keeps itself at the top of the scroll on the phone (`StickyBlock`, moved down on the UI thread by as far as the page has
+ * scrolled past it), and is the scroll's sticky child on the web (`stickyHeaderIndices`). What is above it in the column is the `lead`,
  * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPast(px)` says when the page
  * has gone past a point. `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
- * React Native's sticky rows do not stack, the next one pushes the last off, so both rows are one sticky child.
+ * Both rows are one block that sticks (React Native's sticky rows do not stack, the next one pushes the last off).
  * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
  * shows in it, and it closes as they stick, as two sticky rows meet. `between` is what the web's page has between the two rows besides
  * that room (the strip of a crisis under the Hud, a tip of the guide over the Finance tabs): it stands under the header, over the gap, and
@@ -180,7 +189,7 @@ export function StickyScreen({
 
   return (
     <Offset.Provider value={store}>
-      <Screen sticky={[lead ? 1 : 0]} scrollY={scrollY} fixed={fixed} bar={bar} contentStyle={contentStyle} scroller={scroller}>
+      <Screen sticky={SCROLL_STICKS ? [lead ? 1 : 0] : undefined} scrollY={scrollY} fixed={fixed} bar={bar} contentStyle={contentStyle} scroller={scroller}>
         {lead ? (
           <View
             onLayout={(event) => {
@@ -191,8 +200,7 @@ export function StickyScreen({
             {lead}
           </View>
         ) : null}
-        {/* `pointerEvents` as a style too: React Native's sticky header takes its child's style as its own, and must let a press through. */}
-        <View pointerEvents="box-none" style={{ pointerEvents: 'box-none' }}>
+        <StickyBlock scrollY={scrollY} stuckAt={stuckAt}>
           <View style={[ROW, { zIndex: 1 }]}>{header}</View>
           {subHeader ? (
             <Closing scrollY={scrollY} stuckAt={stuckAt} room={room}>
@@ -203,7 +211,7 @@ export function StickyScreen({
               </View>
             </Closing>
           ) : null}
-        </View>
+        </StickyBlock>
         {children}
       </Screen>
     </Offset.Provider>

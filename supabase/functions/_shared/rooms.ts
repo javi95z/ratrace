@@ -231,7 +231,7 @@ export interface RoomsDeps {
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' } | { kind: 'shout' } | { kind: 'friendRequest' } | { kind: 'friendAccepted' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' } | { kind: 'shout' } | { kind: 'friendRequest' } | { kind: 'friendAccepted' } | { kind: 'roomInvite' }>;
 
 /** How many shouts there are to choose from: the page draws them, the server keeps their number. */
 export const SHOUTS = 14;
@@ -374,8 +374,8 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
     ratsIn(deps, room),
     // A name the player reported in a public game is not shown to them again.
     room.public === true ? deps.reportedBy(userId).then((list) => new Set(list)) : Promise.resolve(new Set<string>()),
-    // Whom the player is already friends with, or has asked, for the end of a game, where they may ask the others.
-    room.status === 'finished' && others.length > 0 ? deps.following(userId, others) : Promise.resolve({ friends: [] as string[], asked: [] as string[] }),
+    // Whom the player is already friends with, or has asked: they may ask the others at any time of the game, from the lobby to its end.
+    others.length > 0 ? deps.following(userId, others) : Promise.resolve({ friends: [] as string[], asked: [] as string[] }),
   ]);
   return {
     id: room.id,
@@ -818,6 +818,7 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
       case 'loanAnswer':
       case 'report':
       case 'follow':
+      case 'invite':
         return await inRoom(games, deps, userId, raw);
       default:
         return bad('action');
@@ -1098,6 +1099,20 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const said = await deps.reportName(room.id, userId, other);
     if (said === 'closed') return closed;
     return await answerRoom(games, deps, room.id, userId, { report: said });
+  }
+
+  // A friend asked into the game while it waits for its players: told by a notice that opens it by its code. Only a friend, never twice a seat.
+  if (raw.action === 'invite') {
+    const { userId: other } = raw;
+    if (typeof other !== 'string' || !UUID.test(other) || other === userId) return bad('userId');
+    if (room.status !== 'open' || me.left_at !== null) return closed;
+    if (members.some((m) => m.user_id === other && m.left_at === null)) return await answerRoom(games, deps, room.id, userId, { invite: 'here' });
+    if (members.filter((m) => m.left_at === null).length >= MAX_MEMBERS) return { status: 409, body: { error: 'full' } };
+    const { friends: mine } = await deps.following(userId, [other]);
+    if (!mine.includes(other)) return { status: 409, body: { error: 'not-friend' } };
+    const names = await deps.names([userId]);
+    await deps.notify([other], { kind: 'roomInvite', who: names[userId] ?? null, code: room.code });
+    return await answerRoom(games, deps, room.id, userId, { invite: 'sent' });
   }
 
   if (raw.action === 'follow') {

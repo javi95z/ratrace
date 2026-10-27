@@ -133,8 +133,8 @@ describe('opening and joining a room', () => {
     const { services } = inRooms();
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
-    const sheet = screen.getByRole('dialog', { name: 'Start a game' });
+    await user.click(await screen.findByRole('button', { name: 'Start a game for friends' }));
+    const sheet = screen.getByRole('dialog', { name: 'Start a game for friends' });
     await user.click(within(sheet).getByRole('radio', { name: '1:30' }));
     await user.click(within(sheet).getByRole('radio', { name: /Software engineer/ }));
     await user.click(within(sheet).getByRole('button', { name: 'Start the game' }));
@@ -154,8 +154,8 @@ describe('opening and joining a room', () => {
     const { services } = inRooms();
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
-    const sheet = screen.getByRole('dialog', { name: 'Start a game' });
+    await user.click(await screen.findByRole('button', { name: 'Start a game for friends' }));
+    const sheet = screen.getByRole('dialog', { name: 'Start a game for friends' });
     expect(within(sheet).getByText(/the clock plays for them/)).toBeTruthy();
     expect(within(within(sheet).getByRole('radiogroup', { name: 'Time for each round' })).getAllByRole('radio').map((radio) => radio.textContent)).toEqual(['1:30', '3:00', '5:00', '12 h', '1 day']);
     await user.click(within(sheet).getByRole('radio', { name: '1 day' }));
@@ -168,8 +168,8 @@ describe('opening and joining a room', () => {
     const { services } = inRooms();
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
-    await user.click(within(screen.getByRole('dialog', { name: 'Start a game' })).getByRole('button', { name: 'Start the game' }));
+    await user.click(await screen.findByRole('button', { name: 'Start a game for friends' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Start a game for friends' })).getByRole('button', { name: 'Start the game' }));
     const code = await screen.findByRole('region', { name: 'Game code' });
     // The link is not written out: it is shared or copied.
     expect(within(code).queryByText(/room\?code=/)).toBeNull();
@@ -189,7 +189,7 @@ describe('opening and joining a room', () => {
     const invitation = await screen.findByRole('region', { name: 'You are invited to the game' });
     expect(within(invitation).getByText(code)).toBeTruthy();
     // Come by a link, there is nothing else to do here: no game to open, no other code to type.
-    expect(screen.queryByRole('button', { name: 'Start a game' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Start a game for friends' })).toBeNull();
     expect(screen.queryByRole('textbox', { name: 'Game code' })).toBeNull();
     await user.click(within(invitation).getByRole('button', { name: 'Join the game' }));
     expect(await screen.findByText('Waiting for the host to start.')).toBeTruthy();
@@ -216,7 +216,7 @@ describe('opening and joining a room', () => {
     const sheet = screen.getByRole('dialog', { name: 'Leave the game?' });
     expect(within(sheet).getByText('You started it: leaving ends it for everyone.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Leave' }));
-    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Start a game for friends' })).toBeTruthy();
     expect((await server.ask(B, { action: 'mine' })).body.room).toBeNull();
   });
 });
@@ -402,7 +402,7 @@ describe('a round in a room', () => {
     const asking = screen.getByRole('dialog', { name: 'Leave the game?' });
     expect(within(asking).getByText('Your life in the game ends here. The others play on without you.')).toBeTruthy();
     await user.click(within(asking).getByRole('button', { name: 'Leave' }));
-    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Start a game for friends' })).toBeTruthy();
     expect(went).not.toHaveBeenCalled();
   });
 
@@ -558,7 +558,7 @@ describe('a round in a room', () => {
     expect(within(within(final).getByRole('list', { name: 'New badges' })).getByText('First win')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
     await user.click(within(final).getByRole('button', { name: 'Leave the game' }));
-    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Start a game for friends' })).toBeTruthy();
     expect((await services.store.listRuns())[0]).toMatchObject({ room: true });
   });
 });
@@ -735,7 +735,7 @@ describe('a public game of a round a day', () => {
     const user = userEvent.setup();
     renderGame(<Room />, services);
     const pace = await screen.findByRole('radiogroup', { name: 'Pace' });
-    await user.click(within(pace).getByRole('radio', { name: 'Now and then' }));
+    await user.click(within(pace).getByRole('radio', { name: 'Turn-based' }));
     expect(screen.getByText(/A round a day with whoever is looking for a game/)).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Game now and then' }));
     const clock = await screen.findByRole('region', { name: 'Looking for players' });
@@ -755,7 +755,7 @@ describe('a public game of a round a day', () => {
     await screen.findByRole('radiogroup', { name: 'Pace' });
     await waitFor(() => expect(services.rooms()?.api).toBeTruthy());
     expect(screen.queryByText(/looking for players right now/)).toBeNull();
-    await user.click(screen.getByRole('radio', { name: 'Now and then' }));
+    await user.click(screen.getByRole('radio', { name: 'Turn-based' }));
     expect((await screen.findByRole('status')).textContent).toBe('1 game is looking for players right now');
   });
 });

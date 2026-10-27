@@ -1107,6 +1107,40 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
   });
 });
 
+describe('a friend asked into a game', () => {
+  it('tells a friend of the game waiting for its players, by its code, once they are friends; never a stranger, nor into a game under way', async () => {
+    const server = roomServer();
+    server.db.names.set(HOST, 'Ana_88');
+    const opened = roomOf(await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS }));
+    // Not a friend: refused, and nobody is told.
+    const told = server.notices.length;
+    expect(await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: B })).toMatchObject({ status: 409, body: { error: 'not-friend' } });
+    expect(server.notices.slice(told)).toEqual([]);
+    server.db.friendships.push({ follower: HOST, followed: B }, { follower: B, followed: HOST });
+    const sent = await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: B });
+    expect(sent).toMatchObject({ status: 200, body: { invite: 'sent' } });
+    expect(server.notices.slice(told)).toEqual([{ user: B, about: { kind: 'roomInvite', who: 'Ana_88', code: opened.code } }]);
+    // Asked of no one, of oneself, or of someone already in it.
+    expect(await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: 'nobody' })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect(await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: HOST })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect((await server.ask(B, { action: 'join', code: opened.code, ...VERSIONS })).status).toBe(200);
+    expect(await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: B })).toMatchObject({ status: 200, body: { invite: 'here' } });
+    // Once it is under way, nobody more is asked into it.
+    server.db.friendships.push({ follower: HOST, followed: C }, { follower: C, followed: HOST });
+    expect((await server.ask(HOST, { action: 'start', roomId: opened.id })).status).toBe(200);
+    expect(await server.ask(HOST, { action: 'invite', roomId: opened.id, userId: C })).toMatchObject({ status: 409 });
+  });
+
+  it('lets the players of a game ask each other to be friends from its lobby on, not only at its end', async () => {
+    const server = roomServer();
+    const opened = roomOf(await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS }));
+    expect((await server.ask(B, { action: 'join', code: opened.code, ...VERSIONS })).status).toBe(200);
+    expect((await server.ask(HOST, { action: 'follow', roomId: opened.id, userId: B })).status).toBe(200);
+    const lobby = roomOf(await server.ask(HOST, { action: 'state', roomId: opened.id })) as unknown as { members: Array<{ userId: string; followed: boolean; friend: boolean }> };
+    expect(lobby.members.find((m) => m.userId === B)).toMatchObject({ followed: true, friend: false });
+  });
+});
+
 describe('a public game of a round a day', () => {
   const D = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
   type Seat = Omit<Room, 'members'> & { public: boolean; startsAt: string | null; members: Array<Room['members'][number] & { bot: string | null }> };

@@ -14,5 +14,5 @@ export const roomLink = (locale: string, code: string): string => {
 /** The link that asks for friendship (`roomLink.ts`), on the page's own address. */
 export const friendLink = (locale: string, code: string): string => {
   const origin = typeof window === 'undefined' ? SITE_URL.origin : window.location.origin;
-  return `${origin}/${locale}/rankings?tab=friends&friend=${code}`;
+  return `${origin}/${locale}/room?friend=${code}`;
 };

@@ -443,8 +443,7 @@ const SHEETS_PATIENCE = 2_000;
  */
 /** The notices each page shows what they told of, by their kind (`tag`, `supabase/functions/_shared/notice.ts`): seen once the page is in front. */
 const SEEN_ON: Partial<Record<Page, readonly string[]>> = {
-  rankings: ['friends'],
-  room: ['room', 'room-loan', 'room-shout'],
+  room: ['room', 'room-loan', 'room-shout', 'room-invite', 'friends'],
   challenge: ['weekly-challenge'],
   play: ['idle-life', 'market-moved'],
 };

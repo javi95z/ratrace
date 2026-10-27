@@ -34,6 +34,28 @@ export default {
       return ids.map((id) => ({ userId: id, nickname: by.get(id)?.nickname ?? null, avatar: by.get(id)?.portrait ?? null }));
     };
 
+    /**
+     * Each friend with the game they are in now (a code only for one that waits for its players: a friend may join it) and how many games the
+     * player has shared with them (the player's latest 500).
+     */
+    const withGames = async (user: string, list: FriendRow[]): Promise<FriendRow[]> => {
+      if (list.length === 0) return list;
+      const ids = list.map((row) => row.userId);
+      const [now, mine] = await Promise.all([
+        db.from('room_players').select('user_id, rooms!inner(code, status)').in('user_id', ids).is('left_at', null).in('rooms.status', ['open', 'playing']),
+        db.from('room_players').select('room_id').eq('user_id', user).order('joined_at', { ascending: false }).limit(500),
+      ]);
+      const playing = new Map<string, { status: 'open' | 'playing'; code: string | null }>();
+      for (const row of must(now) as unknown as Array<{ user_id: string; rooms: { code: string; status: 'open' | 'playing' } }>) {
+        playing.set(row.user_id, { status: row.rooms.status, code: row.rooms.status === 'open' ? row.rooms.code : null });
+      }
+      const rooms = (must(mine) as Array<{ room_id: string }>).map((row) => row.room_id);
+      const shared = rooms.length === 0 ? [] : (must(await db.from('room_players').select('user_id').in('room_id', rooms).in('user_id', ids)) as Array<{ user_id: string }>);
+      const together = new Map<string, number>();
+      for (const row of shared) together.set(row.user_id, (together.get(row.user_id) ?? 0) + 1);
+      return list.map((row) => ({ ...row, playing: playing.get(row.userId) ?? null, together: together.get(row.userId) ?? 0 }));
+    };
+
     const reply = await friends(
       {
         allow: (user) => allowed(db, user, 'friends'),
@@ -49,8 +71,9 @@ export default {
             db.from('friend_requests').select('from_user').eq('to_user', user).order('created_at', { ascending: false }),
             db.from('friend_requests').select('to_user').eq('from_user', user).order('created_at', { ascending: false }),
           ]);
+          const friendIds = (must(mine) as Array<{ followed: string }>).map((row) => row.followed);
           return {
-            friends: await rows((must(mine) as Array<{ followed: string }>).map((row) => row.followed)),
+            friends: await withGames(user, await rows(friendIds)),
             incoming: await rows((must(toMe) as Array<{ from_user: string }>).map((row) => row.from_user)),
             outgoing: await rows((must(fromMe) as Array<{ to_user: string }>).map((row) => row.to_user)),
           };

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { ImageSourcePropType } from 'react-native';
-import { SOURCES } from '../sprites/sources';
+import { SOURCES as BUNDLED } from '../sprites/sources';
 import { uriOf } from './assetUri.web';
 import { reportMissing } from './sprites';
 
@@ -10,6 +10,9 @@ import { reportMissing } from './sprites';
  * same count of reads under way (`useSpritesLoading`, which the scenes' shots wait on), the same states (`SpriteImage`). The browser keeps the
  * decoded pictures and the files: nothing here is trimmed.
  */
+
+/** Every sprite's own file: Metro gives the web `sources.web.ts`, which packs nothing on a sheet (the phone's `sources.ts` does). */
+const SOURCES = BUNDLED as Record<string, ImageSourcePropType>;
 
 /** What is given for a sprite's file (a Metro asset: on the web a number in react-native-web's registry, or an object with its address). */
 export const sourceOf = (id: string): ImageSourcePropType | undefined => (Object.hasOwn(SOURCES, id) ? SOURCES[id] : undefined);

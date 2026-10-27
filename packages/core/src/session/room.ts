@@ -180,6 +180,11 @@ export interface RoomsApi {
   report(roomId: string, userId: string): Promise<{ room: RoomState; report: 'ok' | 'cleared' | 'nameless' } | 'gone'>;
   /** Asks another player of the room to be friends, or says yes if they asked first. `full` at the most friends or requests; `gone` if either is no longer in it. */
   follow(roomId: string, userId: string): Promise<RoomState | 'full' | 'gone'>;
+  /**
+   * Asks a friend into the room while it waits for its players: they are told by a notice that opens it. `here` if they are in it already;
+   * `not-friend` for someone who is not a friend; `full` with no seat left; `gone` if the room no longer waits, or the player is not in it.
+   */
+  invite(roomId: string, userId: string): Promise<{ room: RoomState; invite: 'sent' | 'here' } | 'not-friend' | 'full' | 'gone'>;
   join(code: string, versions: { engine: string; content: string }): Promise<RoomState>;
   start(roomId: string): Promise<RoomState>;
   /** Leaves the room. Null if the player was no longer in it. */

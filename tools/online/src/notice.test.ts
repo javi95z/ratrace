@@ -28,8 +28,8 @@ describe('what a notice says', () => {
   });
 
   it('tells of a friend request and of a yes, by name, and leads to the friends', () => {
-    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' })).toEqual({ title: 'Solicitud de amistad', body: 'Ana quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.', url: '/es/rankings#friends', tag: 'friends' });
-    expect(noticeOf('en', { kind: 'friendAccepted', who: null })).toMatchObject({ title: 'You have a new friend', url: '/en/rankings#friends' });
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' })).toEqual({ title: 'Solicitud de amistad', body: 'Ana quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.', url: '/es/room', tag: 'friends' });
+    expect(noticeOf('en', { kind: 'friendAccepted', who: null })).toMatchObject({ title: 'You have a new friend', url: '/en/room' });
     expect(noticeOf('ru', { kind: 'friendRequest', who: null }).body.startsWith('Игрок')).toBe(true);
   });
 
@@ -38,16 +38,19 @@ describe('what a notice says', () => {
     expect(noticeOf('ru', { kind: 'yourTurn', round: 6, rounds: 20, secondsLeft: 72 }, 'app')).toMatchObject({ url: 'theratrace://room', tag: 'room' });
     expect(noticeOf('en', { kind: 'idle' }, 'app').url).toBe('theratrace://play');
     expect(noticeOf('en', { kind: 'marketMoved', asset: 'gold', percent: 6 }, 'app').url).toBe('theratrace://play');
-    // The app's router drops a `#` from a link the system opens: the friends are asked for by a query, and the web keeps its own.
-    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://rankings?tab=friends');
-    expect(noticeOf('en', { kind: 'friendAccepted', who: null }, 'app').url).toBe('theratrace://rankings?tab=friends');
-    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }).url).toBe('/es/rankings#friends');
+    // The friends are on the games with others' page, beside the ways to play with them.
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }, 'app').url).toBe('theratrace://room');
+    expect(noticeOf('en', { kind: 'friendAccepted', who: null }, 'app').url).toBe('theratrace://room');
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' }).url).toBe('/es/room');
+    // An invitation opens the game it names, joined from its button on a phone.
+    expect(noticeOf('es', { kind: 'roomInvite', who: 'Ana', code: 'K7Q2XM' })).toEqual({ title: 'Ana te invita a una partida', body: 'Todos vivís la misma vida, en el mismo mundo. Únete antes de que empiece.', url: '/es/room?code=K7Q2XM', tag: 'room-invite' });
+    expect(noticeOf('ru', { kind: 'roomInvite', who: null, code: 'K7Q2XM' }, 'app')).toMatchObject({ url: 'theratrace://room?code=K7Q2XM', category: 'room-invite', actions: { join: 'theratrace://room?code=K7Q2XM' } });
     // A request that says who asked is answered from the phone's notice: its buttons, and the link each opens. None on the web, nor for the rest.
     const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
     expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana', from }, 'app')).toMatchObject({
-      url: 'theratrace://rankings?tab=friends',
+      url: 'theratrace://room',
       category: 'friend-request',
-      actions: { accept: `theratrace://rankings?tab=friends&accept=${from}`, decline: `theratrace://rankings?tab=friends&decline=${from}` },
+      actions: { accept: `theratrace://room?accept=${from}`, decline: `theratrace://room?decline=${from}` },
     });
     expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana', from })).not.toHaveProperty('actions');
     expect(noticeOf('es', { kind: 'friendAccepted', who: 'Ana' }, 'app')).not.toHaveProperty('category');

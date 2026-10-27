@@ -338,7 +338,7 @@ function FriendRequests() {
       tone={GOLD}
       bg="night-600"
       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}
-      onPress={() => go.push('rankings', { hash: 'friends' })}
+      onPress={() => go.push('room')}
     >
       <Sprite id="icon.multiplayer" />
       <PixelText size={15} tone="gold-500" style={{ flexShrink: 1, textAlign: 'center' }}>{t('friendRequests', { n: waiting })}</PixelText>
@@ -346,13 +346,13 @@ function FriendRequests() {
   );
 }
 
-/** The way to the player's profile, with their rat on it: there for someone signed in with Google, whose profile the others see, and for nobody else. */
+/** The way to the player's profile, with their rat on it: there for anyone with an account, a guest's as a member's, whose profile the others see. */
 function ProfileLink() {
   const t = useT('home');
   const { state } = useAccount();
   const community = useCommunity();
   const go = useGo();
-  const userId = state.kind === 'member' ? state.userId : null;
+  const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
   // Asked each time the front door is shown (the rat may have been dressed on the profile's page over it), as `FriendRequests` asks.
   const ask = useMemo(() => (userId === null || community === null ? null : () => community.me().then((me) => me?.avatar ?? null)), [userId, community]);
   const avatar = useAskedWhenShown(ask, null);

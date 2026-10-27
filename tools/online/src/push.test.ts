@@ -85,7 +85,7 @@ describe('a notice to the browsers and the phones of players', () => {
     expect(JSON.parse(web[0].payload)).not.toHaveProperty('actions');
     expect(posts[0].messages[0]).toMatchObject({
       categoryId: 'friend-request',
-      data: { url: 'theratrace://rankings?tab=friends', tag: 'friends', actions: { accept: `theratrace://rankings?tab=friends&accept=${from}`, decline: `theratrace://rankings?tab=friends&decline=${from}` } },
+      data: { url: 'theratrace://room', tag: 'friends', actions: { accept: `theratrace://room?accept=${from}`, decline: `theratrace://room?decline=${from}` } },
     });
   });
 
@@ -389,7 +389,7 @@ describe("what a run of the clock answers", () => {
   });
 });
 
-/** Every notice as a browser was sent it before phones could be told, byte for byte. */
+/** Every notice as a browser was sent it before phones could be told, byte for byte; but the friends', which lead to the games with others since they moved there. */
 const ABOUTS: NoticeAbout[] = [
   { kind: 'weekly', place: 3, entrants: 41 },
   { kind: 'weekly', place: null, entrants: null },
@@ -415,8 +415,8 @@ const BEFORE = [
   "{\"title\":\"Your market moved\",\"body\":\"Your Bitcoin fell 12% in your last round. Come and see where you stand.\",\"url\":\"/en/play\",\"tag\":\"market-moved\"}",
   "{\"title\":\"Ana offers you a loan\",\"body\":\"$10,000 at 7.5% over 3 rounds. Answer before the round turns.\",\"url\":\"/en/room\",\"tag\":\"room-loan\"}",
   "{\"title\":\"A rival says:\",\"body\":\"Hurry up!\",\"url\":\"/en/room\",\"tag\":\"room-shout\"}",
-  "{\"title\":\"A friend request\",\"body\":\"Ana wants to be your friend. Say yes to see each other's lives among your friends.\",\"url\":\"/en/rankings#friends\",\"tag\":\"friends\"}",
-  "{\"title\":\"You have a new friend\",\"body\":\"A player said yes. Now you see each other's lives among your friends.\",\"url\":\"/en/rankings#friends\",\"tag\":\"friends\"}",
+  "{\"title\":\"A friend request\",\"body\":\"Ana wants to be your friend. Say yes to see each other's lives among your friends.\",\"url\":\"/en/room\",\"tag\":\"friends\"}",
+  "{\"title\":\"You have a new friend\",\"body\":\"A player said yes. Now you see each other's lives among your friends.\",\"url\":\"/en/room\",\"tag\":\"friends\"}",
   "{\"title\":\"Nuevo reto semanal\",\"body\":\"Quedaste #3 de 41 la semana pasada. Ya hay uno nuevo.\",\"url\":\"/es/challenge\",\"tag\":\"weekly-challenge\"}",
   "{\"title\":\"Nuevo reto semanal\",\"body\":\"Una vida, una regla y el mismo mundo para todos. A ver en qué puesto quedas esta semana.\",\"url\":\"/es/challenge\",\"tag\":\"weekly-challenge\"}",
   "{\"title\":\"Empieza la partida\",\"body\":\"Todos vivís ya la misma vida. Tienes 1:30 por ronda.\",\"url\":\"/es/room\",\"tag\":\"room\"}",
@@ -427,8 +427,8 @@ const BEFORE = [
   "{\"title\":\"Tu mercado se ha movido\",\"body\":\"Tu Bitcoin ha bajado un 12% en tu última ronda. Pasa a ver cómo estás.\",\"url\":\"/es/play\",\"tag\":\"market-moved\"}",
   "{\"title\":\"Ana te ofrece un préstamo\",\"body\":\"10.000 $ al 7.5% en 3 rondas. Responde antes de que acabe la ronda.\",\"url\":\"/es/room\",\"tag\":\"room-loan\"}",
   "{\"title\":\"Un rival dice:\",\"body\":\"¡Date prisa!\",\"url\":\"/es/room\",\"tag\":\"room-shout\"}",
-  "{\"title\":\"Solicitud de amistad\",\"body\":\"Ana quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.\",\"url\":\"/es/rankings#friends\",\"tag\":\"friends\"}",
-  "{\"title\":\"Tienes un amigo nuevo\",\"body\":\"Un jugador ha aceptado. Ya veis vuestras vidas entre amigos.\",\"url\":\"/es/rankings#friends\",\"tag\":\"friends\"}",
+  "{\"title\":\"Solicitud de amistad\",\"body\":\"Ana quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.\",\"url\":\"/es/room\",\"tag\":\"friends\"}",
+  "{\"title\":\"Tienes un amigo nuevo\",\"body\":\"Un jugador ha aceptado. Ya veis vuestras vidas entre amigos.\",\"url\":\"/es/room\",\"tag\":\"friends\"}",
   "{\"title\":\"Новый недельный вызов\",\"body\":\"На прошлой неделе у тебя #3 из 41. Начался новый.\",\"url\":\"/ru/challenge\",\"tag\":\"weekly-challenge\"}",
   "{\"title\":\"Новый недельный вызов\",\"body\":\"Одна жизнь, одно правило и один мир для всех. Посмотри, каким будет твоё место на этой неделе.\",\"url\":\"/ru/challenge\",\"tag\":\"weekly-challenge\"}",
   "{\"title\":\"Партия началась\",\"body\":\"Все живут одну и ту же жизнь. На каждый раунд у тебя 1:30.\",\"url\":\"/ru/room\",\"tag\":\"room\"}",
@@ -439,8 +439,8 @@ const BEFORE = [
   "{\"title\":\"Твой рынок сдвинулся\",\"body\":\"Bitcoin: −12% за твой последний раунд. Загляни, посмотри, как дела.\",\"url\":\"/ru/play\",\"tag\":\"market-moved\"}",
   "{\"title\":\"Ana предлагает тебе заём\",\"body\":\"10 000 $ под 7.5% на 3 раунда. Ответь до конца раунда.\",\"url\":\"/ru/room\",\"tag\":\"room-loan\"}",
   "{\"title\":\"Соперник говорит:\",\"body\":\"Поторопись!\",\"url\":\"/ru/room\",\"tag\":\"room-shout\"}",
-  "{\"title\":\"Заявка в друзья\",\"body\":\"Ana хочет дружить. Прими заявку, и вы будете видеть жизни друг друга среди друзей.\",\"url\":\"/ru/rankings#friends\",\"tag\":\"friends\"}",
-  "{\"title\":\"Новый друг\",\"body\":\"Игрок принимает заявку. Теперь вы видите жизни друг друга среди друзей.\",\"url\":\"/ru/rankings#friends\",\"tag\":\"friends\"}",
+  "{\"title\":\"Заявка в друзья\",\"body\":\"Ana хочет дружить. Прими заявку, и вы будете видеть жизни друг друга среди друзей.\",\"url\":\"/ru/room\",\"tag\":\"friends\"}",
+  "{\"title\":\"Новый друг\",\"body\":\"Игрок принимает заявку. Теперь вы видите жизни друг друга среди друзей.\",\"url\":\"/ru/room\",\"tag\":\"friends\"}",
 ];
 
 describe('what a browser is sent', () => {
