@@ -380,7 +380,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   inlaw_loan: ['He nods, and walks back into the rain.', 'He promises to pay it back by spring, and writes it down.', '"A gift," you say. He cries a little.'],
   inlaw_repay: [null, 'He hugs you for a long time. He keeps the job, too.'],
   boss_weekend: ['She takes the binder back without a word.', 'Two days, one binder, cold pizza. On Monday she says thank you, twice.'],
-  boss_offer: ['She understands, and keeps you in mind.', 'A new title, a new office, and a view of the bay.', 'A new title, a new office, and the rain.'],
+  boss_offer: ['She understands, and keeps you in mind.', 'A new title, a new office, and the rain.', 'A new title, a new office, and a view of the park.'],
   boss_layoffs: [null, 'She crosses your name off. "You covered for me," she says.', 'A cheque, a handshake and a box for your plant.'],
   landlord_damp: ['You move the bed and buy a bucket. He likes a quiet tenant.', null, 'A weekend, a mask and a tin of fungicide. He is delighted.'],
   landlord_raise: ['You sign. He calls you the best tenant in the building.', null, 'Boxes, a van and a deposit you will not see again.'],

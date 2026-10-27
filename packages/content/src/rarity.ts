@@ -76,7 +76,7 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   off_the_grid: { rarity: 'rare', judged: true },
   rode_out_recession: { rarity: 'common' },
   bankrupt: { rarity: 'uncommon' },
-  room_at_40: { rarity: 'uncommon' },
+  room_at_40: { rarity: 'common' },
   ronin: { rarity: 'rare', judged: true },
   ex_convict: { rarity: 'rare', judged: true },
   truly_innocent: { rarity: 'legendary', judged: true },

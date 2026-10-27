@@ -368,7 +368,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   inlaw_loan: ['Asiente y vuelve a la lluvia.', 'Promete devolverlo en primavera, y lo apunta.', '«Es un regalo», le dices. Se le escapa alguna lágrima.'],
   inlaw_repay: [null, 'Te abraza un buen rato. Y conserva el trabajo.'],
   boss_weekend: ['Se lleva el archivador sin decir nada.', 'Dos días, un archivador y pizza fría. El lunes te da las gracias dos veces.'],
-  boss_offer: ['Lo entiende, y te tiene presente.', 'Un cargo nuevo, una oficina nueva y vistas a la bahía.', 'Un cargo nuevo, una oficina nueva y la lluvia.'],
+  boss_offer: ['Lo entiende, y te tiene presente.', 'Un cargo nuevo, una oficina nueva y la lluvia.', 'Un cargo nuevo, una oficina nueva y vistas al parque.'],
   boss_layoffs: [null, 'Tacha tu nombre. «Tú me cubriste», dice.', 'Un cheque, un apretón de manos y una caja para tu planta.'],
   landlord_damp: ['Mueves la cama y compras un cubo. Le gustan los inquilinos tranquilos.', null, 'Un fin de semana, una mascarilla y un bote de antimoho. Está encantado.'],
   landlord_raise: ['Firmas. Dice que eres el mejor inquilino del edificio.', null, 'Cajas, una furgoneta y una fianza que no volverás a ver.'],

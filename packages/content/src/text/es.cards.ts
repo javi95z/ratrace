@@ -1234,8 +1234,8 @@ export const cards: Record<string, CardText> = {
   ]),
   boss_offer: c('Una oficina fuera', '{person:boss} abre una oficina en el extranjero y quiere allí a alguien de confianza, un peldaño más arriba.', [
     'Darle las gracias y quedarte',
-    'Hacer las maletas para {city:singapore}',
     'Hacer las maletas para {city:london}',
+    'Hacer las maletas para {city:new_york}',
   ]),
   boss_layoffs: c('Una lista en el pasillo', 'Cajas en el pasillo y un directivo con una lista. {person:boss} está en la sala donde se hace.', [
     ['Esperar a la lista', 'Tu nombre no está.', 'Tu nombre está.'],

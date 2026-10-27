@@ -10,7 +10,11 @@ import { card, usd, yearly } from './build';
  * step in through a card each, named in its words by `{rival:<who>}`, which the interface fills.
  */
 
-/** How likely a story's first card is: like an everyday card, so a life meets some of the people and not all of them. */
+/**
+ * How likely a story's first card is: like an everyday card, so a life meets some of the people and not all of them, two or three
+ * with the parents (`pnpm --filter @ratrace/balance exec tsx src/people.ts`). Each story's first card is dealt over a different stretch
+ * of a life (the coin to the young, the adviser to anyone with savings), and is weighed from this to meet a third of lives or so.
+ */
 const MEET = 8;
 /** How likely a story's next card is once it is due: high enough to come within a round or two. */
 const NEXT = 150;
@@ -32,7 +36,7 @@ const after = (flag: string, rounds = 1) => ({ flags: [flag], notRecentFlag: { f
 export const peopleCards: CardDef[] = [
   // The brother-in-law and his coin: in early, it goes five times up; held, it most often vanishes and now and then goes twenty.
   // Out, he boasts at dinner. Either way his own goes, and he comes for a loan, which he pays back or not.
-  card('inlaw_coin', 'investing', { once: true, weight: MEET, when: { minRound: 1, maxRound: 12 } }, person('inlaw', [
+  card('inlaw_coin', 'investing', { once: true, weight: MEET, when: { minRound: 1, maxRound: 14 } }, person('inlaw', [
     { effects: { setFlags: ['inlaw_out'] } },
     { effects: { cash: usd(-2_000), ...warm('inlaw', 'inlaw_in') } },
     { when: { minFinanceSkill: 1 }, effects: cold('inlaw', 'inlaw_out') },
@@ -61,15 +65,15 @@ export const peopleCards: CardDef[] = [
     { effects: { status: 1, clearFlags: ['inlaw_owes'], ...warm('inlaw', 'inlaw_forgiven') } },
   ])),
 
-  // The boss: a weekend covered is remembered, with a rung abroad and, in a recession's layoffs, her word; asked twice in vain, she stops asking.
-  card('boss_weekend', 'career', { soon: true, cooldown: 3, weight: MEET, when: { employed: true, minRound: 1, notFlags: ['boss_covered', 'boss_cold'] } }, person('boss', [
+  // The boss: a weekend covered is remembered, with a rung abroad (no bonus on top: the rung is the reward, and no tax haven) and, in a recession's layoffs, her word; asked twice in vain, she stops asking.
+  card('boss_weekend', 'career', { soon: true, cooldown: 3, weight: MEET - 2, when: { employed: true, minRound: 1, notFlags: ['boss_covered', 'boss_cold'] } }, person('boss', [
     { effects: { setFlags: ['boss_declined'], onceMore: { boss_declined: 'boss_cold' } } },
     { effects: { focus: 1, careerSkill: 1, ...warm('boss', 'boss_covered') } },
   ])),
   card('boss_offer', 'career', { once: true, weight: NEXT, when: { employed: true, ...after('boss_covered', 2) } }, person('boss', [
     {},
-    { when: { notCities: ['singapore'] }, effects: { job: { levelDelta: 1 }, moveCity: 'singapore', cash: usd(4_000), setFlags: ['boss_moved'] } },
-    { when: { cities: ['singapore'] }, effects: { job: { levelDelta: 1 }, moveCity: 'london', cash: usd(4_000), setFlags: ['boss_moved'] } },
+    { when: { notCities: ['london'] }, effects: { job: { levelDelta: 1 }, moveCity: 'london', setFlags: ['boss_moved'] } },
+    { when: { cities: ['london'] }, effects: { job: { levelDelta: 1 }, moveCity: 'new_york', setFlags: ['boss_moved'] } },
   ])),
   card('boss_layoffs', 'career', { once: true, weight: NEXT / 2, when: { employed: true, flags: ['boss_met'], notFlags: ['layoff_proof'], regimes: ['recession'] } }, person('boss', [
     { outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } }] },
@@ -122,12 +126,12 @@ export const peopleCards: CardDef[] = [
   ])),
 
   // The bank's adviser: a "guaranteed" fund whose fee runs every year, and the bank's own insurance on a mortgage. A word in time saves it.
-  card('advisor_fund', 'investing', { once: true, weight: MEET, when: { minRound: 2, minNetWorth: usd(15_000) } }, person('advisor', [
+  card('advisor_fund', 'investing', { once: true, weight: MEET - 4, when: { minRound: 2, minNetWorth: usd(15_000) } }, person('advisor', [
     { effects: cold('advisor') },
     { effects: { invest: { assetId: 'treasury_short', amount: usd(10_000) }, recurring: [yearly('fund_fee', 'expense', 400, null)], ...warm('advisor', 'advisor_fund') } },
     { when: { minFinanceSkill: 2 }, effects: { invest: { assetId: 'msci_world', amount: usd(10_000) }, ...cold('advisor') } },
   ])),
-  card('advisor_insurance', 'housing', { once: true, weight: MEET * 2, when: { hasMortgage: true } }, person('advisor', [
+  card('advisor_insurance', 'housing', { once: true, weight: MEET - 3, when: { hasMortgage: true } }, person('advisor', [
     { effects: cold('advisor') },
     { effects: { recurring: [yearly('bank_insurance', 'expense', 900, 10)], ...warm('advisor', 'advisor_insurance') } },
     { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
@@ -136,7 +140,7 @@ export const peopleCards: CardDef[] = [
   // The parents, in every life: help with a first home, care in their old age, and what they leave.
   card('parents_help', 'family', { once: true, weight: FAMILY, when: { ownsHome: false, minRound: 1, maxRound: 5 } }, person('parents', [
     { effects: { status: 1, setFlags: ['parents_proud'] } },
-    { effects: { cash: usd(10_000), setFlags: ['parents_helped'] } },
+    { effects: { cash: usd(6_000), setFlags: ['parents_helped'] } },
   ])),
   card('parents_care', 'family', { once: true, weight: FAMILY, when: { minRound: 9, maxRound: 14 } }, person('parents', [
     { effects: { recurring: [yearly('care_home', 'expense', 6_000, 4)], setFlags: ['parents_home'] } },
