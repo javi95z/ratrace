@@ -819,6 +819,11 @@
     "w": 288,
     "h": 120
   },
+  "card.boss_retire": {
+    "src": "cards/card.boss_retire.png",
+    "w": 288,
+    "h": 120
+  },
   "card.boss_weekend": {
     "src": "cards/card.boss_weekend.png",
     "w": 288,
@@ -1064,6 +1069,11 @@
     "w": 288,
     "h": 120
   },
+  "card.classmate_housewarming": {
+    "src": "cards/card.classmate_housewarming.png",
+    "w": 288,
+    "h": 120
+  },
   "card.classmate_job": {
     "src": "cards/card.classmate_job.png",
     "w": 288,
@@ -1121,6 +1131,11 @@
   },
   "card.cousin_wedding": {
     "src": "cards/card.cousin_wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.cousin_yacht": {
+    "src": "cards/card.cousin_yacht.png",
     "w": 288,
     "h": 120
   },
@@ -1279,6 +1294,11 @@
     "w": 288,
     "h": 120
   },
+  "card.ex_new_car_man": {
+    "src": "cards/card.ex_new_car_man.png",
+    "w": 288,
+    "h": 120
+  },
   "card.family_dinner": {
     "src": "cards/card.family_dinner.png",
     "w": 288,
@@ -1296,6 +1316,11 @@
   },
   "card.for_sale_signs": {
     "src": "cards/card.for_sale_signs.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.founder_bell": {
+    "src": "cards/card.founder_bell.png",
     "w": 288,
     "h": 120
   },
@@ -1711,6 +1736,11 @@
   },
   "card.parents_inheritance": {
     "src": "cards/card.parents_inheritance.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.parents_visit": {
+    "src": "cards/card.parents_visit.png",
     "w": 288,
     "h": 120
   },

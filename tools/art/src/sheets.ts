@@ -418,6 +418,9 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-51', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['boss_weekend', 'boss_offer', 'boss_layoffs', 'landlord_damp', 'landlord_raise', 'landlord_sale'].map((id) => `card.${id}`) },
   { file: 'cards/cards-52', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['founder_pitch', 'founder_more', 'founder_exit', 'founder_second', 'advisor_fund', 'advisor_insurance'].map((id) => `card.${id}`) },
   { file: 'cards/cards-53', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['parents_help', 'parents_care', 'parents_inheritance', 'cousin_wedding', 'ex_new_car', 'classmate_job'].map((id) => `card.${id}`) },
+  // The people, deeper (art/prompts/v22-prompt-pack.md, cards-54): the ex as a man, the classmate's housewarming, the cousin's yacht, the parents' visit,
+  // the founder's bell and the boss's retirement. Stand-ins cut from older scenes until drawn.
+  { file: 'cards/cards-54', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['ex_new_car_man', 'classmate_housewarming', 'cousin_yacht', 'parents_visit', 'founder_bell', 'boss_retire'].map((id) => `card.${id}`) },
   // v21: a life's milestones, the big moment's scene.
   { file: 'cards/milestones-01', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['worth_100k', 'worth_1m', 'worth_10m', 'debt_free'].map((id) => `milestone.${id}`) },
   { file: 'cards/milestones-02', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['first_home', 'first_business', 'halfway', 'escaped'].map((id) => `milestone.${id}`) },

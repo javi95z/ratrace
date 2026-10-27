@@ -4756,6 +4756,36 @@
       "width": 288,
       "height": 120
     },
+    "card.ex_new_car_man": {
+      "file": "cards/card.ex_new_car_man.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.classmate_housewarming": {
+      "file": "cards/card.classmate_housewarming.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cousin_yacht": {
+      "file": "cards/card.cousin_yacht.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.parents_visit": {
+      "file": "cards/card.parents_visit.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.founder_bell": {
+      "file": "cards/card.founder_bell.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.boss_retire": {
+      "file": "cards/card.boss_retire.png",
+      "width": 288,
+      "height": 120
+    },
     "milestone.worth_100k": {
       "file": "cards/milestone.worth_100k.png",
       "width": 288,
