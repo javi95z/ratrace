@@ -35,6 +35,7 @@ export interface Notice {
  * - `shout`: another player of the game said something, by its number among the game's shouts.
  * - `friendRequest`: another player (`from`, their id) asks to be the player's friend.
  * - `friendAccepted`: a player the player asked said yes.
+ * - `roomInvite`: a friend asks the player into the game they are waiting in (`code`, its code).
  */
 export type NoticeAbout =
   | { kind: 'weekly'; place: number | null; entrants: number | null }
@@ -47,7 +48,8 @@ export type NoticeAbout =
   | { kind: 'loanOffer'; who: string | null; lend: boolean; amount: number; rateBp: number; rounds: number }
   | { kind: 'shout'; who: string | null; n: number }
   | { kind: 'friendRequest'; who: string | null; from?: string }
-  | { kind: 'friendAccepted'; who: string | null };
+  | { kind: 'friendAccepted'; who: string | null }
+  | { kind: 'roomInvite'; who: string | null; code: string };
 
 /** The six faces a player may shout, which no language changes. The page's own list, held to it by a test. */
 export const SHOUT_FACES = ['😂', '😱', '🔥', '💸', '👑', '👋'] as const;
@@ -109,6 +111,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     shout: (a) => ({ title: `${a.who ?? 'A rival'} says:`, body: shoutText(a.n, 'en') }),
     friendRequest: (a) => ({ title: 'A friend request', body: `${a.who ?? 'A player'} wants to be your friend. Say yes to see each other's lives among your friends.` }),
     friendAccepted: (a) => ({ title: 'You have a new friend', body: `${a.who ?? 'A player'} said yes. Now you see each other's lives among your friends.` }),
+    roomInvite: (a) => ({ title: `${a.who ?? 'A friend'} invites you to a game`, body: 'Everyone lives the same life, in the same world. Join before it starts.' }),
   },
   es: {
     weekly: (a) => ({
@@ -128,6 +131,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     shout: (a) => ({ title: `${a.who ?? 'Un rival'} dice:`, body: shoutText(a.n, 'es') }),
     friendRequest: (a) => ({ title: 'Solicitud de amistad', body: `${a.who ?? 'Un jugador'} quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.` }),
     friendAccepted: (a) => ({ title: 'Tienes un amigo nuevo', body: `${a.who ?? 'Un jugador'} ha aceptado. Ya veis vuestras vidas entre amigos.` }),
+    roomInvite: (a) => ({ title: `${a.who ?? 'Un amigo'} te invita a una partida`, body: 'Todos vivís la misma vida, en el mismo mundo. Únete antes de que empiece.' }),
   },
   ru: {
     weekly: (a) => ({
@@ -147,13 +151,16 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     shout: (a) => ({ title: `${a.who ?? 'Соперник'} говорит:`, body: shoutText(a.n, 'ru') }),
     friendRequest: (a) => ({ title: 'Заявка в друзья', body: `${a.who ?? 'Игрок'} хочет дружить. Прими заявку, и вы будете видеть жизни друг друга среди друзей.` }),
     friendAccepted: (a) => ({ title: 'Новый друг', body: `${a.who ?? 'Игрок'} принимает заявку. Теперь вы видите жизни друг друга среди друзей.` }),
+    roomInvite: (a) => ({ title: `${a.who ?? 'Друг'} зовёт тебя в партию`, body: 'Все живут одну и ту же жизнь в одном мире. Присоединяйся, пока партия не началась.' }),
   },
 };
 
-const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room', shout: 'room', friendRequest: 'rankings#friends', friendAccepted: 'rankings#friends' };
-/** The app's screen for each notice: the web's page, but for the friends, which the app's router opens by a query (an opened link's `#` is dropped on the way). */
-const APP_PAGE: Record<NoticeAbout['kind'], string> = { ...PAGE, friendRequest: 'rankings?tab=friends', friendAccepted: 'rankings?tab=friends' };
-const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan', shout: 'room-shout', friendRequest: 'friends', friendAccepted: 'friends' };
+/** The page each notice opens: the friends are on the games with others' page, beside the ways to play with them. */
+const PAGE: Record<Exclude<NoticeAbout['kind'], 'roomInvite'>, string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room', shout: 'room', friendRequest: 'room', friendAccepted: 'room' };
+const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan', shout: 'room-shout', friendRequest: 'friends', friendAccepted: 'friends', roomInvite: 'room-invite' };
+
+/** The page a notice opens, after the language or the app's scheme: an invitation opens the game it names, by its code. */
+const pageOf = (about: NoticeAbout): string => (about.kind === 'roomInvite' ? `room?code=${about.code}` : PAGE[about.kind]);
 
 /** Where a tap on a phone's notice leads: the app's own links. */
 export const APP_LINK = 'theratrace://';
@@ -161,25 +168,28 @@ export const APP_LINK = 'theratrace://';
 /**
  * The notice for a browser, or a phone with the app (`on: 'app'`), that asked for notices in a
  * language; one the game does not have, or none, reads in English. The words are the same on both:
- * a browser is led to the page on the site in its language, a phone to the screen in the app (`theratrace://rankings?tab=friends` for the friends).
+ * a browser is led to the page on the site in its language, a phone to the screen in the app (`theratrace://room` for the friends).
  */
 export function noticeOf(locale: string | null, about: NoticeAbout, on: 'web' | 'app' = 'web'): Notice {
   const lang = langOf(locale);
   const words = (WORDS[lang][about.kind] as Words)(about as never);
-  const notice: Notice = { ...words, url: on === 'app' ? `${APP_LINK}${APP_PAGE[about.kind]}` : `/${lang}/${PAGE[about.kind]}`, tag: TAG[about.kind] };
+  const notice: Notice = { ...words, url: on === 'app' ? `${APP_LINK}${pageOf(about)}` : `/${lang}/${pageOf(about)}`, tag: TAG[about.kind] };
   return on === 'app' ? { ...notice, ...buttonsOf(about) } : notice;
 }
 
-/** The name a phone knows a friend request's buttons by: Accept and Decline. */
+/** The names a phone knows the notices' buttons by: a friend request's Accept and Decline, an invitation's Join. */
 export const FRIEND_REQUEST = 'friend-request';
+export const ROOM_INVITE = 'room-invite';
 
 /**
- * The buttons of a notice on a phone, and what each opens: a friend request is answered from its notice (the friends' page, answering it,
- * `theratrace://rankings?tab=friends&accept=<id>`). Nothing for the rest, nor for a request that does not say who asked.
+ * The buttons of a notice on a phone, and what each opens: a friend request is answered from its notice (the friends, on the games with others'
+ * page, answering it, `theratrace://room?accept=<id>`), an invitation joined (`theratrace://room?code=<code>`). Nothing for the rest, nor for a
+ * request that does not say who asked.
  */
 function buttonsOf(about: NoticeAbout): Pick<Notice, 'category' | 'actions'> {
+  if (about.kind === 'roomInvite') return { category: ROOM_INVITE, actions: { join: `${APP_LINK}room?code=${about.code}` } };
   if (about.kind !== 'friendRequest' || about.from === undefined) return {};
-  const answer = (how: 'accept' | 'decline') => `${APP_LINK}rankings?tab=friends&${how}=${about.from}`;
+  const answer = (how: 'accept' | 'decline') => `${APP_LINK}room?${how}=${about.from}`;
   return { category: FRIEND_REQUEST, actions: { accept: answer('accept'), decline: answer('decline') } };
 }
 

@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
-import { Rankings, type Answering, type Kind } from '../../game/screens/Rankings';
+import { useEffect } from 'react';
+import { useGo } from '../../game/pages';
+import { Rankings, type Kind } from '../../game/screens/Rankings';
 import { PageHead } from '../../game/pageHead';
 import { InLanguage } from '../../game/screens/InLanguage';
 
@@ -9,32 +10,27 @@ export { generateStaticParams } from '../../game/pages';
 
 /**
  * The rankings a link can open on: the web's `#friends` (the front door's link, and a phone's `theratrace://rankings#friends`) and `?tab=challenge`, and
- * any tab by `?tab=`, which the server writes a phone's notices in: a friend request's is `theratrace://rankings?tab=friends`. A friend's link (their QR
- * code) brings their code for the player to send (`?friend=`), and a friend request's notice's buttons the answer (`?accept=<id>`, `?decline=<id>`).
+ * any tab by `?tab=`. The player's friends are on the games with others' page: a link that brings a friend's code or a friend request's answer here
+ * (`?friend=`, `?accept=`, `?decline=`: a QR code or a notice from before they moved) is led there, its query kept.
  */
 const TABS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
-/** A friend code, as the server makes them, in a friend's link (`?friend=`, their QR code). */
-const FRIEND_CODE = /^[A-Za-z0-9]{8}$/;
-/** An account's id, in a friend request's notice's buttons (`?accept=`, `?decline=`). */
-const USER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** One value of a query, or undefined. */
-const one = (value: string | string[] | undefined): string | undefined => (typeof value === 'string' ? value : undefined);
+const FRIENDS: readonly string[] = ['friend', 'accept', 'decline'];
 
 export default function RankingsRoute() {
   // The hash, as the router hands it.
-  const { tab, '#': hash, friend, accept, decline } = useLocalSearchParams<{ tab?: string; '#'?: string; friend?: string; accept?: string; decline?: string }>();
-  const code = one(friend)?.toUpperCase();
-  const asked = one(accept) ?? one(decline);
-  const answering = useMemo<Answering | undefined>(() => (asked !== undefined && USER_ID.test(asked) ? { userId: asked, yes: one(accept) === asked } : undefined), [asked, accept]);
+  const params = useLocalSearchParams<{ tab?: string; '#'?: string; friend?: string; accept?: string; decline?: string }>();
+  const go = useGo();
+  const moved = Object.fromEntries(FRIENDS.flatMap((name) => (typeof params[name as 'friend'] === 'string' ? [[name, params[name as 'friend'] as string]] : [])));
+  const leads = Object.keys(moved).length > 0;
+  const where = JSON.stringify(moved);
+  useEffect(() => {
+    if (leads) go.replace('room', { query: JSON.parse(where) as Record<string, string> });
+  }, [leads, where, go]);
+  if (leads) return null;
   return (
     <InLanguage>
       <PageHead page="rankings" />
-      <Rankings
-        tab={TABS.find((kind) => kind === tab) ?? (hash === 'friends' || code !== undefined || answering !== undefined ? 'friends' : undefined)}
-        friend={code !== undefined && FRIEND_CODE.test(code) ? code : undefined}
-        answering={answering}
-      />
+      <Rankings tab={TABS.find((kind) => kind === params.tab) ?? (params['#'] === 'friends' ? 'friends' : undefined)} />
     </InLanguage>
   );
 }

@@ -679,34 +679,30 @@ test('the scenes of the rankings are the rankings themselves, told of the scene\
   expect(lines[0].textContent).toContain('Queso_Grande');
   // The scene's player is the sixth, lit as their own.
   expect(lines[5].getAttribute('aria-selected')).toBe('true');
-  expect(await screen.findByText('Your friend code:', { exact: false }, WAIT)).toBeTruthy();
-  expect(within(screen.getByRole('region', { name: 'You' })).getByText('Rata_Uno')).toBeTruthy();
   expect(screen.queryByRole('textbox')).toBeNull();
   cleanup();
   render(<SceneView name="rankings-week" />);
-  expect(await screen.findByRole('list', { name: 'This week' }, WAIT)).toBeTruthy();
+  expect(await screen.findByRole('list', { name: 'Best this week' }, WAIT)).toBeTruthy();
   cleanup();
+  // Among friends: their ranking, and the way to the friends themselves, on the games with others' page.
   render(<SceneView name="rankings-friends" />);
   expect(await screen.findByRole('list', { name: 'Friends' }, WAIT)).toBeTruthy();
-  await screen.findByText('YOUR FRIENDS', {}, WAIT);
-  expect(await screen.findByRole('button', { name: 'MoneyRat' }, WAIT)).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Friend requests' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Squeak_99 Waiting' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Your friends and their requests' })).toBeTruthy();
   cleanup();
   render(<SceneView name="rankings-challenge" />);
   expect(await screen.findByText('40 players · the best 4 are in the top 10%', {}, WAIT)).toBeTruthy();
   cleanup();
-  // The name being changed: the form open from the start, on the name the player has.
+  // The name is changed on the profile now: this scene is the rankings as they are.
   render(<SceneView name="rankings-nickname" />);
-  const field = await screen.findByRole('textbox', { name: 'Name' }, WAIT);
-  await waitFor(() => expect((field as HTMLInputElement).value).toBe('Rata_Uno'), WAIT);
-  expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
+  expect(await screen.findByRole('list', { name: 'All time' }, WAIT)).toBeTruthy();
+  expect(screen.queryByRole('textbox', { name: 'Name' })).toBeNull();
 });
 
-test('the scenes of the player\'s own profile are drawn signed in: the profile itself, its rat a tab at a time on a page of its own, and its code just copied', async () => {
+test('the scenes of the player\'s own profile are drawn signed in: the profile itself, and its rat a tab at a time on a page of its own', async () => {
   render(<SceneView name="player-member" />);
   expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
-  expect(screen.getByRole('button', { name: /ABCD2345/ })).toBeTruthy();
+  // The friend code is with the friends: none here.
+  expect(screen.queryByRole('button', { name: /ABCD2345/ })).toBeNull();
   // The three lives of the scene's device, at a glance.
   expect(screen.getByLabelText('Your figures').textContent).toMatch(/^3Lives/);
   expect(screen.queryByText('Code copied')).toBeNull();
@@ -724,7 +720,6 @@ test('the scenes of the player\'s own profile are drawn signed in: the profile i
     cleanup();
   }
   render(<SceneView name="player-friend-code" />);
-  expect(await screen.findByText('Code copied', {}, WAIT)).toBeTruthy();
   expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
 });
 
@@ -764,11 +759,15 @@ test('a scene of the game alone is drawn with nobody signed in, and one of the g
 test('the scenes of the games with others are drawn signed in, at the scene\'s table: the door, a lobby among friends, a public one counting down, an invitation', async () => {
   render(<SceneView name="room-door" />);
   expect(await screen.findByText('2 games are looking for players right now', {}, WAIT)).toBeTruthy();
-  expect(screen.getByRole('textbox', { name: 'Game code' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Play now' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Have a game code?' })).toBeTruthy();
+  // The player's friends beside the ways to play: their code, and none yet.
+  expect(await screen.findByRole('button', { name: /Your friend code: / }, WAIT)).toBeTruthy();
   cleanup();
   render(<SceneView name="room-lobby-friends" />);
   const members = await screen.findByRole('region', { name: 'In the game: 3 of 6' }, WAIT);
-  expect(within(members).getAllByRole('listitem').map((seat) => seat.textContent)).toEqual([expect.stringMatching(/^Rata_UnoHostYou/), 'Bea_7', 'Rat C3D4']);
+  // Each other player may be asked to be friends from here, before the game begins.
+  expect(within(members).getAllByRole('listitem').map((seat) => seat.textContent)).toEqual([expect.stringMatching(/^Rata_UnoHostYou/), 'Bea_7Add friend', 'Rat C3D4Add friend']);
   expect(within(screen.getByRole('region', { name: 'Game code' })).getByText('K7Q2XM')).toBeTruthy();
   expect(screen.getByText('Software engineer')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Start' }).getAttribute('aria-disabled')).not.toBe('true');

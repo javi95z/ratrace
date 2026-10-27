@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import type { Community, Friend } from '@ratrace/online/types';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
-import { Rankings } from './Rankings';
+import { FriendsPanel } from './Friends';
 
 /*
- * The rankings' page has one `<h1>`, its title, as the Next web's: the friends' panel's tab is an `<h2>`, and its groups (the requests the player was
- * sent, those they sent) are under it (the Next web writes them as plain lines, `<p>`), never a second `<h1>`.
+ * The friends' panel, on the games with others' page, adds no `<h1>` to the page: its tab is an `<h2>`, and its groups (the requests the player was
+ * sent, those they sent) are under it, `<h3>`s.
  */
 
 afterEach(cleanup);
@@ -38,12 +38,11 @@ function community(): Community {
   } as Community;
 }
 
-it('gives the friends\' groups no h1: one h1 on the page, the groups under the panel\'s h2', async () => {
-  renderGame(<Rankings />, { ...memoryServices(), community: () => community() });
-  fireEvent.click(await screen.findByRole('tab', { name: 'Friends' }));
+it('gives the friends\' groups no h1: the groups under the panel\'s h2', async () => {
+  renderGame(<FriendsPanel onJoin={() => undefined} onTold={() => undefined} />, { ...memoryServices(), community: () => community() });
   await screen.findByText('Tercera');
   await screen.findByText('Otra_Rata');
-  expect([...document.querySelectorAll('h1')].map((h) => h.textContent)).toEqual(['Rankings']);
+  expect(document.querySelectorAll('h1')).toHaveLength(0);
   for (const name of ['Friend requests', 'Requests sent']) expect(screen.getByRole('heading', { level: 3, name })).toBeTruthy();
   expect(screen.getByRole('heading', { level: 2, name: /your friends/i })).toBeTruthy();
 });

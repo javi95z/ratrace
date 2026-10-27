@@ -1,10 +1,11 @@
 import { badgeArt, lives, portraitArt, ratArt } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
-import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
+import { MAX_MEMBERS, MIN_MEMBERS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
 import type { PublicPace, RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
 import type { GameStore } from '@ratrace/core/game/store';
+import type { Friend } from '@ratrace/online/types';
 import { indexed } from '@ratrace/engine';
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +29,7 @@ import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA } from '../../ui/theme';
 import { GameScope, useClock, useCommunity, useGame, useProfile, useRoom, useSettings, useTrack, useWords } from '../context';
 import { lifeRows } from '../lives';
+import { useGo } from '../pages';
 import { useOwnT } from '../ownWords';
 import { roomLink } from '../roomLink';
 import { RoomPaper } from '../roomStory';
@@ -35,10 +37,10 @@ import { useRoomSlice } from '../roomSlice';
 import { canShareLink, shareLink } from '../sharing';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
+import { FriendsPanel, InviteFriends, useFriendName } from './Friends';
 import { LifeBrief, LifeSummary } from './LifeSummary';
 import { Play } from './Play';
 import type { RoomSlots } from './Play';
-import { NAME } from './Rankings';
 import { LinkButton, LoanOffers, LoanReplies, PlayerSheet } from './RoomLoans';
 import type { LoanReply } from './RoomLoans';
 import { clock, rankOf, useCountdown, useNameOf, useSecondsLeft, useSecondsToStart } from './RoomCard';
@@ -120,17 +122,51 @@ function Refusal({ plain = false }: { plain?: boolean }) {
   );
 }
 
+/** A friend request answered from its notice's button (`theratrace://room?accept=<id>`): who asked, and the answer. */
+export interface Answering {
+  userId: string;
+  yes: boolean;
+}
+
 /**
- * Playing with friends: the way into a room, its lobby, and the life lived in it. It needs an account and a connection, and says so where there is
- * neither. `code` is the code an invitation's link brought (the route's `?code=`: `theratrace://room?code=`, or the web's own link opened on the phone).
+ * Playing with others: the way into a room with the player's friends beside it, its lobby, and the life lived in it. It needs an account and a
+ * connection, and says so where there is neither. `code` is the code an invitation's link brought (the route's `?code=`: `theratrace://room?code=`,
+ * or the web's own link opened on the phone); `friend` a friend's code their link brought (their QR code); `answering` a friend request answered from
+ * its notice's button, answered here whatever the page shows.
  */
-export function Room({ code }: { code?: string } = {}) {
+export function Room({ code, friend, answering }: { code?: string; friend?: string; answering?: Answering } = {}) {
+  const [told, setTold] = useState<string | null>(null);
+  // Moved on as a request is answered from a notice: the friends on the page are read again.
+  const [friendsTurn, setFriendsTurn] = useState(0);
   return (
-    <>
+    <View style={{ flex: 1 }}>
       {PERF ? <RoomMark /> : null}
-      <RoomShown code={code} />
-    </>
+      <RoomShown code={code} friend={friend} friendsTurn={friendsTurn} onTold={setTold} />
+      {answering ? <AnswerFromNotice answering={answering} onAnswered={(said) => (setTold(said), setFriendsTurn((n) => n + 1))} /> : null}
+      <Toast message={told} onDone={() => setTold(null)} />
+    </View>
   );
+}
+
+/** Answers a friend request from its notice's button, once for each notice, and says how it went. */
+function AnswerFromNotice({ answering, onAnswered }: { answering: Answering; onAnswered(said: string): void }) {
+  const ranks = useT('rankings');
+  const community = useCommunity();
+  const done = useRef<string | null>(null);
+  const told = useRef(onAnswered);
+  told.current = onAnswered;
+  useEffect(() => {
+    const which = `${answering.userId}:${answering.yes}`;
+    if (community === null || done.current === which) return;
+    done.current = which;
+    void community.answerFriend(answering.userId, answering.yes).then((said) => {
+      if (said === 'accepted') told.current(ranks('nowFriends'));
+      else if (said === 'gone') told.current(ranks('answerGone'));
+      else if (said === 'full' || said === 'failed') told.current(ranks(said === 'full' ? 'followFull' : 'followFailed'));
+      else told.current(ranks('declined'));
+    });
+  }, [answering, community, ranks]);
+  return null;
 }
 
 /**
@@ -142,7 +178,7 @@ function RoomMark() {
   return <PerfDrawn name={`room: ${where}`} />;
 }
 
-function RoomShown({ code }: { code?: string }) {
+function RoomShown({ code, friend, friendsTurn, onTold }: { code?: string; friend?: string; friendsTurn: number; onTold(message: string): void }) {
   const t = useT('room');
   const phone = useOwnT();
   const common = useT('common');
@@ -177,7 +213,7 @@ function RoomShown({ code }: { code?: string }) {
       </RoomPage>
     );
   }
-  if (status === 'none' || room === null) return <Door code={code} />;
+  if (status === 'none' || room === null) return <Door code={code} friend={friend} friendsTurn={friendsTurn} onTold={onTold} />;
   if (room.status === 'open') return <Lobby room={room} />;
   if (otherRules) {
     // The web's words say to reload the page: on the phone, a game on rules the app lacks waits for an update of it (on the web, the Next web's words).
@@ -973,8 +1009,15 @@ function Told({ children }: { children: string }) {
   );
 }
 
-/** In no room: a quick game with whoever is looking for one, a game of one's own, or one joined with a code. A link with a code fills it in. */
-function Door({ code: given }: { code?: string }) {
+/** The seconds of a round at each pace, as the server plays a public game at it (`PUBLIC_PACES`): a game among friends is opened at the same. */
+const PACE_SECONDS: Record<PublicPace, RoundSeconds> = { live: 180, slow: DAY };
+
+/**
+ * In no room: one pace for every game (played together, or a round a day), then the two ways in, a game with whoever is looking for one or a game for
+ * the player's friends; a game joined by its code on a sheet of its own; and the player's friends, each joined in the game they wait in or asked into
+ * one. A link with a code is the invitation itself; a friend's link writes their code in.
+ */
+function Door({ code: given, friend, friendsTurn, onTold }: { code?: string; friend?: string; friendsTurn: number; onTold(message: string): void }) {
   const t = useT('room');
   const track = useTrack();
   const busy = useRoom((s) => s.busy);
@@ -986,20 +1029,20 @@ function Door({ code: given }: { code?: string }) {
   const clearDropped = useRoom((s) => s.clearDropped);
   const lobbies = useRoom((s) => s.lobbies);
   const lookForLobbies = useRoom((s) => s.lookForLobbies);
-  // A public game played together, or a round a day with whoever comes.
+  // Played together, or a round a day: the same for a public game and for one among friends.
   const [pace, setPace] = useState<PublicPace>('live');
   const waiting = lobbies?.[pace] ?? 0;
   useEffect(() => {
     void lookForLobbies();
   }, [lookForLobbies]);
-  const [opening, setOpening] = useState(false);
-  const [code, setCode] = useState('');
+  // The game for friends being opened, and the friend to ask into it once it is, if one was chosen first.
+  const [opening, setOpening] = useState<{ inviting: Friend | null } | null>(null);
+  const [byCode, setByCode] = useState(false);
   // An invitation is a link with the room's code: it is shown as one, to be joined with one press.
   const invited = given === undefined || codeOf(given).length !== 6 ? null : codeOf(given);
-  const submit = () => {
-    if (busy || code.length !== 6) return;
+  const joinBy = (code: string, via: 'code' | 'link') => {
     clearClosed();
-    void join(code).then((joined) => joined && track({ name: 'game_join', via: 'code' }));
+    void join(code).then((joined) => joined && track({ name: 'game_join', via }));
   };
 
   // Come by an invitation, the page is the invitation: the game to join, and the one button that joins it.
@@ -1034,7 +1077,7 @@ function Door({ code: given }: { code?: string }) {
   return (
     <RoomPage title={t('title')} refreshable>
       <View role="list" style={{ gap: 6 }}>
-        {(['introSame', 'introWho', 'introPace'] as const).map((line) => (
+        {(['introSame', 'introWho'] as const).map((line) => (
           <View key={line} role="listitem" style={{ flexDirection: 'row', gap: 8 }}>
             <View aria-hidden>
               <ReadText size={15} tone="gold-500" lineHeight={15 * SNUG}>{'▸'}</ReadText>
@@ -1045,17 +1088,17 @@ function Door({ code: given }: { code?: string }) {
       </View>
       {closed ? <Told>{t('closed')}</Told> : null}
       {dropped ? <Told>{t('dropped')}</Told> : null}
-      {/* The quickest way in: a seat in a public game, with no code to pass round, at the pace chosen. */}
+      <Segmented<PublicPace>
+        label={t('publicPace')}
+        value={pace}
+        onChange={setPace}
+        options={[
+          { value: 'live', label: t('paceTogether') },
+          { value: 'slow', label: t('paceSlow') },
+        ]}
+      />
+      {/* The quickest way in: a seat in a public game, with no code to pass round. */}
       <View style={{ gap: 6 }}>
-        <Segmented<PublicPace>
-          label={t('publicPace')}
-          value={pace}
-          onChange={setPace}
-          options={[
-            { value: 'live', label: t('paceTogether') },
-            { value: 'slow', label: t('paceSlow') },
-          ]}
-        />
         <Button
           variant="primary"
           wide
@@ -1067,7 +1110,7 @@ function Door({ code: given }: { code?: string }) {
           }}
         >
           <Sprite id="icon.multiplayer" />
-          {t(pace === 'live' ? 'quick' : 'quickSlow')}
+          {t('playNow')}
         </Button>
         {waiting > 0 ? (
           <View accessible role="status">
@@ -1076,23 +1119,45 @@ function Door({ code: given }: { code?: string }) {
         ) : null}
         <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t(pace === 'live' ? 'quickAbout' : 'quickSlowAbout')}</ReadText>
       </View>
-      <Button variant="secondary" wide disabled={busy} onPress={() => setOpening(true)}>
-        {t('open')}
-      </Button>
-      <Panel title={t('join')}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <ReadText size={12} tone="ink-300" style={{ marginBottom: 4 }}>{t('code')}</ReadText>
-            <TextField label={t('code')} kind="room" value={code} onChangeText={setCode} placeholder="······" returnKeyType="go" onSubmitEditing={submit} />
-          </View>
-          <Button variant="secondary" disabled={busy || code.length !== 6} onPress={submit}>
-            {t('enter')}
-          </Button>
-        </View>
-      </Panel>
+      <View style={{ gap: 4 }}>
+        <Button variant="secondary" wide disabled={busy} onPress={() => setOpening({ inviting: null })}>
+          {t('open')}
+        </Button>
+        <Button variant="quiet" wide onPress={() => setByCode(true)}>
+          {t('haveCode')}
+        </Button>
+      </View>
       <Refusal />
-      <OpenSheet open={opening} onClose={() => setOpening(false)} />
+      <FriendsPanel onJoin={(code) => joinBy(code, 'code')} onInvite={(one) => setOpening({ inviting: one })} onTold={onTold} initial={friend} turn={friendsTurn} />
+      <OpenSheet open={opening !== null} pace={pace} inviting={opening?.inviting ?? null} onClose={() => setOpening(null)} />
+      <CodeSheet open={byCode} onClose={() => setByCode(false)} onJoin={(code) => joinBy(code, 'code')} />
     </RoomPage>
+  );
+}
+
+/** A game joined by its code: the code typed in, and the way in. Closed once it is joined. */
+function CodeSheet({ open, onClose, onJoin }: { open: boolean; onClose(): void; onJoin(code: string): void }) {
+  const t = useT('room');
+  const common = useT('common');
+  const busy = useRoom((s) => s.busy);
+  const [code, setCode] = useState('');
+  const submit = () => {
+    if (busy || code.length !== 6) return;
+    onClose();
+    onJoin(code);
+  };
+  return (
+    <Sheet open={open} onClose={onClose} title={t('join')} closeLabel={common('close')}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <ReadText size={12} tone="ink-300" style={{ marginBottom: 4 }}>{t('code')}</ReadText>
+          <TextField label={t('code')} kind="room" value={code} onChangeText={setCode} placeholder="······" returnKeyType="go" onSubmitEditing={submit} />
+        </View>
+        <Button variant="secondary" disabled={busy || code.length !== 6} onPress={submit}>
+          {t('enter')}
+        </Button>
+      </View>
+    </Sheet>
   );
 }
 
@@ -1156,26 +1221,48 @@ function Over({ children, below = false }: { children: string; below?: boolean }
   );
 }
 
-/** Opening a room: its life, from those the player may live, and how long a round may take. */
-function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
+/**
+ * Opening a game for friends: its pace (the door's, to change here) and its life, from those the player may live. A friend chosen first (`inviting`,
+ * from their sheet) is asked into it once it is open.
+ */
+function OpenSheet({ open, pace: given, inviting, onClose }: { open: boolean; pace: PublicPace; inviting: Friend | null; onClose(): void }) {
   const t = useT('room');
-  const paceOf = usePaceOf();
+  const friends = useT('friends');
   const common = useT('common');
+  const nameOf = useFriendName();
   const busy = useRoom((s) => s.busy);
   const openRoom = useRoom((s) => s.open);
+  const invite = useRoom((s) => s.invite);
   const available = useAvailableLives();
   const [lifeId, setLifeId] = useState(available[0] ?? 'nurse');
-  const [seconds, setSeconds] = useState<RoundSeconds>(180);
+  const [pace, setPace] = useState(given);
+  // Each opening starts from the door's pace.
+  const [was, setWas] = useState(open);
+  if (open !== was) {
+    setWas(open);
+    if (open) setPace(given);
+  }
   const go = async () => {
-    if (await openRoom(lifeId, seconds)) onClose();
+    if (!(await openRoom(lifeId, PACE_SECONDS[pace]))) return;
+    if (inviting) await invite(inviting.userId);
+    onClose();
   };
   return (
     <Sheet open={open} onClose={onClose} title={t('open')} closeLabel={common('close')}>
       <View style={{ gap: 16 }}>
+        {inviting ? <ReadText size={14} tone="teal-300" lineHeight={14 * SNUG}>{friends('willInvite', { name: nameOf(inviting) })}</ReadText> : null}
         <View>
-          <Over>{t('pace')}</Over>
-          <Segmented<RoundSeconds> label={t('pace')} value={seconds} onChange={setSeconds} options={ROUND_SECONDS.map((value) => ({ value, label: paceOf(value) }))} />
-          <Over below>{t(seconds >= HOUR ? 'paceDay' : 'paceLive')}</Over>
+          <Over>{t('publicPace')}</Over>
+          <Segmented<PublicPace>
+            label={t('publicPace')}
+            value={pace}
+            onChange={setPace}
+            options={[
+              { value: 'live', label: t('paceTogether') },
+              { value: 'slow', label: t('paceSlow') },
+            ]}
+          />
+          <Over below>{t(pace === 'live' ? 'paceLive' : 'paceDay')}</Over>
         </View>
         <View>
           <Over>{t('life')}</Over>
@@ -1227,8 +1314,9 @@ function StartsIn() {
 }
 
 /** Someone at the table: their rat, their name, and what they are to the game. The player's own line has the way to name themselves. */
-const Seat = memo(function Seat({ userId, name, avatar, host, bot, me, first }: { userId: string; name: string; avatar: string | null; host: boolean; bot: boolean; me: boolean; first: boolean }) {
+const Seat = memo(function Seat({ userId, name, avatar, host, bot, me, first, bond, onFollow }: { userId: string; name: string; avatar: string | null; host: boolean; bot: boolean; me: boolean; first: boolean; bond: 'friend' | 'asked' | 'none'; onFollow(userId: string): void }) {
   const t = useT('room');
+  const said = useT('room.player');
   return (
     <View
       role="listitem"
@@ -1240,6 +1328,14 @@ const Seat = memo(function Seat({ userId, name, avatar, host, bot, me, first }: 
       {bot ? <Tag item>{t('bot')}</Tag> : null}
       {me ? <Tag tone="good" item>{t('you')}</Tag> : null}
       {me ? <RenameButton /> : null}
+      {/* Someone met here may be asked to be friends at once, before the game begins. */}
+      {me || bot ? null : bond === 'none' ? (
+        <Button variant="quiet" size={13} padX={8} onPress={() => onFollow(userId)}>
+          {said('follow')}
+        </Button>
+      ) : (
+        <Tag item>{said(bond === 'friend' ? 'friends' : 'following')}</Tag>
+      )}
     </View>
   );
 });
@@ -1258,6 +1354,9 @@ function Lobby({ room }: { room: RoomState }) {
   const busy = useRoom((s) => s.busy);
   const start = useRoom((s) => s.start);
   const leave = useRoom((s) => s.leave);
+  const invite = useRoom((s) => s.invite);
+  const follow = useRoom((s) => s.follow);
+  const befriend = useCallback((userId: string) => void follow(userId), [follow]);
   const [asking, setAsking] = useState(false);
   const [copied, setCopied] = useState(false);
   const here = room.members.filter((member) => !member.left);
@@ -1355,11 +1454,14 @@ function Lobby({ room }: { room: RoomState }) {
                 bot={member.bot !== null}
                 me={member.me}
                 first={at === 0}
+                bond={member.friend ? 'friend' : member.followed ? 'asked' : 'none'}
+                onFollow={befriend}
               />
             ))}
           </View>
         </Panel>
       </View>
+      <InviteFriends here={here.map((member) => member.userId)} onInvite={invite} />
       {room.public ? (
         // Anyone here may start it now, with rats in the empty seats, rather than wait for its clock.
         <Button variant="primary" wide disabled={busy} onPress={() => void start()}>
@@ -1387,63 +1489,15 @@ function Lobby({ room }: { room: RoomState }) {
   );
 }
 
-/** The way for the player to name themselves where the others will see it: in the lobby, before the game begins. Asked about in a sheet. */
+/** The way for the player to name themselves where the others will see it: their profile, where the name is changed, and come back to the lobby. */
 function RenameButton() {
   const t = useT('room');
-  const ranks = useT('rankings');
-  const common = useT('common');
-  const community = useCommunity();
-  const refresh = useRoom((s) => s.refresh);
+  const go = useGo();
   const named = useRoom((s) => s.room?.members.find((member) => member.me)?.name != null);
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [problem, setProblem] = useState<'invalid' | 'taken' | 'refused' | 'failed' | null>(null);
-  const [busy, setBusy] = useState(false);
-  if (community === null) return null;
-  const save = async () => {
-    if (busy) return;
-    const asked = name.trim();
-    // How it is written is checked here, before anyone is asked. What it says is the database's to judge.
-    if (!NAME.test(asked)) return setProblem('invalid');
-    setBusy(true);
-    const answer = await community.rename(asked);
-    setBusy(false);
-    if (answer !== 'ok') return setProblem(answer);
-    setOpen(false);
-    await refresh();
-  };
   return (
-    <>
-      <Button
-        variant="quiet"
-        size={13}
-        padX={8}
-        onPress={() => {
-          setName('');
-          setProblem(null);
-          setOpen(true);
-        }}
-      >
-        {t(named ? 'renameShort' : 'nameYourself')}
-      </Button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('renameTitle')} closeLabel={common('close')}>
-        <View style={{ gap: 12 }}>
-          <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('renameAbout')}</ReadText>
-          <View style={{ gap: 4 }}>
-            <ReadText size={13} tone="ink-200">{ranks('name')}</ReadText>
-            <TextField label={ranks('name')} value={name} onChangeText={setName} maxLength={16} returnKeyType="go" onSubmitEditing={() => void save()} />
-          </View>
-          {problem ? (
-            <View accessible role="alert">
-              <ReadText size={13} tone="wine-300">{ranks(problem)}</ReadText>
-            </View>
-          ) : null}
-          <Button variant="primary" wide disabled={busy} onPress={() => void save()}>
-            {ranks('save')}
-          </Button>
-        </View>
-      </Sheet>
-    </>
+    <Button variant="quiet" size={13} padX={8} onPress={() => go.push('player')}>
+      {t(named ? 'renameShort' : 'nameYourself')}
+    </Button>
   );
 }
 

@@ -98,7 +98,7 @@
     "failed": "No se ha podido empezar la vida. Inténtalo de nuevo.",
     "mode": "Cómo jugar",
     "modeRanked": "Clasificatoria",
-    "modeRankedHint": "Para el ranking",
+    "modeRankedHint": "Para la clasificación",
     "modeFree": "Offline",
     "modeFreeHint": "Solo para ti",
     "difficulty": "Dificultad: {level}",
@@ -256,7 +256,7 @@
     "status": "Tu [estatus](status) sale de tu puesto, tu casa, tu ciudad, cómo vives (pestaña Vida) y lo que compras (Tienda); la puntuación cuenta su media de toda la vida. Vivir mejor sube tu coste de vida, y muchas cosas cuestan mantenimiento cada año y pierden valor.",
     "flow": "El [flujo](flow), arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. Impuestos te da esta ronda al céntimo.",
     "debt": "Ya tienes Deuda e Impuestos. Un préstamo te dice lo que pagarás cada ronda antes de pedirlo; Impuestos muestra la ronda al céntimo y lo que podrías esconder a Hacienda, con riesgo.",
-    "rivals": "«Tu gente» del Diario son tres personas de tu edad que viven a tu lado: alguien de tu clase, tu prima y tu ex. En tu perfil ves en qué puesto vas, y al final de la vida, el ranking.",
+    "rivals": "«Tu gente» del Diario son tres personas de tu edad que viven a tu lado: alguien de tu clase, tu prima y tu ex. En tu perfil ves en qué puesto vas, y al final de la vida, la clasificación.",
     "inflation": "Con la [inflación](inflation), precios y sueldos suelen subir cada año, pero tu efectivo no: cada ronda compra menos. Tu puntuación mide el patrimonio en dinero de cuando tenías {from}, así que lo que no crece, encoge.",
     "property": "Ya puedes comprar vivienda: pagas una [entrada](downPayment) y un impuesto, y te ahorras el alquiler. Si tiene una habitación de sobra, puedes alquilarla.",
     "business": "Ya puedes montar negocios: cuesta un punto de foco y dinero, y lo llevas tú o un encargado. Si te da al menos el {share} % de tu sueldo dos rondas seguidas, puedes dejar tu trabajo por él.",
@@ -1283,7 +1283,7 @@
     "escapeAge": "Fuera de la rueda a los",
     "badgesCount": "Insignias",
     "badgesNew": "{n, plural, one {# nueva} other {# nuevas}}",
-    "rankedLink": "Vida clasificatoria: ver el ranking",
+    "rankedLink": "Vida clasificatoria: ver la clasificación",
     "lifeLine": "Tu vida en una línea",
     "lineAge": "{age} años",
     "lineQuiet": "Una vida tranquila: nada destacó.",
@@ -1640,7 +1640,7 @@
     "code": "Tu código de amigo",
     "kinds": "Qué clasificación",
     "all": "Histórica",
-    "week": "Esta semana",
+    "week": "Mejores de la semana",
     "friends": "Amigos",
     "life": "Vida inicial",
     "anyLife": "Cualquier vida",
@@ -1665,7 +1665,7 @@
     "runBankruptcies": "Quiebras",
     "runCities": "Vivió en",
     "runBadges": "Insignias de esta vida",
-    "challenge": "Reto de la semana",
+    "challenge": "Reto semanal",
     "requests": "Te piden amistad",
     "accept": "Aceptar",
     "decline": "Rechazar",
@@ -1680,7 +1680,9 @@
     "unfriendAbout": "Dejaréis de ver vuestras vidas entre amigos. Para volver, hará falta otra solicitud.",
     "answerGone": "Esa solicitud ya no está.",
     "inviteScan": "Escanéalo con la cámara de otro móvil: abre el juego con tu código listo para enviar.",
-    "inviteText": "Sé mi amigo en The Rat Race. Mi código de amigo es {code}"
+    "inviteText": "Sé mi amigo en The Rat Race. Mi código de amigo es {code}",
+    "toFriends": "Tus amigos y sus solicitudes",
+    "declined": "Solicitud rechazada."
   },
   "keyboard": {
     "title": "Controles de teclado",
@@ -1710,18 +1712,18 @@
     "title": "Reto de la semana",
     "life": "La vida de esta semana",
     "rule": "La regla",
-    "about": "La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Cuenta un intento al día, y el ranking guarda el mejor; practica cuantas veces quieras.",
+    "about": "La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Cuenta un intento al día, y la clasificación guarda el mejor; practica cuantas veces quieras.",
     "ends": "Termina el {day}, a medianoche UTC.",
     "attempt": "Jugar el intento de hoy",
     "practice": "Practicar",
-    "practiceHint": "Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para el ranking.",
+    "practiceHint": "Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para la clasificación.",
     "played": "Ya jugaste el intento de hoy. Tu mejor marca de la semana: {score} puntos.",
     "entered": "Ya empezaste el intento de hoy.",
     "best": "Tu mejor marca de la semana: {score} puntos.",
     "needsAccount": "Para jugar el intento que cuenta, entra con tu cuenta. Puedes practicar igualmente.",
-    "rankingLink": "Ver el ranking del reto",
+    "rankingLink": "Ver la clasificación del reto",
     "rankingTitle": "Reto de esta semana",
-    "unreachable": "Ahora no se puede leer el ranking del reto.",
+    "unreachable": "Ahora no se puede leer la clasificación del reto.",
     "noEntries": "Nadie ha terminado aún el reto de esta semana.",
     "entrants": "{n, plural, one {# jugador} other {# jugadores}} · los {top} mejores están en el 10 % superior",
     "topTenth": "Top 10 %",
@@ -1836,8 +1838,8 @@
     "openNow": "{count, plural, one {Ahora mismo # partida busca jugadores} other {Ahora mismo # partidas buscan jugadores}}",
     "quickAgain": "Otra partida rápida",
     "publicPace": "Ritmo",
-    "paceTogether": "A la vez",
-    "paceSlow": "A ratos",
+    "paceTogether": "Rápida",
+    "paceSlow": "Por turnos",
     "quickSlow": "Partida a ratos",
     "quickSlowAbout": "Una ronda al día con quien esté buscando partida: juegas la tuya cuando puedes y un aviso te dice cuándo te toca. Si no llega nadie, completan la mesa ratas bot.",
     "quickAgainSlow": "Otra partida a ratos",
@@ -1855,7 +1857,7 @@
       "chaser": "Rata Pija",
       "landlord": "Rata Casera"
     },
-    "open": "Crear una partida",
+    "open": "Crear partida para amigos",
     "life": "La vida que vivirán todos",
     "pace": "Tiempo por ronda",
     "create": "Crear la partida",
@@ -2060,7 +2062,9 @@
       "others": "Durante la partida puedes picar a un rival desde tu foco, o prestarle o pedirle dinero tocando su nombre en la clasificación."
     },
     "worthShort": "Patrimonio",
-    "olderRules": "Esta partida empezó con una versión anterior del juego: se juega igual, pero las cifras que se prevén en pantalla pueden variar un poco."
+    "olderRules": "Esta partida empezó con una versión anterior del juego: se juega igual, pero las cifras que se prevén en pantalla pueden variar un poco.",
+    "playNow": "Jugar ahora",
+    "haveCode": "¿Tienes un código de partida?"
   },
   "player": {
     "title": "Tu perfil",
@@ -2270,11 +2274,26 @@
     },
     "noticeActions": {
       "accept": "Aceptar",
-      "decline": "Rechazar"
+      "decline": "Rechazar",
+      "join": "Unirme"
     }
   },
   "notFound": {
     "title": "Página no encontrada",
     "body": "No hay nada en esta dirección. Tu vida sigue donde la dejaste."
+  },
+  "friends": {
+    "playing": "Jugando ahora",
+    "waiting": "Buscando jugadores",
+    "together": "{n, plural, =0 {Aún no habéis jugado juntos} one {# partida juntos} other {# partidas juntos}}",
+    "best": "Mejor vida clasificatoria",
+    "noBest": "Aún no tiene vidas clasificatorias.",
+    "join": "Unirme a su partida",
+    "invite": "Invitar a una partida",
+    "inviteShort": "Invitar",
+    "invited": "Invitación enviada",
+    "inviteTitle": "Invita a tus amigos",
+    "inviteFailed": "No se pudo invitar. Inténtalo de nuevo.",
+    "willInvite": "Invitaremos a {name} en cuanto se cree la partida."
   }
 }

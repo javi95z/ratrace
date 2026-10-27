@@ -354,11 +354,12 @@ test('the player\'s own profile is drawn signed in on both sides, with the same 
     expect(source).toContain("player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : ");
     expect(source).toContain("const used: Pick<Community, 'me' | 'rename' | 'setAvatar'> = cloud.community;\n  const community = used as Community;\n  return { account: cloud.account, community: () => community };");
   }
-  // The web's page presses the tab and the code, which its screens have no initial state for; the phone's screens are given them.
+  // The web's page presses the tab and the code, which its screens have no initial state for; the phone's screens are given the tab (the friend code
+  // is on the games with others' page now: its scene is the profile as it is).
   expect(web).toContain('<PressedInTurn selectors={tab === \'body\' ? [] : [`main [data-tab="${tab}"]`]}>');
   expect(web).toContain('<PressedInTurn selectors={find}>\n      <PlayerProfile />');
   expect(app).toContain('tab={ratTabOf(scene)}');
-  expect(app).toContain("<PlayerProfile copied={scene.name === 'player-friend-code'} />");
+  expect(app).toContain(": <PlayerProfile />),");
 });
 
 test('the scenes of the game online beside the game alone are drawn by their screens as they are, on both sides, over the same account and other players', () => {

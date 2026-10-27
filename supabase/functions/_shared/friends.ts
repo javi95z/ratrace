@@ -10,11 +10,19 @@ import type { NoticeAbout } from './notice.ts';
 /** What befriending says, in the database's word. */
 export type Befriended = 'self' | 'friends' | 'accepted' | 'pending' | 'sent' | 'full';
 
-/** Another player, as the list of friends shows them. */
+/** A friend's game now: waiting for its players (with its code, to join them) or under way. */
+export interface FriendPlaying {
+  status: 'open' | 'playing';
+  code: string | null;
+}
+
+/** Another player, as the list of friends shows them; a friend also with the game they are in now, and how many games the two have played together. */
 export interface FriendRow {
   userId: string;
   nickname: string | null;
   avatar: string | null;
+  playing?: FriendPlaying | null;
+  together?: number;
 }
 
 export interface FriendsDeps {
@@ -24,7 +32,7 @@ export interface FriendsDeps {
   requestByCode(userId: string, code: string): Promise<{ answer: Befriended | 'unknown'; to: string | null }>;
   answer(userId: string, from: string, yes: boolean): Promise<'accepted' | 'full' | 'declined' | 'gone' | Befriended>;
   remove(userId: string, other: string): Promise<void>;
-  /** The player's friends, the requests sent to them, and those they sent, the latest first. */
+  /** The player's friends (each with the game they are in now and the games played together), the requests sent to them, and those they sent, the latest first. */
   list(userId: string): Promise<{ friends: FriendRow[]; incoming: FriendRow[]; outgoing: FriendRow[] }>;
   /** The names the players chose, by id; null or left out for a player with none. */
   names(userIds: string[]): Promise<Record<string, string | null>>;

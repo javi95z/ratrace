@@ -150,13 +150,16 @@ describe('the link a tap opens', () => {
       const { url } = noticeOf('en', about, 'app');
       expect(pageOf(url), `${about.kind}: ${url}`).not.toBeNull();
     }
-    expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toEqual({ page: 'rankings', query: { tab: 'friends' } });
+    expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toEqual({ page: 'room', query: {} });
+    expect(pageOf(noticeOf('es', { kind: 'roomInvite', who: 'Ana', code: 'K7Q2XM' }, 'app').url)).toEqual({ page: 'room', query: { code: 'K7Q2XM' } });
     // A friend request's buttons: the friends, answering whoever asked.
     const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
     const { actions } = noticeOf('es', { kind: 'friendRequest', who: null, from }, 'app');
-    expect(pageOf(actions?.accept)).toEqual({ page: 'rankings', query: { tab: 'friends', accept: from } });
-    expect(pageOf(actions?.decline)).toEqual({ page: 'rankings', query: { tab: 'friends', decline: from } });
-    expect(pageOf('theratrace://rankings?tab=friends&accept=not-an-id')).toBeNull();
+    expect(pageOf(actions?.accept)).toEqual({ page: 'room', query: { accept: from } });
+    expect(pageOf(actions?.decline)).toEqual({ page: 'room', query: { decline: from } });
+    expect(pageOf('theratrace://room?accept=not-an-id')).toBeNull();
+    // Sent before the friends moved: still opened, on the rankings' page, which leads them on.
+    expect(pageOf(`theratrace://rankings?tab=friends&accept=${from}`)).toEqual({ page: 'rankings', query: { tab: 'friends', accept: from } });
   });
 });
 
@@ -179,6 +182,7 @@ describe('the buttons of a notice', () => {
         { identifier: 'decline', buttonTitle: 'Rechazar', options: { opensAppToForeground: true } },
       ]),
     );
+    expect(notices.categories.get('room-invite')).toEqual([{ identifier: 'join', buttonTitle: 'Unirme', options: { opensAppToForeground: true } }]);
     fireEvent.click(screen.getByRole('radio', { name: 'English' }));
     await waitFor(() => expect(notices.categories.get('friend-request')?.map((button) => button.buttonTitle)).toEqual(['Accept', 'Decline']));
   });
@@ -188,12 +192,12 @@ describe('the buttons of a notice', () => {
     renderGame(<Preferences />, { ...memoryServices(), push });
     await waitFor(() => expect(notices.taps.size).toBe(1));
     act(() => notices.tap(pressed('accept')));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith(`/en/rankings?tab=friends&accept=${from}`));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith(`/en/room?accept=${from}`));
     expect(notices.dismissed).toEqual(['notice-9']);
     act(() => notices.tap(pressed('decline', 'notice-10')));
     // Over the friends opened by the first, in their place.
     const moves = () => [...router.push.mock.calls, ...router.replace.mock.calls].map(([to]) => to);
-    await waitFor(() => expect(moves()).toContain(`/en/rankings?tab=friends&decline=${from}`));
+    await waitFor(() => expect(moves()).toContain(`/en/room?decline=${from}`));
     // The notice itself, tapped: its own link, and the phone takes it from the tray.
     act(() => notices.tap({ ...pressed('expo.modules.notifications.actions.DEFAULT', 'notice-11') }));
     await settle();
@@ -209,11 +213,12 @@ describe('the notices seen', () => {
       { identifier: 'c', tag: 'weekly-challenge' },
     ];
     const push = phonePush(memoryNote(), { platform: 'ios' });
-    pathname.now = '/en/rankings';
+    // The games with others' page shows the room's notices and the friends'.
+    pathname.now = '/en/room';
     renderGame(<Preferences />, { ...memoryServices(), push });
-    await waitFor(() => expect(notices.badge).toBe(2));
-    expect(notices.dismissed).toEqual(['a']);
-    expect(notices.presented.map((one) => one.identifier)).toEqual(['b', 'c']);
+    await waitFor(() => expect(notices.badge).toBe(1));
+    expect(notices.dismissed).toEqual(['a', 'b']);
+    expect(notices.presented.map((one) => one.identifier)).toEqual(['c']);
   });
 
   it('only set the number again on a page that shows none of them; nothing where the phone cannot be told', async () => {

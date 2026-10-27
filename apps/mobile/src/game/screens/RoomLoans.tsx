@@ -168,11 +168,11 @@ export function LoanOffers({ nameOf }: { nameOf(member: Pick<RoomMember, 'name' 
 }
 
 /** What the sheet of another player draws of the room: them as it now shows them, and what may be done with them there. */
-type Picked = { member: RoomMember; playing: boolean; over: boolean; public: boolean };
+type Picked = { member: RoomMember; playing: boolean; public: boolean };
 
 /**
  * Another player of the room, from the room's order: who they are, and what the player may do with them. While the game is played, a loan either
- * way, where its rules have loans; once it is over, to follow them; in a public game, to report their name. (The web's takes the room; this one reads
+ * way, where its rules have loans; at any time of the game, to follow them; in a public game, to report their name. (The web's takes the room; this one reads
  * the one player it shows, so a closed sheet draws nothing of the room.)
  */
 export function PlayerSheet({ member: picked, nameOf, loans, onClose }: { member: Pick<RoomMember, 'userId'> | null; nameOf(member: Pick<RoomMember, 'name' | 'bot' | 'userId'>): string; loans: boolean; onClose(): void }) {
@@ -192,12 +192,11 @@ export function PlayerSheet({ member: picked, nameOf, loans, onClose }: { member
     if (room === null || pickedId === null) return null;
     const member = room.members.find((one) => one.userId === pickedId);
     if (member === undefined) return null;
-    return { member, playing: room.status === 'playing', over: room.status === 'finished', public: room.public };
+    return { member, playing: room.status === 'playing', public: room.public };
   });
   const member = shown?.member ?? null;
   const standing = member?.standing ?? null;
   const playing = shown?.playing === true && loans;
-  const over = shown?.over === true;
   const close = () => {
     setLend(null);
     setTold(null);
@@ -230,7 +229,7 @@ export function PlayerSheet({ member: picked, nameOf, loans, onClose }: { member
             </View>
           </>
         ) : null}
-        {over && member ? (
+        {member && member.bot === null && !member.me ? (
           <View style={{ marginTop: 12, gap: 6 }}>
             <Button variant="primary" wide disabled={busy || member.followed} onPress={() => void ask(async () => ({ ok: 'followed', full: 'full', failed: 'failed' })[await follow(member.userId)])}>
               {said(member.friend ? 'friends' : member.followed ? 'following' : 'follow')}

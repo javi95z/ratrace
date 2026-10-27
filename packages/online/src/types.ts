@@ -165,11 +165,16 @@ export interface ChallengeChoice {
   answered: number;
 }
 
-/** Another player in the list of friends: a friend, or someone a request is waiting on. `avatar` is the rat they chose. */
+/**
+ * Another player in the list of friends: a friend, or someone a request is waiting on. `avatar` is the rat they chose. A friend also with the game
+ * they are in now (`playing`: one waiting for its players carries its code, to join them) and how many games the two have shared (`together`).
+ */
 export interface Friend {
   userId: string;
   nickname: string | null;
   avatar: string | null;
+  playing?: { status: 'open' | 'playing'; code: string | null } | null;
+  together?: number;
 }
 
 /** The player's friends, both ways; the requests sent to them, to answer; and those they sent, waiting. The latest first. */

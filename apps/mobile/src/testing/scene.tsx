@@ -221,12 +221,11 @@ const collectionTabOf = (scene: Scene): 'items' | 'badges' => (scene.name === 'c
 const OFFER_OPEN = { offer: true };
 
 /**
- * The rankings a scene opens on (`rankingsOpening`): the tab its name says, and the form of the player's name open from the start (`rankings-nickname`),
- * given to the screen as its initial state. The web's page presses the tab, and the button that opens the form.
+ * The rankings a scene opens on (`rankingsOpening`): the tab its name says, given to the screen as its initial state. The web's page presses the tab.
+ * (The player's name is changed on their profile now: `rankings-nickname` opens on the rankings as they are.)
  */
 function RankingsScene({ scene }: { scene: Scene }) {
-  const opening = rankingsOpening(scene.name);
-  return <Rankings tab={opening?.tab} naming={opening?.naming} />;
+  return <Rankings tab={rankingsOpening(scene.name)?.tab} />;
 }
 
 /** The tab of the rat a scene of it has open (`player-editor-wear`: what it wears). */
@@ -289,7 +288,7 @@ export const SCENE_SCREENS: SceneScreens = {
   moment: (scene) => <PlayScene scene={scene} />,
   settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,
   rankings: (scene) => <RankingsScene scene={scene} />,
-  player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerProfile copied={scene.name === 'player-friend-code'} />),
+  player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerProfile />),
   // The games with others, at the scene's table (`sceneRooms`); one come by an invitation is given its code as the route gives it (`?code=`). The games
   // played with others are the records' (`room-history`), given the one open (the web's page presses it).
   room: (scene) => (scene.name === 'room-history' ? <Records game={sceneGameOpened(scene.name)} /> : <Room code={sceneInvite(scene.name)} />),

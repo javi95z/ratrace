@@ -741,11 +741,20 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
 
     client.asked.length = 0;
     client.answers.invoke = {
-      data: { friends: [{ userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold' }, { userId: 'u-8' }], incoming: [{ userId: 'u-7', nickname: null, avatar: null }], outgoing: [], junk: 1 },
+      data: {
+        friends: [{ userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold', playing: { status: 'open', code: 'K7Q2XM' }, together: 4 }, { userId: 'u-8', playing: { status: 'lost', code: 1 }, together: -1 }],
+        incoming: [{ userId: 'u-7', nickname: null, avatar: null }],
+        outgoing: [],
+        junk: 1,
+      },
       error: null,
     };
+    // A friend with the game they are in now and the games shared, each as the function writes it, or none.
     expect(await cloud.community.friends()).toEqual({
-      friends: [{ userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold' }, { userId: 'u-8', nickname: null, avatar: null }],
+      friends: [
+        { userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold', playing: { status: 'open', code: 'K7Q2XM' }, together: 4 },
+        { userId: 'u-8', nickname: null, avatar: null, playing: null, together: 0 },
+      ],
       incoming: [{ userId: 'u-7', nickname: null, avatar: null }],
       outgoing: [],
     });

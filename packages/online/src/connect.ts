@@ -55,6 +55,16 @@ const pushRow = (target: PushTarget): ['push_subscriptions', 'endpoint', string]
   typeof target === 'string' ? ['push_subscriptions', 'endpoint', target] : ['push_tokens', 'token', target.expo];
 
 /** The database's own word for "the rules of this table do not let you". */
+/** A friend's game now and the games shared with them, as the friends function writes them; nothing of either where it does not. */
+function gamesOf(row: Record<string, unknown>): Pick<Friend, 'playing' | 'together'> {
+  const playing = row.playing as Record<string, unknown> | null | undefined;
+  const now =
+    typeof playing === 'object' && playing !== null && (playing.status === 'open' || playing.status === 'playing')
+      ? { status: playing.status as 'open' | 'playing', code: typeof playing.code === 'string' && /^[A-Z0-9]{6}$/.test(playing.code) ? playing.code : null }
+      : null;
+  return { playing: now, together: typeof row.together === 'number' && Number.isInteger(row.together) && row.together >= 0 ? row.together : 0 };
+}
+
 const NOT_ALLOWED = '42501';
 /** A name someone already has, a name that is not accepted for what it says, and one that is not written as a name is. */
 const TAKEN = '23505';
@@ -481,12 +491,13 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
         try {
           const { data, error } = await client.functions.invoke('friends', { body: { action: 'list' } });
           if (error || typeof data !== 'object' || data === null) return null;
-          const list = (raw: unknown): Friend[] =>
+          // A friend comes with the game they are in now and the games shared with them; a request with neither.
+          const list = (raw: unknown, friends = false): Friend[] =>
             (Array.isArray(raw) ? raw : [])
               .filter((row): row is Record<string, unknown> => typeof row === 'object' && row !== null && typeof (row as { userId?: unknown }).userId === 'string')
-              .map((row) => ({ userId: row.userId as string, nickname: typeof row.nickname === 'string' ? row.nickname : null, avatar: typeof row.avatar === 'string' ? row.avatar : null }));
+              .map((row) => ({ userId: row.userId as string, nickname: typeof row.nickname === 'string' ? row.nickname : null, avatar: typeof row.avatar === 'string' ? row.avatar : null, ...(friends ? gamesOf(row) : null) }));
           const body = data as Record<string, unknown>;
-          return { friends: list(body.friends), incoming: list(body.incoming), outgoing: list(body.outgoing) };
+          return { friends: list(body.friends, true), incoming: list(body.incoming), outgoing: list(body.outgoing) };
         } catch {
           return null;
         }

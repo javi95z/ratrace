@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedRef, useSharedValue } from 'react-native-reanimated';
-import { copy } from '../../ui/copy';
 import { Framed } from '../../ui/Frame';
 import { Button, Panel, pressDown, Raised, usePress } from '../../ui/kit';
 import { Toast } from '../../ui/overlay';
@@ -60,10 +59,10 @@ function NameButton({ name, label, onPress }: { name: string; label: string; onP
 
 /**
  * How the others see the player: the rat they play as, in rooms and rankings, and the name under
- * it. Only for someone signed in, whose profile the server keeps. `copied` is the friend code just copied, its toast up from the start and held
- * there (a scene's initial state, for its shot; the player copies it by a tap).
+ * it. For anyone with an account, a guest's as a member's, whose profile the server keeps. Here, and only here, the player's name is changed; their
+ * friend code is with their friends, on the games with others' page.
  */
-export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
+export function PlayerProfile() {
   const t = useT('player');
   const ranks = useT('rankings');
   const common = useT('common');
@@ -75,9 +74,7 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
   const [name, setName] = useState('');
   const [problem, setProblem] = useState<'invalid' | 'taken' | 'refused' | 'failed' | null>(null);
   const [busy, setBusy] = useState(false);
-  const [told, setTold] = useState<string | null>(() => (copied ? t('copied') : null));
-  // A scene's toast stays up for its shot: it would leave after its 2.6 s, perhaps before the shot is taken.
-  const [held] = useState(copied);
+  const [told, setTold] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const runs = useRuns();
   const profile = useProfile();
@@ -103,10 +100,10 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
     };
   }, [community]);
 
-  const userId = state.kind === 'member' ? state.userId : null;
+  const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
   const page = (children: ReactNode) => (
     <PageScroll.Provider value={scrolling}>
-      <Screen scrollY={scrollY} contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => (held ? undefined : setTold(null))} />}>
+      <Screen scrollY={scrollY} contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => setTold(null)} />}>
         <Animated.View ref={column} collapsable={false} onLayout={() => void (laid.value = laid.value + 1)} style={{ gap: 16 }}>
           <Head title={t('title')} />
           {children}
@@ -150,10 +147,6 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
     setEditing(false);
     setMe((was) => (was ? { ...was, nickname: asked } : was));
     setTold(t('saved'));
-  };
-  // Where the phone does not take it, nothing is said: the code is on screen to be copied by hand.
-  const copyCode = () => {
-    if (me?.friendCode) void copy(me.friendCode, () => setTold(t('copied')));
   };
   const lives = runs ?? [];
   const best = lives.reduce<number | null>((top, run) => (top === null || run.score > top ? run.score : top), null);
@@ -219,13 +212,6 @@ export function PlayerProfile({ copied = false }: { copied?: boolean } = {}) {
             ) : (
               <NameButton name={me === undefined ? ' ' : (me?.nickname ?? t('noName'))} label={t('rename')} onPress={() => setEditing(true)} />
             )}
-            {me?.friendCode ? (
-              <Raised bg="night-800" onPress={copyCode} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 }}>
-                <ReadText size={13} tone="ink-200">{ranks('code')}</ReadText>
-                <PixelText size={13} tone="gold-500" style={{ letterSpacing: 13 * 0.15 }}>{me.friendCode}</PixelText>
-                <ReadText size={13} tone="ink-300">{`· ${t('copy')}`}</ReadText>
-              </Raised>
-            ) : null}
             <ReadText size={12} tone="ink-300" lineHeight={12 * SNUG} style={{ textAlign: 'center' }}>{t('about')}</ReadText>
           </View>
         </Framed>

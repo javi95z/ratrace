@@ -48,8 +48,8 @@ function browser(sheet: boolean) {
 /** A private game's lobby, and its code. */
 async function privateLobby(services: Services) {
   renderGame(<Room />, services);
-  fireEvent.click(await screen.findByRole('button', { name: 'Start a game' }));
-  const sheet = (await screen.findByRole('heading', { name: 'Start a game' })).closest('[aria-modal="true"]') as HTMLElement;
+  fireEvent.click(await screen.findByRole('button', { name: 'Start a game for friends' }));
+  const sheet = (await screen.findByRole('heading', { name: 'Start a game for friends' })).closest('[aria-modal="true"]') as HTMLElement;
   fireEvent.click(within(sheet).getByRole('button', { name: 'Start the game' }));
   return screen.findByRole('region', { name: 'Game code' });
 }
@@ -91,7 +91,7 @@ describe('a private game on a browser with a share sheet', () => {
 describe('a public game', () => {
   const clock = async (services: Services) => {
     renderGame(<Room />, services);
-    fireEvent.click(await screen.findByRole('button', { name: 'Quick game' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Play now' }));
     return screen.findByRole('region', { name: 'Looking for players' });
   };
 
@@ -124,6 +124,7 @@ describe('a game with others on another version, on the web', () => {
     Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
     const { services } = inRooms(server, B);
     renderGame(<Room />, services);
+    fireEvent.click(await screen.findByRole('button', { name: 'Have a game code?' }));
     fireEvent.change(await screen.findByRole('textbox', { name: 'Game code' }), { target: { value: room.code } });
     fireEvent.click(screen.getByRole('button', { name: 'Join' }));
     expect((await screen.findByRole('alert')).textContent).toBe('That game plays another version. Reload the page and try again.');
