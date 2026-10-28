@@ -985,6 +985,11 @@ export interface Content {
   yearsPerRound: number;
   /** Living-cost multiplier in percent for lifestyle tiers 0 to 3. */
   lifestyleMultiplierPct: readonly [number, number, number, number];
+  /**
+   * Living in luxury costs at least this share of the year's income before tax (pay and every passive income), whatever the city's prices:
+   * the rich live as the rich do. Left out, luxury costs the city's price times its multiplier and no more.
+   */
+  luxuryIncomePct?: number;
   /** Share of living cost that is housing, in percent. Waived for owner-occupiers. */
   housingSharePct: number;
   /** The pension follows this asset: its price return plus its reinvested yield. */

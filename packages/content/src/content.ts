@@ -16,6 +16,8 @@ export const content: Content = {
   rounds: 20,
   yearsPerRound: 2,
   lifestyleMultiplierPct: [70, 100, 140, 200],
+  // Luxury is priced by the life it keeps up with: at least 30% of a year's income before tax, so a fortune pays for its standing.
+  luxuryIncomePct: 30,
   housingSharePct: 35,
   pensionAssetId: 'msci_world',
   pensionContributionCapBp: 2_000,

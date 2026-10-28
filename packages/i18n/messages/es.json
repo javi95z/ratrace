@@ -709,6 +709,7 @@
       "noJob": "No tienes trabajo: ni horas extra ni búsqueda. Aún puedes aprender, aquí abajo.",
       "tier": "Cómo vives",
       "tierFloor": "Tu vida no permite menos que esto.",
+      "luxuryShare": "{tier} cuesta como mínimo el {pct} % de tus ingresos antes de impuestos.",
       "tierStatus": "Estatus:",
       "roomLate": "Desde los {age} años, la habitación resta {n} de estatus.",
       "home": "Dónde vives",

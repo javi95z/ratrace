@@ -56,6 +56,9 @@ export function validateContent(c: Content): string[] {
   if (c.lifestyleMultiplierPct.length !== 4 || c.lifestyleMultiplierPct.some((x) => !isWhole(x) || x <= 0)) {
     errors.push('lifestyleMultiplierPct must be four positive integers');
   }
+  if (c.luxuryIncomePct !== undefined && (!isWhole(c.luxuryIncomePct) || c.luxuryIncomePct < 0 || c.luxuryIncomePct > 100)) {
+    errors.push('luxuryIncomePct must be a whole number from 0 to 100');
+  }
   if (!within(c.housingSharePct, 0, 100)) errors.push('housingSharePct must be between 0 and 100');
   if (!isWhole(c.maxOrdersPerRound) || c.maxOrdersPerRound < 1) errors.push('maxOrdersPerRound must be a positive integer');
   if (!within(c.pensionContributionCapBp, 0, 10_000)) errors.push('pensionContributionCapBp must be between 0 and 10000');

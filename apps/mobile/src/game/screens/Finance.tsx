@@ -1860,7 +1860,7 @@ const WorkModes = memo(function WorkModes({ current, remote, before, hint }: { c
 /** How the player lives, two to a row (the web's `grid-cols-2`), what each costs a year, and what each does to status. Drawn again only when one of these changes. */
 const Tiers = memo(function Tiers({ value, before, min, hints, status }: { value: LifestyleTier; before: LifestyleTier; min: number; hints: readonly string[]; status: string }) {
   const t = useT('finance.lifestyle');
-  const { text } = useWords();
+  const { text, content } = useWords();
   const setOrder = useGame((s) => s.setOrder);
   return (
     <Panel title={t('tier')}>
@@ -1872,6 +1872,8 @@ const Tiers = memo(function Tiers({ value, before, min, hints, status }: { value
         options={([0, 1, 2, 3] as const).map((tier) => ({ value: tier, label: text.lifestyleTiers[tier], icon: lifestyleArt[tier], hint: hints[tier], disabled: tier < min }))}
       />
       <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{status}</ReadText>
+      {/* Luxury is priced by the income it keeps up with, under rules that say so. */}
+      {content.luxuryIncomePct ? <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('luxuryShare', { tier: text.lifestyleTiers[3], pct: content.luxuryIncomePct })}</ReadText> : null}
       {min > 0 ? <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('tierFloor')}</ReadText> : null}
       <LivingEscape type="setLifestyle" />
     </Panel>

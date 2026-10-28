@@ -709,6 +709,7 @@
       "noJob": "You have no job: no overtime and no job hunt. You can still learn, below.",
       "tier": "How you live",
       "tierFloor": "Your life does not allow less than this.",
+      "luxuryShare": "{tier} costs at least {pct}% of your income before tax.",
       "tierStatus": "Status:",
       "roomLate": "From {age}, a rented room costs {n} status.",
       "home": "Where you live",

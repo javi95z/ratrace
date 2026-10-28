@@ -19,6 +19,19 @@ describe('living cost', () => {
     expect(livingCostAnnual(fixturePlayer({ lifestyleTier: 3 }), content, world)).toBe(3_600_000);
   });
 
+  it('in luxury, costs at least its share of the year\'s income before tax, where the content sets one; below luxury, never', () => {
+    const rich = fixturePlayer({ lifestyleTier: 3, salaryAnnual: 50_000_000 });
+    // Without a share, luxury is the city's price times its multiplier.
+    expect(livingCostAnnual(rich, content, world)).toBe(3_600_000);
+    const priced = { ...content, luxuryIncomePct: 30 };
+    // 30% of a year's pay of $500,000: $150,000, above the city's $36,000.
+    expect(livingCostAnnual(rich, priced, world)).toBe(15_000_000);
+    // Comfortable is still the city's price, whatever the income.
+    expect(livingCostAnnual({ ...rich, lifestyleTier: 2 }, priced, world)).toBe(livingCostAnnual({ ...rich, lifestyleTier: 2 }, content, world));
+    // A modest income in luxury pays the city's price, the floor below it.
+    expect(livingCostAnnual(fixturePlayer({ lifestyleTier: 3, salaryAnnual: 1_000_000 }), priced, world)).toBe(3_600_000);
+  });
+
   it('rises with the price level', () => {
     expect(livingCostAnnual(fixturePlayer(), content, dearer)).toBe(2_700_000);
   });

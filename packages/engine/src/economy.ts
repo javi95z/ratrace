@@ -35,10 +35,18 @@ export interface RoundExpenses {
 export function livingCostAnnual(p: PlayerState, content: Content, world: WorldState): Cents {
   const city = cityOf(content, p.cityId);
   const atTier = mulDiv(city.livingCostAnnual, content.lifestyleMultiplierPct[p.lifestyleTier], 100);
-  const base = indexed(atTier, world);
+  const base = Math.max(indexed(atTier, world), luxuryFloor(p, content, world));
   const housing = mulDiv(base, content.housingSharePct, 100);
   if (ownsHome(p)) return base - housing;
   return base - housing + mulDiv(housing, content.life.rentTierHousingPct[p.life.rentTier], 100);
+}
+
+/** The least a year of luxury costs: its share of the year's income before tax. Nothing below the top tier, or where the content sets none. */
+export function luxuryFloor(p: PlayerState, content: Content, world: WorldState): Cents {
+  const pct = content.luxuryIncomePct;
+  if (pct === undefined || p.lifestyleTier !== content.lifestyleMultiplierPct.length - 1) return 0;
+  const income = incomeForRound(p, content, world);
+  return mulDiv(income.salary + passiveOf(income), pct, 100 * content.yearsPerRound);
 }
 
 /** What each investment held pays in the round, at the rates of the given world. Nothing is listed for one that pays nothing. */
