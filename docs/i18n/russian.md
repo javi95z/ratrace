@@ -132,7 +132,9 @@ One English word, one Russian word, everywhere.
 | raise | прибавка | |
 | rung (of a career) | ступень | |
 | ladder (of things) | категория | |
-| lifestyle tiers | Эконом, Стандарт, Комфорт, Люкс | nouns, so that nothing agrees with the player |
+| lifestyle tiers | Эконом, Стандарт, Комфорт, Люкс | nouns, so that nothing agrees with the player; in a sentence by name, in quotes: не ниже уровня «Комфорт» |
+| manager (of a business) | управляющий | never «менеджер» |
+| points of a skill | баллы | «+2 балла за раунд»; «очки» is only the score |
 | connection | связь | «Нет связи» |
 | nameless player in the rankings | Крыса {tag} | |
 | the end | конец | |
