@@ -116,13 +116,13 @@ describe('the scenes of the cards', () => {
     expect(r1.state).toMatchObject({ stage: 'cards', busy: false, picked: null });
   });
 
-  it('play-cards-legendary is a legendary card with two choices, to be swiped: the appointment, the second card of the engineer\'s third round on screen-seed-337', async () => {
+  it('play-cards-legendary is a legendary card with two choices, to be swiped: the appointment, the second card of the engineer\'s third round on screen-seed-169', async () => {
     const legendary = await waiting('play-cards-legendary');
     expect(legendary).toMatchObject({ cardId: 'red_appointment', shown: 2 });
     expect(cardRarity(legendary.def)).toBe('legendary');
     expect(roundOf(legendary.state)).toBe(3);
     // The first life of the device, on its own seed, played by the saver: the first two rounds whole, then one card of the third.
-    expect(await saveOf(await sceneStore('play-cards-legendary'))).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-337', lifeId: 'engineer' });
+    expect(await saveOf(await sceneStore('play-cards-legendary'))).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-169', lifeId: 'engineer' });
   });
 
   it('play-cards-three is a card with three choices shown and a fourth the player cannot take, not shown: asking for a raise, on screen-seed-3', async () => {
@@ -296,7 +296,7 @@ describe('the scenes of the HUD', () => {
     expect(await saveOf(await sceneStore('hud-flow'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
   });
 
-  it('hud-jailed is a life in prison: the nurse of screen-seed-190, wrongly accused in her ninth round, who went to court and lost, at the finances of that round', async () => {
+  it('hud-jailed is a life in prison: the nurse of screen-seed-10220, wrongly accused in her ninth round, who went to court and lost, at the finances of that round', async () => {
     const store = await sceneStore('hud-jailed');
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'finance' });
@@ -304,7 +304,7 @@ describe('the scenes of the HUD', () => {
     // In for the rest of the round: a sentence of one round is served at its end.
     expect(state.view?.player.life.jailRounds).toBe(1);
     const save = (await saveOf(store)) as SavedGame;
-    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-190' });
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-10220' });
     // The accusation was the first card of the round, answered with its first option (to court); every other card as the saver answers it.
     expect(state.view?.hand[0]).toBe('crime_wrongly_accused');
     expect(save.log[8].picks[0]).toBe(0);
@@ -341,10 +341,10 @@ describe('the scenes of an amount and of a badge', () => {
     expect(state.view?.player.cash).toBeGreaterThan(0);
   });
 
-  it('celebrate-legendary is a legendary badge earned in a real life: the engineer of screen-seed-4247 meets MrFeast, the first card of the third round, and takes his challenge', async () => {
+  it('celebrate-legendary is a legendary badge earned in a real life: the engineer of screen-seed-62473 meets MrFeast, the first card of the third round, and takes his challenge', async () => {
     const store = await sceneStore('celebrate-legendary');
     const save = (await saveOf(store)) as SavedGame;
-    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-4247', lifeId: 'engineer' });
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-62473', lifeId: 'engineer' });
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', stage: 'news' });
     expect(roundOf(state)).toBe(3);
@@ -746,13 +746,13 @@ describe('the scenes of the profile', () => {
 const onScreenOf = (state: { stage: string; view: { round: number; player: unknown } | null }) => JSON.stringify([state.stage, state.view?.round, state.view?.player]);
 
 describe('the scenes of the end of a life', () => {
-  it('end-escaped is the engineer of screen-seed-335, played by the saver to the end: out of the rat race with the seventeenth round, never bankrupt, and the game opens on its end', async () => {
+  it('end-escaped is the engineer of screen-seed-53, played by the saver to the end: out of the rat race with the seventeenth round, never bankrupt, and the game opens on its end', async () => {
     const store = await sceneStore('end-escaped');
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'end', bankruptcies: 0 });
     expect(state.view).toMatchObject({ finished: true, round: content.rounds });
     expect(state.view?.player.escapedAtRound).toBe(16);
-    expect(await saveOf(store)).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-335', lifeId: 'engineer' });
+    expect(await saveOf(store)).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-53', lifeId: 'engineer' });
     // The start and every round: the graph of a whole life.
     expect(state.history).toHaveLength(content.rounds + 1);
     // The life is among the finished ones already, with what it earned: its badges, its rank, the lives it opened.
@@ -764,14 +764,14 @@ describe('the scenes of the end of a life', () => {
     expect(state.badges).toContain('escaped');
   });
 
-  it('end-bankrupt is the nurse of screen-seed-18, played by the chaser to the end: bankrupt with her fourth round, and never out of the rat race', async () => {
+  it('end-bankrupt is the nurse of screen-seed-17, played by the chaser to the end: bankrupt with her fourth round, and never out of the rat race', async () => {
     const store = await sceneStore('end-bankrupt');
     const state = await opened(store);
     expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'end', bankruptcies: 1 });
     expect(state.view).toMatchObject({ finished: true });
     expect(state.view?.player.escapedAtRound).toBeNull();
     expect(state.story.find((m) => m.kind === 'bankrupt')?.round).toBe(4);
-    expect(await saveOf(store)).toMatchObject({ seed: 'screen-seed-18', lifeId: 'nurse' });
+    expect(await saveOf(store)).toMatchObject({ seed: 'screen-seed-17', lifeId: 'nurse' });
   });
 
   it('end-share and end-ru are end-escaped\'s very store: the picture to share open over it, and the same end in Russian', async () => {
@@ -803,9 +803,9 @@ describe('the moments of a life: real lives, played to the round a moment stops 
     return game.getState();
   }
 
-  it('moment-escape is the ledger of the round the engineer of screen-seed-335 (end-escaped\'s) leaves the rat race in, the seventeenth, played by the saver', async () => {
+  it('moment-escape is the ledger of the round the engineer of screen-seed-53 (end-escaped\'s) leaves the rat race in, the seventeenth, played by the saver', async () => {
     const save = (await saveOf(await sceneStore('moment-escape'))) as SavedGame;
-    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-335', lifeId: 'engineer' });
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-53', lifeId: 'engineer' });
     const state = await played('moment-escape');
     expect(state).toMatchObject({ status: 'playing', stage: 'resolve', busy: false });
     expect(state.resolved?.before.round).toBe(16);
@@ -815,9 +815,9 @@ describe('the moments of a life: real lives, played to the round a moment stops 
     expect(momentsOf(state)[0]).toMatchObject({ kind: 'escape' });
   });
 
-  it('moment-bankrupt is the ledger of the round the nurse of screen-seed-18 goes bankrupt in, her fourth, played by the chaser, who lives beyond her pay', async () => {
+  it('moment-bankrupt is the ledger of the round the nurse of screen-seed-17 goes bankrupt in, her fourth, played by the chaser, who lives beyond her pay', async () => {
     const save = (await saveOf(await sceneStore('moment-bankrupt'))) as SavedGame;
-    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-18', lifeId: 'nurse' });
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-17', lifeId: 'nurse' });
     const state = await played('moment-bankrupt');
     expect(state).toMatchObject({ status: 'playing', stage: 'resolve', busy: false });
     expect(state.resolved?.before.round).toBe(3);
@@ -866,9 +866,9 @@ describe('the records and the collection: three real lives, each played to its e
     const runs = await store.listRuns();
     // The latest first, as the device lists them; each a run of its own, on a day of the scene's week, none of them a life left in progress.
     expect(runs.map((run) => [run.runId, run.lifeId, run.seed])).toEqual([
-      ['id-3', 'engineer', 'screen-seed-335'],
+      ['id-3', 'engineer', 'screen-seed-53'],
       ['id-2', 'civil_servant', 'screen-seed-15'],
-      ['id-1', 'nurse', 'screen-seed-18'],
+      ['id-1', 'nurse', 'screen-seed-17'],
     ]);
     expect(runs.map((run) => new Date(run.finishedAt).toISOString().slice(0, 10))).toEqual(['2026-10-21', '2026-10-20', '2026-10-19']);
     for (const [i, run] of runs.entries()) expect(run.finishedAt - (SCENE_NOW - (i + 1) * DAY), run.runId).toBeLessThan(1_000);

@@ -22,11 +22,17 @@ export interface PeopleReport {
   endings: Record<string, number>;
 }
 
-/** The flags a later card waits on: those it needs (but that the person was met) and the one it counts its rounds from. None for a story's first card. */
+/**
+ * The flags a later card waits on: those it needs (but that the person was met) and the one it counts its rounds from. None for a story's first card.
+ * A flag the card sets itself is no wait but a guard: the boss's layoffs, which mark the round as any layoff does, so two never come in one.
+ */
 function awaited(cardId: string): string[] {
-  const when = content.cards.find((card) => card.id === cardId)?.when ?? {};
+  const card = content.cards.find((one) => one.id === cardId);
+  const when = card?.when ?? {};
   const needs = (when.flags ?? []).filter((flag) => !flag.endsWith('_met'));
-  return [...new Set([...needs, ...(when.notRecentFlag ? [when.notRecentFlag.flag] : [])])];
+  const sets = new Set((card?.options ?? []).flatMap((option) => [option.effects, ...(option.outcomes ?? []).map((outcome) => outcome.effects)]).flatMap((effects) => effects?.setFlags ?? []));
+  const counted = when.notRecentFlag && !sets.has(when.notRecentFlag.flag) ? [when.notRecentFlag.flag] : [];
+  return [...new Set([...needs, ...counted])];
 }
 
 export function peopleReport(rules: Content, starting: ReadonlyArray<{ id: string; start: StartConfig }>, seeds: readonly string[], playing: readonly Bot[]): PeopleReport {

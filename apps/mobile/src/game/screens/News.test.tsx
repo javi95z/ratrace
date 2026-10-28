@@ -135,8 +135,9 @@ describe('the news of a round', () => {
 
   it('tells of the luck that brings a rival back within reach of a player far ahead', async () => {
     const clippings = await clippingsOf('play-news-rival-luck');
-    const people = clippings.at(-1) as HTMLElement;
-    expect(people.querySelector('[data-topic]')?.textContent).toBe(en.rivals.topic.toUpperCase());
+    // The people's clipping, which a needle from one of them may follow.
+    const people = clippings.find((clipping) => clipping.querySelector('[data-topic]')?.textContent === en.rivals.topic.toUpperCase()) as HTMLElement;
+    expect(people).toBeTruthy();
     const said = people.textContent ?? '';
     const lucky = [en.rivals.asides.luckInheritance, en.rivals.asides.luckStartup, en.rivals.asides.luckCoin].flatMap((sentence) => ways(sentence, ''));
     expect(lucky.some((way) => said.includes(way.trim()))).toBe(true);

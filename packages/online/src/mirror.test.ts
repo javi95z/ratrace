@@ -359,7 +359,8 @@ describe('the mirror', { timeout: 60_000 }, () => {
 
   it('takes the offered life as the account has it by now, not as it was when it was offered', async () => {
     const { cloud } = fakeCloud();
-    const first = device(cloud, 'first');
+    // A life that earns something new between the round it is offered at and the round it is taken at.
+    const first = device(cloud, 'phone');
     const far = await first.sessions.start('nurse');
     await play(far, 2);
     await first.mirror.sync();
