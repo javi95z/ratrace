@@ -20,7 +20,7 @@ import { useCanSignIn, useClock, useCommunity, useGame, useRanking, useWords } f
 import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
-import { ElsewhereSheet } from './NewLife';
+import { ElsewhereSheet } from './ElsewhereSheet';
 import { useGo } from '../pages';
 
 /** Nothing to listen to, for `useSyncExternalStore`: the week, once read, is not read again. */
