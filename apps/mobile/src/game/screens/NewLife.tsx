@@ -1,4 +1,4 @@
-import { cityIcon, lives, portraitArt } from '@ratrace/content';
+import { careerArt, cityIcon, lives, portraitArt } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import { difficultyOf } from '@ratrace/core/game/difficulty';
@@ -58,17 +58,24 @@ export function portraitSize(window: number, column: number, columns: number): n
 }
 
 /**
- * One life in the grid: its portrait, large, its job on one line, the city's icon and how hard it is. A life still locked is only the shape of who it
- * is, with a lock. Pressed, it opens the sheet of the life. Drawn again only when its Tab stop moves: twenty are on the page of someone who has them all.
+ * One life in the grid: its portrait, large, who lives it on one line, the icons of the city and the career, and how hard it is in dots. A life
+ * still locked is only the shape of who it is, with a lock, and their name. Pressed, it opens the sheet of the life. Drawn again only when its Tab
+ * stop moves: two dozen are on the page of someone who has them all.
  */
 const LifeTile = memo(function LifeTile({ id, locked, portrait, width, tabbable, onOpen }: { id: string; locked: boolean; portrait: number; width: string; tabbable: boolean; onOpen(id: string): void }) {
   const t = useT('newLife');
   const { text, names } = useWords();
+  const { locale } = useSettings();
   const haptic = useHaptic();
   const life = byId.get(id);
   if (!life) return null;
-  const name = text.lives[id]?.name ?? id;
-  const label = locked ? t('lockedTile', { life: name }) : t('tile', { life: name, city: names.cities[life.start.cityId], level: t(LEVELS[difficultyOf(id) - 1]) });
+  const job = text.lives[id]?.name ?? id;
+  // Who lives it, as the sheet's title names them after the job; the job where a life has nobody named.
+  const name = characterName(id, locale) ?? job;
+  const career = life.start.life?.career?.id;
+  const label = locked
+    ? t('lockedTile', { name, life: job })
+    : t('tile', { name, life: job, city: names.cities[life.start.cityId], level: t(LEVELS[difficultyOf(id) - 1]) });
   return (
     // A share of the row; 4 on each side and the grid made 8 wider than its page, so that the gap between two is 8 and the outer edges are the page's.
     <View style={{ width: width as `${number}%`, paddingHorizontal: GAP / 2 }}>
@@ -91,9 +98,13 @@ const LifeTile = memo(function LifeTile({ id, locked, portrait, width, tabbable,
           </ReadText>
         </View>
         {locked ? null : (
+          // Where it starts and at what, by their icons, and how hard it is in the dots of three.
           <View aria-hidden style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
             <Sprite id={cityIcon(life.start.cityId)} size={{ w: 16, h: 16 }} />
-            <Difficulty lifeId={id} word />
+            {career ? <Sprite id={careerArt(career)} size={{ w: 16, h: 16 }} /> : null}
+            <View style={{ marginLeft: 2 }}>
+              <Difficulty lifeId={id} />
+            </View>
           </View>
         )}
       </Raised>
@@ -247,7 +258,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const roll = () => openLife(anotherLife(openIds, chosen));
 
   // On the web the keyboard moves through the grid (docs/keyboard.md): one Tab stop, the arrows across a row and down a column, Home and End to
-  // the first and the last; letters typed find a life by its name (what is typed within 0.7 s of the last letter). Enter opens the life's sheet.
+  // the first and the last; letters typed find a life by who lives it, or by its job (what is typed within 0.7 s of the last letter). Enter opens the life's sheet.
   useKeyboardContext('new-life');
   const typed = useRef({ text: '', at: 0 });
   const focusTile = (id: string) => {
@@ -267,7 +278,9 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
     if (event.key.length !== 1 || !/[\p{L}\p{N}]/u.test(event.key)) return false;
     const now = Date.now();
     typed.current = { text: (now - typed.current.at > 700 ? '' : typed.current.text) + event.key.toLocaleLowerCase(), at: now };
-    const match = order.find((id) => written.lives[id]?.name.toLocaleLowerCase().startsWith(typed.current.text));
+    // By who lives it, as the tile names them, or by the job.
+    const starts = (words: string | null | undefined) => words?.toLocaleLowerCase().startsWith(typed.current.text) === true;
+    const match = order.find((id) => starts(characterName(id, locale))) ?? order.find((id) => starts(written.lives[id]?.name));
     if (!match) return false;
     focusTile(match);
     return true;

@@ -39,7 +39,7 @@ const tiles = () => Array.from(document.querySelectorAll<HTMLElement>('[data-lif
 /** The sheet of a life, once it is open: titled by its job and who lives it. */
 const sheetOf = async (title: string | RegExp) => (await screen.findByRole('heading', { name: title })).closest('[aria-modal="true"]') as HTMLElement;
 /** The Start of a life's sheet (the nurse's, the first, unless another is named), the sheet opened by its tile. */
-async function startButton(life: RegExp = /^Nurse, /, start = START) {
+async function startButton(life: RegExp = /^Lucía, Nurse, /, start = START) {
   fireEvent.click(await screen.findByRole('button', { name: life }));
   const heading = await screen.findByRole('heading', { name: / · / });
   return within(heading.closest('[aria-modal="true"]') as HTMLElement).getByRole('button', start);
@@ -60,34 +60,39 @@ async function livingNurse() {
 describe('the grid of lives', () => {
   it('has a tile for every life, the seven open ones first and the seventeen locked after them, each named for a screen reader', async () => {
     renderGame(<NewLife />, memoryServices());
-    await screen.findByRole('button', { name: /^Nurse, / });
+    await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     const names = tiles().map((tile) => tile.getAttribute('aria-label'));
     expect(names.slice(0, 7)).toEqual([
-      'Nurse, Madrid, easy',
-      'Software engineer, Tokyo, normal',
-      expect.stringMatching(/^Civil servant, .+, (easy|normal|hard)$/),
-      expect.stringMatching(/^Delivery rider, /),
-      expect.stringMatching(/^Newcomer abroad, /),
-      expect.stringMatching(/^Teacher, /),
-      expect.stringMatching(/^Recruit, /),
+      'Lucía, Nurse, Madrid, easy',
+      'Haruto, Software engineer, Tokyo, normal',
+      expect.stringMatching(/^Carmen, Civil servant, .+, (easy|normal|hard)$/),
+      expect.stringMatching(/^Somchai, Delivery rider, /),
+      expect.stringMatching(/^Amara, Newcomer abroad, /),
+      expect.stringMatching(/^Wei, Teacher, /),
+      expect.stringMatching(/^Ravi, Recruit, /),
     ]);
     expect(names.slice(7)).toHaveLength(17);
     expect(names.slice(7).every((name) => / locked$/.test(name ?? ''))).toBe(true);
-    expect(names[7]).toBe('Heir, locked');
+    expect(names[7]).toBe('Max, Heir, locked');
     // The folded list of the locked lives is gone, and so is the button at the foot.
     expect(screen.queryByText(/lives to unlock/)).toBeNull();
     expect(screen.queryByRole('button', START)).toBeNull();
   });
 
-  it('shows on each open tile its job, the city\'s icon and how hard it is; a locked one only its shape and a lock', async () => {
+  it('shows on each open tile who lives it, the icons of the city and the career, and how hard it is in dots; a locked one only its shape, a lock and the name', async () => {
     renderGame(<NewLife />, memoryServices());
-    const nurse = await screen.findByRole('button', { name: /^Nurse, / });
-    expect(nurse.textContent).toContain('Nurse');
-    expect(within(nurse).getByText('easy')).toBeTruthy();
+    const nurse = await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
+    expect(nurse.textContent).toContain('Lucía');
+    expect(nurse.textContent).not.toContain('Nurse');
+    // The dots of three, one filled for an easy life, and no word.
+    expect(nurse.textContent).toContain('●●●');
+    expect(within(nurse).queryByText('easy')).toBeNull();
     expect(nurse.querySelector('[data-sprite="icon.city_madrid"]')).not.toBeNull();
+    expect(nurse.querySelector('[data-sprite="icon.career_healthcare"]')).not.toBeNull();
     expect(nurse.querySelector('[data-sprite="portrait.nurse.22"]')).not.toBeNull();
-    const heir = screen.getByRole('button', { name: 'Heir, locked' });
+    const heir = screen.getByRole('button', { name: 'Max, Heir, locked' });
+    expect(heir.textContent).toBe('Max');
     expect(heir.querySelector('[data-sprite="portrait.heir.22"]')?.getAttribute('data-silhouette')).toBe('true');
     expect(heir.querySelector('[data-sprite="icon.locked"]')).not.toBeNull();
     expect(heir.textContent).not.toMatch(/easy|normal|hard/);
@@ -97,7 +102,7 @@ describe('the grid of lives', () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
-    const heir = await screen.findByRole('button', { name: /^Heir, (?!locked)/ });
+    const heir = await screen.findByRole('button', { name: /^Max, Heir, (?!locked)/ });
     expect(tiles().indexOf(heir)).toBeLessThan(8);
     expect(tiles().filter((tile) => / locked$/.test(tile.getAttribute('aria-label') ?? ''))).toHaveLength(16);
     fireEvent.click(heir);
@@ -123,7 +128,7 @@ describe('the grid of lives', () => {
       </HapticProvider>,
       memoryServices(),
     );
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     expect(felt).toEqual(['select']);
   });
 
@@ -137,7 +142,7 @@ describe('the grid of lives', () => {
 describe('the sheet of a life', () => {
   it('opens on a tap with the life\'s portrait, who lives it, where and with how much it starts, how hard it is, and what it is good and bad at', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: /^Software engineer, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Software engineer, / }));
     const sheet = await sheetOf('Software engineer · Haruto');
     expect(sheet.querySelector('[data-sprite="portrait.engineer.22"]')).not.toBeNull();
     expect(sheet.textContent).toContain('Starts in Tokyo with');
@@ -154,7 +159,7 @@ describe('the sheet of a life', () => {
     const services = memoryServices();
     let gone: () => void = () => undefined;
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Software engineer, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Software engineer, / }));
     const sheet = await sheetOf(/^Software engineer/);
     sheets.gone = new Promise<void>((done) => (gone = done));
     fireEvent.click(within(sheet).getByRole('button', START));
@@ -170,7 +175,7 @@ describe('the sheet of a life', () => {
 
   it('shows what unlocks a locked life, how far the player is and a hint, and no way to start it', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: 'Heir, locked' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Max, Heir, locked' }));
     const sheet = await sheetOf('Heir');
     expect(sheet.textContent).toContain('To unlock: ');
     expect(within(sheet).getByText('A head start nobody earned. What does it do to a person?')).toBeTruthy();
@@ -183,7 +188,7 @@ describe('the sheet of a life', () => {
   it('opens the sheet of an open life at random from the header, and starts nothing by itself', async () => {
     const services = memoryServices();
     renderGame(<NewLife />, services);
-    await screen.findByRole('button', { name: /^Nurse, / });
+    await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(screen.getByRole('button', { name: /At random/ }));
     // The others than the first, in their order: the recruit is the last.
@@ -220,7 +225,7 @@ describe('the sheet of a life', () => {
   it('warns of the life in progress, asks before it ends it, and ends nothing unless told to', async () => {
     const services = await livingNurse();
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Civil servant, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Civil servant, / }));
     // The sheet says what starting does, before it is asked.
     const sheet = await sheetOf(/^Civil servant/);
     expect(within(sheet).getByText('This ends the life you have in progress.')).toBeTruthy();
@@ -235,7 +240,7 @@ describe('the sheet of a life', () => {
     expect((await saved(services))?.lifeId).toBe('nurse');
     expect(router.replace).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Civil servant, / }));
+    fireEvent.click(screen.getByRole('button', { name: /^[^,]+, Civil servant, / }));
     fireEvent.click(within(await sheetOf(/^Civil servant/)).getByRole('button', START));
     fireEvent.click(within(await ask()).getByRole('button', { name: 'End it and start this one' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
@@ -244,7 +249,7 @@ describe('the sheet of a life', () => {
 
   it('does not warn of a life in progress where none is', async () => {
     renderGame(<NewLife />, memoryServices());
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     expect(within(await sheetOf(/^Nurse/)).queryByText(en.newLife.replace)).toBeNull();
   });
 
@@ -324,8 +329,8 @@ describe('the page in other languages', () => {
   it('speaks Spanish, and tells who lives the life', async () => {
     renderGame(<NewLife />, memoryServices(), 'es');
     expect(await screen.findByRole('heading', { name: 'Elige una vida' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Heredero, por desbloquear' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /^Enfermera, Madrid, fácil$/ }));
+    expect(screen.getByRole('button', { name: 'Max, Heredero, por desbloquear' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Lucía, Enfermera, Madrid, fácil' }));
     const sheet = await sheetOf('Enfermera · Lucía');
     expect(within(sheet).getByRole('button', { name: 'Empezar esta vida' })).toBeTruthy();
   });
@@ -333,6 +338,8 @@ describe('the page in other languages', () => {
   it('speaks Russian, with the names of those who live the lives in Cyrillic and nothing of another language left', async () => {
     renderGame(<NewLife />, memoryServices(), 'ru');
     const [nurse] = await screen.findAllByRole('button', { name: /, (легко|средне|сложно)$/ });
+    expect(nurse.getAttribute('aria-label')).toMatch(/^Люсия, /);
+    expect(nurse.textContent).toBe('Люсия●●●');
     fireEvent.click(nurse);
     await screen.findByRole('heading', { name: /Люсия/ });
     expect(document.body.textContent?.replace(/\+/g, '')).not.toMatch(/[A-Za-z]{3,}/);
@@ -358,7 +365,7 @@ describe('what the page is drawn again for', () => {
         <Hand />
       </GameProvider>,
     );
-    await screen.findByRole('button', { name: /^Nurse, / });
+    await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
     // Let everything the opening of the game does settle (the profile, the finished lives).
     await settled();
     const before = renders.count;
@@ -374,13 +381,13 @@ describe('what the page is drawn again for', () => {
 
   it('draws no tile again when a sheet opens: the tiles are memoised', async () => {
     renderGame(<NewLife />, memoryServices());
-    await screen.findByRole('button', { name: /^Nurse, / });
+    await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
     await settled();
     // A tile's portrait is drawn each time the tile is: the sprite stand-in counts them.
     const drawn = (id: string) => spriteRenders.get(`portrait.${id}.22`) ?? 0;
     const ids = ['engineer', 'civil_servant', 'heir'];
     const before = ids.map(drawn);
-    fireEvent.click(screen.getByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(screen.getByRole('button', { name: /^[^,]+, Nurse, / }));
     await sheetOf(/^Nurse/);
     await settled();
     expect(ids.map(drawn)).toEqual(before);
@@ -415,7 +422,7 @@ describe('choosing between a ranked life and a casual one', () => {
   it('offers a ranked life to a player who is signed in, on by default, and says what it means', async () => {
     const { services, asked } = signedIn();
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     // Two ways to play, side by side: ranked is chosen, and each says in a few words what it is.
     const mode = await screen.findByRole('radiogroup', { name: 'How to play' });
     const ranked = within(mode).getByRole('radio', { name: /^Ranked/ });
@@ -429,7 +436,7 @@ describe('choosing between a ranked life and a casual one', () => {
   it('starts a casual life when the player turns it off', async () => {
     const { services, asked } = signedIn();
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     fireEvent.click(await screen.findByRole('radio', { name: /^Offline/ }));
     fireEvent.click(screen.getByRole('button', START));
     await waitFor(() => expect(asked).toEqual([{ ranked: false, replace: undefined }]));
@@ -438,7 +445,7 @@ describe('choosing between a ranked life and a casual one', () => {
   it('offers no ranked life where nobody is signed in, and asks for none', async () => {
     const { services, asked } = signedIn({ kind: 'offline' });
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     await screen.findByRole('heading', { name: /^Nurse/ });
     expect(screen.queryByRole('radiogroup', { name: 'How to play' })).toBeNull();
     expect(screen.queryByText(/will not be ranked/)).toBeNull();
@@ -450,7 +457,7 @@ describe('choosing between a ranked life and a casual one', () => {
     network.connected = false;
     const { services, asked } = signedIn();
     renderGame(<NewLife />, services, 'es');
-    fireEvent.click(await screen.findByRole('button', { name: /^Enfermera, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Enfermera, / }));
     expect((await screen.findByRole('status')).textContent).toBe('Sin conexión: esta vida no será clasificatoria.');
     expect(screen.queryByRole('radiogroup', { name: 'Cómo jugar' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Empezar esta vida' }));
@@ -460,7 +467,7 @@ describe('choosing between a ranked life and a casual one', () => {
   it('turns the ranked choice into the note as the connection goes, and back as it returns', async () => {
     const { services } = signedIn();
     renderGame(<NewLife />, services);
-    fireEvent.click(await screen.findByRole('button', { name: /^Nurse, / }));
+    fireEvent.click(await screen.findByRole('button', { name: /^[^,]+, Nurse, / }));
     await screen.findByRole('radiogroup', { name: 'How to play' });
     act(() => network.set(false));
     expect(await screen.findByText('No connection: this life will not be ranked.')).toBeTruthy();
@@ -479,7 +486,7 @@ describe('choosing between a ranked life and a casual one', () => {
         </Counted>
       </GameProvider>,
     );
-    await screen.findByRole('button', { name: /^Nurse, / });
+    await screen.findByRole('button', { name: /^[^,]+, Nurse, / });
     await steady(() => renders.count);
     const before = renders.count;
     await settled(() => network.set(false));
@@ -554,7 +561,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     const { server, there, phone } = await twoDevices();
     let gone: () => void = () => undefined;
     renderGame(<NewLife />, phone);
-    fireEvent.click(await startButton(/^Software engineer, /));
+    fireEvent.click(await startButton(/^Haruto, Software engineer, /));
     const sheet = await elsewhere();
     sheets.gone = new Promise<void>((done) => (gone = done));
     fireEvent.click(await ready(sheet, 'End it and start this one'));
@@ -602,7 +609,7 @@ describe('a ranked life in progress on another device', { timeout: 60_000 }, () 
     const { server, there, phone } = await twoDevices();
     (server.games.get(there.gameId) as { engine_version: string }).engine_version = '0.0.1';
     renderGame(<NewLife />, phone, 'es');
-    fireEvent.click(await startButton(/^Enfermera, /, { name: 'Empezar esta vida' }));
+    fireEvent.click(await startButton(/^[^,]+, Enfermera, /, { name: 'Empezar esta vida' }));
     const sheet = await elsewhere('Una vida clasificatoria en curso');
     expect(sheet.textContent).toContain('Empezó con otras reglas y no se puede seguir en este dispositivo.');
     expect(within(sheet).queryByRole('button', { name: 'Seguir con esa vida' })).toBeNull();

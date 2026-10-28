@@ -105,8 +105,8 @@
     "level1": "easy",
     "level2": "normal",
     "level3": "hard",
-    "tile": "{life}, {city}, {level}",
-    "lockedTile": "{life}, locked",
+    "tile": "{name}, {life}, {city}, {level}",
+    "lockedTile": "{name}, {life}, locked",
     "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}",
     "progressFinished": "Lives finished: {n} of {total}",
     "hints": {

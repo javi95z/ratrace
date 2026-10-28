@@ -105,8 +105,8 @@
     "level1": "легко",
     "level2": "средне",
     "level3": "сложно",
-    "tile": "{life}, {city}, {level}",
-    "lockedTile": "{life}, закрыто",
+    "tile": "{name}, {life}, {city}, {level}",
+    "lockedTile": "{name}, {life}, закрыто",
     "lockedMany": "{count, plural, one {# жизнь ещё закрыта} few {# жизни ещё закрыты} many {# жизней ещё закрыто} other {# жизни ещё закрыты}}",
     "progressFinished": "Завершено жизней: {n} из {total}",
     "hints": {
