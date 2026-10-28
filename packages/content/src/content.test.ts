@@ -13,7 +13,7 @@ describe('the v1 content', () => {
   it('has the size the spec sets', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich']);
     expect(content.assets).toHaveLength(22);
-    expect(content.careers).toHaveLength(11);
+    expect(content.careers).toHaveLength(15);
     expect(content.items).toHaveLength(67);
     expect(content.propertyTypes.filter((type) => type.cities === undefined).map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
@@ -36,8 +36,8 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(289);
-    expect(lives).toHaveLength(20);
+    expect(content.cards).toHaveLength(305);
+    expect(lives).toHaveLength(24);
   });
 
   it('has the number of cards the spec sets for each category', () => {
@@ -50,7 +50,8 @@ describe('the v1 content', () => {
       // And content 1.50's people who come back, the player's own three, the lodger's party and leaving, and a fake masterpiece:
       // four in career, eight in investing, four in housing, six in family, four in lifestyle and one in later life;
       // and the people, deeper: one more in career, investing, housing, family and lifestyle.
-      career: 46, education: 9, business: 25, investing: 29, housing: 33, lifestyle: 46,
+      // Content 1.52: the four careers added last, four cards each: twelve in career, three in housing and one in investing.
+      career: 58, education: 9, business: 25, investing: 30, housing: 36, lifestyle: 46,
       family: 28, health: 6, luck: 23, world: 18, tax: 14, laterLife: 12,
     });
   });

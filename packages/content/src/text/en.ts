@@ -52,6 +52,10 @@ export const en: ContentText = {
     influencer: { name: 'Influencer', levels: ['New creator', 'Creator', 'Influencer', 'Star'], focus: { overtime: 'Post more', studyCareer: 'Improve your videos', jobHunt: 'Switch agencies', askRaise: 'Negotiate with brands' }, moves: { goViral: { name: 'Go for a viral hit', about: 'A risky video: it may launch you… or sink you.', outcomes: ['Viral! Up two rungs at once.', 'Backlash: you lose status and sponsors.', 'Nobody notices.'] }, ownBrand: { name: 'Launch your own brand', about: 'A brand with your name that outlasts the fame.', outcomes: ['The brand sells itself: income for good.', 'The brand never takes off, and it shows.'] } } },
     hospitality: { name: 'Hospitality', levels: ['Waiter', 'Head waiter', 'Restaurant manager', 'Hotel director', 'Chain director'], focus: { overtime: 'Double shifts', studyCareer: 'Hospitality course', jobHunt: 'Move to another venue', askRaise: 'Ask for a raise' } },
     sales: { name: 'Sales', levels: ['Sales rep', 'Account executive', 'Key account manager', 'Sales director', 'Head of sales'], focus: { overtime: 'More client visits', studyCareer: 'Sales course', jobHunt: 'Move to another company', askRaise: 'Renegotiate your commission' } },
+    aviation: { name: 'Aviation', levels: ['Second officer', 'First officer', 'Captain', 'Senior captain'], focus: { overtime: 'Extra rotations', studyCareer: 'Type rating', jobHunt: 'Apply to another airline', askRaise: 'Ask for a better roster' }, moves: { longHaul: { name: 'Fly long-haul', about: 'The long routes pay more, and wear you out: time zones, nights awake.', outcomes: ['The long routes pay: +8% pay for good.', 'The pay goes up 8%, and the jet lag takes its toll on your health.'] }, flagCarrier: { name: 'Apply to the flag carrier', about: 'The national airline takes its captains from the best. Languages help.', outcomes: ['The flag carrier takes you: up a rung, and the uniform everyone knows.', 'They thank you for your interest.'] } } },
+    construction: { name: 'Architecture', levels: ['Junior architect', 'Project architect', 'Lead architect', 'Studio partner'], focus: { overtime: 'Competition nights', studyCareer: 'Master\'s in structures', jobHunt: 'Move to a bigger studio', askRaise: 'Ask for a share of the fees' }, moves: { competition: { name: 'Enter a competition', about: 'A design for a public building, against the best studios. Connections help.', outcomes: ['You win it: your name in the papers, and +6% pay.', 'Another studio wins. The drawings go in a drawer.'] }, ownStudio: { name: 'Open your own studio', about: 'Your name on the door and clients of your own: income for good, if they come.', outcomes: ['The studio fills up: passive income for good.', 'The clients do not come, and people notice.'] } } },
+    realestate: { name: 'Real estate', levels: ['Trainee agent', 'Agent', 'Senior agent', 'Branch director', 'Agency owner'], focus: { overtime: 'Open houses at weekends', studyCareer: 'Property law course', jobHunt: 'Move to a luxury agency', askRaise: 'Ask for a bigger commission' }, moves: { luxuryPortfolio: { name: 'Take on luxury homes', about: 'The dearest homes in the city, and the hardest buyers. Knowing how to negotiate helps.', outcomes: ['The big sales come: +10% pay for good.', 'The rich buy through someone else.'] }, ownAgency: { name: 'Open your own agency', about: 'A shopfront with your name and agents of your own.', outcomes: ['The agency takes off: up a rung, and income for good.', 'The agency never gets going, and it shows.'] } } },
+    military: { name: 'Armed forces', levels: ['Private', 'Sergeant', 'Lieutenant', 'Captain', 'Colonel'], focus: { overtime: 'Volunteer for a mission', studyCareer: 'Officer academy', jobHunt: 'Transfer to another unit', askRaise: 'Apply for a pay grade' }, moves: { specialForces: { name: 'Try for the special forces', about: 'A selection few pass. Being fit helps.', outcomes: ['You pass selection: up a rung, and the beret.', 'You do not pass, and your body pays for trying.'] } } },
   },
   businessTypes: {
     services: { name: 'Your own practice', blurb: 'Your trade for your own clients. Cheap to start and quick to pay, and never large.' },
@@ -218,6 +222,30 @@ export const en: ContentText = {
       perk: 'The best-paid desk in the dearest city, with clients who open doors.',
       handicap: 'A lifestyle that may never drop below comfortable, in Zurich.',
       unlock: 'Make a million while living in {city:zurich}.',
+    },
+    pilot: {
+      name: 'Pilot',
+      perk: 'Pay that climbs fast once the stripes come, and no tax on it in {city:dubai}.',
+      handicap: 'A training loan of $80,000, and a job a recession can ground.',
+      unlock: 'Move to {city:dubai}.',
+    },
+    architect: {
+      name: 'Architect',
+      perk: 'A cheap city to start in, and pay that rises with every building boom.',
+      handicap: 'A loan from the studio years, and pay that falls when building stops.',
+      unlock: 'Live in three cities in one life.',
+    },
+    estate_agent: {
+      name: 'Estate agent',
+      perk: 'Commissions that soar in a boom, and the best flats before anyone else sees them.',
+      handicap: 'The lowest pay to start, among the dearest homes, and the widest swing of any trade.',
+      unlock: 'Rent out three properties at once.',
+    },
+    recruit: {
+      name: 'Recruit',
+      perk: 'Cannot be laid off, one more point of focus every round, and a pension that may come early.',
+      handicap: 'A modest pay that climbs slowly.',
+      unlock: 'Available from the start.',
     },
   },
   crises: {

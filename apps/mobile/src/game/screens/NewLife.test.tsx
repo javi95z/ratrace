@@ -58,22 +58,23 @@ async function livingNurse() {
 }
 
 describe('the grid of lives', () => {
-  it('has a tile for every life, the six open ones first and the fourteen locked after them, each named for a screen reader', async () => {
+  it('has a tile for every life, the seven open ones first and the seventeen locked after them, each named for a screen reader', async () => {
     renderGame(<NewLife />, memoryServices());
     await screen.findByRole('button', { name: /^Nurse, / });
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     const names = tiles().map((tile) => tile.getAttribute('aria-label'));
-    expect(names.slice(0, 6)).toEqual([
+    expect(names.slice(0, 7)).toEqual([
       'Nurse, Madrid, easy',
       'Software engineer, Tokyo, normal',
       expect.stringMatching(/^Civil servant, .+, (easy|normal|hard)$/),
       expect.stringMatching(/^Delivery rider, /),
       expect.stringMatching(/^Newcomer abroad, /),
       expect.stringMatching(/^Teacher, /),
+      expect.stringMatching(/^Recruit, /),
     ]);
-    expect(names.slice(6)).toHaveLength(14);
-    expect(names.slice(6).every((name) => / locked$/.test(name ?? ''))).toBe(true);
-    expect(names[6]).toBe('Heir, locked');
+    expect(names.slice(7)).toHaveLength(17);
+    expect(names.slice(7).every((name) => / locked$/.test(name ?? ''))).toBe(true);
+    expect(names[7]).toBe('Heir, locked');
     // The folded list of the locked lives is gone, and so is the button at the foot.
     expect(screen.queryByText(/lives to unlock/)).toBeNull();
     expect(screen.queryByRole('button', START)).toBeNull();

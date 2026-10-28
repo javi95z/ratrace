@@ -1354,4 +1354,72 @@ export const cards: Record<string, CardText> = {
     ['Demandar a la galería', 'La galería paga, y se disculpa por escrito.', 'La galería ha desaparecido. Sus dueños, también.'],
     'Donarlo a un museo, como falso',
   ]),
+  // Content 1.52: the four careers added last, four cards each.
+  aviation_medical: c('El reconocimiento anual', 'En el reconocimiento anual, el médico oye un soplo en tu corazón. Sin el visto bueno de un especialista, la licencia espera.', [
+    'Esperar a que te den el alta',
+    'Pagar a un especialista',
+  ]),
+  aviation_strike: c('Huelga de pilotos', 'El sindicato convoca huelga por los sueldos. La aerolínea necesita a alguien que vuele los vuelos de la mañana.', [
+    'Volar el vuelo de la mañana',
+    ['Sumarte a la huelga', 'La aerolínea cede: subida para todos los pilotos.', 'No sale nada, y los días de huelga no se cobran.'],
+  ]),
+  aviation_base_abroad: c('Una base en el extranjero', 'La aerolínea abre bases en sus dos centros y pregunta quién se muda con el puesto. La mudanza la paga ella.', [
+    'Quedarte donde estás',
+    'Irte a la base de {city:dubai}',
+    'Irte a la base de {city:singapore}',
+  ]),
+  aviation_grounded: c('La flota, en tierra', 'Con esta recesión nadie vuela. Media flota está aparcada en el desierto, y la aerolínea pide a los pilotos que esperen.', [
+    'Esperar con medio sueldo',
+    'Pasarte a la carga',
+  ]),
+  construction_own_house: c('Una casa diseñada por ti', 'Llevas años dibujando casas para otros. Sale un solar, y el constructor de confianza te hace precio de gremio.', [
+    'Seguir dibujando para otros',
+    'Construir tu propia casa',
+  ]),
+  construction_unpaid: c('El promotor no paga', 'El edificio está en pie y el promotor ya no coge el teléfono. Tus honorarios están en su bolsillo.', [
+    'Dejarlo estar',
+    ['Llevarlo a juicio', 'El juez te da la razón: los honorarios, con intereses.', 'El promotor quiebra. Los abogados sí cobran.'],
+  ]),
+  construction_collapse: c('Una grieta en el balcón', 'Se ha agrietado un balcón de un bloque que firmaste. No hay heridos, y los periódicos ya saben tu nombre.', [
+    'Pagar la reparación',
+    ['Culpar al constructor', 'El informe lo confirma: el constructor escatimó en acero.', 'El informe culpa al diseño. La reparación y la vergüenza son tuyas.'],
+  ]),
+  construction_famous_client: c('Un cliente famoso', 'Una estrella del pop quiere una villa en un acantilado, toda de cristal, y quiere que la dibujes tú.', [
+    'Rechazar el encargo',
+    'Dibujar la villa',
+  ]),
+  realestate_off_market: c('Fuera de mercado', 'Un casero quiere vender en silencio un piso alquilado, antes de anunciarlo. Eres el primero en saberlo.', [
+    'Pasárselo a un cliente',
+    'Comprarlo tú',
+  ]),
+  realestate_hurried_seller: c('Un vendedor con prisa', 'Un vendedor tiene que irse antes de fin de mes y acepta cualquier oferta razonable.', [
+    'Que lo lleve un compañero',
+    'Avisar a tu cliente inversor',
+    'Comprarlo para vivir en él',
+  ]),
+  realestate_bubble: c('Se habla de burbuja', 'Los precios nunca han estado tan altos, y en la agencia todos dicen que el techo está cerca.', [
+    'Aguantar',
+    'Vender tu casa en lo más alto',
+  ]),
+  realestate_double_fee: c('Dos comisiones por una venta', 'El comprador y el vendedor te ofrecen cada uno una comisión, y ninguno sabe del otro.', [
+    'Jugar limpio',
+    ['Cobrar las dos', 'Nadie se entera. Dos comisiones por una venta.', 'El comprador se entera: una multa, y tu nombre en la prensa del sector.'],
+  ]),
+  military_mission: c('Una misión en el extranjero', 'Mandan a la unidad fuera seis meses. Los voluntarios cobran una prima, y de los demás se toma nota.', [
+    'Quedarte en la base',
+    ['Presentarte voluntario', 'Seis meses duros, y vuelves con una prima y una medalla.', 'Vuelves con una prima, una medalla y una lesión que todavía duele.'],
+  ]),
+  military_twenty_years: c('Veinte años de servicio', 'Veinte años de uniforme. Puedes dejarlo ya con una pensión de por vida, y la administración tiene una mesa para ti.', [
+    'Seguir en el ejército',
+    'Retirarte con la pensión',
+  ]),
+  military_posting: c('Un nuevo destino', 'El ejército traslada tu unidad al extranjero. La mudanza está pagada, y pedir quedarse es pedir un favor.', [
+    'Pedir quedarte',
+    'Irte con la unidad a {city:dubai}',
+    'Irte con la unidad a {city:london}',
+  ]),
+  military_contractor: c('La oferta de la contratista', 'Una empresa de seguridad privada busca oficiales como tú en el extranjero, con un sueldo que el ejército ni sueña.', [
+    'Seguir en el ejército',
+    'Firmar el contrato',
+  ]),
 };

@@ -16,7 +16,9 @@ export type BadgeUnlock =
   | 'index_only'
   | 'status_100'
   | 'first_share'
-  | 'bought_the_dip';
+  | 'bought_the_dip'
+  | 'moved_to_dubai'
+  | 'three_rentals';
 
 /** How a life is unlocked. The interface checks these against the player's history. */
 export type Unlock = 'default' | 'finish_one_life' | 'net_worth_1m' | 'three_cities' | BadgeUnlock;
@@ -33,8 +35,9 @@ export interface LifeDef {
 }
 
 /**
- * Twenty starting lives: the six of spec section 4, five that each open with a badge, one for each of the five newer careers,
- * each opened by a badge too, and one for each of the four cities added since. Six are open from the start, so a newcomer has a
+ * Twenty-four starting lives: the six of spec section 4, five that each open with a badge, one for each of the five newer careers,
+ * each opened by a badge too, one for each of the four cities added since, and one for each of the four careers added last
+ * (the pilot, the architect, the estate agent and the recruit). Seven are open from the start, so a newcomer has a
  * choice of lives far apart (a steady wage, pay that swings, a new country, a small wage in a rich city); the rest are goals. A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
  * `share_plan`, `bilingual` and `has_business` by cards.
@@ -323,6 +326,62 @@ export const lives: LifeDef[] = [
       lifestyleTier: 2,
       debts: [],
       life: { lifeId: 'private_banker', career: { id: 'finance', level: 0 }, careerSkill: 0, financeSkill: 2, skills: { network: 3 }, focus: 3, minLifestyleTier: 2 },
+    },
+  },
+  {
+    // The best pay of the four careers added last, after a training bought on a loan; a job the economy can ground.
+    id: 'pilot',
+    unlock: 'moved_to_dubai',
+    challengeFrom: '2026-W45',
+    start: {
+      cityId: 'dubai',
+      cash: usd(2_000),
+      salaryAnnual: 0,
+      lifestyleTier: 0,
+      debts: [{ kind: 'personalLoan', principal: usd(80_000), fixedRateBp: 600, roundsLeft: 8 }],
+      life: { lifeId: 'pilot', career: { id: 'aviation', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { languages: 3 }, focus: 3, rentTier: 0 },
+    },
+  },
+  {
+    // A city still being built and cheap to start in; pay that follows the property cycle, and a studio loan to clear.
+    id: 'architect',
+    unlock: 'three_cities',
+    challengeFrom: '2026-W45',
+    start: {
+      cityId: 'mexico_city',
+      cash: usd(3_000),
+      salaryAnnual: 0,
+      lifestyleTier: 0,
+      debts: [{ kind: 'personalLoan', principal: usd(10_000), fixedRateBp: 600, roundsLeft: 5 }],
+      life: { lifeId: 'architect', career: { id: 'construction', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { management: 3 }, focus: 3, rentTier: 0 },
+    },
+  },
+  {
+    // The dearest homes and the fattest commissions; no debt, and a low pay that swings with the market.
+    id: 'estate_agent',
+    unlock: 'three_rentals',
+    challengeFrom: '2026-W45',
+    start: {
+      cityId: 'london',
+      cash: usd(2_500),
+      salaryAnnual: 0,
+      lifestyleTier: 0,
+      debts: [],
+      life: { lifeId: 'estate_agent', career: { id: 'realestate', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { negotiation: 3, network: 2 }, focus: 3, rentTier: 0 },
+    },
+  },
+  {
+    // A modest pay that never falls and cannot be lost, a point of focus more every round, and a pension that may come early.
+    id: 'recruit',
+    unlock: 'default',
+    challengeFrom: '2026-W45',
+    start: {
+      cityId: 'singapore',
+      cash: usd(1_500),
+      salaryAnnual: 0,
+      lifestyleTier: 0,
+      debts: [],
+      life: { lifeId: 'recruit', career: { id: 'military', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { health: 3 }, focus: 3, rentTier: 0, flags: ['layoff_proof'] },
     },
   },
 ];

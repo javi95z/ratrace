@@ -314,13 +314,30 @@ export const cardArt: Record<string, string> = {
   rich_yacht_rocks: scene('rich_yacht_rocks'),
   rich_threat: scene('rich_threat'),
   rich_hostile_bid: scene('rich_hostile_bid'),
+  // Content 1.52: the four careers added last, four cards each (cards-55 to 57, stand-ins until drawn).
+  aviation_medical: scene('aviation_medical'),
+  aviation_strike: scene('aviation_strike'),
+  aviation_base_abroad: scene('aviation_base_abroad'),
+  aviation_grounded: scene('aviation_grounded'),
+  construction_own_house: scene('construction_own_house'),
+  construction_unpaid: scene('construction_unpaid'),
+  construction_collapse: scene('construction_collapse'),
+  construction_famous_client: scene('construction_famous_client'),
+  realestate_off_market: scene('realestate_off_market'),
+  realestate_hurried_seller: scene('realestate_hurried_seller'),
+  realestate_bubble: scene('realestate_bubble'),
+  realestate_double_fee: scene('realestate_double_fee'),
+  military_mission: scene('military_mission'),
+  military_twenty_years: scene('military_twenty_years'),
+  military_posting: scene('military_posting'),
+  military_contractor: scene('military_contractor'),
 };
 
 /**
  * The lives drawn as women. The player's ex is of the other sex (the paper's people, `useRivals` in the app, holds the same list):
  * a man for these lives, a woman for the rest.
  */
-export const LIVES_DRAWN_AS_WOMEN: readonly string[] = ['nurse', 'civil_servant', 'newcomer', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson', 'private_banker'];
+export const LIVES_DRAWN_AS_WOMEN: readonly string[] = ['nurse', 'civil_servant', 'newcomer', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson', 'private_banker', 'pilot', 'estate_agent'];
 /** A card that draws the player's ex: its own scene draws a woman, this one a man (cards-54). */
 export const exAsManArt: Readonly<Record<string, string>> = { ex_new_car: 'card.ex_new_car_man' };
 /** A card's scene in this life: the ex, where a card draws one, of the other sex to the player. */

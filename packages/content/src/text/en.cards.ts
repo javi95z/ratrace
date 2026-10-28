@@ -1354,4 +1354,72 @@ export const cards: Record<string, CardText> = {
     ['Sue the gallery', 'The gallery pays, and apologises in print.', 'The gallery has vanished. So have its owners.'],
     'Give it to a museum, as a fake',
   ]),
+  // Content 1.52: the four careers added last, four cards each.
+  aviation_medical: c('The yearly medical', 'The doctor at the yearly check hears a murmur in your heart. Without a specialist\'s word, your licence waits.', [
+    'Wait to be cleared',
+    'Pay a specialist',
+  ]),
+  aviation_strike: c('The pilots strike', 'The union calls a strike over pay. The airline needs someone to fly the morning flights.', [
+    'Fly the morning flight',
+    ['Join the strike', 'The airline gives in: a raise for every pilot.', 'Nothing comes of it, and the days on strike are not paid.'],
+  ]),
+  aviation_base_abroad: c('A base abroad', 'The airline is opening bases at its two hubs and asks who will move with the job. The move is paid.', [
+    'Stay where you are',
+    'Move to the base in {city:dubai}',
+    'Move to the base in {city:singapore}',
+  ]),
+  aviation_grounded: c('The fleet is grounded', 'Nobody is flying in this recession. Half the fleet is parked in the desert, and the airline asks pilots to wait.', [
+    'Wait on half pay',
+    'Fly cargo instead',
+  ]),
+  construction_own_house: c('A house of your own design', 'You have drawn houses for others for years. A plot comes up, and the builder you trust offers you the trade price.', [
+    'Keep drawing for others',
+    'Build your own house',
+  ]),
+  construction_unpaid: c('The developer will not pay', 'The building is up, and the developer has stopped answering the phone. Your fee is in his pocket.', [
+    'Let it go',
+    ['Take him to court', 'The court rules for you: the fee, with interest.', 'The developer goes bust. The lawyers still get paid.'],
+  ]),
+  construction_collapse: c('A crack in the balcony', 'A balcony in a block you signed has cracked. Nobody was hurt, and the papers already know your name.', [
+    'Pay for the repair',
+    ['Blame the builder', 'The report agrees: the builder skimped on steel.', 'The report blames the design. The repair and the shame are yours.'],
+  ]),
+  construction_famous_client: c('A famous client', 'A pop star wants a villa on a cliff, all glass, and wants you to draw it.', [
+    'Turn it down',
+    'Draw the villa',
+  ]),
+  realestate_off_market: c('Off the market', 'A landlord wants to sell a let flat quietly, before it is listed. You are the first to know.', [
+    'Pass it to a client',
+    'Buy it yourself',
+  ]),
+  realestate_hurried_seller: c('A seller in a hurry', 'A seller has to be gone by the end of the month and will take any fair offer.', [
+    'Let a colleague handle it',
+    'Tip off your investor client',
+    'Buy it to live in',
+  ]),
+  realestate_bubble: c('Talk of a bubble', 'Prices have never been higher, and at the agency everyone says the top is near.', [
+    'Hold on',
+    'Sell your home at the top',
+  ]),
+  realestate_double_fee: c('Two fees for one sale', 'The buyer and the seller each offer you a fee, and neither knows about the other.', [
+    'Play it straight',
+    ['Take both fees', 'Nobody finds out. Two fees for one sale.', 'The buyer finds out: a fine, and your name in the trade press.'],
+  ]),
+  military_mission: c('A mission abroad', 'The unit is sent abroad for six months. Volunteers get a bonus, and the others get noticed.', [
+    'Stay behind',
+    ['Volunteer', 'Six hard months, and you come back with a bonus and a medal.', 'You come back with a bonus, a medal and an injury that still aches.'],
+  ]),
+  military_twenty_years: c('Twenty years of service', 'Twenty years in uniform. You may leave now with a pension for life, and the civil service has a desk for you.', [
+    'Stay on',
+    'Leave with the pension',
+  ]),
+  military_posting: c('A new posting', 'The army is moving your unit abroad. The move is paid, and asking to stay is asking for a favour.', [
+    'Ask to stay',
+    'Go with the unit to {city:dubai}',
+    'Go with the unit to {city:london}',
+  ]),
+  military_contractor: c('The contractor\'s offer', 'A private security firm wants officers like you abroad, at a pay the army never dreamt of.', [
+    'Stay in the army',
+    'Take the contract',
+  ]),
 };

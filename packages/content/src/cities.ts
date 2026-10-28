@@ -151,7 +151,7 @@ export const cities: CityDef[] = [
     tax: madridTax,
     prestige: 6,
     taxOfficePct: 130,
-    careerPayPct: { public: 115, healthcare: 110, education: 110 },
+    careerPayPct: { public: 115, healthcare: 110, education: 110, construction: 110 },
     propertyRentPct: { shop: 90, parking: 110 },
   },
   {
@@ -219,7 +219,7 @@ export const cities: CityDef[] = [
     tax: singaporeTax,
     prestige: 12,
     taxOfficePct: 90,
-    careerPayPct: { tech: 120, finance: 110, education: 125 },
+    careerPayPct: { tech: 120, finance: 110, education: 125, aviation: 115 },
     propertyRentPct: { warehouse: 120, shop: 110 },
   },
   {
@@ -256,7 +256,7 @@ export const cities: CityDef[] = [
     tax: tokyoTax,
     prestige: 13,
     taxOfficePct: 110,
-    careerPayPct: { tech: 115, sales: 110, hospitality: 110 },
+    careerPayPct: { tech: 115, sales: 110, hospitality: 110, realestate: 110 },
     propertyRentPct: { parking: 120, office: 95 },
   },
   {
@@ -274,7 +274,7 @@ export const cities: CityDef[] = [
     tax: moscowTax,
     prestige: 9,
     taxOfficePct: 60,
-    careerPayPct: { finance: 115, tech: 115, public: 110 },
+    careerPayPct: { finance: 115, tech: 115, public: 110, military: 110 },
     propertyRentPct: { warehouse: 115, office: 85 },
   },
   {

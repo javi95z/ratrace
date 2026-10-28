@@ -24,6 +24,10 @@ const NAMES: Readonly<Record<string, { latin: string; cyrillic: string }>> = {
   salesperson: { latin: 'Valeria', cyrillic: 'Валерия' },
   private_banker: { latin: 'Lea', cyrillic: 'Леа' },
   doctor: { latin: 'Nina', cyrillic: 'Нина' },
+  pilot: { latin: 'Noor', cyrillic: 'Нур' },
+  architect: { latin: 'Mateo', cyrillic: 'Матео' },
+  estate_agent: { latin: 'Charlotte', cyrillic: 'Шарлотта' },
+  recruit: { latin: 'Ravi', cyrillic: 'Рави' },
 };
 
 /** The first name of whoever lives a life, in the letters of a language; null for a life with none. */

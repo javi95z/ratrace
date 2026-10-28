@@ -14,7 +14,7 @@ const TRAINEE = { salaryBoostPct: -30 };
 const NEW_EMPLOYER = { setFlags: ['share_plan', CHANGED], clearFlags: ['layoff_proof'] };
 /** A new trade with no share plan and no job for life: what is left behind on the way into one. */
 const FRESH_START = { setFlags: [CHANGED], clearFlags: ['layoff_proof', 'share_plan'] };
-const CAREERS = ['healthcare', 'tech', 'public', 'service', 'finance', 'medicine', 'law', 'education', 'influencer', 'hospitality', 'sales'];
+const CAREERS = ['healthcare', 'tech', 'public', 'service', 'finance', 'medicine', 'law', 'education', 'influencer', 'hospitality', 'sales', 'aviation', 'construction', 'realestate', 'military'];
 /** Every career but the one named: who a way into it is offered to. */
 const outside = (...ids: string[]) => CAREERS.filter((id) => !ids.includes(id));
 

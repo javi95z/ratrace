@@ -396,4 +396,21 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   lodger_leaves: ['Pintura nueva, y sobra un poco. La habitación vuelve a ser tuya.', 'Promete mandarte a sus amigos.'],
   // Content 1.50: a fortune's fake masterpiece.
   rich_fake_art: [null, null, 'Una placa que dice «Escuela de», y un trato amable de Hacienda.'],
+  // Content 1.52: the four careers added last, four cards each.
+  aviation_medical: ['Una ronda en tierra y un puesto menos, esperando los papeles.', 'El especialista no oye nada preocupante. De vuelta a la cabina.'],
+  aviation_strike: ['El vuelo sale a su hora. En la sala de tripulaciones nadie te habla.', null],
+  aviation_base_abroad: ['La base se la queda otro. Tú conservas tus rutas.', 'Un piso junto al aeropuerto, sueldo sin impuestos y el desierto bajo el ala.', 'Orquídeas en la terminal, un piso junto a la bahía y un cuadrante mejor.'],
+  aviation_grounded: ['Una ronda en casa con medio sueldo, hasta que vuelvan a volar.', 'Las cajas no se quejan. Menos sueldo, y la carga nunca se queda en tierra.'],
+  construction_own_house: ['El solar se lo lleva otro. Tus bocetos se quedan en el cajón.', 'Un año de fines de semana en la obra, y una casa tal como la dibujaste.'],
+  construction_unpaid: ['Lo das por perdido. La próxima vez, la mitad por adelantado.', null],
+  construction_collapse: ['La reparación tarda una semana. El titular dura más.', null],
+  construction_famous_client: ['Conservas tus fines de semana, y la cordura.', 'Trescientos cambios después, la villa sale en todas las revistas.'],
+  realestate_off_market: ['Tu cliente lo compra. A ti te llega una tarjeta de agradecimiento.', 'Los inquilinos se quedan, entra el alquiler y costó menos de lo que vale.'],
+  realestate_hurried_seller: ['Tu compañero lo vende en un día y paga los cafés.', 'Tu cliente lo compra en una hora y te paga el soplo.', 'Por fin unas llaves tuyas, a un precio que a nadie más le ofrecieron.'],
+  realestate_bubble: ['No te mueves. Quizá esta vez no sea una burbuja.', 'Vendida en lo más alto. Ahora vives de alquiler y esperas a que bajen.'],
+  realestate_double_fee: ['Una sola comisión, y un nombre del que el sector se fía.', null],
+  military_mission: ['Te quedas en la base. Tu nombre baja en la lista.', null],
+  military_twenty_years: ['Vuelves a firmar. El uniforme todavía te queda bien.', 'Una pensión cada mes, un trabajo de oficina y los fines de semana en casa.'],
+  military_posting: ['Te quedas, y tu próximo ascenso espera un poco más.', 'Arena, una base junto al mar y un idioma nuevo que aprender.', 'Lluvia, autobuses rojos y una base a las afueras.'],
+  military_contractor: ['Conservas el uniforme, la pensión y el respeto.', 'El dinero es de verdad. Los riesgos también, y las miradas en casa.'],
 };

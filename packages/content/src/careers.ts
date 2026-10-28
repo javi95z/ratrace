@@ -2,7 +2,7 @@ import type { CareerDef } from '@ratrace/engine';
 import { usd } from './money';
 
 /**
- * Eleven career ladders. A level pays a share of the median salary of the player's city,
+ * Fifteen career ladders. A level pays a share of the median salary of the player's city,
  * so the same job pays more in New York than in Bangkok.
  *
  * A round of work adds one point of career skill, and a round of study one more. So the top of a
@@ -165,6 +165,76 @@ export const careers: CareerDef[] = [
       { salaryPct: 135, minSkill: 10, status: 10 },
       { salaryPct: 180, minSkill: 18, status: 17 },
       { salaryPct: 240, minSkill: 28, status: 25 },
+    ],
+  },
+  {
+    // An expensive start bought on debt, then a great salary, in a job the economy can ground: planes stay on the ground in a recession.
+    id: 'aviation',
+    // A captain may fly the long routes, paid more and slept less; one at the top may be taken by the national airline.
+    moves: [
+      { id: 'longHaul', fromLevel: 1, toLevel: 2, rounds: 1, restRounds: 3, outcomes: [{ weight: 70, result: { salaryPct: 8 } }, { weight: 30, result: { salaryPct: 8, health: -2 } }] },
+      { id: 'flagCarrier', fromLevel: 2, toLevel: 3, rounds: 1, restRounds: 3, skill: 'languages', pctPerSkillLevel: 8, outcomes: [{ weight: 40, result: { rungs: 1, status: 3, salaryPct: 5 } }, { weight: 60, result: {} }] },
+    ],
+    overtimePct: 6,
+    cyclePct: { boom: 5, slowdown: -10, recession: -35 },
+    levels: [
+      { salaryPct: 75, minSkill: 0, status: 4 },
+      { salaryPct: 120, minSkill: 7, status: 9 },
+      { salaryPct: 170, minSkill: 18, status: 16 },
+      { salaryPct: 205, minSkill: 30, status: 22 },
+    ],
+  },
+  {
+    // Pay that follows the property cycle, and the chance to build for oneself.
+    id: 'construction',
+    // A competition that makes a name; at the top, a studio of one's own.
+    moves: [
+      { id: 'competition', fromLevel: 1, toLevel: 3, rounds: 1, restRounds: 3, skill: 'network', pctPerSkillLevel: 8, outcomes: [{ weight: 25, result: { status: 5, salaryPct: 6 } }, { weight: 75, result: {} }] },
+      { id: 'ownStudio', fromLevel: 3, toLevel: 3, rounds: 1, restRounds: 4, outcomes: [{ weight: 55, result: { passiveAnnual: usd(10_000), status: 2 } }, { weight: 45, result: { status: -3 } }] },
+    ],
+    overtimePct: 5,
+    remote: true,
+    cyclePct: { boom: 15, expansion: 5, slowdown: -10, recession: -25 },
+    levels: [
+      { salaryPct: 85, minSkill: 0, status: 4 },
+      { salaryPct: 115, minSkill: 5, status: 8 },
+      { salaryPct: 150, minSkill: 13, status: 13 },
+      { salaryPct: 210, minSkill: 24, status: 20 },
+    ],
+  },
+  {
+    // Commission is feast or famine: the widest swing of any career, with the economy.
+    id: 'realestate',
+    // The dear homes, for someone who can bargain; at the top, an agency of one's own.
+    moves: [
+      { id: 'luxuryPortfolio', fromLevel: 1, toLevel: 3, rounds: 1, restRounds: 3, skill: 'negotiation', pctPerSkillLevel: 8, outcomes: [{ weight: 55, result: { salaryPct: 10 } }, { weight: 45, result: {} }] },
+      { id: 'ownAgency', fromLevel: 3, toLevel: 3, rounds: 1, restRounds: 4, outcomes: [{ weight: 50, result: { rungs: 1, passiveAnnual: usd(12_000) } }, { weight: 50, result: { status: -3 } }] },
+    ],
+    overtimePct: 10,
+    cyclePct: { boom: 30, expansion: 10, slowdown: -15, recession: -35 },
+    levels: [
+      { salaryPct: 55, minSkill: 0, status: 2 },
+      { salaryPct: 88, minSkill: 4, status: 5 },
+      { salaryPct: 128, minSkill: 10, status: 9 },
+      { salaryPct: 180, minSkill: 20, status: 15 },
+      { salaryPct: 235, minSkill: 32, status: 20 },
+    ],
+  },
+  {
+    // A modest pay that never falls, little to spend it on, and life on base leaves time: a point of focus more every round.
+    id: 'military',
+    // Selection for the special forces, for the fit: a rung up, or a body that pays for trying.
+    moves: [
+      { id: 'specialForces', fromLevel: 0, toLevel: 2, rounds: 1, restRounds: 3, skill: 'health', pctPerSkillLevel: 8, outcomes: [{ weight: 35, result: { rungs: 1, status: 4 } }, { weight: 65, result: { health: -1 } }] },
+    ],
+    overtimePct: 8,
+    focus: 1,
+    levels: [
+      { salaryPct: 64, minSkill: 0, status: 4 },
+      { salaryPct: 82, minSkill: 5, status: 7 },
+      { salaryPct: 105, minSkill: 12, status: 11 },
+      { salaryPct: 132, minSkill: 20, status: 15 },
+      { salaryPct: 168, minSkill: 32, status: 21 },
     ],
   },
 ];

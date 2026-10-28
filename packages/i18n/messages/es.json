@@ -123,7 +123,10 @@
       "robotics_engineer": "Las máquinas vienen. Alguien las está construyendo.",
       "programmer": "Trabajo callado, sueldo ruidoso y una carrera amenazada por sus propias herramientas.",
       "chef": "Una cocina, un fuego y un restaurante que quizá nunca dé beneficios.",
-      "private_banker": "Las fortunas de otros y una vista de cómo vive de verdad la gente rica."
+      "private_banker": "Las fortunas de otros y una vista de cómo vive de verdad la gente rica.",
+      "pilot": "Una cabina pagada a crédito, y un cielo que se cierra cuando falta el dinero.",
+      "architect": "Dibujar lo que otros construyen, hasta el día en que construyes lo tuyo.",
+      "estate_agent": "Vender casas para vivir, y aprender lo que de verdad valen."
     },
     "random": "🎲 Al azar"
   },

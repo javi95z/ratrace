@@ -493,18 +493,21 @@ describe('unlocking lives', () => {
       lawyer: 'first_luxury_watch', influencer: 'status_100', waiter: 'first_share', salesperson: 'bought_the_dip',
       // One for each of the four cities added later.
       robotics_engineer: 'world_tour', programmer: 'five_asset_classes', chef: 'family_of_four', private_banker: 'swiss_banker',
+      // And for two of the four careers added last (the architect's three cities are tried below, beside the heir's million).
+      pilot: 'moved_to_dubai', estate_agent: 'three_rentals',
     };
     for (const [life, badge] of Object.entries(later)) {
       expect(badges.map((b) => b.id), life).toContain(badge);
       expect(lives.find((x) => x.id === life)?.unlock).toBe(badge);
       expect(unlockedLives(lives, { finished: 0, badges: [badge] })).toEqual([life]);
     }
-    expect(unlockedLives(lives, { finished: 0, badges: badges.map((b) => b.id).filter((id) => !Object.values(later).includes(id) && id !== 'millionaire') })).toEqual([]);
+    expect(unlockedLives(lives, { finished: 0, badges: badges.map((b) => b.id).filter((id) => !Object.values(later).includes(id) && id !== 'millionaire' && id !== 'three_cities') })).toEqual([]);
+    expect(unlockedLives(lives, { finished: 0, badges: ['three_cities'] })).toEqual(['architect']);
   });
 
   it('never lists a life that was open from the start', () => {
     const open = lives.filter((life) => life.unlock === 'default').map((life) => life.id);
-    expect(open).toEqual(['nurse', 'engineer', 'civil_servant', 'rider', 'newcomer', 'teacher']);
+    expect(open).toEqual(['nurse', 'engineer', 'civil_servant', 'rider', 'newcomer', 'teacher', 'recruit']);
     for (const id of open) expect(unlockedLives(lives, { finished: 9, badges: badges.map((b) => b.id) })).not.toContain(id);
   });
 });

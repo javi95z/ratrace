@@ -52,6 +52,10 @@ export const es: ContentText = {
     influencer: { name: 'Influencer', levels: ['Creador novato', 'Creador', 'Influencer', 'Estrella'], focus: { overtime: 'Publicar más', studyCareer: 'Mejorar tus vídeos', jobHunt: 'Cambiar de agencia', askRaise: 'Negociar con marcas' }, moves: { goViral: { name: 'Ir a por un viral', about: 'Un vídeo arriesgado: puede lanzarte… o hundirte.', outcomes: ['¡Viral! Subes dos escalones de golpe.', 'Polémica: pierdes estatus y anunciantes.', 'Pasa sin pena ni gloria.'] }, ownBrand: { name: 'Lanzar tu propia marca', about: 'Una marca con tu nombre que dure más que la fama.', outcomes: ['La marca vende sola: ingresos para siempre.', 'La marca no arranca y se nota.'] } } },
     hospitality: { name: 'Hostelería', levels: ['Camarero', 'Jefe de sala', 'Encargado', 'Director de hotel', 'Director de cadena'], focus: { overtime: 'Turnos dobles', studyCareer: 'Curso de hostelería', jobHunt: 'Cambiar de local', askRaise: 'Pedir un aumento' } },
     sales: { name: 'Ventas', levels: ['Comercial júnior', 'Comercial', 'Responsable de cuentas', 'Director comercial', 'Director de ventas'], focus: { overtime: 'Más visitas a clientes', studyCareer: 'Curso de ventas', jobHunt: 'Cambiar de empresa', askRaise: 'Renegociar la comisión' } },
+    aviation: { name: 'Aviación', levels: ['Segundo oficial', 'Primer oficial', 'Comandante', 'Comandante sénior'], focus: { overtime: 'Rotaciones extra', studyCareer: 'Habilitación de tipo', jobHunt: 'Presentarse a otra aerolínea', askRaise: 'Pedir un cuadrante mejor' }, moves: { longHaul: { name: 'Volar largo radio', about: 'Las rutas largas pagan más y desgastan: husos horarios, noches en vela.', outcomes: ['Las rutas largas pagan: +8 % de sueldo para siempre.', 'El sueldo sube un 8 %, y el desfase horario te pasa factura en la salud.'] }, flagCarrier: { name: 'Presentarse a la aerolínea de bandera', about: 'La aerolínea nacional elige a sus comandantes entre los mejores. Ayudan los idiomas.', outcomes: ['La aerolínea de bandera te ficha: subes un puesto, con el uniforme que todos conocen.', 'Te agradecen el interés.'] } } },
+    construction: { name: 'Arquitectura', levels: ['Arquitecto júnior', 'Arquitecto de proyecto', 'Arquitecto jefe', 'Socio del estudio'], focus: { overtime: 'Noches de concurso', studyCareer: 'Máster en estructuras', jobHunt: 'Pasar a un estudio más grande', askRaise: 'Pedir parte de los honorarios' }, moves: { competition: { name: 'Presentarse a un concurso', about: 'Un edificio público, contra los mejores estudios. Ayudan los contactos.', outcomes: ['Lo ganas: tu nombre en los periódicos y +6 % de sueldo.', 'Gana otro estudio. Los planos van a un cajón.'] }, ownStudio: { name: 'Abrir tu propio estudio', about: 'Tu nombre en la puerta y clientes propios: ingresos para siempre, si llegan.', outcomes: ['El estudio se llena: ingresos pasivos para siempre.', 'Los clientes no llegan, y se nota.'] } } },
+    realestate: { name: 'Inmobiliaria', levels: ['Agente en prácticas', 'Agente', 'Agente sénior', 'Director de oficina', 'Dueño de la agencia'], focus: { overtime: 'Jornadas de puertas abiertas', studyCareer: 'Curso de derecho inmobiliario', jobHunt: 'Pasar a una agencia de lujo', askRaise: 'Pedir más comisión' }, moves: { luxuryPortfolio: { name: 'Llevar viviendas de lujo', about: 'Las casas más caras de la ciudad y los compradores más duros. Ayuda saber negociar.', outcomes: ['Llegan las grandes ventas: +10 % de sueldo para siempre.', 'Los ricos compran con otro.'] }, ownAgency: { name: 'Abrir tu propia agencia', about: 'Un escaparate con tu nombre y agentes a tu cargo.', outcomes: ['La agencia despega: subes un puesto e ingresos para siempre.', 'La agencia no arranca, y se nota.'] } } },
+    military: { name: 'Fuerzas armadas', levels: ['Soldado', 'Sargento', 'Teniente', 'Capitán', 'Coronel'], focus: { overtime: 'Presentarse voluntario a una misión', studyCareer: 'Academia de oficiales', jobHunt: 'Pedir traslado a otra unidad', askRaise: 'Pedir un ascenso de categoría' }, moves: { specialForces: { name: 'Optar a las fuerzas especiales', about: 'Una selección que pocos pasan. Ayuda estar en forma.', outcomes: ['Pasas la selección: subes un puesto y te dan la boina.', 'No la pasas, y el cuerpo te lo cobra.'] } } },
   },
   businessTypes: {
     services: { name: 'Tu oficio por tu cuenta', blurb: 'Tu trabajo para tus propios clientes. Barato de montar, da dinero pronto y nunca será grande.' },
@@ -218,6 +222,30 @@ export const es: ContentText = {
       perk: 'La mesa mejor pagada en la ciudad más cara, con clientes que abren puertas.',
       handicap: 'Un estilo de vida que nunca puede bajar de acomodado, en Zúrich.',
       unlock: 'Reúne un millón viviendo en {city:zurich}.',
+    },
+    pilot: {
+      name: 'Piloto',
+      perk: 'Un sueldo que sube deprisa cuando llegan los galones, y sin impuestos en {city:dubai}.',
+      handicap: 'Un préstamo de 80.000 $ por la formación, y un trabajo que una recesión deja en tierra.',
+      unlock: 'Múdate a {city:dubai}.',
+    },
+    architect: {
+      name: 'Arquitecto',
+      perk: 'Una ciudad barata para empezar, y un sueldo que sube con cada boom de la construcción.',
+      handicap: 'Un préstamo de los años de estudio, y un sueldo que cae cuando se deja de construir.',
+      unlock: 'Vive en tres ciudades en una misma vida.',
+    },
+    estate_agent: {
+      name: 'Agente inmobiliaria',
+      perk: 'Comisiones que se disparan en un boom, y los mejores pisos antes de que nadie los vea.',
+      handicap: 'El sueldo más bajo para empezar, entre las casas más caras, y el mayor vaivén de todos los oficios.',
+      unlock: 'Ten tres inmuebles alquilados a la vez.',
+    },
+    recruit: {
+      name: 'Recluta',
+      perk: 'No lo pueden despedir, tiene un punto de foco más cada ronda y una pensión que puede llegar pronto.',
+      handicap: 'Un sueldo modesto que sube despacio.',
+      unlock: 'Disponible desde el principio.',
     },
   },
   crises: {

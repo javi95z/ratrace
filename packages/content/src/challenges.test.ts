@@ -47,16 +47,22 @@ describe('the challenge of a week', () => {
     for (let i = 1; i < all.length; i++) expect(all[i].lifeId, all[i].week).not.toBe(all[i - 1].lifeId);
     expect(new Set(all.map((each) => each.lifeId))).toEqual(new Set(lives.map((life) => life.id)));
     expect(new Set(all.map((each) => each.rule))).toEqual(new Set(CHALLENGE_RULES));
-    // Pairs come back only after many weeks, once the lives that came later have joined.
-    const pairs = all.filter((each) => each.week >= '2026-W43').map((each) => `${each.lifeId}/${each.rule}`);
+    // Pairs come back only after many weeks, once the lives that came later have joined: every pair of the 24 lives and 10 rules
+    // before any comes back, which one more turn of the rule each round of lives would not give (it brings a pair back in 48 weeks).
+    const pairs = all.filter((each) => each.week >= '2026-W45').map((each) => `${each.lifeId}/${each.rule}`);
     expect(new Set(pairs.slice(0, 60)).size).toBe(60);
+    const long = Array.from({ length: 240 }, (_, i) => challengeOf(weekOf(weekStart('2026-W45')! + i * 7 * 86_400_000), lives)!);
+    expect(new Set(long.map((each) => `${each.lifeId}/${each.rule}`)).size).toBe(240);
   });
 
   it('keeps every week before a later life joins exactly as it was', () => {
     const first = lives.filter((life) => life.challengeFrom === undefined);
     for (const week of weeks.filter((each) => each < '2026-W43')) expect(challengeOf(week, lives), week).toEqual(challengeOf(week, first));
-    expect(lives.filter((life) => life.challengeFrom !== undefined).map((life) => life.id)).toEqual(['robotics_engineer', 'programmer', 'chef', 'private_banker']);
-  });
+    // The lives of the four careers added last join two weeks later, and leave the two weeks between as they were.
+    const second = lives.filter((life) => life.challengeFrom === undefined || life.challengeFrom === '2026-W43');
+    for (const week of weeks.filter((each) => each < '2026-W45')) expect(challengeOf(week, lives), week).toEqual(challengeOf(week, second));
+    expect(lives.filter((life) => life.challengeFrom === '2026-W43').map((life) => life.id)).toEqual(['robotics_engineer', 'programmer', 'chef', 'private_banker']);
+    expect(lives.filter((life) => life.challengeFrom === '2026-W45').map((life) => life.id)).toEqual(['pilot', 'architect', 'estate_agent', 'recruit']);  });
 
   it('starts every life under every rule as a sound game', () => {
     for (const life of lives) {

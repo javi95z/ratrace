@@ -46,7 +46,7 @@ describe('choosing a life', () => {
     await user.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Software engineer/ }));
     await user.keyboard('{End}');
-    expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Teacher/ }));
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Recruit/ }));
     await user.keyboard('{Home}');
     expect(document.activeElement).toBe(nurse);
     await user.keyboard('sof');
@@ -70,24 +70,24 @@ describe('choosing a life', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  it('offers the six starting lives, and shows what unlocks the others', async () => {
+  it('offers the seven starting lives, and shows what unlocks the others', async () => {
     renderGame(<NewLife />, memoryServices());
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     // The lives that can be lived are the ones to choose from, each with how hard it is.
     const lives = screen.getAllByRole('radio');
-    expect(lives.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant|Delivery rider|Newcomer abroad|Teacher)\b/).textContent?.split(' · ')[0])).toEqual(['Nurse', 'Software engineer', 'Civil servant', 'Delivery rider', 'Newcomer abroad', 'Teacher']);
+    expect(lives.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant|Delivery rider|Newcomer abroad|Teacher|Recruit)\b/).textContent?.split(' · ')[0])).toEqual(['Nurse', 'Software engineer', 'Civil servant', 'Delivery rider', 'Newcomer abroad', 'Teacher', 'Recruit']);
     // The one chosen says who lives it.
     expect(lives[0].textContent).toContain('Nurse · Lucía');
     expect(within(lives[1]).getByRole('img', { name: 'Difficulty: normal' })).toBeTruthy();
     // The others wait at the foot, folded, with what unlocks each.
     expect(screen.queryByText(/To unlock/)).toBeNull();
-    await userEvent.setup().click(screen.getByRole('button', { name: '14 lives to unlock' }));
-    expect(screen.getAllByText(/To unlock/)).toHaveLength(14);
+    await userEvent.setup().click(screen.getByRole('button', { name: '17 lives to unlock' }));
+    expect(screen.getAllByText(/To unlock/)).toHaveLength(17);
   });
 
   it('gives each locked life a hint, and counts nothing where no goal is a count of lives', async () => {
     renderGame(<NewLife />, memoryServices());
-    await userEvent.setup().click(await screen.findByRole('button', { name: '14 lives to unlock' }));
+    await userEvent.setup().click(await screen.findByRole('button', { name: '17 lives to unlock' }));
     expect(screen.getByText('A head start nobody earned. What does it do to a person?')).toBeTruthy();
     // No goal left counts lives finished (unlockProgress's own test holds that one).
     expect(screen.queryByText(/Lives finished/)).toBeNull();
@@ -99,7 +99,7 @@ describe('choosing a life', () => {
     const user = userEvent.setup();
     renderGame(<NewLife />, services);
     const rider = await screen.findByRole('radio', { name: /^Heir/ });
-    expect(screen.getByRole('button', { name: '13 lives to unlock' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '16 lives to unlock' })).toBeTruthy();
     await user.click(rider);
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));

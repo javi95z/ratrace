@@ -408,4 +408,21 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   lodger_leaves: ['Fresh paint, and a little over. The room is yours again.', 'They promise to send their friends your way.'],
   // Content 1.50: a fortune's fake masterpiece.
   rich_fake_art: [null, null, 'A plaque that says "School of", and a kind word from the tax office.'],
+  // Content 1.52: the four careers added last, four cards each.
+  aviation_medical: ['A round on the ground and a rung lower, waiting for the paperwork.', 'The specialist hears nothing to worry about. Back in the cockpit.'],
+  aviation_strike: ['The flight leaves on time. In the crew room, nobody talks to you.', null],
+  aviation_base_abroad: ['Someone else takes the base. You keep your routes.', 'A flat by the airport, pay without tax and the desert under the wing.', 'Orchids at the terminal, a flat by the bay and a better roster.'],
+  aviation_grounded: ['A round at home on half pay, until the planes fly again.', 'Boxes do not complain. Less pay, and nobody ever grounds the freight.'],
+  construction_own_house: ['The plot goes to someone else. Your sketches stay in the drawer.', 'A year of weekends on site, and a house exactly as you drew it.'],
+  construction_unpaid: ['You write it off. Next time, half the fee up front.', null],
+  construction_collapse: ['The repair is done in a week. The headline lasts longer.', null],
+  construction_famous_client: ['You keep your weekends, and your sanity.', 'Three hundred changes later, the villa is in every magazine.'],
+  realestate_off_market: ['Your client buys it. You get a thank-you card.', 'The tenants stay, the rent comes in, and it cost less than it is worth.'],
+  realestate_hurried_seller: ['Your colleague sells it in a day, and buys the coffees.', 'Your client buys it in an hour, and pays you for the tip.', 'Your own keys at last, at a price nobody else was offered.'],
+  realestate_bubble: ['You stay put. Maybe it is not a bubble this time.', 'Sold at the top. Now you rent, and wait for prices to fall.'],
+  realestate_double_fee: ['One fee, and a name the trade trusts.', null],
+  military_mission: ['You stay on base. Your name drops down the list.', null],
+  military_twenty_years: ['You sign on again. The uniform still fits.', 'A pension every month, a desk job, and weekends at home.'],
+  military_posting: ['You stay, and your next promotion waits a while longer.', 'Sand, a base by the sea and a new language to learn.', 'Rain, red buses and a base outside the city.'],
+  military_contractor: ['You keep the uniform, the pension and the respect.', 'The money is real. So are the risks, and the looks back home.'],
 };

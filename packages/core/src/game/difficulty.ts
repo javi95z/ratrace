@@ -18,12 +18,16 @@ export const DIFFICULTY: Readonly<Record<string, 1 | 2 | 3>> = {
   salesperson: 2,
   private_banker: 2,
   chef: 2,
+  pilot: 2,
+  architect: 2,
+  recruit: 1,
   newcomer: 3,
   rider: 3,
   comeback: 3,
   crypto_kid: 3,
   influencer: 3,
   waiter: 3,
+  estate_agent: 3,
 };
 
 /** A life's difficulty; one the list has not judged counts as middling. */

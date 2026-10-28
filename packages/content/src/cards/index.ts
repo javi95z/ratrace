@@ -10,6 +10,7 @@ import { celebCards } from './celebs';
 import { v20Cards } from './v20';
 import { richCards } from './rich';
 import { peopleCards } from './people';
+import { jobCards } from './jobs';
 
 /** The hundred cards of v1, in the order of spec section 3.11. */
 export const cards: CardDef[] = [
@@ -48,4 +49,6 @@ export const cards: CardDef[] = [
   ...richCards,
   // Content 1.50: the people who come back, and the player's own.
   ...peopleCards,
+  // Content 1.52: the four careers added last, each with four cards of its own.
+  ...jobCards,
 ];

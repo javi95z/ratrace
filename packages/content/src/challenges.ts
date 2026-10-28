@@ -70,8 +70,22 @@ export function challengeOf(week: string, all: readonly LifeDef[]): Challenge | 
   const n = Math.round((start - Date.UTC(1970, 0, 5)) / (7 * DAY_MS));
   const life = lives[((n % lives.length) + lives.length) % lives.length];
   const rules = CHALLENGE_RULES.filter((rule) => RULE_FROM[rule] === undefined || start >= (weekStart(RULE_FROM[rule] ?? '') ?? Infinity));
-  const rule = rules[(((n + Math.floor(n / lives.length)) % rules.length) + rules.length) % rules.length];
+  const turn = ruleTurn(lives.length, rules.length);
+  const rule = rules[(((n + Math.floor(n / lives.length) * turn) % rules.length) + rules.length) % rules.length];
   return { week, lifeId: life.id, rule };
+}
+
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+
+/**
+ * How far the rule moves on, beyond the week's own step, each time every life has had its week: one, unless the lives and the rules
+ * would then bring a pair back within months (24 lives and 10 rules would every 48 weeks), and then as few more as go through every
+ * pair first. Every count of lives and rules the weeks have had so far takes one, so no week already played changes.
+ */
+function ruleTurn(lives: number, rules: number): number {
+  let turn = 1;
+  while (gcd(lives + turn, rules) !== 1) turn += 1;
+  return turn;
 }
 
 /** What a rule forbids for the whole game. */

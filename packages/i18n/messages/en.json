@@ -123,7 +123,10 @@
       "robotics_engineer": "The machines are coming. Some people are building them.",
       "programmer": "Quiet work, loud pay, and a career at risk from its own tools.",
       "chef": "A kitchen, a fire, and a restaurant that may never turn a profit.",
-      "private_banker": "Other people's fortunes, and a view of how the rich really live."
+      "private_banker": "Other people's fortunes, and a view of how the rich really live.",
+      "pilot": "A cockpit bought on credit, and a sky that closes when money is short.",
+      "architect": "Drawing what others build, until the day you build your own.",
+      "estate_agent": "Selling homes for a living, and learning what they are really worth."
     },
     "random": "🎲 At random"
   },
