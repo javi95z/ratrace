@@ -106,10 +106,11 @@ function PlayScene({ scene }: { scene: Scene }) {
 export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>;
 
 /**
- * What a scene of the page where a life is chosen has open at the start: its sheet, the question of ending the life in progress (`scene.sheet`), or
- * the list of the lives still locked (`new-locked`, which the web's page opens by pressing the button that folds it).
+ * What a scene of the page where a life is chosen has open at the start: the question of ending the life in progress (`scene.sheet`), the sheet of
+ * the first life still locked (`new-locked`; the web's page opened the list of them by pressing the button that folds it), or the sheet of the
+ * first open life, where a member chooses a ranked life or not (`new-ranked`).
  */
-const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined);
+const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : scene.name === 'new-ranked' ? 'life' : undefined);
 
 /** A sheet that asks nothing of the game is never taken: a scene's sheet stays open whatever is pressed in it. */
 const refused = (): boolean => false;

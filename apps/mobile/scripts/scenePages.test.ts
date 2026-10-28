@@ -171,7 +171,7 @@ test('the page where a life is chosen has open, in a scene, what the scene says:
   expect(page).toMatch(/<div className="pb-safe fixed inset-x-0 bottom-0[^"]*">/);
   expect(page.slice(page.indexOf('pb-safe fixed'), page.indexOf('<Sheet'))).toContain('<Button');
   // The phone: the scene's sheet and its name say what the screen opens.
-  expect(app).toContain("scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined");
+  expect(app).toContain("scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : scene.name === 'new-ranked' ? 'life' : undefined");
   expect(app).toContain('new: (scene) => <NewLife opened={openedOf(scene)} />,');
   // And both are scenes there are, and the one with a sheet names it.
   const names = SCENES.map((scene) => scene.name);

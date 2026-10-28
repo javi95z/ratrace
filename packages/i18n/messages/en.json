@@ -105,6 +105,8 @@
     "level1": "easy",
     "level2": "normal",
     "level3": "hard",
+    "tile": "{life}, {city}, {level}",
+    "lockedTile": "{life}, locked",
     "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}",
     "progressFinished": "Lives finished: {n} of {total}",
     "hints": {
@@ -1702,6 +1704,7 @@
       "escape": "Close the open window and return to what opened it.",
       "question": "Open this keyboard reference.",
       "life": "Move through available lives; Home and End jump to the first and last.",
+      "lives": "Move through the lives with the arrows; Home and End jump to the first and last, and Enter opens one.",
       "cards": "Choose an available option with its number, or move with the arrows and press Enter.",
       "tabs": "Move through finance tabs; Home and End jump to either edge.",
       "switchTab": "Go to the previous or next finance tab from anywhere on the screen.",

@@ -1,121 +1,171 @@
-import { lives, portraitArt } from '@ratrace/content';
+import { cityIcon, lives, portraitArt } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
+import { characterName } from '@ratrace/core/game/characters';
+import { difficultyOf } from '@ratrace/core/game/difficulty';
 import { ageAt } from '@ratrace/core/game/present';
 import { unlockProgress } from '@ratrace/core/game/unlockProgress';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, View } from 'react-native';
-import type { HostInstance, LayoutChangeEvent } from 'react-native';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { useWindowDimensions, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
-import { Framed } from '../../ui/Frame';
-import { GOLD } from '../../ui/frames';
-import { Button, Notice, Raised, Segmented, Well } from '../../ui/kit';
-import { focusMarked, onKeys, useKeyboardContext } from '../../ui/keyboard';
+import { useIsWide, WIDE_COLUMN } from '../../ui/desk';
+import { useHaptic } from '../../ui/haptic';
+import { Button, Notice, Raised, Segmented, SrOnly } from '../../ui/kit';
+import { focusedMark, focusMarked, onKeys, useKeyboardContext } from '../../ui/keyboard';
 import { Sheet } from '../../ui/overlay';
-import { BottomBar, Screen } from '../../ui/Page';
-import type { ScreenScroller } from '../../ui/Page';
+import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
-import { COLORS } from '../../ui/theme';
-import { useGame, useProfile, useRanking, useRuns, useStill, useT, useWords } from '../context';
-import { anotherLife, lifeRows } from '../lives';
+import { COLORS, GUTTER, SHELL_WIDTH } from '../../ui/theme';
+import { useGame, useProfile, useRanking, useRuns, useSettings, useT, useWords } from '../context';
+import { anotherLife } from '../lives';
 import { BackLink } from './BackLink';
-import { Difficulty, LifeBrief, LifeSummary } from './LifeSummary';
+import { LifeFace } from './LifeFace';
+import { Difficulty } from './LifeSummary';
 import { useGo } from '../pages';
 
 const byId = new Map<string, LifeDef>(lives.map((life) => [life.id, life]));
+const LEVELS = ['level1', 'level2', 'level3'] as const;
 
 /**
  * What a scene shows open at the start (a client draws a scene by the screen's own initial state, never by a tap): the question of ending the life
- * in progress, or the list of the lives still locked. Left out, the screen as a player first meets it.
+ * in progress, the sheet of the first life still locked, or that of the first open life. Left out, the screen as a player first meets it.
  */
-export type NewLifeOpened = 'replace' | 'locked';
+export type NewLifeOpened = 'replace' | 'locked' | 'life';
+
+/** The grid's columns: three on a phone, five in the web's wider column (`WIDE_COLUMN`), so that no tile is larger than a phone's. */
+export const COLUMNS = { phone: 3, wide: 5 } as const;
+/** The gap between two tiles, across and down. */
+const GAP = 8;
+/** The most a tile's portrait is drawn at: one and a half points to an art pixel. */
+const PORTRAIT_MAX = 96;
+/** What a tile keeps round its portrait: its padding and frame. */
+const TILE_ROOM = 12;
+/** The portrait of the sheet of one life. */
+const SHEET_PORTRAIT = 96;
 
 /**
- * One life in the grid. Drawn again only when it is chosen or let go, not for another life being chosen: a tile has a portrait, a city
- * and a good deal of frame, and twenty of them are on the page of someone who has unlocked every life.
+ * How large a tile's portrait is drawn: as large as its tile lets it be, up to `PORTRAIT_MAX`, in steps of a quarter of a point to an art pixel (16
+ * points), so that the art's pixels stay even. `window` is the window's width (none on the build's machine: then the column's).
  */
-const LifeTile = memo(function LifeTile({ id, on, onChoose, onLayout, onNode }: { id: string; on: boolean; onChoose(id: string): void; onLayout(id: string, event: LayoutChangeEvent): void; onNode(id: string, node: HostInstance | null): void }) {
-  const node = useCallback((view: HostInstance | null) => onNode(id, view), [id, onNode]);
+export function portraitSize(window: number, column: number, columns: number): number {
+  const inner = Math.min(window > 0 ? window : column, column) - 2 * GUTTER;
+  const tile = (inner + GAP) / columns - GAP;
+  return Math.max(48, Math.min(PORTRAIT_MAX, Math.floor((tile - TILE_ROOM) / 16) * 16));
+}
+
+/**
+ * One life in the grid: its portrait, large, its job on one line, the city's icon and how hard it is. A life still locked is only the shape of who it
+ * is, with a lock. Pressed, it opens the sheet of the life. Drawn again only when its Tab stop moves: twenty are on the page of someone who has them all.
+ */
+const LifeTile = memo(function LifeTile({ id, locked, portrait, width, tabbable, onOpen }: { id: string; locked: boolean; portrait: number; width: string; tabbable: boolean; onOpen(id: string): void }) {
+  const t = useT('newLife');
+  const { text, names } = useWords();
+  const haptic = useHaptic();
+  const life = byId.get(id);
+  if (!life) return null;
+  const name = text.lives[id]?.name ?? id;
+  const label = locked ? t('lockedTile', { life: name }) : t('tile', { life: name, city: names.cities[life.start.cityId], level: t(LEVELS[difficultyOf(id) - 1]) });
   return (
-    // Half the row, or all of it for the life chosen; 4 on each side and the grid made 8 wider than its page, so that the gap between two is 8 and the outer
-    // edges are the page's.
-    <View style={{ width: on ? '100%' : '50%', paddingHorizontal: 4 }} onLayout={(event) => onLayout(id, event)}>
+    // A share of the row; 4 on each side and the grid made 8 wider than its page, so that the gap between two is 8 and the outer edges are the page's.
+    <View style={{ width: width as `${number}%`, paddingHorizontal: GAP / 2 }}>
       <Raised
-        ref={node}
         marks={{ life: id }}
-        tabbable={on}
-        role="radio"
-        checked={on}
-        tone={on ? GOLD : {}}
-        bg={on ? 'cream' : 'night-700'}
+        tabbable={tabbable}
+        label={label}
+        bg={locked ? 'night-800' : 'night-700'}
         place={{ flexGrow: 1 }}
-        style={{ flexGrow: 1, minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 6 }}
-        onPress={() => onChoose(id)}
+        style={{ flexGrow: 1, alignItems: 'center', gap: 6, padding: 6 }}
+        onPress={() => {
+          haptic('select');
+          onOpen(id);
+        }}
       >
-        {/* The portrait at its own size: drawn at 64 pixels, any other size blurs it. */}
-        <Well style={{ width: 68, height: 68, alignSelf: 'center' }}>
-          <Sprite id={portraitArt(id, 22)} fallback={{ w: 64, h: 64 }} />
-        </Well>
-        {on ? <LifeSummary lifeId={id} light /> : <LifeBrief lifeId={id} />}
+        {locked ? <Silhouette id={id} px={portrait} /> : <LifeFace lifeId={id} size="lg" px={portrait} />}
+        <View aria-hidden style={{ alignSelf: 'stretch' }}>
+          <ReadText size={12} lineHeight={14} tone={locked ? 'ink-300' : 'ink-200'} numberOfLines={1} style={{ textAlign: 'center' }}>
+            {name}
+          </ReadText>
+        </View>
+        {locked ? null : (
+          <View aria-hidden style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <Sprite id={cityIcon(life.start.cityId)} size={{ w: 16, h: 16 }} />
+            <Difficulty lifeId={id} word />
+          </View>
+        )}
       </Raised>
     </View>
   );
 });
 
-/** A life still locked: only the shape of who it is, what unlocks it and how far the player is, a hint, and how hard it is. */
-const LockedLife = memo(function LockedLife({ id, finished }: { id: string; finished: number | null }) {
+/** A life still locked: only the dark shape of who it is, and a lock at its foot. */
+function Silhouette({ id, px }: { id: string; px: number }) {
+  return (
+    <View aria-hidden style={{ width: px, height: px, backgroundColor: COLORS['night-600'] }}>
+      <Sprite id={portraitArt(id, 22)} fallback={{ w: 64, h: 64 }} size={{ w: px, h: px }} silhouette />
+      <View style={{ position: 'absolute', bottom: 2, right: 2 }}>
+        <Sprite id="icon.locked" fallback={{ w: 16, h: 16 }} size={{ w: 16, h: 16 }} />
+      </View>
+    </View>
+  );
+}
+
+/** Where a life starts, with how much, and how hard it is, beside its portrait; then a line each of what it is good at and what holds it back. */
+function LifeDetails({ id }: { id: string }) {
+  const t = useT('newLife');
+  const { text, names, fmt } = useWords();
+  const life = byId.get(id);
+  const written = text.lives[id];
+  if (!life || !written) return null;
+  const city = names.cities[life.start.cityId];
+  const cash = fmt.money(life.start.cash);
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <LifeFace lifeId={id} size="lg" px={SHEET_PORTRAIT} />
+        <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 }}>
+          <SrOnly>{t('startsIn', { city, cash })}</SrOnly>
+          {/* What the sentence above says, for the eyes. */}
+          <View aria-hidden style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Sprite id={cityIcon(life.start.cityId)} size={{ w: 20, h: 20 }} />
+              <ReadText size={14} tone="ink-200">{city}</ReadText>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Sprite id="icon.cash" size={{ w: 20, h: 20 }} />
+              <PixelText size={15} tone="ink-200">{cash}</PixelText>
+            </View>
+          </View>
+          <Difficulty lifeId={id} word />
+        </View>
+      </View>
+      <ReadText size={14} lineHeight={14 * SNUG} tone="teal-300">{`＋ ${written.perk}`}</ReadText>
+      <ReadText size={14} lineHeight={14 * SNUG} tone="wine-300">{`− ${written.handicap}`}</ReadText>
+    </View>
+  );
+}
+
+/** What unlocks a life still locked, how far the player is, and a hint of what it is, beside its shape. */
+function LockedDetails({ id, finished }: { id: string; finished: number | null }) {
   const t = useT('newLife');
   const { text } = useWords();
   const life = byId.get(id);
   if (!life) return null;
   const progress = unlockProgress(life.unlock, finished);
   return (
-    <Framed kind="raised" style={{ backgroundColor: COLORS['night-800'], flexDirection: 'row', alignItems: 'center', gap: 12, padding: 6 }}>
-      {/* Only the shape of who it is: the portrait waits for whoever opens the life. */}
-      <Well style={{ width: 68, height: 68, alignSelf: 'center' }}>
-        <Sprite id={portraitArt(id, 22)} fallback={{ w: 64, h: 64 }} silhouette />
-        <View style={{ position: 'absolute', bottom: 2, right: 2 }}>
-          <Sprite id="icon.locked" fallback={{ w: 16, h: 16 }} />
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Silhouette id={id} px={SHEET_PORTRAIT} />
+        <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 }}>
+          <ReadText size={14} lineHeight={14 * SNUG} tone="gold-500" after={[{ text: text.lives[id].unlock, tone: 'ink-200' }]}>
+            {`${t('unlock')}: `}
+          </ReadText>
+          {progress ? (
+            <ReadText size={13} lineHeight={13 * SNUG} tone="teal-300">{t('progressFinished', { n: progress.have, total: progress.need })}</ReadText>
+          ) : null}
+          <Difficulty lifeId={id} word />
         </View>
-      </Well>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <PixelText size={15}>{text.lives[id].name}</PixelText>
-        <ReadText size={12} lineHeight={12 * SNUG} tone="gold-500" after={[{ text: text.lives[id].unlock, tone: 'ink-200' }]}>
-          {`${t('unlock')}: `}
-        </ReadText>
-        {progress ? (
-          <ReadText size={12} lineHeight={12 * SNUG} tone="teal-300">{t('progressFinished', { n: progress.have, total: progress.need })}</ReadText>
-        ) : null}
-        <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" italic>{t(`hints.${id}`)}</ReadText>
       </View>
-      <Difficulty lifeId={id} />
-    </Framed>
-  );
-});
-
-/** The rows of the locked list that are drawn in the frame the list is opened, and each of the frames after it. */
-export const LOCKED_FIRST = 5;
-export const LOCKED_STEP = 6;
-
-/**
- * The locked lives, opened: the first few rows at once and the rest a few to a frame, so that opening it is not one long stop of the screen. A row is two
- * Skia pictures, a frame and four texts, and the seventeen of them at once took 300 to 400 ms to draw on the simulator in a development build (the twenty
- * tiles of someone who has unlocked everything, 100 to 145 ms: those are drawn when the page is). It is drawn when it is opened, so it starts again each time.
- */
-function LockedList({ ids, finished }: { ids: readonly string[]; finished: number | null }) {
-  const [shown, setShown] = useState(LOCKED_FIRST);
-  useEffect(() => {
-    if (shown >= ids.length) return;
-    const frame = requestAnimationFrame(() => setShown((now) => now + LOCKED_STEP));
-    return () => cancelAnimationFrame(frame);
-  }, [shown, ids.length]);
-  return (
-    <View role="list" style={{ marginTop: 8, gap: 8 }}>
-      {ids.slice(0, shown).map((id) => (
-        <View key={id} role="listitem">
-          <LockedLife id={id} finished={finished} />
-        </View>
-      ))}
+      <ReadText size={14} lineHeight={14 * SNUG} tone="ink-300" italic>{t(`hints.${id}`)}</ReadText>
     </View>
   );
 }
@@ -185,8 +235,9 @@ export function ElsewhereSheet({ starting, away, onTake, onEnd }: { starting: bo
 }
 
 /**
- * Choose who to be. A locked life shows what unlocks it. A player signed in chooses whether the life is ranked (played by the server) or their own,
- * and a ranked life of theirs in progress on another device is asked about, never ended by starting here.
+ * Choose who to be: every life a tile of a grid, the open ones first and those still locked after them. A tile opens the sheet of its life: what it
+ * is and the button that starts it, or, for one still locked, what unlocks it. A player signed in chooses there whether the life is ranked (played by
+ * the server) or their own, and a ranked life of theirs in progress on another device is asked about, never ended by starting here.
  */
 export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const t = useT('newLife');
@@ -195,7 +246,21 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const start = useGame((s) => s.start);
   const continueElsewhere = useGame((s) => s.continueElsewhere);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
-  const [chosen, setChosen] = useState(lives[0].id);
+  // Which lives are open is the profile's to say. Nothing is judged here.
+  const { unlocked } = useProfile();
+  const runs = useRuns();
+  const { locale } = useSettings();
+  const { text: written } = useWords();
+  const available = useMemo(() => lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id)), [unlocked]);
+  const locked = useMemo(() => lives.filter((life) => !available.includes(life)), [available]);
+  const openIds = useMemo(() => available.map((life) => life.id), [available]);
+  /** Every tile, in the order of the grid: the open lives, then the locked. */
+  const order = useMemo(() => [...available, ...locked].map((life) => life.id), [available, locked]);
+  const finished = runs?.length ?? null;
+
+  /** The life whose sheet is open, or was last: kept while its sheet leaves, so that the sheet does not empty as it goes. */
+  const [chosen, setChosen] = useState<string>(() => (opened === 'locked' ? (locked[0]?.id ?? lives[0].id) : lives[0].id));
+  const [sheetOpen, setSheetOpen] = useState(opened === 'locked' || opened === 'life');
   const [starting, setStarting] = useState(false);
   /** A life begun here: the page is on its way to it, and the life in progress it now sees is that one, not one to warn of. */
   const [begun, setBegun] = useState(false);
@@ -207,93 +272,60 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   // A ranked life is played by the server. It is offered when there is someone to play it for and a way to reach it.
   const ranking = useRanking();
   const [wantRanked, setWantRanked] = useState(true);
-  const [showLocked, setShowLocked] = useState(opened === 'locked');
   /** A life being begun: a second press while it is is no second life, whatever the screen has drawn by then. */
   const busy = useRef(false);
-  const still = useStill();
-  // Where each tile stands, to bring the one the dice picks into view; and the pressable of each, to move the screen reader to it.
-  const scroller = useRef<ScreenScroller>(null);
-  const group = useRef(0);
-  const frames = useRef(new Map<string, { y: number; height: number }>());
-  const nodes = useRef(new Map<string, HostInstance>());
-  /** The life the dice picked, until its tile has been laid out where it now stands (it opens across a row, and the tiles after it move). */
-  const revealing = useRef<string | null>(null);
-  // Which lives are open is the profile's to say. Nothing is judged here.
-  const { unlocked } = useProfile();
-  const runs = useRuns();
-  const available = useMemo(() => lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id)), [unlocked]);
-  const locked = useMemo(() => lives.filter((life) => !available.includes(life)), [available]);
-  const lockedIds = useMemo(() => locked.map((life) => life.id), [locked]);
-  // Two to a row, the chosen life across one: in the order of the web's dense grid, all in one place so that a life that moves is moved and not made again.
-  const order = useMemo(() => lifeRows(available.map((life) => life.id), chosen).flat(), [available, chosen]);
-  const finished = runs?.length ?? null;
-  const openIds = useMemo(() => available.map((life) => life.id), [available]);
+  const chosenOpen = !locked.some((life) => life.id === chosen);
 
-  /** Brings a tile into view if it is not, and says to the screen reader which life is chosen: the web scrolls the chosen tile into view and focuses it. */
-  const show = useCallback(
-    (id: string) => {
-      const frame = frames.current.get(id);
-      if (frame) scroller.current?.reveal(group.current + frame.y, frame.height, !still);
-      const node = nodes.current.get(id);
-      if (node && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') AccessibilityInfo.sendAccessibilityEvent(node, 'focus');
-    },
-    [still],
-  );
-  const tileLaidOut = useCallback(
-    (id: string, event: LayoutChangeEvent) => {
-      const { y, height } = event.nativeEvent.layout;
-      frames.current.set(id, { y, height });
-      if (revealing.current === id) {
-        revealing.current = null;
-        show(id);
-      }
-    },
-    [show],
-  );
-  const tileNode = useCallback((id: string, node: HostInstance | null) => {
-    if (node) nodes.current.set(id, node);
-    else nodes.current.delete(id);
-  }, []);
-  // On the web the keyboard picks a life as the Next web's (docs/keyboard.md): the arrows, Home and End through the open lives in their order, each
-  // chosen and given the focus; letters typed find one by its name (what is typed within 0.7 s of the last letter).
-  useKeyboardContext('new-life');
-  const { text: written } = useWords();
-  const typed = useRef({ text: '', at: 0 });
-  const chooseAndFocus = (id: string) => {
+  // Three tiles to a row on a phone, more in the web's wider column; each portrait as large as its tile lets it be.
+  const wide = useIsWide();
+  const columns = wide ? COLUMNS.wide : COLUMNS.phone;
+  const { width: windowWidth } = useWindowDimensions();
+  const portrait = portraitSize(windowWidth, wide ? WIDE_COLUMN : SHELL_WIDTH, columns);
+  const tileWidth = `${100 / columns}%`;
+
+  const [tabStop, setTabStop] = useState(order[0]);
+  const openLife = useCallback((id: string) => {
+    setFailed(false);
     setChosen(id);
+    setTabStop(id);
+    setSheetOpen(true);
+  }, []);
+  /** The dice: the sheet of one of the open lives, never the one last opened. Picked here, not in the state's update: a pick is not pure. */
+  const roll = () => openLife(anotherLife(openIds, chosen));
+
+  // On the web the keyboard moves through the grid (docs/keyboard.md): one Tab stop, the arrows across a row and down a column, Home and End to
+  // the first and the last; letters typed find a life by its name (what is typed within 0.7 s of the last letter). Enter opens the life's sheet.
+  useKeyboardContext('new-life');
+  const typed = useRef({ text: '', at: 0 });
+  const focusTile = (id: string) => {
+    setTabStop(id);
     requestAnimationFrame(() => focusMarked('life', id));
   };
-  const lifeKeys = onKeys((event) => {
-    if (event.altKey || event.ctrlKey || event.metaKey || available.length === 0) return false;
-    const direction = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0;
-    if (direction || event.key === 'Home' || event.key === 'End') {
-      const at = Math.max(0, available.findIndex((life) => life.id === chosen));
-      const next = event.key === 'Home' ? available[0] : event.key === 'End' ? available[available.length - 1] : available[(at + direction + available.length) % available.length];
-      chooseAndFocus(next.id);
+  const gridKeys = onKeys((event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || order.length === 0) return false;
+    // From the tile in focus (one pressed or clicked into is not the Tab stop until the arrows move), else the Tab stop.
+    const at = Math.max(0, order.indexOf(focusedMark('life') ?? tabStop));
+    const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: columns, ArrowUp: -columns }[event.key];
+    if (step !== undefined || event.key === 'Home' || event.key === 'End') {
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? order.length - 1 : Math.min(order.length - 1, Math.max(0, at + (step ?? 0)));
+      focusTile(order[next]);
       return true;
     }
     if (event.key.length !== 1 || !/[\p{L}\p{N}]/u.test(event.key)) return false;
     const now = Date.now();
     typed.current = { text: (now - typed.current.at > 700 ? '' : typed.current.text) + event.key.toLocaleLowerCase(), at: now };
-    const match = available.find((life) => written.lives[life.id].name.toLocaleLowerCase().startsWith(typed.current.text));
+    const match = order.find((id) => written.lives[id]?.name.toLocaleLowerCase().startsWith(typed.current.text));
     if (!match) return false;
-    chooseAndFocus(match.id);
+    focusTile(match);
     return true;
   });
-  /** The dice: another of the open lives, which is picked here and not in the state's update (a pick is not pure), and brought into view once it has moved. */
-  const roll = () => {
-    const next = anotherLife(openIds, chosen);
-    if (next === chosen) return;
-    revealing.current = next;
-    setChosen(next);
-  };
 
   /**
-   * Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player has said may end for it. The answer of a sheet
-   * waits for the sheets to be gone before the page changes under them (`sheetsGone`: a Modal still leaving on iOS holds the screen that is
-   * changing); one that came from the button has no sheet to wait for.
+   * Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player has said may end for it. The page changes only once
+   * every sheet is gone (`sheetsGone`: a Modal still leaving on iOS holds the screen that is changing). A life that did not begin because one is in
+   * progress elsewhere closes the life's sheet, for the question of that one to take its turn; one that failed opens it again, saying so.
    */
-  const begin = async (replace?: string, fromSheet = false) => {
+  const begin = async (replace?: string) => {
     if (busy.current) return;
     busy.current = true;
     setAsking(false);
@@ -301,20 +333,29 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
     setAway(false);
     setStarting(true);
     try {
-      // Nothing began if the player has a ranked life in progress somewhere else: they are asked what to do about it.
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
       if (await start(chosen, { ranked: ranking === 'yes' && wantRanked, replace })) {
         setBegun(true);
-        if (fromSheet) await sheetsGone();
+        setSheetOpen(false);
+        await sheetsGone();
         go.replace('play');
-      }
+      } else setSheetOpen(false);
     } catch (error) {
       console.error('the life could not be started:', error);
       setFailed(true);
+      setSheetOpen(true);
     } finally {
       busy.current = false;
       setStarting(false);
     }
+  };
+  /** The sheet's Start: a life in progress is not ended by one tap, the question is asked first, once the life's sheet has made way for it. */
+  const startPressed = () => {
+    if (busy.current || begun) return;
+    if (inProgress) {
+      setSheetOpen(false);
+      setAsking(true);
+    } else void begin();
   };
   /** Goes on with the ranked life in progress elsewhere, in place of starting one: from its sheet, once the sheet has gone. */
   const takeUp = async () => {
@@ -340,103 +381,79 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
     }
   };
 
+  const name = written.lives[chosen]?.name ?? chosen;
+  const character = chosenOpen ? characterName(chosen, locale) : null;
+
   return (
-    <Screen
-      scroller={scroller}
-      contentStyle={{ gap: 12 }}
-      bar={
-        <BottomBar>
-          {ranking === 'yes' ? (
-            // Two ways to play, side by side, each saying in a few words what it is.
-            <View style={{ marginBottom: 8 }}>
-              <Segmented<'ranked' | 'free'>
-                label={t('mode')}
-                value={wantRanked ? 'ranked' : 'free'}
-                onChange={(mode) => setWantRanked(mode === 'ranked')}
-                options={[
-                  { value: 'ranked', label: t('modeRanked'), hint: t('modeRankedHint') },
-                  { value: 'free', label: t('modeFree'), hint: t('modeFreeHint') },
-                ]}
-              />
-            </View>
-          ) : null}
-          {ranking === 'offline' ? (
-            <View accessible role="status" style={{ marginBottom: 8 }}>
-              <ReadText size={12} tone="ink-200" style={{ textAlign: 'center' }}>
-                {t('noConnection')}
-              </ReadText>
-            </View>
-          ) : null}
-          {failed ? (
-            <Notice role="alert" size={13} center style={{ marginBottom: 8 }}>
-              {t('failed')}
-            </Notice>
-          ) : null}
-          {inProgress && !starting && !begun ? (
-            <ReadText size={12} tone="wine-300" style={{ textAlign: 'center', marginBottom: 8 }}>
-              {t('replace')}
-            </ReadText>
-          ) : null}
-          {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
-          <Button variant="primary" wide disabled={starting || begun} onPress={() => (inProgress ? setAsking(true) : void begin())}>
-            {t('start')}
-          </Button>
-        </BottomBar>
-      }
-    >
+    <Screen width={wide ? WIDE_COLUMN : undefined} contentStyle={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackLink />
         <View accessibilityRole="header" style={{ flexShrink: 1 }}>
           <PixelText size={24} tone="gold-500">{t('title')}</PixelText>
         </View>
-        {/* Someone who cannot choose lets the dice: one of the open lives, never the one already chosen. Started only with the usual button. */}
+        {/* Someone who cannot choose lets the dice: the sheet of one of the open lives, started only with its own button. */}
         {available.length > 1 ? (
-          <Raised
-            bg="night-700"
-            place={{ marginLeft: 'auto' }}
-            style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
-            onPress={roll}
-          >
+          <Raised bg="night-700" place={{ marginLeft: 'auto' }} style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }} onPress={roll}>
             <PixelText size={14} tone="ink-200">{t('random')}</PixelText>
           </Raised>
         ) : null}
       </View>
 
-      {/* The lives that can be lived, two to a row; the one chosen opens across the row with what it is. */}
-      <View
-        {...lifeKeys}
-        accessibilityRole="radiogroup"
-        accessibilityLabel={t('title')}
-        onLayout={(event) => void (group.current = event.nativeEvent.layout.y)}
-        style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}
-      >
-        {order.map((id) => (
-          <LifeTile key={id} id={id} on={id === chosen} onChoose={setChosen} onLayout={tileLaidOut} onNode={tileNode} />
+      {/* Every life, the open ones first: a tile each, which opens its sheet. */}
+      <View {...gridKeys} aria-label={t('title')} style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -GAP / 2, rowGap: GAP }}>
+        {order.map((id, at) => (
+          <LifeTile key={id} id={id} locked={at >= available.length} portrait={portrait} width={tileWidth} tabbable={id === tabStop} onOpen={openLife} />
         ))}
       </View>
 
-      {/* What is still locked waits at the foot, folded: what unlocks each is there for whoever wants to know. */}
-      {locked.length > 0 ? (
-        <View>
-          <Raised
-            expanded={showLocked}
-            bg="night-800"
-            style={{ paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
-            onPress={() => setShowLocked((open) => !open)}
-          >
-            <View style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Sprite id="icon.locked" />
-              <View style={{ flexShrink: 1 }}>
-                <ReadText size={14} tone="ink-200">{t('lockedMany', { count: locked.length })}</ReadText>
-              </View>
+      <Sheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={character ? `${name} · ${character}` : name}
+        closeLabel={common('close')}
+      >
+        {chosenOpen ? (
+          <>
+            <LifeDetails id={chosen} />
+            <View style={{ marginTop: 16, gap: 8 }}>
+              {inProgress && !starting && !begun ? (
+                <ReadText size={13} tone="wine-300" style={{ textAlign: 'center' }}>
+                  {t('replace')}
+                </ReadText>
+              ) : null}
+              {ranking === 'yes' ? (
+                // Two ways to play, side by side, each saying in a few words what it is.
+                <Segmented<'ranked' | 'free'>
+                  label={t('mode')}
+                  value={wantRanked ? 'ranked' : 'free'}
+                  onChange={(mode) => setWantRanked(mode === 'ranked')}
+                  options={[
+                    { value: 'ranked', label: t('modeRanked'), hint: t('modeRankedHint') },
+                    { value: 'free', label: t('modeFree'), hint: t('modeFreeHint') },
+                  ]}
+                />
+              ) : null}
+              {ranking === 'offline' ? (
+                <View accessible role="status">
+                  <ReadText size={12} tone="ink-200" style={{ textAlign: 'center' }}>
+                    {t('noConnection')}
+                  </ReadText>
+                </View>
+              ) : null}
+              {failed ? (
+                <Notice role="alert" size={13} center>
+                  {t('failed')}
+                </Notice>
+              ) : null}
+              <Button variant="primary" wide disabled={starting || begun} onPress={startPressed}>
+                {t('start')}
+              </Button>
             </View>
-            <View aria-hidden>
-              <PixelText size={14} tone="ink-300">{showLocked ? '▴' : '▾'}</PixelText>
-            </View>
-          </Raised>
-          {showLocked ? <LockedList ids={lockedIds} finished={finished} /> : null}
-        </View>
-      ) : null}
+          </>
+        ) : (
+          <LockedDetails id={chosen} finished={finished} />
+        )}
+      </Sheet>
 
       <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={t('confirmTitle')} closeLabel={common('close')} back={false}>
         <InProgress />
@@ -444,14 +461,14 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
           <Button variant="primary" wide onPress={() => setAsking(false)}>
             {t('confirmNo')}
           </Button>
-          <Button variant="danger" wide disabled={starting} onPress={() => void begin(undefined, true)}>
+          <Button variant="danger" wide disabled={starting} onPress={() => void begin()}>
             {t('confirmYes')}
           </Button>
         </View>
       </Sheet>
 
       {/* A player has one ranked life in progress. One on another device is never ended by starting here: it is asked about. */}
-      <ElsewhereSheet starting={starting} away={away} onTake={() => void takeUp()} onEnd={(gameId) => void begin(gameId, true)} />
+      <ElsewhereSheet starting={starting} away={away} onTake={() => void takeUp()} onEnd={(gameId) => void begin(gameId)} />
     </Screen>
   );
 }

@@ -105,6 +105,8 @@
     "level1": "fácil",
     "level2": "media",
     "level3": "difícil",
+    "tile": "{life}, {city}, {level}",
+    "lockedTile": "{life}, por desbloquear",
     "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}",
     "progressFinished": "Vidas terminadas: {n} de {total}",
     "hints": {
@@ -1702,6 +1704,7 @@
       "escape": "Cerrar la ventana abierta y volver a lo que la abrió.",
       "question": "Abrir esta referencia de teclado.",
       "life": "Recorrer las vidas disponibles; Inicio y Fin saltan a la primera y la última.",
+      "lives": "Recorrer las vidas con las flechas; Inicio y Fin saltan a la primera y la última, e Intro abre una.",
       "cards": "Elegir una opción disponible con su número, o moverse con las flechas y pulsar Intro.",
       "tabs": "Recorrer las pestañas de finanzas; Inicio y Fin saltan a los extremos.",
       "switchTab": "Ir a la pestaña de finanzas anterior o siguiente desde cualquier punto de la pantalla.",
