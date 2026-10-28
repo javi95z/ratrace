@@ -434,10 +434,10 @@ export const SHEETS: SheetSpec[] = [
     ids: ['construction_collapse', 'construction_famous_client', 'realestate_off_market', 'realestate_hurried_seller', 'realestate_bubble', 'realestate_double_fee'].map((id) => `card.${id}`),
   },
   { file: 'cards/cards-57', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['military_mission', 'military_twenty_years', 'military_posting', 'military_contractor'].map((id) => `card.${id}`), '', ''] },
-  // Content 1.52: three cards for each of the eleven careers before them, two careers to a sheet, healthcare's third left for the card to come.
+  // Content 1.52: three cards for each of the eleven careers before them, two careers to a sheet.
   // Stand-ins until drawn: each career's cards show its own workplace at its three stages.
   ...[
-    ['healthcare_assault', 'healthcare_post_away', '', 'tech_stock_options', 'tech_layoffs', 'tech_new_york'],
+    ['healthcare_assault', 'healthcare_post_away', 'healthcare_icu', 'tech_stock_options', 'tech_layoffs', 'tech_new_york'],
     ['public_exam', 'public_pay_cut', 'public_abroad', 'service_app_cut', 'service_strike', 'service_on_call'],
     ['finance_bonus', 'finance_insider', 'finance_merger', 'medicine_negligence', 'medicine_specialty', 'medicine_private_clinic'],
     ['law_big_case', 'law_cash_client', 'law_own_firm', 'education_summer', 'education_old_pupil', 'education_new_law'],

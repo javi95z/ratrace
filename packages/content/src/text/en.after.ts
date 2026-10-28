@@ -428,6 +428,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   // Content 1.52: three cards for each of the eleven careers before the four added last.
   healthcare_assault: ['You finish the shift. The fear comes home with you.', null, 'Quieter nights on a ward, and no more night-shift pay.'],
   healthcare_post_away: ['You keep your ward and your colleagues.', 'A post for life, a bigger hospital and dinner at ten.', 'A post for life, a bigger hospital and rain on the way in.'],
+  healthcare_icu: ['You keep your ward, your patients and your sleep.', 'Better pay, monitors that never stop, and nights that stay with you.'],
   tech_stock_options: ['A tidy sum, and no more checking the news.', null],
   tech_layoffs: [null, 'Half a year\'s pay, a few months of interviews and a new badge.'],
   tech_new_york: ['You stay. The headhunter calls someone else.', 'A rung lower, a far bigger payslip and a rent that frightens.', null],

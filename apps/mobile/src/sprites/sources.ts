@@ -316,6 +316,7 @@ export const SOURCES: Record<string, SpriteSource> = {
   'card.handshake': require('../../assets/sprites/cards/card.handshake.png'),
   'card.headhunter_call': require('../../assets/sprites/cards/card.headhunter_call.png'),
   'card.healthcare_assault': require('../../assets/sprites/cards/card.healthcare_assault.png'),
+  'card.healthcare_icu': require('../../assets/sprites/cards/card.healthcare_icu.png'),
   'card.healthcare_post_away': require('../../assets/sprites/cards/card.healthcare_post_away.png'),
   'card.hospital': require('../../assets/sprites/cards/card.hospital.png'),
   'card.hospitality_inspection': require('../../assets/sprites/cards/card.hospitality_inspection.png'),

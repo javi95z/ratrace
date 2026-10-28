@@ -332,6 +332,7 @@ export const cardArt: Record<string, string> = {
   military_posting: scene('military_posting'),
   military_contractor: scene('military_contractor'),
   // Content 1.52: three cards for each of the eleven careers before them (cards-58 to 63, stand-ins until drawn).
+  healthcare_icu: scene('healthcare_icu'),
   healthcare_assault: scene('healthcare_assault'),
   healthcare_post_away: scene('healthcare_post_away'),
   tech_stock_options: scene('tech_stock_options'),

@@ -4746,6 +4746,11 @@
       "width": 288,
       "height": 120
     },
+    "card.healthcare_icu": {
+      "file": "cards/card.healthcare_icu.png",
+      "width": 288,
+      "height": 120
+    },
     "card.tech_stock_options": {
       "file": "cards/card.tech_stock_options.png",
       "width": 288,

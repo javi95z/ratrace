@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 26 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 337 |
+| [Cartas](#cartas) | 338 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 63 |
 
@@ -1098,7 +1098,7 @@ La sospecha baja 8 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (89)
+### Carrera (90)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1162,6 +1162,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.military_contractor.png" alt="La oferta de la contratista"> | **La oferta de la contratista**<br>Una empresa de seguridad privada busca oficiales como tú en el extranjero, con un sueldo que el ejército ni sueña. | 1. Seguir en el ejército<br>2. Firmar el contrato |
 | <img src="../art/clean/cards/card.healthcare_assault.png" alt="Agresión en Urgencias"> | **Agresión en Urgencias**<br>El familiar de un paciente te agrede en un turno de noche en Urgencias. Al acabar, aún te tiemblan las manos. | 1. Seguir como si nada<br>2. Denunciarlo<br>3. Pedir el traslado a planta |
 | <img src="../art/clean/cards/card.healthcare_post_away.png" alt="Una plaza fija"> | **Una plaza fija**<br>Dos grandes hospitales te ofrecen una plaza fija y mejor pagada. Los dos están en otras ciudades. | 1. Quedarte donde estás<br>2. Aceptar la plaza en Madrid<br>3. Aceptar la plaza en Londres |
+| <img src="../art/clean/cards/card.healthcare_icu.png" alt="La UCI necesita gente"> | **La UCI necesita gente**<br>En la UCI faltan enfermeras. Se cobra mejor, y las noches son largas y duras. | 1. Quedarte en planta<br>2. Pasarte a la UCI |
 | <img src="../art/clean/cards/card.tech_stock_options.png" alt="Tus opciones sobre acciones"> | **Tus opciones sobre acciones**<br>La empresa habla de salir a bolsa. Puedes vender ya tus opciones o guardarlas hasta la salida. | 1. Venderlas ya<br>2. Esperar a la salida a bolsa |
 | <img src="../art/clean/cards/card.tech_layoffs.png" alt="Despidos masivos"> | **Despidos masivos**<br>La empresa recorta una quinta parte de la plantilla y pide primero voluntarios, con indemnización. | 1. No llamar la atención<br>2. Coger la indemnización |
 | <img src="../art/clean/cards/card.tech_new_york.png" alt="Una llamada de Nueva York"> | **Una llamada de Nueva York**<br>Un cazatalentos te ofrece una gran tecnológica en Nueva York: mucho más sueldo, pero empezando un puesto más abajo. | 1. Colgar<br>2. Mudarte a Nueva York<br>3. Usarlo para pedir un aumento |

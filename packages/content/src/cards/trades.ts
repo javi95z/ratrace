@@ -3,7 +3,7 @@ import { card, usd, yearly } from './build';
 import { TRAINING_BOND } from './extra';
 
 /**
- * Content 1.52: three cards for each of the eleven careers the game had before the four added last (healthcare's third still to come),
+ * Content 1.52: three cards for each of the eleven careers the game had before the four added last,
  * dealt only to someone working in it. Money is counted in a share of the player's own pay wherever it can be, so a card weighs the
  * same in Bangkok as in Zurich.
  */
@@ -23,6 +23,11 @@ export const tradeCards: CardDef[] = [
     {},
     { when: { notCities: ['madrid'] }, effects: { moveCity: 'madrid', salaryModPct: 8, setFlags: ['layoff_proof'] } },
     { when: { notCities: ['london'] }, effects: { moveCity: 'london', salaryModPct: 8, setFlags: ['layoff_proof'] } },
+  ]),
+  // Intensive care is short of nurses: a tenth more pay for good, and nights that wear the body. Turned down, it may ask again; taken, never (`icu`).
+  card('healthcare_icu', 'career', { ...OWN, when: { careers: ['healthcare'], minRound: 1, notFlags: ['icu'] } }, [
+    {},
+    { effects: { salaryModPct: 10, skills: { health: -1 }, setFlags: ['icu'] } },
   ]),
   // Options of a company that may list: a little for sure now, or three times as much if the listing comes.
   card('tech_stock_options', 'career', { ...OWN, when: { careers: ['tech'], flags: ['share_plan'], minRound: 2 } }, [

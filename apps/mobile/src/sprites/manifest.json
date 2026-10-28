@@ -1479,6 +1479,11 @@
     "w": 288,
     "h": 120
   },
+  "card.healthcare_icu": {
+    "src": "cards/card.healthcare_icu.png",
+    "w": 288,
+    "h": 120
+  },
   "card.healthcare_post_away": {
     "src": "cards/card.healthcare_post_away.png",
     "w": 288,

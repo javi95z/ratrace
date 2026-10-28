@@ -416,6 +416,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   // Content 1.52: three cards for each of the eleven careers before the four added last.
   healthcare_assault: ['Acabas el turno. El miedo se viene contigo a casa.', null, 'Noches más tranquilas en planta, y adiós al plus de nocturnidad.'],
   healthcare_post_away: ['Conservas tu planta y a tus compañeros.', 'Una plaza para siempre, un hospital más grande y cenas a las diez.', 'Una plaza para siempre, un hospital más grande y lluvia de camino.'],
+  healthcare_icu: ['Conservas tu planta, tus pacientes y tus horas de sueño.', 'Mejor sueldo, monitores que no paran y noches que no se olvidan.'],
   tech_stock_options: ['Una buena suma, y se acabó mirar las noticias.', null],
   tech_layoffs: [null, 'Medio año de sueldo, unos meses de entrevistas y una tarjeta de acceso nueva.'],
   tech_new_york: ['Te quedas. El cazatalentos llama a otra persona.', 'Un puesto más abajo, una nómina mucho mayor y un alquiler que asusta.', null],

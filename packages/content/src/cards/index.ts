@@ -52,6 +52,6 @@ export const cards: CardDef[] = [
   ...peopleCards,
   // Content 1.52: the four careers added last, each with four cards of its own.
   ...jobCards,
-  // And three for each of the eleven careers before them, healthcare's third still to come.
+  // And three for each of the eleven careers before them.
   ...tradeCards,
 ];

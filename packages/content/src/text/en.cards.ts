@@ -1433,6 +1433,10 @@ export const cards: Record<string, CardText> = {
     'Take the post in {city:madrid}',
     'Take the post in {city:london}',
   ]),
+  healthcare_icu: c('The ICU needs people', 'Intensive care is short of nurses. The pay is better, and the nights are long and hard.', [
+    'Stay on the ward',
+    'Move to the ICU',
+  ]),
   tech_stock_options: c('Your stock options', 'The company talks of going public. You can sell your stock options now, or keep them for the listing.', [
     'Sell them now',
     ['Hold on for the listing', 'The listing soars. Your options are worth three times as much.', 'The listing is called off, and the options expire worthless.'],
