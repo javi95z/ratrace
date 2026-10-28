@@ -106,7 +106,7 @@ export const lives: LifeDef[] = [
     unlock: 'net_worth_1m',
     start: {
       cityId: 'dubai',
-      cash: usd(60_000),
+      cash: usd(30_000),
       salaryAnnual: 0,
       lifestyleTier: 2,
       debts: [],
