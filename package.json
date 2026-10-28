@@ -22,7 +22,8 @@
     "online:stats": "pnpm --filter @ratrace/online-tools stats",
     "online:health": "pnpm --filter @ratrace/online-tools health",
     "online:deploy": "pnpm online:bundle && for f in engine finish-run ranked rooms friends delete-account weekly-notice market-notice report-error track; do supabase functions deploy $f --use-api || exit 1; done && pnpm online:bundle --shipped",
-    "catalog": "pnpm --filter @ratrace/play catalog"
+    "catalog": "pnpm --filter @ratrace/play catalog",
+    "catalog:pdf": "pnpm --filter @ratrace/play catalog:pdf"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

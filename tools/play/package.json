@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "play": "tsx src/cli.ts",
-    "catalog": "tsx src/catalog.ts"
+    "catalog": "tsx src/catalog.ts",
+    "catalog:pdf": "tsx src/catalogPdf.ts"
   },
   "dependencies": {
     "@ratrace/content": "workspace:*",

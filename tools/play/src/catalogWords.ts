@@ -55,6 +55,8 @@ const quoted = (name: string) => `«${name}»`;
 
 export interface Words {
   title: string;
+  /** Which content the catalogue shows, for its title page and its foot. */
+  version: (version: string) => string;
   intro: (version: string) => string[];
   toc: { head: [string, string]; rules: (n: number) => string; items: (n: number, cars: number) => string };
   sections: {
@@ -212,6 +214,7 @@ export interface Words {
 
 const es: Words = {
   title: 'Catálogo del juego',
+  version: (version) => `contenido ${version}`,
   intro: (version) => [
     `Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido ${version}) con \`pnpm catalog\`: no lo edites a mano.`,
     'Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.',
@@ -379,6 +382,7 @@ const es: Words = {
 
 const ruWords: Words = {
   title: 'Каталог игры',
+  version: (version) => `контент ${version}`,
   intro: (version) => [
     `Всё, что есть в The Rat Race, с картинками и цифрами. Собрано из содержимого и текстов игры (контент ${version}) командой \`pnpm catalog --locale=ru\`: не правь его вручную.`,
     'Цены указаны в долларах на начало жизни; в игре они растут вместе с инфляцией.',

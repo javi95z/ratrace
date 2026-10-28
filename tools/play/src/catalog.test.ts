@@ -59,3 +59,17 @@ describe('catalog', () => {
     }
   });
 });
+
+describe('catalog as a page', () => {
+  it('lays the Russian catalogue out with its pictures and its contents linked', async () => {
+    const { catalogPage } = await import('./catalogPdf');
+    const page = catalogPage('ru');
+    expect(page).toContain('<html lang="ru">');
+    expect(page).toContain('<p class="game">The Rat Race</p>');
+    expect(page).toMatch(/src="file:\/\/[^"]+\/art\/clean\/portraits\/portrait\.nurse\.22\.png"/);
+    expect(page).not.toContain('src="../');
+    for (const [, id] of page.matchAll(/href="#([^"]+)"/g)) expect(page, id).toContain(`id="${id}"`);
+    expect(page).toContain('<table class="wide">');
+    expect(page).not.toMatch(/^\|/m);
+  });
+});
