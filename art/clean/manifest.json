@@ -4736,6 +4736,166 @@
       "width": 288,
       "height": 120
     },
+    "card.healthcare_assault": {
+      "file": "cards/card.healthcare_assault.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.healthcare_post_away": {
+      "file": "cards/card.healthcare_post_away.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tech_stock_options": {
+      "file": "cards/card.tech_stock_options.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tech_layoffs": {
+      "file": "cards/card.tech_layoffs.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tech_new_york": {
+      "file": "cards/card.tech_new_york.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.public_exam": {
+      "file": "cards/card.public_exam.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.public_pay_cut": {
+      "file": "cards/card.public_pay_cut.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.public_abroad": {
+      "file": "cards/card.public_abroad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.service_app_cut": {
+      "file": "cards/card.service_app_cut.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.service_strike": {
+      "file": "cards/card.service_strike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.service_on_call": {
+      "file": "cards/card.service_on_call.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.finance_bonus": {
+      "file": "cards/card.finance_bonus.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.finance_insider": {
+      "file": "cards/card.finance_insider.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.finance_merger": {
+      "file": "cards/card.finance_merger.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.medicine_negligence": {
+      "file": "cards/card.medicine_negligence.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.medicine_specialty": {
+      "file": "cards/card.medicine_specialty.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.medicine_private_clinic": {
+      "file": "cards/card.medicine_private_clinic.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.law_big_case": {
+      "file": "cards/card.law_big_case.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.law_cash_client": {
+      "file": "cards/card.law_cash_client.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.law_own_firm": {
+      "file": "cards/card.law_own_firm.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.education_summer": {
+      "file": "cards/card.education_summer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.education_old_pupil": {
+      "file": "cards/card.education_old_pupil.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.education_new_law": {
+      "file": "cards/card.education_new_law.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.influencer_dodgy_brand": {
+      "file": "cards/card.influencer_dodgy_brand.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.influencer_shadowban": {
+      "file": "cards/card.influencer_shadowban.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.influencer_viral": {
+      "file": "cards/card.influencer_viral.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hospitality_star": {
+      "file": "cards/card.hospitality_star.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hospitality_inspection": {
+      "file": "cards/card.hospitality_inspection.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hospitality_next_door": {
+      "file": "cards/card.hospitality_next_door.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sales_giant_client": {
+      "file": "cards/card.sales_giant_client.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sales_quota": {
+      "file": "cards/card.sales_quota.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sales_poached": {
+      "file": "cards/card.sales_poached.png",
+      "width": 288,
+      "height": 120
+    },
     "work.aviation.0": {
       "file": "cards/work.aviation.0.png",
       "width": 288,

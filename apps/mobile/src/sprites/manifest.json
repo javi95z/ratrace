@@ -1334,6 +1334,21 @@
     "w": 288,
     "h": 120
   },
+  "card.education_new_law": {
+    "src": "cards/card.education_new_law.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.education_old_pupil": {
+    "src": "cards/card.education_old_pupil.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.education_summer": {
+    "src": "cards/card.education_summer.png",
+    "w": 288,
+    "h": 120
+  },
   "card.empty_street": {
     "src": "cards/card.empty_street.png",
     "w": 288,
@@ -1356,6 +1371,21 @@
   },
   "card.festival_rental": {
     "src": "cards/card.festival_rental.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.finance_bonus": {
+    "src": "cards/card.finance_bonus.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.finance_insider": {
+    "src": "cards/card.finance_insider.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.finance_merger": {
+    "src": "cards/card.finance_merger.png",
     "w": 288,
     "h": 120
   },
@@ -1444,13 +1474,53 @@
     "w": 288,
     "h": 120
   },
+  "card.healthcare_assault": {
+    "src": "cards/card.healthcare_assault.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.healthcare_post_away": {
+    "src": "cards/card.healthcare_post_away.png",
+    "w": 288,
+    "h": 120
+  },
   "card.hospital": {
     "src": "cards/card.hospital.png",
     "w": 288,
     "h": 120
   },
+  "card.hospitality_inspection": {
+    "src": "cards/card.hospitality_inspection.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.hospitality_next_door": {
+    "src": "cards/card.hospitality_next_door.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.hospitality_star": {
+    "src": "cards/card.hospitality_star.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.influencer_dodgy_brand": {
+    "src": "cards/card.influencer_dodgy_brand.png",
+    "w": 288,
+    "h": 120
+  },
   "card.influencer_review": {
     "src": "cards/card.influencer_review.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.influencer_shadowban": {
+    "src": "cards/card.influencer_shadowban.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.influencer_viral": {
+    "src": "cards/card.influencer_viral.png",
     "w": 288,
     "h": 120
   },
@@ -1524,8 +1594,23 @@
     "w": 288,
     "h": 120
   },
+  "card.law_big_case": {
+    "src": "cards/card.law_big_case.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.law_cash_client": {
+    "src": "cards/card.law_cash_client.png",
+    "w": 288,
+    "h": 120
+  },
   "card.law_office": {
     "src": "cards/card.law_office.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.law_own_firm": {
+    "src": "cards/card.law_own_firm.png",
     "w": 288,
     "h": 120
   },
@@ -1596,6 +1681,21 @@
   },
   "card.lottery": {
     "src": "cards/card.lottery.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.medicine_negligence": {
+    "src": "cards/card.medicine_negligence.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.medicine_private_clinic": {
+    "src": "cards/card.medicine_private_clinic.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.medicine_specialty": {
+    "src": "cards/card.medicine_specialty.png",
     "w": 288,
     "h": 120
   },
@@ -1884,6 +1984,21 @@
     "w": 288,
     "h": 120
   },
+  "card.public_abroad": {
+    "src": "cards/card.public_abroad.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.public_exam": {
+    "src": "cards/card.public_exam.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.public_pay_cut": {
+    "src": "cards/card.public_pay_cut.png",
+    "w": 288,
+    "h": 120
+  },
   "card.rate_scissors": {
     "src": "cards/card.rate_scissors.png",
     "w": 288,
@@ -2044,6 +2159,21 @@
     "w": 288,
     "h": 120
   },
+  "card.sales_giant_client": {
+    "src": "cards/card.sales_giant_client.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sales_poached": {
+    "src": "cards/card.sales_poached.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sales_quota": {
+    "src": "cards/card.sales_quota.png",
+    "w": 288,
+    "h": 120
+  },
   "card.scaffolding": {
     "src": "cards/card.scaffolding.png",
     "w": 288,
@@ -2071,6 +2201,21 @@
   },
   "card.server_room": {
     "src": "cards/card.server_room.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.service_app_cut": {
+    "src": "cards/card.service_app_cut.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.service_on_call": {
+    "src": "cards/card.service_on_call.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.service_strike": {
+    "src": "cards/card.service_strike.png",
     "w": 288,
     "h": 120
   },
@@ -2206,6 +2351,21 @@
   },
   "card.tech_bubble": {
     "src": "cards/card.tech_bubble.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.tech_layoffs": {
+    "src": "cards/card.tech_layoffs.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.tech_new_york": {
+    "src": "cards/card.tech_new_york.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.tech_stock_options": {
+    "src": "cards/card.tech_stock_options.png",
     "w": 288,
     "h": 120
   },
