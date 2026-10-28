@@ -128,7 +128,8 @@ describe('the round the way out is written with, in every rules bundle still pla
 
   it('is the round after the one the life got out in, or was caught in, from the oldest to the newest', () => {
     // The bundle of the rules now in the code may be written and not shipped yet: it ships with the deploy, which locks it in shipped.json.
-    const keys = files.map((file) => file.slice(1, -3).replace('-', '/')).sort();
+    // A retired bundle stays in the folder for the site and the app, and is no longer the server's: it is neither.
+    const keys = files.map((file) => file.slice(1, -3).replace('-', '/')).filter((key) => !retired.has(key)).sort();
     const unshipped = keys.filter((key) => !shipped.includes(key));
     expect(unshipped.every((key) => key === `${ENGINE_VERSION}/${CONTENT_VERSION}`)).toBe(true);
     expect(keys.filter((key) => shipped.includes(key))).toEqual([...shipped].sort());
