@@ -34,7 +34,7 @@ function rowsFor(context: KeyboardContextName, t: (key: string) => string): Arra
     ['Esc', t('help.escape')],
     ['?', t('help.question')],
   ];
-  if (context === 'new-life') rows.push(['↑ / ↓ · Home / End', t('help.life')]);
+  if (context === 'new-life') rows.push(['← ↑ → ↓ · Home / End · Enter', t('help.lives')]);
   if (context === 'cards') rows.push(['↑ / ↓ · 1–4', t('help.cards')]);
   if (context === 'finance') {
     rows.push(['← / → · Home / End', t('help.tabs')]);

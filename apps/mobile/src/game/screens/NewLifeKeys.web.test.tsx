@@ -8,7 +8,7 @@ import { AmountSheet } from './AmountSheet';
 import { NewLife } from './NewLife';
 
 /*
- * The keyboard on the web away from a round (docs/keyboard.md): the life picker's arrows and letters, and an amount given with Ctrl/⌘ + Enter.
+ * The keyboard on the web away from a round (docs/keyboard.md): the grid of lives' arrows, letters and Enter, and an amount given with Ctrl/⌘ + Enter.
  */
 
 afterEach(cleanup);
@@ -16,11 +16,12 @@ afterEach(cleanup);
 const key = (init: KeyboardEventInit, on: Element = document.activeElement ?? document.body) => act(() => void fireEvent.keyDown(on, init));
 const { text } = textFor('en');
 const open = lives.filter((life) => life.unlock === 'default');
+const locked = lives.filter((life) => life.unlock !== 'default');
 const tile = (id: string) => document.querySelector<HTMLElement>(`[data-life="${id}"]`) as HTMLElement;
-const chosen = () => document.querySelector('[data-life][aria-checked="true"]')?.getAttribute('data-life');
+const focused = () => document.activeElement?.getAttribute('data-life');
 
-describe('the life picker with the keyboard', () => {
-  it('is one Tab stop; the arrows, Home and End choose the open lives in their order, letters one by its name', async () => {
+describe('the grid of lives with the keyboard', () => {
+  it('is one Tab stop; the arrows move across a row and down a column, Home and End to the ends, letters to a life by its name; Enter opens its sheet', async () => {
     renderGame(
       <>
         <KeyboardControls />
@@ -29,25 +30,47 @@ describe('the life picker with the keyboard', () => {
       memoryServices(),
     );
     await waitFor(() => expect(tile(open[0].id)).toBeTruthy());
-    await waitFor(() => expect(chosen()).toBe(open[0].id));
     expect(tile(open[0].id).getAttribute('tabindex')).toBe('0');
     expect(tile(open[1].id).getAttribute('tabindex')).toBe('-1');
     act(() => tile(open[0].id).focus());
     await key({ key: 'ArrowRight' });
-    await waitFor(() => expect(chosen()).toBe(open[1].id));
-    await waitFor(() => expect(document.activeElement).toBe(tile(open[1].id)));
+    await waitFor(() => expect(focused()).toBe(open[1].id));
+    expect(tile(open[1].id).getAttribute('tabindex')).toBe('0');
+    // Down a column: three to a row.
+    await key({ key: 'ArrowDown' });
+    await waitFor(() => expect(focused()).toBe(open[4].id));
+    await key({ key: 'ArrowLeft' });
+    await waitFor(() => expect(focused()).toBe(open[3].id));
+    await key({ key: 'ArrowUp' });
+    await waitFor(() => expect(focused()).toBe(open[0].id));
+    // From the tile in focus, wherever the Tab stop was left (a tile clicked, or focused by the sheet that closed).
+    act(() => tile(open[2].id).focus());
+    await key({ key: 'ArrowRight' });
+    await waitFor(() => expect(focused()).toBe(open[3].id));
+    // The locked lives are in the grid too, after the open ones.
     await key({ key: 'End' });
-    await waitFor(() => expect(chosen()).toBe(open[open.length - 1].id));
+    await waitFor(() => expect(focused()).toBe(locked[locked.length - 1].id));
     await key({ key: 'Home' });
-    await waitFor(() => expect(chosen()).toBe(open[0].id));
-    // Letters: the first open life whose name starts with them.
+    await waitFor(() => expect(focused()).toBe(open[0].id));
+    // Letters: the first life whose name starts with them.
     const target = open[open.length - 1];
     await key({ key: text.lives[target.id].name[0] });
-    await waitFor(() => expect(text.lives[chosen() ?? ''].name.toLocaleLowerCase().startsWith(text.lives[target.id].name[0].toLocaleLowerCase())).toBe(true));
+    await waitFor(() => expect(text.lives[focused() ?? ''].name.toLocaleLowerCase().startsWith(text.lives[target.id].name[0].toLocaleLowerCase())).toBe(true));
+    // Enter opens the sheet of the life in focus, and its Start is there to be reached.
+    await key({ key: 'Home' });
+    await waitFor(() => expect(focused()).toBe(open[0].id));
+    // The tile is a native button: the browser turns its Enter into a click (jsdom does not, so the click is given here), and no shortcut takes it first.
+    expect(document.activeElement?.tagName).toBe('BUTTON');
+    await key({ key: 'Enter' });
+    act(() => void fireEvent.click(document.activeElement ?? document.body));
+    const sheet = (await screen.findByRole('heading', { name: /^Nurse · / })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getByRole('button', { name: 'Start this life' })).toBeTruthy();
+    act(() => void fireEvent.keyUp(document.activeElement ?? document.body, { key: 'Escape' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: /^Nurse · / })).toBeNull());
     // And the reference says so.
     await key({ key: '?' }, document.body);
-    const sheet = (await screen.findByRole('heading', { name: 'Keyboard controls' })).closest('[aria-modal="true"]') as HTMLElement;
-    expect(within(sheet).getAllByText((_, element) => element?.textContent === '↑ / ↓ · Home / End').length).toBeGreaterThan(0);
+    const help = (await screen.findByRole('heading', { name: 'Keyboard controls' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(help).getAllByText((_, element) => element?.textContent === '← ↑ → ↓ · Home / End · Enter').length).toBeGreaterThan(0);
   });
 });
 
