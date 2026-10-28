@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { lives, textFor } from '@ratrace/content';
+import { lives } from '@ratrace/content';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
@@ -14,7 +14,6 @@ import { NewLife } from './NewLife';
 afterEach(cleanup);
 
 const key = (init: KeyboardEventInit, on: Element = document.activeElement ?? document.body) => act(() => void fireEvent.keyDown(on, init));
-const { text } = textFor('en');
 const open = lives.filter((life) => life.unlock === 'default');
 const locked = lives.filter((life) => life.unlock !== 'default');
 const tile = (id: string) => document.querySelector<HTMLElement>(`[data-life="${id}"]`) as HTMLElement;
@@ -52,10 +51,13 @@ describe('the grid of lives with the keyboard', () => {
     await waitFor(() => expect(focused()).toBe(locked[locked.length - 1].id));
     await key({ key: 'Home' });
     await waitFor(() => expect(focused()).toBe(open[0].id));
-    // Letters: the first life whose name starts with them.
-    const target = open[open.length - 1];
-    await key({ key: text.lives[target.id].name[0] });
-    await waitFor(() => expect(text.lives[focused() ?? ''].name.toLocaleLowerCase().startsWith(text.lives[target.id].name[0].toLocaleLowerCase())).toBe(true));
+    // Letters: the first life whose character's name starts with them, before one whose job does (h: Haruto the engineer, not the heir); a job
+    // where no name does (t: the teacher, Wei).
+    await key({ key: 'h' });
+    await waitFor(() => expect(focused()).toBe('engineer'));
+    await new Promise((done) => setTimeout(done, 750));
+    await key({ key: 't' });
+    await waitFor(() => expect(focused()).toBe('teacher'));
     // Enter opens the sheet of the life in focus, and its Start is there to be reached.
     await key({ key: 'Home' });
     await waitFor(() => expect(focused()).toBe(open[0].id));

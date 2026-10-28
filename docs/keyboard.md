@@ -28,7 +28,7 @@ and a stage over a global command.
 | Tabs | Left, Right, Home, End | Select and focus the adjacent, first or last tab. |
 | Finance tabs | `[`, `]` | From anywhere on the finance stage, select and focus the previous or next tab. |
 | Segmented radio group | Left, Right, Home, End | Select and focus an enabled option; disabled options are skipped. |
-| Grid of lives | arrows, Home, End, text, Enter | One Tab stop. Left and Right move along a row, Up and Down along a column, Home and End to the first and last tile (the locked lives come after the open ones); letters find a life by its localised name. Enter opens the life's sheet, whose Start begins it (a locked life's sheet says what unlocks it). |
+| Grid of lives | arrows, Home, End, text, Enter | One Tab stop. Left and Right move along a row, Up and Down along a column, Home and End to the first and last tile (the locked lives come after the open ones); letters find a life by the name of who lives it, or else by its localised job. Enter opens the life's sheet, whose Start begins it (a locked life's sheet says what unlocks it). |
 | Card choices | Up, Down, Home, End, 1–4 | Move focus among available choices. A digit chooses that available option at once; a held digit never answers the next card. Enter or Space uses the focused native button. |
 | Shop view | Left, Right, Home, End | Recommended, in reach or all: a segmented radio group. |
 | Finance lists | Up, Down, Home, End, Escape | Move among actionable rows; Escape returns to the selected finance tab. |
