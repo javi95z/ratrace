@@ -100,6 +100,11 @@ async function seasoned(lifeId: string, change: (view: GameView) => GameView = (
 /** The heir a round after buying a studio in Dubai on a fixed mortgage: two homes, and a mortgage to switch. */
 async function mortgaged() {
   const { services, session } = await inFinance('heir');
+  // The heir's $30,000 is less than a studio's deposit in Dubai: rounds of work first, until it is there.
+  for (let round = 0; round < 6 && session.view().player.cash < quoteProperty(content, session.view(), 'studio').minDown + quoteProperty(content, session.view(), 'studio').purchaseTax; round++) {
+    await session.playRound({ orders: [] });
+    await toFinance(session);
+  }
   const quote = quoteProperty(content, session.view(), 'studio');
   const bought = await session.playRound({ orders: [{ type: 'buyProperty', typeId: 'studio', downPayment: quote.minDown, mortgage: 'fixed', rented: false }] });
   expect(bought.events.filter((e) => e.kind === 'orderRejected')).toEqual([]);
@@ -793,8 +798,8 @@ describe('property that is only for letting', () => {
 
   it('buys a parking space to let, for someone who has the skill', async () => {
     const { services, session } = await inFinance('heir');
-    // The same life, having learnt what a landlord must know.
-    changed(services, session, (view) => ({ ...view, player: { ...view.player, life: { ...view.player.life, financeSkill: 2 } } }));
+    // The same life, having learnt what a landlord must know, with the cash to pay for a parking bay in full.
+    changed(services, session, (view) => ({ ...view, player: { ...view.player, cash: Math.max(view.player.cash, 10_000_000), life: { ...view.player.life, financeSkill: 2 } } }));
     renderGame(<Play />, services);
     fireEvent.click(await screen.findByRole('tab', { name: 'Property' }));
     fireEvent.click(screen.getByRole('button', { name: /^Parking bay in Downtown/ }));
@@ -957,9 +962,9 @@ describe('switching a mortgage', () => {
     expect(screen.queryByRole('button', { name: /^Switch to / })).toBeNull();
     cleanup();
 
-    // No cash for the fee (the studio's down payment took nearly all there was): the sheet says why, and there is nothing to press.
-    services.sessions.resume = async () => ({ lost: null, session });
-    expect(mortgageSwitch(session.view().player, id, content, session.view().timeline[at], at)?.lock).toBe('not-enough-cash');
+    // No cash for the fee (all of it spent): the sheet says why, and there is nothing to press.
+    const broke = changed(services, session, (view) => ({ ...view, player: { ...view.player, cash: 0 } }));
+    expect(mortgageSwitch(broke().player, id, content, broke().timeline[at], at)?.lock).toBe('not-enough-cash');
     renderGame(<Play />, services);
     fireEvent.click(await screen.findByRole('tab', { name: 'Debt' }));
     fireEvent.click(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByRole('button', { name: 'Switch to variable' }));

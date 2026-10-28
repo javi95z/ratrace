@@ -164,6 +164,11 @@ describe('the homes a player owns', () => {
 
   it('says "You live here" of the one home the engine says the player lives in, not of every home in town', async () => {
     const { services, session } = await inFinance('heir');
+    // The heir's $30,000 is less than a studio's deposit in Dubai: rounds of work first, until it is there.
+    for (let round = 0; round < 6 && session.view().player.cash < quoteProperty(content, session.view(), 'studio').minDown + quoteProperty(content, session.view(), 'studio').purchaseTax; round++) {
+      await session.playRound({ orders: [] });
+      await toFinance(session);
+    }
     const quote = quoteProperty(content, session.view(), 'studio');
     const bought = await session.playRound({ orders: [{ type: 'buyProperty', typeId: 'studio', downPayment: quote.minDown, mortgage: 'fixed', rented: false }] });
     expect(bought.events.filter((e) => e.kind === 'orderRejected')).toEqual([]);
@@ -220,8 +225,8 @@ describe('property that is only for letting', () => {
 
   it('buys a parking space to let, for someone who has the skill', async () => {
     const { services, session } = await inFinance('heir');
-    // The same life, having learnt what a landlord must know.
-    const skilled = (): GameView => ({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, financeSkill: 2 } } });
+    // The same life, having learnt what a landlord must know, with the cash to pay for a parking bay in full.
+    const skilled = (): GameView => ({ ...session.view(), player: { ...session.view().player, cash: Math.max(session.view().player.cash, 10_000_000), life: { ...session.view().player.life, financeSkill: 2 } } });
     const landlord: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: skilled, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
     services.sessions.resume = async () => ({ lost: null, session: landlord });
     const user = userEvent.setup();
