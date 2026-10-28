@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 26 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 305 |
+| [Cartas](#cartas) | 337 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 63 |
 
@@ -1098,7 +1098,7 @@ La sospecha baja 8 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (58)
+### Carrera (89)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1160,6 +1160,37 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.military_twenty_years.png" alt="Veinte años de servicio"> | **Veinte años de servicio**<br>Veinte años de uniforme. Puedes dejarlo ya con una pensión de por vida, y la administración tiene una mesa para ti. | 1. Seguir en el ejército<br>2. Retirarte con la pensión |
 | <img src="../art/clean/cards/card.military_posting.png" alt="Un nuevo destino"> | **Un nuevo destino**<br>El ejército traslada tu unidad al extranjero. La mudanza está pagada, y pedir quedarse es pedir un favor. | 1. Pedir quedarte<br>2. Irte con la unidad a Dubái<br>3. Irte con la unidad a Londres |
 | <img src="../art/clean/cards/card.military_contractor.png" alt="La oferta de la contratista"> | **La oferta de la contratista**<br>Una empresa de seguridad privada busca oficiales como tú en el extranjero, con un sueldo que el ejército ni sueña. | 1. Seguir en el ejército<br>2. Firmar el contrato |
+| <img src="../art/clean/cards/card.healthcare_assault.png" alt="Agresión en Urgencias"> | **Agresión en Urgencias**<br>El familiar de un paciente te agrede en un turno de noche en Urgencias. Al acabar, aún te tiemblan las manos. | 1. Seguir como si nada<br>2. Denunciarlo<br>3. Pedir el traslado a planta |
+| <img src="../art/clean/cards/card.healthcare_post_away.png" alt="Una plaza fija"> | **Una plaza fija**<br>Dos grandes hospitales te ofrecen una plaza fija y mejor pagada. Los dos están en otras ciudades. | 1. Quedarte donde estás<br>2. Aceptar la plaza en Madrid<br>3. Aceptar la plaza en Londres |
+| <img src="../art/clean/cards/card.tech_stock_options.png" alt="Tus opciones sobre acciones"> | **Tus opciones sobre acciones**<br>La empresa habla de salir a bolsa. Puedes vender ya tus opciones o guardarlas hasta la salida. | 1. Venderlas ya<br>2. Esperar a la salida a bolsa |
+| <img src="../art/clean/cards/card.tech_layoffs.png" alt="Despidos masivos"> | **Despidos masivos**<br>La empresa recorta una quinta parte de la plantilla y pide primero voluntarios, con indemnización. | 1. No llamar la atención<br>2. Coger la indemnización |
+| <img src="../art/clean/cards/card.tech_new_york.png" alt="Una llamada de Nueva York"> | **Una llamada de Nueva York**<br>Un cazatalentos te ofrece una gran tecnológica en Nueva York: mucho más sueldo, pero empezando un puesto más abajo. | 1. Colgar<br>2. Mudarte a Nueva York<br>3. Usarlo para pedir un aumento |
+| <img src="../art/clean/cards/card.public_exam.png" alt="Oposiciones al cuerpo superior"> | **Oposiciones al cuerpo superior**<br>Se convocan oposiciones al cuerpo superior: dos años de tardes con el temario, y pocas plazas. | 1. Dejarlas pasar<br>2. Prepararlas |
+| <img src="../art/clean/cards/card.public_pay_cut.png" alt="Recorte de sueldo a los funcionarios"> | **Recorte de sueldo a los funcionarios**<br>No hay presupuesto, y el Gobierno recorta el sueldo de los funcionarios. Los sindicatos convocan huelga. | 1. Aceptarlo<br>2. Ir a la huelga |
+| <img src="../art/clean/cards/card.public_abroad.png" alt="Un organismo internacional"> | **Un organismo internacional**<br>Un organismo internacional busca funcionarios para sus oficinas, con un complemento los primeros años. | 1. Quedarte donde estás<br>2. Irte a Madrid<br>3. Irte a Moscú |
+| <img src="../art/clean/cards/card.service_app_cut.png" alt="La app baja las tarifas"> | **La app baja las tarifas**<br>Desde el lunes, la app de reparto paga menos por pedido. Los repartidores protestan, y algunos se cambian. | 1. Aguantar<br>2. Cambiarte de app |
+| <img src="../art/clean/cards/card.service_strike.png" alt="La huelga de repartidores"> | **La huelga de repartidores**<br>Los repartidores hacen huelga por una tarifa justa. Con tan pocos en la calle, cada pedido paga el doble. | 1. Seguir repartiendo<br>2. Unirte a la huelga |
+| <img src="../art/clean/cards/card.service_on_call.png" alt="Siempre de guardia"> | **Siempre de guardia**<br>La empresa te ofrece ya el siguiente puesto, si coges el teléfono a cualquier hora, todos los días. | 1. Conservar tus tardes<br>2. Aceptar el puesto |
+| <img src="../art/clean/cards/card.finance_bonus.png" alt="El bonus del año"> | **El bonus del año**<br>Buen año para el banco. Puedes cobrar el bonus en efectivo o en acciones del banco, bloqueadas dos años. | 1. Cobrarlo en efectivo<br>2. Cobrarlo en acciones |
+| <img src="../art/clean/cards/card.finance_insider.png" alt="Información privilegiada"> | **Información privilegiada**<br>Un cliente se va de la lengua: a su empresa la compran la semana que viene. Nadie sabría si compras acciones. | 1. Callarte<br>2. Aprovecharla |
+| <img src="../art/clean/cards/card.finance_merger.png" alt="Fusión bancaria"> | **Fusión bancaria**<br>Un banco mayor compra el tuyo. Hay un puesto para ti, un escalón más abajo y mejor pagado, o una indemnización para quien se vaya. | 1. Aceptar el puesto nuevo<br>2. Coger la indemnización y dejar de trabajar |
+| <img src="../art/clean/cards/card.medicine_negligence.png" alt="Una demanda por negligencia"> | **Una demanda por negligencia**<br>La familia de un paciente te demanda por un diagnóstico que, según ellos, llegó tarde. Los abogados del hospital proponen un acuerdo. | 1. Llegar a un acuerdo<br>2. Ir a juicio |
+| <img src="../art/clean/cards/card.medicine_specialty.png" alt="La especialidad"> | **La especialidad**<br>Sale una plaza para formarte en cardiología: años de exámenes y guardias, y un puesto mejor pagado al final. | 1. Seguir en medicina general<br>2. Formarte |
+| <img src="../art/clean/cards/card.medicine_private_clinic.png" alt="La clínica privada"> | **La clínica privada**<br>Una clínica privada te quiere a tiempo completo, por mucho más de lo que paga el hospital público. Tus pacientes se quedarían. | 1. Seguir en la pública<br>2. Irte a la privada |
+| <img src="../art/clean/cards/card.law_big_case.png" alt="El caso de todas las portadas"> | **El caso de todas las portadas**<br>Un acusado famoso te quiere en su caso. Si ganas, te harás un nombre; si pierdes, serás el chiste del año. | 1. Rechazarlo<br>2. Aceptar el caso |
+| <img src="../art/clean/cards/card.law_cash_client.png" alt="Un cliente que paga en efectivo"> | **Un cliente que paga en efectivo**<br>El dueño de una cadena de discotecas paga bien, en efectivo y sin facturas. Y prefiere que siga así. | 1. Rechazarlo<br>2. Aceptar el efectivo |
+| <img src="../art/clean/cards/card.law_own_firm.png" alt="Un bufete propio"> | **Un bufete propio**<br>Dos clientes dicen que te seguirían si abrieras tu propio bufete. El alquiler y el personal correrían de tu cuenta. | 1. Seguir en el bufete<br>2. Abrir tu bufete |
+| <img src="../art/clean/cards/card.education_summer.png" alt="El verano"> | **El verano**<br>Dos meses sin clases. Una familia busca profesor particular, y la playa te busca a ti. | 1. Descansar<br>2. Dar clases particulares |
+| <img src="../art/clean/cards/card.education_old_pupil.png" alt="Un antiguo alumno"> | **Un antiguo alumno**<br>Un alumno al que un día convenciste de no dejar los estudios es hoy famoso, y te da las gracias en una entrevista. | 1. Escribirle para darle las gracias<br>2. Pedirle un favor |
+| <img src="../art/clean/cards/card.education_new_law.png" alt="Una nueva ley de educación"> | **Una nueva ley de educación**<br>El nuevo Gobierno cambia otra vez el currículo. Libros nuevos, formularios nuevos y el mismo sueldo. | 1. Hacer lo mínimo<br>2. Aprender el nuevo currículo<br>3. Sumarte a las protestas |
+| <img src="../art/clean/cards/card.influencer_dodgy_brand.png" alt="Una marca que paga demasiado"> | **Una marca que paga demasiado**<br>Una marca de té adelgazante ofrece una fortuna por un mes de publicaciones. Sus reseñas no son amables. | 1. Decir que no<br>2. Coger el dinero |
+| <img src="../art/clean/cards/card.influencer_shadowban.png" alt="El shadowban"> | **El shadowban**<br>Tus publicaciones llegan a la mitad de gente que antes, y nadie en la plataforma te dice por qué. | 1. Esperar a que pase<br>2. Pagar para promocionarlas |
+| <img src="../art/clean/cards/card.influencer_viral.png" alt="Una semana viral"> | **Una semana viral**<br>Un vídeo tuyo está en todas partes esta semana. Todo el mundo quiere una continuación, ya. | 1. Dejarlo pasar<br>2. Aprovechar la ola |
+| <img src="../art/clean/cards/card.hospitality_star.png" alt="A por una estrella"> | **A por una estrella**<br>Se dice que los inspectores de la guía están en la ciudad. Una temporada de platos perfectos podría darle una estrella al restaurante. | 1. Cocinar como siempre<br>2. Ir a por la estrella |
+| <img src="../art/clean/cards/card.hospitality_inspection.png" alt="La inspección de sanidad"> | **La inspección de sanidad**<br>La semana que viene viene un inspector. La cámara frigorífica falla, y el dueño no quiere pagar el arreglo. | 1. Pagar tú el arreglo<br>2. Esconderlo durante la visita |
+| <img src="../art/clean/cards/card.sales_giant_client.png" alt="El cliente gigante"> | **El cliente gigante**<br>Un cliente enorme busca proveedor. En solitario es difícil; con un compañero, seguro, a mitad de comisión. | 1. Compartirlo con un compañero<br>2. Ir a por él en solitario |
+| <img src="../art/clean/cards/card.sales_quota.png" alt="Una cuota imposible"> | **Una cuota imposible**<br>El nuevo director comercial dobla la cuota a todos. Si la cumples, hay bonus; si no, baja el fijo. | 1. Darlo todo<br>2. Negociarla a la baja<br>3. Negociarla con las cifras en la mano |
+| <img src="../art/clean/cards/card.sales_poached.png" alt="La competencia te llama"> | **La competencia te llama**<br>La competencia te quiere, y a tus clientes contigo. Paga bien, y tu empresa no lo perdonará. | 1. Quedarte donde estás<br>2. Irte con tus clientes<br>3. Pedir que te igualen la oferta |
 
 ### Formación (9)
 
@@ -1175,7 +1206,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crime_jail_library.png" alt="La biblioteca de la cárcel"> | **La biblioteca de la cárcel**<br>Tres estanterías, un diccionario y mucho tiempo. | 1. Dormir<br>2. Aprender un idioma<br>3. Estudiar para tu oficio |
 | <img src="../art/clean/cards/card.crime_fake_mba.png" alt="Una pequeña mejora"> | **Una pequeña mejora**<br>Nadie comprueba un currículum. Un MBA quedaría muy bien en el tuyo. | 1. Dejar el currículum como está<br>2. Añadir el MBA |
 
-### Negocios (25)
+### Negocios (26)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1204,6 +1235,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.influencer_review.png" alt="Un influencer quiere comer gratis"> | **Un influencer quiere comer gratis**<br>Un influencer de la zona te ofrece una reseña estupenda a cambio de comer gratis todo el año. | 1. Decirle que no<br>2. Aceptar el trato |
 | <img src="../art/clean/cards/card.rich_partner_swindle.png" alt="Tu socio cobra dos veces"> | **Tu socio cobra dos veces**<br>Alguien de la empresa te insinúa que tu socio lleva años cobrándose el sueldo dos veces. | 1. Confiar en él<br>2. Llamar a los auditores<br>3. Revisar las cuentas tú en persona |
 | <img src="../art/clean/cards/card.rich_hostile_bid.png" alt="Una oferta por tu negocio"> | **Una oferta por tu negocio**<br>Un rival diez veces mayor quiere tu negocio, y avisa de que puede ponértelo difícil si dices que no. | 1. Rechazarla<br>2. Vender a su precio<br>3. Plantarles cara |
+| <img src="../art/clean/cards/card.hospitality_next_door.png" alt="El bar de al lado"> | **El bar de al lado**<br>Se traspasa el bar de al lado, con todo dentro. Conoces a cada cliente, y cada error de su dueño. | 1. Dejarlo pasar<br>2. Quedarte el traspaso |
 
 ### Inversión (30)
 
