@@ -49,7 +49,8 @@ test('the small groups are packed on sheets of their own, each piece inside its 
 test('the phone bundles few enough files that an update over the air goes (EAS Update takes at most 1000 assets, the fonts and sounds among them)', () => {
   const loose = Object.keys(committed).filter((id) => !Object.hasOwn(sheets.pieces, id)).length;
   expect(phoneSpriteFiles(sheets, committed)).toBe(loose + Object.keys(sheets.sheets).length);
-  expect(phoneSpriteFiles(sheets, committed)).toBeLessThanOrEqual(600);
+  // About 690 assets an update with the fonts and sounds (`npx expo export --platform android`, metadata.json), at 628 sprite files: room left under 1000.
+  expect(phoneSpriteFiles(sheets, committed)).toBeLessThanOrEqual(750);
 });
 
 test('sources.ts names every sprite by one static require: its own file, or its piece of its sheet', () => {
