@@ -11,6 +11,7 @@ import { v20Cards } from './v20';
 import { richCards } from './rich';
 import { peopleCards } from './people';
 import { jobCards } from './jobs';
+import { tradeCards } from './trades';
 
 /** The hundred cards of v1, in the order of spec section 3.11. */
 export const cards: CardDef[] = [
@@ -51,4 +52,6 @@ export const cards: CardDef[] = [
   ...peopleCards,
   // Content 1.52: the four careers added last, each with four cards of its own.
   ...jobCards,
+  // And three for each of the eleven careers before them, healthcare's third still to come.
+  ...tradeCards,
 ];

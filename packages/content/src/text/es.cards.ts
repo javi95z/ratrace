@@ -1422,4 +1422,140 @@ export const cards: Record<string, CardText> = {
     'Seguir en el ejército',
     'Firmar el contrato',
   ]),
+  // Content 1.52: three cards for each of the eleven careers before the four added last.
+  healthcare_assault: c('Agresión en Urgencias', 'El familiar de un paciente te agrede en un turno de noche en Urgencias. Al acabar, aún te tiemblan las manos.', [
+    'Seguir como si nada',
+    ['Denunciarlo', 'El hospital te respalda y dobla la seguridad.', 'La denuncia se archiva y nada cambia.'],
+    'Pedir el traslado a planta',
+  ]),
+  healthcare_post_away: c('Una plaza fija', 'Dos grandes hospitales te ofrecen una plaza fija y mejor pagada. Los dos están en otras ciudades.', [
+    'Quedarte donde estás',
+    'Aceptar la plaza en {city:madrid}',
+    'Aceptar la plaza en {city:london}',
+  ]),
+  tech_stock_options: c('Tus opciones sobre acciones', 'La empresa habla de salir a bolsa. Puedes vender ya tus opciones o guardarlas hasta la salida.', [
+    'Venderlas ya',
+    ['Esperar a la salida a bolsa', 'La salida se dispara: tus opciones valen el triple.', 'La salida se cancela y las opciones caducan sin valor.'],
+  ]),
+  tech_layoffs: c('Despidos masivos', 'La empresa recorta una quinta parte de la plantilla y pide primero voluntarios, con indemnización.', [
+    ['No llamar la atención', 'Sobrevives a los recortes, con el doble de trabajo.', 'Conservas el puesto, con un contrato nuevo que paga menos.'],
+    'Coger la indemnización',
+  ]),
+  tech_new_york: c('Una llamada de Nueva York', 'Un cazatalentos te ofrece una gran tecnológica en Nueva York: mucho más sueldo, pero empezando un puesto más abajo.', [
+    'Colgar',
+    'Mudarte a {city:new_york}',
+    ['Usarlo para pedir un aumento', 'Tu jefe iguala parte de la oferta. Te quedas, y cobras más.', 'Tu jefe te desea suerte en Nueva York. Todo sigue igual.'],
+  ]),
+  public_exam: c('Oposiciones al cuerpo superior', 'Se convocan oposiciones al cuerpo superior: dos años de tardes con el temario, y pocas plazas.', [
+    'Dejarlas pasar',
+    ['Prepararlas', 'Apruebas con buen número: mejor puesto y mejor cargo.', 'Te quedas a unos puntos. El temario vuelve a la estantería.'],
+  ]),
+  public_pay_cut: c('Recorte de sueldo a los funcionarios', 'No hay presupuesto, y el Gobierno recorta el sueldo de los funcionarios. Los sindicatos convocan huelga.', [
+    'Aceptarlo',
+    ['Ir a la huelga', 'El Gobierno recula: no hay recorte.', 'El recorte sigue adelante, y los días de huelga no se pagan.'],
+  ]),
+  public_abroad: c('Un organismo internacional', 'Un organismo internacional busca funcionarios para sus oficinas, con un complemento los primeros años.', [
+    'Quedarte donde estás',
+    'Irte a {city:madrid}',
+    'Irte a {city:moscow}',
+  ]),
+  service_app_cut: c('La app baja las tarifas', 'Desde el lunes, la app de reparto paga menos por pedido. Los repartidores protestan, y algunos se cambian.', [
+    'Aguantar',
+    ['Cambiarte de app', 'La nueva app paga lo que pagaba la otra. De momento.', 'Al mes, la nueva app también baja las tarifas.'],
+  ]),
+  service_strike: c('La huelga de repartidores', 'Los repartidores hacen huelga por una tarifa justa. Con tan pocos en la calle, cada pedido paga el doble.', [
+    'Seguir repartiendo',
+    ['Unirte a la huelga', 'La app cede: mejor tarifa por pedido, para siempre.', 'La app espera a que pase. Una semana sin cobrar, para nada.'],
+  ]),
+  service_on_call: c('Siempre de guardia', 'La empresa te ofrece ya el siguiente puesto, si coges el teléfono a cualquier hora, todos los días.', [
+    'Conservar tus tardes',
+    'Aceptar el puesto',
+  ]),
+  finance_bonus: c('El bonus del año', 'Buen año para el banco. Puedes cobrar el bonus en efectivo o en acciones del banco, bloqueadas dos años.', [
+    'Cobrarlo en efectivo',
+    ['Cobrarlo en acciones', 'Las acciones se duplican: tu bonus vale el doble.', 'Las acciones caen a la mitad. Medio bonus sigue siendo un bonus.'],
+  ]),
+  finance_insider: c('Información privilegiada', 'Un cliente se va de la lengua: a su empresa la compran la semana que viene. Nadie sabría si compras acciones.', [
+    'Callarte',
+    ['Aprovecharla', 'Se anuncia la compra y nadie pregunta nada.', 'El regulador detecta la operación: multa, despido y tu nombre en la prensa.'],
+  ]),
+  finance_merger: c('Fusión bancaria', 'Un banco mayor compra el tuyo. Hay un puesto para ti, un escalón más abajo y mejor pagado, o una indemnización para quien se vaya.', [
+    'Aceptar el puesto nuevo',
+    'Coger la indemnización y dejar de trabajar',
+  ]),
+  medicine_negligence: c('Una demanda por negligencia', 'La familia de un paciente te demanda por un diagnóstico que, según ellos, llegó tarde. Los abogados del hospital proponen un acuerdo.', [
+    'Llegar a un acuerdo',
+    ['Ir a juicio', 'El juez te da la razón, y la prensa lo cuenta.', 'El juez falla en tu contra: una indemnización y un titular.'],
+  ]),
+  medicine_specialty: c('La especialidad', 'Sale una plaza para formarte en cardiología: años de exámenes y guardias, y un puesto mejor pagado al final.', [
+    'Seguir en medicina general',
+    'Formarte',
+  ]),
+  medicine_private_clinic: c('La clínica privada', 'Una clínica privada te quiere a tiempo completo, por mucho más de lo que paga el hospital público. Tus pacientes se quedarían.', [
+    'Seguir en la pública',
+    'Irte a la privada',
+  ]),
+  law_big_case: c('El caso de todas las portadas', 'Un acusado famoso te quiere en su caso. Si ganas, te harás un nombre; si pierdes, serás el chiste del año.', [
+    'Rechazarlo',
+    ['Aceptar el caso', 'Ganas. Todos los bufetes conocen ya tu nombre.', 'Pierdes, en directo por televisión.'],
+  ]),
+  law_cash_client: c('Un cliente que paga en efectivo', 'El dueño de una cadena de discotecas paga bien, en efectivo y sin facturas. Y prefiere que siga así.', [
+    'Rechazarlo',
+    'Aceptar el efectivo',
+  ]),
+  law_own_firm: c('Un bufete propio', 'Dos clientes dicen que te seguirían si abrieras tu propio bufete. El alquiler y el personal correrían de tu cuenta.', [
+    'Seguir en el bufete',
+    ['Abrir tu bufete', 'Los clientes te siguen y traen a otros. Tu nombre está en la puerta.', 'Los clientes se quedan donde estaban. Cierras antes de un año.'],
+  ]),
+  education_summer: c('El verano', 'Dos meses sin clases. Una familia busca profesor particular, y la playa te busca a ti.', [
+    'Descansar',
+    'Dar clases particulares',
+  ]),
+  education_old_pupil: c('Un antiguo alumno', 'Un alumno al que un día convenciste de no dejar los estudios es hoy famoso, y te da las gracias en una entrevista.', [
+    'Escribirle para darle las gracias',
+    'Pedirle un favor',
+  ]),
+  education_new_law: c('Una nueva ley de educación', 'El nuevo Gobierno cambia otra vez el currículo. Libros nuevos, formularios nuevos y el mismo sueldo.', [
+    'Hacer lo mínimo',
+    'Aprender el nuevo currículo',
+    ['Sumarte a las protestas', 'Retiran la ley. En la sala de profesores brindan por ti.', 'La ley sale adelante, y a la dirección no le hace gracia.'],
+  ]),
+  influencer_dodgy_brand: c('Una marca que paga demasiado', 'Una marca de té adelgazante ofrece una fortuna por un mes de publicaciones. Sus reseñas no son amables.', [
+    'Decir que no',
+    ['Coger el dinero', 'Nadie se da cuenta. El dinero está en el banco.', 'Destapan el té, y a ti con él. Te dejan de seguir a miles.'],
+  ]),
+  influencer_shadowban: c('El shadowban', 'Tus publicaciones llegan a la mitad de gente que antes, y nadie en la plataforma te dice por qué.', [
+    'Esperar a que pase',
+    ['Pagar para promocionarlas', 'Las publicaciones pagadas te devuelven a tu público.', 'El dinero se gasta, y el alcance sigue por los suelos.'],
+  ]),
+  influencer_viral: c('Una semana viral', 'Un vídeo tuyo está en todas partes esta semana. Todo el mundo quiere una continuación, ya.', [
+    'Dejarlo pasar',
+    ['Aprovechar la ola', 'Las continuaciones funcionan. Ya juegas en otra liga.', 'Las continuaciones no gustan. Internet ya está en otra cosa.'],
+  ]),
+  hospitality_star: c('A por una estrella', 'Se dice que los inspectores de la guía están en la ciudad. Una temporada de platos perfectos podría darle una estrella al restaurante.', [
+    'Cocinar como siempre',
+    ['Ir a por la estrella', '¡Una estrella! Las mesas, llenas durante meses, y tu sueldo a la altura.', 'Este año no hay estrella. Solo el agotamiento.'],
+  ]),
+  hospitality_inspection: c('La inspección de sanidad', 'La semana que viene viene un inspector. La cámara frigorífica falla, y el dueño no quiere pagar el arreglo.', [
+    'Pagar tú el arreglo',
+    ['Esconderlo durante la visita', 'El inspector mira hacia otro lado. O no mira.', 'El inspector abre la cámara: una multa y un cartel en la puerta.'],
+  ]),
+  hospitality_next_door: c('El bar de al lado', 'Se traspasa el bar de al lado, con todo dentro. Conoces a cada cliente, y cada error de su dueño.', [
+    'Dejarlo pasar',
+    'Quedarte el traspaso',
+  ]),
+  sales_giant_client: c('El cliente gigante', 'Un cliente enorme busca proveedor. En solitario es difícil; con un compañero, seguro, a mitad de comisión.', [
+    'Compartirlo con un compañero',
+    ['Ir a por él en solitario', 'Lo consigues. La mayor comisión de tu vida.', 'Un rival te rebaja el precio en el último momento.'],
+  ]),
+  sales_quota: c('Una cuota imposible', 'El nuevo director comercial dobla la cuota a todos. Si la cumples, hay bonus; si no, baja el fijo.', [
+    ['Darlo todo', 'Días largos, llamadas tardías, y la cumples.', 'No llegas, y baja el fijo.'],
+    ['Negociarla a la baja', 'Una cuota más justa, y la superas.', 'El director no cede, pero conservas el fijo.'],
+    ['Negociarla con las cifras en la mano', 'Una cuota más justa, y la superas.', 'El director no cede, pero conservas el fijo.'],
+  ]),
+  sales_poached: c('La competencia te llama', 'La competencia te quiere, y a tus clientes contigo. Paga bien, y tu empresa no lo perdonará.', [
+    'Quedarte donde estás',
+    'Irte con tus clientes',
+    ['Pedir que te igualen la oferta', 'Tu empresa iguala parte de la oferta para retenerte.', 'Tu empresa no se lo cree. Ahora todos saben que buscabas fuera.'],
+  ]),
 };

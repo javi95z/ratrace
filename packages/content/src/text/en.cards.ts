@@ -1422,4 +1422,140 @@ export const cards: Record<string, CardText> = {
     'Stay in the army',
     'Take the contract',
   ]),
+  // Content 1.52: three cards for each of the eleven careers before the four added last.
+  healthcare_assault: c('Attacked in A&E', 'A patient\'s relative hits you on a night shift in A&E. At the end of it, your hands are still shaking.', [
+    'Carry on as if nothing happened',
+    ['Report it', 'The hospital backs you, and security is doubled.', 'The report is filed, and nothing changes.'],
+    'Ask to move to a ward',
+  ]),
+  healthcare_post_away: c('A post for good', 'Two big hospitals offer you a permanent post, with better pay. Both are in other cities.', [
+    'Stay where you are',
+    'Take the post in {city:madrid}',
+    'Take the post in {city:london}',
+  ]),
+  tech_stock_options: c('Your stock options', 'The company talks of going public. You can sell your stock options now, or keep them for the listing.', [
+    'Sell them now',
+    ['Hold on for the listing', 'The listing soars. Your options are worth three times as much.', 'The listing is called off, and the options expire worthless.'],
+  ]),
+  tech_layoffs: c('Mass layoffs', 'The company is cutting a fifth of its staff, and asks for volunteers first, with a payoff.', [
+    ['Keep your head down', 'You survive the cuts, with twice the work.', 'You keep the job, on a new contract that pays less.'],
+    'Take the payoff',
+  ]),
+  tech_new_york: c('A call from New York', 'A headhunter has a big tech firm in New York that wants you: far more pay, but a rung lower to start.', [
+    'Hang up',
+    'Move to {city:new_york}',
+    ['Use it to ask for a raise', 'Your boss matches part of it. You stay, and earn more.', 'Your boss wishes you luck in New York. Nothing changes.'],
+  ]),
+  public_exam: c('The senior corps exam', 'The exam for the senior corps is called: two years of evenings with the syllabus, and few places.', [
+    'Let it pass',
+    ['Prepare for it', 'You pass, high on the list: a better post and a better title.', 'You miss it by a few points. The syllabus goes back on the shelf.'],
+  ]),
+  public_pay_cut: c('A pay cut for the civil service', 'The budget is short, and the government cuts civil servants\' pay. The unions call a strike.', [
+    'Accept it',
+    ['Go on strike', 'The government backs down. There is no cut.', 'The cut goes ahead, and the strike days are not paid.'],
+  ]),
+  public_abroad: c('An international post', 'An international body wants civil servants for its offices, with an allowance for the first years.', [
+    'Stay where you are',
+    'Go to {city:madrid}',
+    'Go to {city:moscow}',
+  ]),
+  service_app_cut: c('The app cuts its rates', 'From Monday the delivery app pays less per order. The riders grumble, and some are switching.', [
+    'Put up with it',
+    ['Switch to another app', 'The new app pays what the old one did. For now.', 'A month later, the new app cuts its rates too.'],
+  ]),
+  service_strike: c('The riders\' strike', 'The riders strike for a fair rate. With so few on the road, every order pays double.', [
+    'Keep riding',
+    ['Join the strike', 'The app gives in: a better rate per order, for good.', 'The app waits it out. A week without pay, for nothing.'],
+  ]),
+  service_on_call: c('Always on call', 'The company offers you the next rung at once, if you answer the phone at any hour, every day.', [
+    'Keep your evenings',
+    'Take the rung',
+  ]),
+  finance_bonus: c('The year\'s bonus', 'A good year for the bank. Your bonus can be paid in cash, or in the bank\'s own shares, locked for two years.', [
+    'Take it in cash',
+    ['Take it in shares', 'The shares double. Your bonus is worth twice as much.', 'The shares halve. Half a bonus is still a bonus.'],
+  ]),
+  finance_insider: c('Inside information', 'A client lets slip that his company will be bought next week. Nobody would know if you bought its shares.', [
+    'Keep quiet',
+    ['Trade on it', 'The deal is announced, and nobody asks a thing.', 'The regulator spots the trade: a fine, the sack and your name in the papers.'],
+  ]),
+  finance_merger: c('The bank merges', 'A bigger bank buys yours. There is a post for you, a rung lower and better paid, or a payoff for those who leave.', [
+    'Take the new post',
+    'Take the payoff and stop working',
+  ]),
+  medicine_negligence: c('A negligence claim', 'A patient\'s family sues you over a diagnosis they say came too late. The hospital\'s lawyers suggest a settlement.', [
+    'Settle',
+    ['Fight it in court', 'The court clears you, and the press says so.', 'The court rules against you: damages, and a headline.'],
+  ]),
+  medicine_specialty: c('A specialty', 'A place opens to train in cardiology: years of exams and night shifts, and a better-paid post at the end.', [
+    'Stay a generalist',
+    'Train for it',
+  ]),
+  medicine_private_clinic: c('The private clinic', 'A private clinic wants you full time, at far more than the public hospital pays. Your patients would stay behind.', [
+    'Stay at the public hospital',
+    'Go private',
+  ]),
+  law_big_case: c('The case on every front page', 'A famous defendant wants you on the case. Win, and you are a name; lose, and you are a joke.', [
+    'Turn it down',
+    ['Take the case', 'You win. Every firm in town now knows your name.', 'You lose, on live television.'],
+  ]),
+  law_cash_client: c('A client who pays in cash', 'A man with a chain of nightclubs pays well, in cash, and asks for no receipts. He would rather not have any.', [
+    'Turn him down',
+    'Take the cash',
+  ]),
+  law_own_firm: c('A firm of your own', 'Two clients say they would follow you if you opened your own firm. The rent and the staff would be yours to pay.', [
+    'Stay with the firm',
+    ['Open your own firm', 'The clients follow, and bring others. Your name is on the door.', 'The clients stay where they were. You close within the year.'],
+  ]),
+  education_summer: c('The long summer', 'Two months without classes. A family is looking for a tutor, and the beach is looking for you.', [
+    'Rest',
+    'Give private lessons',
+  ]),
+  education_old_pupil: c('A former pupil', 'A pupil you once kept from dropping out is famous now, and thanks you in an interview.', [
+    'Write back to thank them',
+    'Ask them for a favour',
+  ]),
+  education_new_law: c('A new education law', 'The new government changes the curriculum again. New books, new forms, the same pay.', [
+    'Do the minimum',
+    'Learn the new curriculum',
+    ['Join the protests', 'The law is withdrawn. The staffroom drinks to you.', 'The law passes anyway, and the head is not pleased.'],
+  ]),
+  influencer_dodgy_brand: c('A brand that pays too well', 'A slimming-tea brand offers a fortune for a month of posts. Its reviews are not kind.', [
+    'Say no',
+    ['Take the money', 'Nobody notices. The money is in the bank.', 'The tea is exposed, and so are you. Followers leave by the thousand.'],
+  ]),
+  influencer_shadowban: c('The shadowban', 'Your posts reach half the people they did, and nobody at the platform will say why.', [
+    'Wait it out',
+    ['Pay to promote your posts', 'The paid posts bring your audience back.', 'The money is spent, and the reach stays low anyway.'],
+  ]),
+  influencer_viral: c('A week of going viral', 'A video of yours is everywhere this week. Everyone wants a follow-up, now.', [
+    'Let it pass',
+    ['Ride the wave', 'The follow-ups land. You are in another league now.', 'The follow-ups fall flat. The internet has moved on.'],
+  ]),
+  hospitality_star: c('A shot at a star', 'Word is the guide\'s inspectors are in town. A season of perfect plates might win the restaurant a star.', [
+    'Cook as usual',
+    ['Go for the star', 'A star! The tables are booked for months, and your pay follows.', 'No star this year. Only the exhaustion.'],
+  ]),
+  hospitality_inspection: c('The health inspection', 'An inspector is due next week. The cold room is failing, and the owner will not pay to fix it.', [
+    'Pay for the repair yourself',
+    ['Hide it for the visit', 'The inspector looks the other way. Or never looks.', 'The inspector opens the cold room: a fine, and a sign on the door.'],
+  ]),
+  hospitality_next_door: c('The bar next door', 'The bar next door is for lease, fittings and all. You know every regular, and every mistake its owner made.', [
+    'Let it go',
+    'Take the lease',
+  ]),
+  sales_giant_client: c('The giant client', 'A giant client is choosing a supplier. Alone, it is a long shot; with a colleague, a sure thing at half the commission.', [
+    'Share it with a colleague',
+    ['Go after it alone', 'You land it. The biggest commission of your life.', 'A rival undercuts you at the last minute.'],
+  ]),
+  sales_quota: c('An impossible quota', 'The new sales director doubles everyone\'s quota. Hit it and there is a bonus; miss it and your base pay shrinks.', [
+    ['Push yourself', 'Long days, late calls, and you hit it.', 'You fall short, and your base pay shrinks.'],
+    ['Talk it down', 'A fairer quota, and you beat it.', 'The director will not budge, but your base pay stays.'],
+    ['Talk it down, figures in hand', 'A fairer quota, and you beat it.', 'The director will not budge, but your base pay stays.'],
+  ]),
+  sales_poached: c('The competitor calls', 'A competitor wants you, and your clients with you. It pays well, and your firm will not forgive it.', [
+    'Stay where you are',
+    'Leave with your clients',
+    ['Ask your firm to match it', 'Your firm matches part of it to keep you.', 'Your firm calls your bluff. Now everyone knows you looked elsewhere.'],
+  ]),
 };
