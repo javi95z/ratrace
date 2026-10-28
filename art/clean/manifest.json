@@ -1251,26 +1251,6 @@
       "width": 64,
       "height": 64
     },
-    "portrait.nurse.22": {
-      "file": "portraits/portrait.nurse.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.nurse.32": {
-      "file": "portraits/portrait.nurse.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.nurse.45": {
-      "file": "portraits/portrait.nurse.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.nurse.58": {
-      "file": "portraits/portrait.nurse.58.png",
-      "width": 64,
-      "height": 64
-    },
     "portrait.engineer.22": {
       "file": "portraits/portrait.engineer.22.png",
       "width": 64,
@@ -1308,26 +1288,6 @@
     },
     "portrait.civil_servant.58": {
       "file": "portraits/portrait.civil_servant.58.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.rider.22": {
-      "file": "portraits/portrait.rider.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.rider.32": {
-      "file": "portraits/portrait.rider.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.rider.45": {
-      "file": "portraits/portrait.rider.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.rider.58": {
-      "file": "portraits/portrait.rider.58.png",
       "width": 64,
       "height": 64
     },
@@ -1388,26 +1348,6 @@
     },
     "portrait.banker.58": {
       "file": "portraits/portrait.banker.58.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.doctor.22": {
-      "file": "portraits/portrait.doctor.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.doctor.32": {
-      "file": "portraits/portrait.doctor.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.doctor.45": {
-      "file": "portraits/portrait.doctor.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.doctor.58": {
-      "file": "portraits/portrait.doctor.58.png",
       "width": 64,
       "height": 64
     },
@@ -1551,26 +1491,6 @@
       "width": 64,
       "height": 64
     },
-    "portrait.waiter.22": {
-      "file": "portraits/portrait.waiter.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.waiter.32": {
-      "file": "portraits/portrait.waiter.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.waiter.45": {
-      "file": "portraits/portrait.waiter.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.waiter.58": {
-      "file": "portraits/portrait.waiter.58.png",
-      "width": 64,
-      "height": 64
-    },
     "portrait.salesperson.22": {
       "file": "portraits/portrait.salesperson.22.png",
       "width": 64,
@@ -1611,26 +1531,6 @@
       "width": 64,
       "height": 64
     },
-    "portrait.pilot.22": {
-      "file": "portraits/portrait.pilot.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.pilot.32": {
-      "file": "portraits/portrait.pilot.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.pilot.45": {
-      "file": "portraits/portrait.pilot.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.pilot.58": {
-      "file": "portraits/portrait.pilot.58.png",
-      "width": 64,
-      "height": 64
-    },
     "portrait.scientist.22": {
       "file": "portraits/portrait.scientist.22.png",
       "width": 64,
@@ -1651,26 +1551,6 @@
       "width": 64,
       "height": 64
     },
-    "portrait.robotics_engineer.22": {
-      "file": "portraits/portrait.robotics_engineer.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.robotics_engineer.32": {
-      "file": "portraits/portrait.robotics_engineer.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.robotics_engineer.45": {
-      "file": "portraits/portrait.robotics_engineer.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.robotics_engineer.58": {
-      "file": "portraits/portrait.robotics_engineer.58.png",
-      "width": 64,
-      "height": 64
-    },
     "portrait.programmer.22": {
       "file": "portraits/portrait.programmer.22.png",
       "width": 64,
@@ -1688,26 +1568,6 @@
     },
     "portrait.programmer.58": {
       "file": "portraits/portrait.programmer.58.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.chef.22": {
-      "file": "portraits/portrait.chef.22.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.chef.32": {
-      "file": "portraits/portrait.chef.32.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.chef.45": {
-      "file": "portraits/portrait.chef.45.png",
-      "width": 64,
-      "height": 64
-    },
-    "portrait.chef.58": {
-      "file": "portraits/portrait.chef.58.png",
       "width": 64,
       "height": 64
     },
@@ -4993,6 +4853,146 @@
     },
     "portrait.recruit.58": {
       "file": "portraits/portrait.recruit.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.22": {
+      "file": "portraits/portrait.nurse.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.32": {
+      "file": "portraits/portrait.nurse.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.45": {
+      "file": "portraits/portrait.nurse.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.58": {
+      "file": "portraits/portrait.nurse.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.22": {
+      "file": "portraits/portrait.rider.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.32": {
+      "file": "portraits/portrait.rider.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.45": {
+      "file": "portraits/portrait.rider.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.58": {
+      "file": "portraits/portrait.rider.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.22": {
+      "file": "portraits/portrait.doctor.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.32": {
+      "file": "portraits/portrait.doctor.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.45": {
+      "file": "portraits/portrait.doctor.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.58": {
+      "file": "portraits/portrait.doctor.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.22": {
+      "file": "portraits/portrait.waiter.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.32": {
+      "file": "portraits/portrait.waiter.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.45": {
+      "file": "portraits/portrait.waiter.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.58": {
+      "file": "portraits/portrait.waiter.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.22": {
+      "file": "portraits/portrait.pilot.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.32": {
+      "file": "portraits/portrait.pilot.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.45": {
+      "file": "portraits/portrait.pilot.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.58": {
+      "file": "portraits/portrait.pilot.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.22": {
+      "file": "portraits/portrait.robotics_engineer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.32": {
+      "file": "portraits/portrait.robotics_engineer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.45": {
+      "file": "portraits/portrait.robotics_engineer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.58": {
+      "file": "portraits/portrait.robotics_engineer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.22": {
+      "file": "portraits/portrait.chef.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.32": {
+      "file": "portraits/portrait.chef.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.45": {
+      "file": "portraits/portrait.chef.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.58": {
+      "file": "portraits/portrait.chef.58.png",
       "width": 64,
       "height": 64
     },

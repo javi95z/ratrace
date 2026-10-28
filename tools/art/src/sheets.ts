@@ -29,18 +29,20 @@ export interface SheetSpec {
   thinnest?: number;
 }
 
-const LIVES_A = ['nurse', 'engineer', 'civil_servant', 'rider'];
-const LIVES_B = ['heir', 'newcomer', 'banker', 'doctor'];
+// A life drawn again on a later sheet leaves its old row empty (''): the nurse, the rider, the doctor, the waiter, the pilot, the robotics
+// engineer and the chef were drawn in their job's clothes, and are drawn again in their own on portraits-08 and portraits-09 (v24).
+const LIVES_A = ['', 'engineer', 'civil_servant', ''];
+const LIVES_B = ['heir', 'newcomer', 'banker', ''];
 const LIVES_C = ['comeback', 'founder', 'crypto_kid', 'nomad'];
-const LIVES_D = ['lawyer', 'teacher', 'influencer', 'waiter'];
+const LIVES_D = ['lawyer', 'teacher', 'influencer', ''];
 // The salesperson, and three lives for careers the game does not have yet.
-const LIVES_E = ['salesperson', 'electrician', 'pilot', 'scientist'];
+const LIVES_E = ['salesperson', 'electrician', '', 'scientist'];
 // A life for each of the four cities added later.
-const LIVES_F = ['robotics_engineer', 'programmer', 'chef', 'private_banker'];
+const LIVES_F = ['', 'programmer', '', 'private_banker'];
 const AGES = [22, 32, 45, 58];
 /** A workplace for each career, two to a sheet, each at three stages: starting out, established, at the top. The last is for a trade to come. */
 const WORKPLACES = [['healthcare', 'tech'], ['public', 'service'], ['finance', 'medicine'], ['law', 'education'], ['influencer', 'hospitality'], ['sales', 'trades']];
-const portraits = (lives: string[]) => lives.flatMap((life) => AGES.map((age) => `portrait.${life}.${age}`));
+const portraits = (lives: string[]) => lives.flatMap((life) => AGES.map((age) => (life === '' ? '' : `portrait.${life}.${age}`)));
 
 export const SHEETS: SheetSpec[] = [
   {
@@ -421,8 +423,8 @@ export const SHEETS: SheetSpec[] = [
   // The people, deeper (art/prompts/v22-prompt-pack.md, cards-54): the ex as a man, the classmate's housewarming, the cousin's yacht, the parents' visit,
   // the founder's bell and the boss's retirement. Stand-ins cut from older scenes until drawn.
   { file: 'cards/cards-54', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['ex_new_car_man', 'classmate_housewarming', 'cousin_yacht', 'parents_visit', 'founder_bell', 'boss_retire'].map((id) => `card.${id}`) },
-  // Content 1.52: the four careers added last, four cards each. Stand-ins cut from older scenes until drawn: the pilot's four and the
-  // architect's first two, the architect's last two and the estate agent's four, and the soldier's four.
+  // Content 1.52: the four careers added last, four cards each (v24): the pilot's four and the architect's first two, the architect's last
+  // two and the estate agent's four, and the soldier's four with two career moves not yet shown.
   {
     file: 'cards/cards-55', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
     ids: ['aviation_medical', 'aviation_strike', 'aviation_base_abroad', 'aviation_grounded', 'construction_own_house', 'construction_unpaid'].map((id) => `card.${id}`),
@@ -432,13 +434,15 @@ export const SHEETS: SheetSpec[] = [
     ids: ['construction_collapse', 'construction_famous_client', 'realestate_off_market', 'realestate_hurried_seller', 'realestate_bubble', 'realestate_double_fee'].map((id) => `card.${id}`),
   },
   { file: 'cards/cards-57', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['military_mission', 'military_twenty_years', 'military_posting', 'military_contractor'].map((id) => `card.${id}`), '', ''] },
-  // Their workplaces at three stages, and the lives that start in them: stand-ins too, until drawn. The pilot's portraits were drawn
-  // with portraits-05; the architect, the estate agent and the recruit stand in with faces drawn for lives the game never had.
+  // Their workplaces at three stages, and the faces of the lives that start in them (v24).
   ...[['aviation', 'construction'], ['realestate', 'military']].map((careers, i): SheetSpec => ({
     file: `cards/work-${String(i + 7).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,
     ids: careers.flatMap((career) => [0, 1, 2].map((stage) => `work.${career}.${stage}`)),
   })),
   { file: 'portraits/portraits-07', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64, ids: portraits(['architect', 'estate_agent', 'recruit']) },
+  // v24: seven lives drawn again as the people they are, in their own clothes, not their job's.
+  { file: 'portraits/portraits-08', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(['nurse', 'rider', 'doctor', 'waiter']) },
+  { file: 'portraits/portraits-09', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64, ids: portraits(['pilot', 'robotics_engineer', 'chef']) },
   { file: 'icons/icons-14', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.career_realestate', 'icon.career_military'] },
   // v21: a life's milestones, the big moment's scene.
   { file: 'cards/milestones-01', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['worth_100k', 'worth_1m', 'worth_10m', 'debt_free'].map((id) => `milestone.${id}`) },

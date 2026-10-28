@@ -39,7 +39,6 @@ No sheets missing.
 | home.mexico_city.penthouse | touches-edge |
 | home.zurich.chalet | 1 key-coloured pixels |
 | celeb.swiftly | 2 key-coloured pixels |
-| icon.career_realestate | touches-edge |
 | anim.burst.0 | 4 stray pixels removed |
 | badge.celeb_swiftly | 3 key-coloured pixels |
 | home.student_house | 2 key-coloured pixels |
