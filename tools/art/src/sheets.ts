@@ -421,6 +421,25 @@ export const SHEETS: SheetSpec[] = [
   // The people, deeper (art/prompts/v22-prompt-pack.md, cards-54): the ex as a man, the classmate's housewarming, the cousin's yacht, the parents' visit,
   // the founder's bell and the boss's retirement. Stand-ins cut from older scenes until drawn.
   { file: 'cards/cards-54', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['ex_new_car_man', 'classmate_housewarming', 'cousin_yacht', 'parents_visit', 'founder_bell', 'boss_retire'].map((id) => `card.${id}`) },
+  // Content 1.52: the four careers added last, four cards each. Stand-ins cut from older scenes until drawn: the pilot's four and the
+  // architect's first two, the architect's last two and the estate agent's four, and the soldier's four.
+  {
+    file: 'cards/cards-55', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['aviation_medical', 'aviation_strike', 'aviation_base_abroad', 'aviation_grounded', 'construction_own_house', 'construction_unpaid'].map((id) => `card.${id}`),
+  },
+  {
+    file: 'cards/cards-56', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['construction_collapse', 'construction_famous_client', 'realestate_off_market', 'realestate_hurried_seller', 'realestate_bubble', 'realestate_double_fee'].map((id) => `card.${id}`),
+  },
+  { file: 'cards/cards-57', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['military_mission', 'military_twenty_years', 'military_posting', 'military_contractor'].map((id) => `card.${id}`), '', ''] },
+  // Their workplaces at three stages, and the lives that start in them: stand-ins too, until drawn. The pilot's portraits were drawn
+  // with portraits-05; the architect, the estate agent and the recruit stand in with faces drawn for lives the game never had.
+  ...[['aviation', 'construction'], ['realestate', 'military']].map((careers, i): SheetSpec => ({
+    file: `cards/work-${String(i + 7).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,
+    ids: careers.flatMap((career) => [0, 1, 2].map((stage) => `work.${career}.${stage}`)),
+  })),
+  { file: 'portraits/portraits-07', group: 'portraits', kind: 'portraits', cols: 4, rows: 3, width: 64, height: 64, ids: portraits(['architect', 'estate_agent', 'recruit']) },
+  { file: 'icons/icons-14', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.career_realestate', 'icon.career_military'] },
   // v21: a life's milestones, the big moment's scene.
   { file: 'cards/milestones-01', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['worth_100k', 'worth_1m', 'worth_10m', 'debt_free'].map((id) => `milestone.${id}`) },
   { file: 'cards/milestones-02', group: 'cards', kind: 'scenes', cols: 2, rows: 2, width: 288, height: 120, ids: ['first_home', 'first_business', 'halfway', 'escaped'].map((id) => `milestone.${id}`) },

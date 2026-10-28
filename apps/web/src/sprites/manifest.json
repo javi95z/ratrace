@@ -734,6 +734,26 @@
     "w": 288,
     "h": 120
   },
+  "card.aviation_base_abroad": {
+    "src": "cards/card.aviation_base_abroad.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.aviation_grounded": {
+    "src": "cards/card.aviation_grounded.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.aviation_medical": {
+    "src": "cards/card.aviation_medical.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.aviation_strike": {
+    "src": "cards/card.aviation_strike.png",
+    "w": 288,
+    "h": 120
+  },
   "card.back_home": {
     "src": "cards/card.back_home.png",
     "w": 288,
@@ -1111,6 +1131,26 @@
   },
   "card.concert": {
     "src": "cards/card.concert.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.construction_collapse": {
+    "src": "cards/card.construction_collapse.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.construction_famous_client": {
+    "src": "cards/card.construction_famous_client.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.construction_own_house": {
+    "src": "cards/card.construction_own_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.construction_unpaid": {
+    "src": "cards/card.construction_unpaid.png",
     "w": 288,
     "h": 120
   },
@@ -1584,6 +1624,26 @@
     "w": 288,
     "h": 120
   },
+  "card.military_contractor": {
+    "src": "cards/card.military_contractor.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.military_mission": {
+    "src": "cards/card.military_mission.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.military_posting": {
+    "src": "cards/card.military_posting.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.military_twenty_years": {
+    "src": "cards/card.military_twenty_years.png",
+    "w": 288,
+    "h": 120
+  },
   "card.mlm": {
     "src": "cards/card.mlm.png",
     "w": 288,
@@ -1826,6 +1886,26 @@
   },
   "card.rate_scissors": {
     "src": "cards/card.rate_scissors.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.realestate_bubble": {
+    "src": "cards/card.realestate_bubble.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.realestate_double_fee": {
+    "src": "cards/card.realestate_double_fee.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.realestate_hurried_seller": {
+    "src": "cards/card.realestate_hurried_seller.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.realestate_off_market": {
+    "src": "cards/card.realestate_off_market.png",
     "w": 288,
     "h": 120
   },
@@ -3534,8 +3614,18 @@
     "w": 32,
     "h": 32
   },
+  "icon.career_military": {
+    "src": "icons/icon.career_military.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.career_public": {
     "src": "icons/icon.career_public.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_realestate": {
+    "src": "icons/icon.career_realestate.png",
     "w": 32,
     "h": 32
   },
@@ -4619,6 +4709,26 @@
     "w": 64,
     "h": 64
   },
+  "portrait.architect.22": {
+    "src": "portraits/portrait.architect.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.architect.32": {
+    "src": "portraits/portrait.architect.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.architect.45": {
+    "src": "portraits/portrait.architect.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.architect.58": {
+    "src": "portraits/portrait.architect.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.banker.22": {
     "src": "portraits/portrait.banker.22.png",
     "w": 64,
@@ -4776,6 +4886,26 @@
   },
   "portrait.engineer.58": {
     "src": "portraits/portrait.engineer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.estate_agent.22": {
+    "src": "portraits/portrait.estate_agent.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.estate_agent.32": {
+    "src": "portraits/portrait.estate_agent.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.estate_agent.45": {
+    "src": "portraits/portrait.estate_agent.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.estate_agent.58": {
+    "src": "portraits/portrait.estate_agent.58.png",
     "w": 64,
     "h": 64
   },
@@ -4976,6 +5106,26 @@
   },
   "portrait.programmer.58": {
     "src": "portraits/portrait.programmer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.recruit.22": {
+    "src": "portraits/portrait.recruit.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.recruit.32": {
+    "src": "portraits/portrait.recruit.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.recruit.45": {
+    "src": "portraits/portrait.recruit.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.recruit.58": {
+    "src": "portraits/portrait.recruit.58.png",
     "w": 64,
     "h": 64
   },
@@ -5829,6 +5979,36 @@
     "w": 312,
     "h": 66
   },
+  "work.aviation.0": {
+    "src": "cards/work.aviation.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.aviation.1": {
+    "src": "cards/work.aviation.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.aviation.2": {
+    "src": "cards/work.aviation.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.construction.0": {
+    "src": "cards/work.construction.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.construction.1": {
+    "src": "cards/work.construction.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.construction.2": {
+    "src": "cards/work.construction.2.png",
+    "w": 288,
+    "h": 120
+  },
   "work.education.0": {
     "src": "cards/work.education.0.png",
     "w": 288,
@@ -5934,6 +6114,21 @@
     "w": 288,
     "h": 120
   },
+  "work.military.0": {
+    "src": "cards/work.military.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.military.1": {
+    "src": "cards/work.military.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.military.2": {
+    "src": "cards/work.military.2.png",
+    "w": 288,
+    "h": 120
+  },
   "work.public.0": {
     "src": "cards/work.public.0.png",
     "w": 288,
@@ -5946,6 +6141,21 @@
   },
   "work.public.2": {
     "src": "cards/work.public.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.realestate.0": {
+    "src": "cards/work.realestate.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.realestate.1": {
+    "src": "cards/work.realestate.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.realestate.2": {
+    "src": "cards/work.realestate.2.png",
     "w": 288,
     "h": 120
   },

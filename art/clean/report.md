@@ -1,16 +1,16 @@
 # Art report
 
-Sprites: 1202. Every group uses the 31 interface colours plus its own.
+Sprites: 1244. Every group uses the 31 interface colours plus its own.
 
 | Group | Sprites | Size | Colours |
 |---|---|---|---|
 | items | 85 | 64×64 | 64 |
 | cars | 9 | 96×48 | 64 |
 | homes | 196 | 128×128 | 64 |
-| icons | 197 | 32×32 | 64 |
+| icons | 199 | 32×32 | 64 |
 | badges | 86 | 64×64 | 64 |
-| portraits | 132 | 64×64 | 64 |
-| cards | 357 | 288×120 | 67 |
+| portraits | 144 | 64×64 | 64 |
+| cards | 385 | 288×120 | 67 |
 | skylines | 40 | 312×66 | 64 |
 | rat_body | 8 | 128×128 | 64 |
 | rat_face | 8 | 128×128 | 64 |
@@ -39,6 +39,7 @@ No sheets missing.
 | home.mexico_city.penthouse | touches-edge |
 | home.zurich.chalet | 1 key-coloured pixels |
 | celeb.swiftly | 2 key-coloured pixels |
+| icon.career_realestate | touches-edge |
 | anim.burst.0 | 4 stray pixels removed |
 | badge.celeb_swiftly | 3 key-coloured pixels |
 | home.student_house | 2 key-coloured pixels |

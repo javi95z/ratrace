@@ -4796,6 +4796,216 @@
       "width": 288,
       "height": 120
     },
+    "card.aviation_medical": {
+      "file": "cards/card.aviation_medical.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.aviation_strike": {
+      "file": "cards/card.aviation_strike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.aviation_base_abroad": {
+      "file": "cards/card.aviation_base_abroad.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.aviation_grounded": {
+      "file": "cards/card.aviation_grounded.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.construction_own_house": {
+      "file": "cards/card.construction_own_house.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.construction_unpaid": {
+      "file": "cards/card.construction_unpaid.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.construction_collapse": {
+      "file": "cards/card.construction_collapse.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.construction_famous_client": {
+      "file": "cards/card.construction_famous_client.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.realestate_off_market": {
+      "file": "cards/card.realestate_off_market.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.realestate_hurried_seller": {
+      "file": "cards/card.realestate_hurried_seller.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.realestate_bubble": {
+      "file": "cards/card.realestate_bubble.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.realestate_double_fee": {
+      "file": "cards/card.realestate_double_fee.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.military_mission": {
+      "file": "cards/card.military_mission.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.military_twenty_years": {
+      "file": "cards/card.military_twenty_years.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.military_posting": {
+      "file": "cards/card.military_posting.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.military_contractor": {
+      "file": "cards/card.military_contractor.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.aviation.0": {
+      "file": "cards/work.aviation.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.aviation.1": {
+      "file": "cards/work.aviation.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.aviation.2": {
+      "file": "cards/work.aviation.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.construction.0": {
+      "file": "cards/work.construction.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.construction.1": {
+      "file": "cards/work.construction.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.construction.2": {
+      "file": "cards/work.construction.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.realestate.0": {
+      "file": "cards/work.realestate.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.realestate.1": {
+      "file": "cards/work.realestate.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.realestate.2": {
+      "file": "cards/work.realestate.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.military.0": {
+      "file": "cards/work.military.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.military.1": {
+      "file": "cards/work.military.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.military.2": {
+      "file": "cards/work.military.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "portrait.architect.22": {
+      "file": "portraits/portrait.architect.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.architect.32": {
+      "file": "portraits/portrait.architect.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.architect.45": {
+      "file": "portraits/portrait.architect.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.architect.58": {
+      "file": "portraits/portrait.architect.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.estate_agent.22": {
+      "file": "portraits/portrait.estate_agent.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.estate_agent.32": {
+      "file": "portraits/portrait.estate_agent.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.estate_agent.45": {
+      "file": "portraits/portrait.estate_agent.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.estate_agent.58": {
+      "file": "portraits/portrait.estate_agent.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.recruit.22": {
+      "file": "portraits/portrait.recruit.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.recruit.32": {
+      "file": "portraits/portrait.recruit.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.recruit.45": {
+      "file": "portraits/portrait.recruit.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.recruit.58": {
+      "file": "portraits/portrait.recruit.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "icon.career_realestate": {
+      "file": "icons/icon.career_realestate.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_military": {
+      "file": "icons/icon.career_military.png",
+      "width": 32,
+      "height": 32
+    },
     "milestone.worth_100k": {
       "file": "cards/milestone.worth_100k.png",
       "width": 288,
