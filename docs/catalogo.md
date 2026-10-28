@@ -6,15 +6,15 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 
 | Qué | Cuántos |
 | --- | --- |
-| [Vidas](#vidas) | 20 |
+| [Vidas](#vidas) | 24 |
 | [Reto de la semana](#reto-de-la-semana) | 10 reglas |
-| [Carreras](#carreras) | 11 |
+| [Carreras](#carreras) | 15 |
 | [Ciudades](#ciudades) | 10 |
 | [Objetos](#objetos) | 67, de ellos 8 coches |
 | [Inmuebles](#inmuebles) | 26 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 289 |
+| [Cartas](#cartas) | 305 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 63 |
 
@@ -88,7 +88,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Dubái, con 60.000 $ |
+| Empieza en | Dubái, con 30.000 $ |
 | Trabajo | Repartidor (Servicios) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Cómodo (no puede bajar de Cómodo) |
@@ -322,6 +322,66 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Desventaja | Un estilo de vida que nunca puede bajar de acomodado, en Zúrich. |
 | Se desbloquea | Reúne un millón viviendo en Zúrich. |
 
+### Piloto
+
+<img src="../art/clean/portraits/portrait.pilot.22.png" alt="Piloto a los 22"> <img src="../art/clean/portraits/portrait.pilot.32.png" alt="Piloto a los 32"> <img src="../art/clean/portraits/portrait.pilot.45.png" alt="Piloto a los 45"> <img src="../art/clean/portraits/portrait.pilot.58.png" alt="Piloto a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Dubái, con 2.000 $ |
+| Trabajo | Segundo oficial (Aviación) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Austero |
+| Empieza con | Préstamo personal de 80.000 $ al 6 % |
+| Ventaja | Un sueldo que sube deprisa cuando llegan los galones, y sin impuestos en Dubái. |
+| Desventaja | Un préstamo de 80.000 $ por la formación, y un trabajo que una recesión deja en tierra. |
+| Se desbloquea | Múdate a Dubái. |
+
+### Arquitecto
+
+<img src="../art/clean/portraits/portrait.architect.22.png" alt="Arquitecto a los 22"> <img src="../art/clean/portraits/portrait.architect.32.png" alt="Arquitecto a los 32"> <img src="../art/clean/portraits/portrait.architect.45.png" alt="Arquitecto a los 45"> <img src="../art/clean/portraits/portrait.architect.58.png" alt="Arquitecto a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Ciudad de México, con 3.000 $ |
+| Trabajo | Arquitecto júnior (Arquitectura) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Austero |
+| Empieza con | Préstamo personal de 10.000 $ al 6 % |
+| Ventaja | Una ciudad barata para empezar, y un sueldo que sube con cada boom de la construcción. |
+| Desventaja | Un préstamo de los años de estudio, y un sueldo que cae cuando se deja de construir. |
+| Se desbloquea | Vive en tres ciudades en una misma vida. |
+
+### Agente inmobiliaria
+
+<img src="../art/clean/portraits/portrait.estate_agent.22.png" alt="Agente inmobiliaria a los 22"> <img src="../art/clean/portraits/portrait.estate_agent.32.png" alt="Agente inmobiliaria a los 32"> <img src="../art/clean/portraits/portrait.estate_agent.45.png" alt="Agente inmobiliaria a los 45"> <img src="../art/clean/portraits/portrait.estate_agent.58.png" alt="Agente inmobiliaria a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Londres, con 2.500 $ |
+| Trabajo | Agente en prácticas (Inmobiliaria) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Austero |
+| Empieza con | Nada más |
+| Ventaja | Comisiones que se disparan en un boom, y los mejores pisos antes de que nadie los vea. |
+| Desventaja | El sueldo más bajo para empezar, entre las casas más caras, y el mayor vaivén de todos los oficios. |
+| Se desbloquea | Ten tres inmuebles alquilados a la vez. |
+
+### Recluta
+
+<img src="../art/clean/portraits/portrait.recruit.22.png" alt="Recluta a los 22"> <img src="../art/clean/portraits/portrait.recruit.32.png" alt="Recluta a los 32"> <img src="../art/clean/portraits/portrait.recruit.45.png" alt="Recluta a los 45"> <img src="../art/clean/portraits/portrait.recruit.58.png" alt="Recluta a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Singapur, con 1.500 $ |
+| Trabajo | Soldado (Fuerzas armadas) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Austero |
+| Empieza con | Nada más |
+| Ventaja | No lo pueden despedir, tiene un punto de foco más cada ronda y una pensión que puede llegar pronto. |
+| Desventaja | Un sueldo modesto que sube despacio. |
+| Se desbloquea | Disponible desde el principio. |
+
 ## Reto de la semana
 
 <img src="../art/clean/cards/card.weekly_challenge.png" alt="Reto de la semana">
@@ -500,6 +560,71 @@ Horas extra: +8 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +25 
 | Director comercial | 180 % del sueldo medio | 18 | +17 |
 | Director de ventas | 240 % del sueldo medio | 28 | +25 |
 
+### Aviación
+
+Horas extra: +6 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +5 %, Desaceleración -10 %, Recesión -35 %.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Segundo oficial | 75 % del sueldo medio | 0 | +4 |
+| Primer oficial | 120 % del sueldo medio | 7 | +9 |
+| Comandante | 170 % del sueldo medio | 18 | +16 |
+| Comandante sénior | 205 % del sueldo medio | 30 | +22 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Volar largo radio**<br>Las rutas largas pagan más y desgastan: husos horarios, noches en vela. | Primer oficial a Comandante | 1 · 3 | 70 %: Las rutas largas pagan: +8 % de sueldo para siempre.<br>30 %: El sueldo sube un 8 %, y el desfase horario te pasa factura en la salud. |
+| **Presentarse a la aerolínea de bandera**<br>La aerolínea nacional elige a sus comandantes entre los mejores. Ayudan los idiomas. | Comandante a Comandante sénior | 1 · 3 | 40 %: La aerolínea de bandera te ficha: subes un puesto, con el uniforme que todos conocen.<br>60 %: Te agradecen el interés.<br>+8 puntos de probabilidad por nivel de Idiomas |
+
+### Arquitectura
+
+Horas extra: +5 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +15 %, Expansión +5 %, Desaceleración -10 %, Recesión -25 %.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Arquitecto júnior | 85 % del sueldo medio | 0 | +4 |
+| Arquitecto de proyecto | 115 % del sueldo medio | 5 | +8 |
+| Arquitecto jefe | 150 % del sueldo medio | 13 | +13 |
+| Socio del estudio | 210 % del sueldo medio | 24 | +20 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Presentarse a un concurso**<br>Un edificio público, contra los mejores estudios. Ayudan los contactos. | Arquitecto de proyecto a Socio del estudio | 1 · 3 | 25 %: Lo ganas: tu nombre en los periódicos y +6 % de sueldo.<br>75 %: Gana otro estudio. Los planos van a un cajón.<br>+8 puntos de probabilidad por nivel de Contactos |
+| **Abrir tu propio estudio**<br>Tu nombre en la puerta y clientes propios: ingresos para siempre, si llegan. | Socio del estudio | 1 · 4 | 55 %: El estudio se llena: ingresos pasivos para siempre.<br>45 %: Los clientes no llegan, y se nota. |
+
+### Inmobiliaria
+
+Horas extra: +10 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +30 %, Expansión +10 %, Desaceleración -15 %, Recesión -35 %.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Agente en prácticas | 55 % del sueldo medio | 0 | +2 |
+| Agente | 88 % del sueldo medio | 4 | +5 |
+| Agente sénior | 128 % del sueldo medio | 10 | +9 |
+| Director de oficina | 180 % del sueldo medio | 20 | +15 |
+| Dueño de la agencia | 235 % del sueldo medio | 32 | +20 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Llevar viviendas de lujo**<br>Las casas más caras de la ciudad y los compradores más duros. Ayuda saber negociar. | Agente a Director de oficina | 1 · 3 | 55 %: Llegan las grandes ventas: +10 % de sueldo para siempre.<br>45 %: Los ricos compran con otro.<br>+8 puntos de probabilidad por nivel de Negociación |
+| **Abrir tu propia agencia**<br>Un escaparate con tu nombre y agentes a tu cargo. | Director de oficina | 1 · 4 | 50 %: La agencia despega: subes un puesto e ingresos para siempre.<br>50 %: La agencia no arranca, y se nota. |
+
+### Fuerzas armadas
+
+Horas extra: +8 % de sueldo esa ronda. Deja tiempo libre: +1 de foco cada ronda.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Soldado | 64 % del sueldo medio | 0 | +4 |
+| Sargento | 82 % del sueldo medio | 5 | +7 |
+| Teniente | 105 % del sueldo medio | 12 | +11 |
+| Capitán | 132 % del sueldo medio | 20 | +15 |
+| Coronel | 168 % del sueldo medio | 32 | +21 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Optar a las fuerzas especiales**<br>Una selección que pocos pasan. Ayuda estar en forma. | Soldado a Teniente | 1 · 3 | 35 %: Pasas la selección: subes un puesto y te dan la boina.<br>65 %: No la pasas, y el cuerpo te lo cobra.<br>+8 puntos de probabilidad por nivel de Salud |
+
 ## Negocios
 
 Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el 50 % y pierde un 8 % de su capital. Se pueden llevar hasta 3. Vendido desde la pestaña vale entre el 70 % y el 100 % de lo que tiene dentro, según la economía; solo una carta paga más.
@@ -535,7 +660,7 @@ Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.
 | Impuesto sobre la renta | 19 % · 30 % · 45 % |
 | Impuesto sobre ganancias | 21 % |
 | Estatus por vivir aquí | +6 |
-| Carreras que paga mejor | Función pública +15 % · Sanidad +10 % · Educación +10 % |
+| Carreras que paga mejor | Función pública +15 % · Sanidad +10 % · Educación +10 % · Arquitectura +10 % |
 
 ### <img src="../art/clean/icons/icon.city_london.png" alt=""> Londres
 
@@ -611,7 +736,7 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 | Impuesto sobre la renta | 5 % · 15 % · 22 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +12 |
-| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % · Educación +25 % |
+| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % · Educación +25 % · Aviación +15 % |
 
 ### <img src="../art/clean/icons/icon.city_bangkok.png" alt=""> Bangkok
 
@@ -649,7 +774,7 @@ Todo funciona, nada baja de precio y los pisos apenas suben.
 | Impuesto sobre la renta | 15 % · 33 % · 45 % |
 | Impuesto sobre ganancias | 20 % |
 | Estatus por vivir aquí | +13 |
-| Carreras que paga mejor | Tecnología +15 % · Ventas +10 % · Hostelería +10 % |
+| Carreras que paga mejor | Tecnología +15 % · Ventas +10 % · Hostelería +10 % · Inmobiliaria +10 % |
 
 ### <img src="../art/clean/icons/icon.city_moscow.png" alt=""> Moscú
 
@@ -668,7 +793,7 @@ Un impuesto plano del trece por ciento y un mercado que se mueve con los tipos.
 | Impuesto sobre la renta | 13 % · 13 % · 15 % |
 | Impuesto sobre ganancias | 13 % |
 | Estatus por vivir aquí | +9 |
-| Carreras que paga mejor | Finanzas +15 % · Tecnología +15 % · Función pública +10 % |
+| Carreras que paga mejor | Finanzas +15 % · Tecnología +15 % · Función pública +10 % · Fuerzas armadas +10 % |
 
 ### <img src="../art/clean/icons/icon.city_mexico_city.png" alt=""> Ciudad de México
 
@@ -946,11 +1071,11 @@ Habilidades: todas, como Finanzas, van del nivel 0 al 3, a 3, 8, 15 puntos, cada
 
 |  | Habilidad | Por nivel | Se practica |
 | --- | --- | --- | --- |
-| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Negociación | +1 % al buscar trabajo, +2 % por ascenso, negocio vendido un 4 % más caro | Buscando trabajo; Ventas, Derecho, Finanzas |
-| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Idiomas | Mudanza un 15 % más barata; desde 2 sin perder puesto; desde 3 la pareja trabaja al llegar | Fuera de la ciudad de origen; Hostelería |
-| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Contactos | +8 puntos al buscar trabajo, +1 de estatus | Socio de un club; Ventas, Influencer, Hostelería, Función pública |
+| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Negociación | +1 % al buscar trabajo, +2 % por ascenso, negocio vendido un 4 % más caro | Buscando trabajo; Ventas, Derecho, Finanzas, Inmobiliaria |
+| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Idiomas | Mudanza un 15 % más barata; desde 2 sin perder puesto; desde 3 la pareja trabaja al llegar | Fuera de la ciudad de origen; Hostelería, Aviación |
+| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Contactos | +8 puntos al buscar trabajo, +1 de estatus | Socio de un club; Ventas, Influencer, Hostelería, Función pública, Inmobiliaria |
 | <img src="../art/clean/icons/icon.skill_management.png" alt=""> | Gestión | +6 % de beneficio, encargado 4 puntos más barato; desde 3 un negocio más | Llevando un negocio |
-| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Salud | Seguro de salud un 20 % más barato; desde 3 +1 de foco | Gimnasio; Sanidad, Medicina |
+| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Salud | Seguro de salud un 20 % más barato; desde 3 +1 de foco | Gimnasio; Sanidad, Medicina, Fuerzas armadas |
 
 Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durante 20 años.
 
@@ -973,7 +1098,7 @@ La sospecha baja 8 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (46)
+### Carrera (58)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1023,6 +1148,18 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.boss_layoffs.png" alt="Una lista en el pasillo"> | **Una lista en el pasillo**<br>Cajas en el pasillo y un directivo con una lista. Mercedes está en la sala donde se hace. | 1. Esperar a la lista<br>2. Pedirle su palabra<br>3. Aceptar la baja voluntaria |
 | <img src="../art/clean/cards/card.classmate_job.png" alt="Trabajo en la empresa de un amigo"> | **Trabajo en la empresa de un amigo**<br>Un café con un compañero de clase. En su empresa contratan, y el puesto es tuyo si lo quieres. | 1. Quedarte donde estás<br>2. Aceptar el puesto<br>3. Aceptarlo, a tu precio |
 | <img src="../art/clean/cards/card.boss_retire.png" alt="Una jubilación"> | **Una jubilación**<br>Mercedes se jubila para cultivar tomates. Te tiende su agenda: «Yo ya no la voy a necesitar». | 1. Un café de despedida<br>2. Quedarte sus contactos<br>3. Pedirle que mire tu negocio |
+| <img src="../art/clean/cards/card.aviation_medical.png" alt="El reconocimiento anual"> | **El reconocimiento anual**<br>En el reconocimiento anual, el médico oye un soplo en tu corazón. Sin el visto bueno de un especialista, la licencia espera. | 1. Esperar a que te den el alta<br>2. Pagar a un especialista |
+| <img src="../art/clean/cards/card.aviation_strike.png" alt="Huelga de pilotos"> | **Huelga de pilotos**<br>El sindicato convoca huelga por los sueldos. La aerolínea necesita a alguien que vuele los vuelos de la mañana. | 1. Volar el vuelo de la mañana<br>2. Sumarte a la huelga |
+| <img src="../art/clean/cards/card.aviation_base_abroad.png" alt="Una base en el extranjero"> | **Una base en el extranjero**<br>La aerolínea abre bases en sus dos centros y pregunta quién se muda con el puesto. La mudanza la paga ella. | 1. Quedarte donde estás<br>2. Irte a la base de Dubái<br>3. Irte a la base de Singapur |
+| <img src="../art/clean/cards/card.aviation_grounded.png" alt="La flota, en tierra"> | **La flota, en tierra**<br>Con esta recesión nadie vuela. Media flota está aparcada en el desierto, y la aerolínea pide a los pilotos que esperen. | 1. Esperar con medio sueldo<br>2. Pasarte a la carga |
+| <img src="../art/clean/cards/card.construction_unpaid.png" alt="El promotor no paga"> | **El promotor no paga**<br>El edificio está en pie y el promotor ya no coge el teléfono. Tus honorarios están en su bolsillo. | 1. Dejarlo estar<br>2. Llevarlo a juicio |
+| <img src="../art/clean/cards/card.construction_collapse.png" alt="Una grieta en el balcón"> | **Una grieta en el balcón**<br>Se ha agrietado un balcón de un bloque que firmaste. No hay heridos, y los periódicos ya saben tu nombre. | 1. Pagar la reparación<br>2. Culpar al constructor |
+| <img src="../art/clean/cards/card.construction_famous_client.png" alt="Un cliente famoso"> | **Un cliente famoso**<br>Una estrella del pop quiere una villa en un acantilado, toda de cristal, y quiere que la dibujes tú. | 1. Rechazar el encargo<br>2. Dibujar la villa |
+| <img src="../art/clean/cards/card.realestate_double_fee.png" alt="Dos comisiones por una venta"> | **Dos comisiones por una venta**<br>El comprador y el vendedor te ofrecen cada uno una comisión, y ninguno sabe del otro. | 1. Jugar limpio<br>2. Cobrar las dos |
+| <img src="../art/clean/cards/card.military_mission.png" alt="Una misión en el extranjero"> | **Una misión en el extranjero**<br>Mandan a la unidad fuera seis meses. Los voluntarios cobran una prima, y de los demás se toma nota. | 1. Quedarte en la base<br>2. Presentarte voluntario |
+| <img src="../art/clean/cards/card.military_twenty_years.png" alt="Veinte años de servicio"> | **Veinte años de servicio**<br>Veinte años de uniforme. Puedes dejarlo ya con una pensión de por vida, y la administración tiene una mesa para ti. | 1. Seguir en el ejército<br>2. Retirarte con la pensión |
+| <img src="../art/clean/cards/card.military_posting.png" alt="Un nuevo destino"> | **Un nuevo destino**<br>El ejército traslada tu unidad al extranjero. La mudanza está pagada, y pedir quedarse es pedir un favor. | 1. Pedir quedarte<br>2. Irte con la unidad a Dubái<br>3. Irte con la unidad a Londres |
+| <img src="../art/clean/cards/card.military_contractor.png" alt="La oferta de la contratista"> | **La oferta de la contratista**<br>Una empresa de seguridad privada busca oficiales como tú en el extranjero, con un sueldo que el ejército ni sueña. | 1. Seguir en el ejército<br>2. Firmar el contrato |
 
 ### Formación (9)
 
@@ -1068,7 +1205,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rich_partner_swindle.png" alt="Tu socio cobra dos veces"> | **Tu socio cobra dos veces**<br>Alguien de la empresa te insinúa que tu socio lleva años cobrándose el sueldo dos veces. | 1. Confiar en él<br>2. Llamar a los auditores<br>3. Revisar las cuentas tú en persona |
 | <img src="../art/clean/cards/card.rich_hostile_bid.png" alt="Una oferta por tu negocio"> | **Una oferta por tu negocio**<br>Un rival diez veces mayor quiere tu negocio, y avisa de que puede ponértelo difícil si dices que no. | 1. Rechazarla<br>2. Vender a su precio<br>3. Plantarles cara |
 
-### Inversión (29)
+### Inversión (30)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1101,8 +1238,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.founder_second.png" alt="Una segunda idea"> | **Una segunda idea**<br>Bea ha vuelto, con cajas, pegatinas y una segunda idea: la misma app, para perros. | 1. Desearle suerte<br>2. Invertir un poco otra vez<br>3. Presentarle a gente |
 | <img src="../art/clean/cards/card.advisor_fund.png" alt="Un fondo garantizado"> | **Un fondo garantizado**<br>Borja, del banco, tiene un fondo para ti: garantizado, dice, y con una comisión pequeñísima. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado en su lugar |
 | <img src="../art/clean/cards/card.founder_bell.png" alt="El toque de campana"> | **El toque de campana**<br>Bea toca la campana en el primer día de su empresa en bolsa. Te saluda desde el escenario. | 1. Aplaudir desde la sala<br>2. Comprar acciones el primer día<br>3. Pedirle trabajo |
+| <img src="../art/clean/cards/card.realestate_off_market.png" alt="Fuera de mercado"> | **Fuera de mercado**<br>Un casero quiere vender en silencio un piso alquilado, antes de anunciarlo. Eres el primero en saberlo. | 1. Pasárselo a un cliente<br>2. Comprarlo tú |
 
-### Vivienda (33)
+### Vivienda (36)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1139,6 +1277,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.landlord_sale.png" alt="El piso, a precio de amigo"> | **El piso, a precio de amigo**<br>don Julián se jubila y se va a la costa. Prefiere venderte el piso a ti antes que a un desconocido. | 1. Seguir de alquiler<br>2. Comprarlo con hipoteca<br>3. Comprarlo al contado |
 | <img src="../art/clean/cards/card.advisor_insurance.png" alt="Un seguro con la hipoteca"> | **Un seguro con la hipoteca**<br>Para tu hipoteca, dice Borja, el banco recomienda encarecidamente su propio seguro. | 1. Dejarlo como está<br>2. Contratar el seguro del banco<br>3. Contratar la misma cobertura fuera |
 | <img src="../art/clean/cards/card.classmate_housewarming.png" alt="La inauguración del piso"> | **La inauguración del piso**<br>Copas en el piso que se acaba de comprar un compañero de clase. Te enseña la caldera como si fuera un recién nacido. | 1. Llevar una planta y volver a casa<br>2. Ponerte a mirar pisos tú también<br>3. Preguntarle cómo lo ha hecho |
+| <img src="../art/clean/cards/card.construction_own_house.png" alt="Una casa diseñada por ti"> | **Una casa diseñada por ti**<br>Llevas años dibujando casas para otros. Sale un solar, y el constructor de confianza te hace precio de gremio. | 1. Seguir dibujando para otros<br>2. Construir tu propia casa |
+| <img src="../art/clean/cards/card.realestate_hurried_seller.png" alt="Un vendedor con prisa"> | **Un vendedor con prisa**<br>Un vendedor tiene que irse antes de fin de mes y acepta cualquier oferta razonable. | 1. Que lo lleve un compañero<br>2. Avisar a tu cliente inversor<br>3. Comprarlo para vivir en él |
+| <img src="../art/clean/cards/card.realestate_bubble.png" alt="Se habla de burbuja"> | **Se habla de burbuja**<br>Los precios nunca han estado tan altos, y en la agencia todos dicen que el techo está cerca. | 1. Aguantar<br>2. Vender tu casa en lo más alto |
 
 ### Estilo de vida (46)
 
