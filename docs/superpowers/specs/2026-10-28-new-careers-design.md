@@ -24,7 +24,7 @@ Salaries are a percent of the city's median (Madrid 32k, London 58k, New York 75
 - **Moves:**
   - *Long-haul* (rung 1–2): the pay goes up 8 %, and health takes a hit 30 % of the time.
   - *The flag carrier* (rung 2–3, helped by languages): a rung up and +3 status, or nothing.
-- **The life, "Pilot cadet":** Madrid, $2k cash, a $70k training loan at 6 % over 8 rounds, Frugal, a room, languages +2.
+- **The life, "Pilot cadet":** Dubai (the airlines' hub, no tax on pay), $2k cash, a $70k training loan at 6 % over 8 rounds, Frugal, a room, languages +2.
 - **Cards:**
   1. *The medical:* a heart murmur at the yearly check. Pay for a specialist (cash) to keep the licence, or be grounded for a round (a rung down).
   2. *The strike:* join it (a round of less pay, then +4 % for good, 60 %) or fly (status −2 among colleagues, pay kept).
@@ -47,7 +47,7 @@ Salaries are a percent of the city's median (Madrid 32k, London 58k, New York 75
 - **Moves:**
   - *Enter a competition* (rung 1–3, helped by network): 25 % a prize (+5 status, +$15k cash), else nothing.
   - *Your own studio* (rung 3): $10k of passive income a year and +2 status, or −3 status if it fails (45 %).
-- **The life, "Architecture graduate":** Madrid, $3k, Frugal, a room, a $25k loan, management +1.
+- **The life, "Architecture graduate":** Mexico City (a city still being built, cheap to start), $3k, Frugal, a room, a $25k loan, management +1.
 - **Cards:**
   1. *Design your own house:* buy a home at 80 % of its price (`property`, `pricePct: 80`), the architect's discount.
   2. *The developer who does not pay:* sue (cash and a round, 60 % you are paid with interest) or let it go (lose the invoice).
@@ -71,7 +71,7 @@ Salaries are a percent of the city's median (Madrid 32k, London 58k, New York 75
 - **Moves:**
   - *The luxury portfolio* (rung 1–3, helped by negotiation): +10 % pay for good (55 %), or nothing.
   - *Open your own agency* (rung 3): a rung up and $12k a year passive (50 %), or −$10k cash.
-- **The life, "Estate agent":** New York, $2.5k, Frugal, a room, negotiation +2, network +1. No debt, low pay.
+- **The life, "Estate agent":** London (the dearest homes, the fattest commissions), $2.5k, Frugal, a room, negotiation +2, network +1. No debt, low pay.
 - **Cards:**
   1. *The off-market flat:* buy a rental before it is listed, at 85 % of its price (`property`, `rented: true`).
   2. *A seller in a hurry:* tell your investor client (+$5k commission) or buy it yourself at 80 % (a mortgage).
@@ -94,12 +94,17 @@ Salaries are a percent of the city's median (Madrid 32k, London 58k, New York 75
 - **Overtime:** 8 %, "Volunteer for a mission". **Study:** "Officer academy". **Job hunt:** "Transfer to another unit". +1 focus a round (life on base is cheap in time).
 - **Moves:**
   - *Special forces selection* (rung 0–2, helped by health): a rung up and +4 status (35 %), else health −1.
-- **The life, "Recruit":** Madrid, $1.5k, Frugal, a room, health +3.
+- **The life, "Recruit":** Singapore (national service, a safe pay), $1.5k, Frugal, a room, health +3.
 - **Cards:**
   1. *A mission abroad:* six months away. +$12k bonus and +3 status, with 20 % an injury (health −2). Or refuse (status −2).
   2. *Twenty years of service* (from round 10): leave with a pension for life (`pension`, `recurring` passive income worth about half the pay) and a civilian job a rung down, or stay on.
   3. *The posting:* moved to another city with the army (`moveCity`), no cost, or ask to stay (a round without promotion).
   4. *The contractor's offer* (rung 2+): private security abroad, pay +60 % for good, health −1 and status −3.
+
+## Cities
+
+Today's twenty lives start two in each of the ten cities. The four new ones go to four of them, each to three: Dubai, Mexico City, London and
+Singapore. Each city's median salary, taxes and prices set the life's difficulty with its career, so each is measured with `pnpm balance`.
 
 ## Pictures
 
