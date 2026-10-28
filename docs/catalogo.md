@@ -400,10 +400,10 @@ Una práctica se juega en este dispositivo con la misma vida y la misma regla, p
 | <img src="../art/clean/icons/icon.rule_no_property.png" alt="Sin inmuebles"> | Sin inmuebles | No puedes comprar ninguna propiedad: alquilas toda la vida. |
 | <img src="../art/clean/icons/icon.rule_start_in_debt.png" alt="Empiezas con deuda"> | Empiezas con deuda | Empiezas con un préstamo de 30.000 $ que devolver. |
 | <img src="../art/clean/icons/icon.rule_no_business.png" alt="Sin negocios"> | Sin negocios | Trabajas para otros toda la vida: nada de negocio propio. |
-| <img src="../art/clean/icons/icon.rule_frugal.png" alt="Vida austera"> | Vida austera | Nada por encima de vivir sencillo, toda la vida. |
+| <img src="../art/clean/icons/icon.rule_frugal.png" alt="Vida austera"> | Vida austera | Nada por encima de vivir normal, toda la vida. |
 | <img src="../art/clean/icons/icon.rule_minimalist.png" alt="Minimalista"> | Minimalista | Nada de la tienda: ni coches, ni relojes, ni viajes. |
 | <img src="../art/clean/icons/icon.rule_honest.png" alt="Contribuyente ejemplar"> | Contribuyente ejemplar | Ni un dólar escondido a Hacienda: nada en negro, ni sociedades fuera, ni cripto callada. |
-| <img src="../art/clean/icons/icon.rule_rich_heir.png" alt="Herencia envenenada"> | Herencia envenenada | Empiezas con 30.000 $ más y una familia que no te deja vivir por debajo de lo acomodado. |
+| <img src="../art/clean/icons/icon.rule_rich_heir.png" alt="Herencia envenenada"> | Herencia envenenada | Empiezas con 30.000 $ más y una familia que no te deja vivir por debajo del lujo. |
 
 ## Carreras
 

@@ -1774,7 +1774,7 @@
       },
       "frugal": {
         "name": "Vida austera",
-        "about": "Nada por encima de vivir sencillo, toda la vida."
+        "about": "Nada por encima de vivir normal, toda la vida."
       },
       "minimalist": {
         "name": "Minimalista",
@@ -1786,7 +1786,7 @@
       },
       "richHeir": {
         "name": "Herencia envenenada",
-        "about": "Empiezas con {amount} más y una familia que no te deja vivir por debajo de lo acomodado."
+        "about": "Empiezas con {amount} más y una familia que no te deja vivir por debajo del lujo."
       }
     },
     "cardPending": "{days, plural, =0 {Acaba hoy} one {Queda # día} other {Quedan # días}}",

@@ -1774,7 +1774,7 @@
       },
       "frugal": {
         "name": "Austerity",
-        "about": "No way of living above the plain one, the whole life through."
+        "about": "No way of living above the normal one, the whole life through."
       },
       "minimalist": {
         "name": "Minimalist",
@@ -1786,7 +1786,7 @@
       },
       "richHeir": {
         "name": "Poisoned inheritance",
-        "about": "You start with {amount} more, and a family who will not see you live below the comfortable."
+        "about": "You start with {amount} more, and a family who will not see you live any less than lavishly."
       }
     },
     "cardPending": "{days, plural, =0 {Ends today} one {# day left} other {# days left}}",

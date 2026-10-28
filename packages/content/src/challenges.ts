@@ -122,13 +122,13 @@ export function challengeStart(challenge: Challenge, life: LifeDef): StartConfig
     start.debts.push({ kind: 'personalLoan', principal: CHALLENGE_DEBT, fixedRateBp: market.start.policyRateBp + debt.personalLoanSpreadBp, roundsLeft: debt.personalLoanTermRounds });
   }
   if (challenge.rule === 'richHeir') {
-    // Money from the family, and the family's idea of how to live: never below the comfortable.
+    // Money from the family, and the family's idea of how to live: never below the lavish.
     start.cash += HEIR_CASH;
     if (start.life) start.life = { ...start.life, minLifestyleTier: 3 };
     start.lifestyleTier = 3;
   }
   if (challenge.rule === 'frugal') {
-    // A life of austerity starts plainly, whatever the life would have chosen.
+    // A life of austerity starts no higher than the normal way of living, whatever the life would have chosen.
     start.lifestyleTier = Math.min(start.lifestyleTier, 1) as typeof start.lifestyleTier;
     if (start.life) start.life = { ...start.life, minLifestyleTier: Math.min(start.life.minLifestyleTier ?? 0, 1) as typeof start.lifestyleTier };
   }
