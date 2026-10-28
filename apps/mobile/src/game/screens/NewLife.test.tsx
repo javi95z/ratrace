@@ -98,20 +98,20 @@ describe('the grid of lives', () => {
     await services.store.saveProfile({ ...newProfile(), unlocked: { heir: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
     const heir = await screen.findByRole('button', { name: /^Heir, (?!locked)/ });
-    expect(tiles().indexOf(heir)).toBeLessThan(7);
-    expect(tiles().filter((tile) => / locked$/.test(tile.getAttribute('aria-label') ?? ''))).toHaveLength(13);
+    expect(tiles().indexOf(heir)).toBeLessThan(8);
+    expect(tiles().filter((tile) => / locked$/.test(tile.getAttribute('aria-label') ?? ''))).toHaveLength(16);
     fireEvent.click(heir);
     fireEvent.click(within(await sheetOf(/^Heir/)).getByRole('button', START));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/play'));
     expect((await saved(services))?.lifeId).toBe('heir');
   });
 
-  it('has twenty open tiles and no locked one for a player who has unlocked every life', async () => {
+  it('has twenty-four open tiles and no locked one for a player who has unlocked every life', async () => {
     const services = memoryServices();
     const all = lives.filter((life) => life.unlock !== 'default').map((life) => life.id);
     await services.store.saveProfile({ ...newProfile(), unlocked: Object.fromEntries(all.map((id, at) => [id, { at, gameId: `g${at}` }])) });
     renderGame(<NewLife />, services);
-    await waitFor(() => expect(tiles().filter((tile) => !/ locked$/.test(tile.getAttribute('aria-label') ?? ''))).toHaveLength(20));
+    await waitFor(() => expect(tiles().filter((tile) => !/ locked$/.test(tile.getAttribute('aria-label') ?? ''))).toHaveLength(24));
     expect(screen.queryByRole('button', { name: / locked$/ })).toBeNull();
   });
 
@@ -186,8 +186,8 @@ describe('the sheet of a life', () => {
     await screen.findByRole('button', { name: /^Nurse, / });
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.99);
     fireEvent.click(screen.getByRole('button', { name: /At random/ }));
-    // The others than the first, in their order: the teacher is the last.
-    expect(await sheetOf(/^Teacher/)).toBeTruthy();
+    // The others than the first, in their order: the recruit is the last.
+    expect(await sheetOf(/^Recruit/)).toBeTruthy();
     random.mockRestore();
     expect(await saved(services)).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
