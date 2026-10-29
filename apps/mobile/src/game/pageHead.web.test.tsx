@@ -44,7 +44,7 @@ describe('PageHead', () => {
   it('writes the title of /es/rankings as the Next web does, and its canonical address', () => {
     params.locale = 'es';
     render(<PageHead page="rankings" />);
-    expect(document.title).toBe('Clasificaciones · The Rat Race');
+    expect(document.title).toBe('Rankings · The Rat Race');
     expect(inTheHead()).toContainEqual({ tag: 'link', rel: 'canonical', href: new URL('/es/rankings', SITE_URL).href });
     expect(inTheHead().filter((tag) => tag.tag === 'link' && tag.rel === 'alternate').map((tag) => (tag as { hrefLang: string }).hrefLang)).toEqual(['en', 'es', 'ru', 'x-default']);
   });

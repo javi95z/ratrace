@@ -80,7 +80,7 @@ Empieza como enfermera, ingeniero, funcionario y más. Vive en Madrid, Londres, 
 Jefes, caseros, un cuñado con un soplo de la bolsa, mercados que suben y se hunden. Cada vida es distinta.
 
 JUEGA CON OTROS
-Reto semanal: todos juegan la misma vida con las mismas cartas. Clasificaciones con tus amigos y con el mundo. Partidas con amigos por código, o una partida rápida contra desconocidos y ratas.
+Reto semanal: todos juegan la misma vida con las mismas cartas. Rankings con tus amigos y con el mundo. Partidas con amigos por código, o una partida rápida contra desconocidos y ratas.
 
 63 INSIGNIAS PARA COLECCIONAR
 Unas por hacerte de oro y otras por equivocarte a lo grande.
@@ -143,5 +143,5 @@ Todo en `docs/play/graphics/`, hecho con los píxeles del juego:
 | Gráfico destacado (feature graphic) | 1024 × 500 PNG | `feature-1024x500.png` | el mismo |
 | Capturas de teléfono, 8 por idioma | 1080 × 1920 (9:16) | `en/`, `es/`, `ru/`: `phone-<n>-<escena>.png` | `scripts/playShots.ts` (ver su cabecera: la web de la app en desarrollo en 8091) |
 
-Orden de las capturas: elegir vida, una carta, el mercado, el periódico, clasificaciones, una partida con otros ganada, la colección, salir de la
+Orden de las capturas: elegir vida, una carta, el mercado, el periódico, los rankings, una partida con otros ganada, la colección, salir de la
 rueda. Se suben las de cada idioma en su traducción de la ficha; las de inglés son las de por defecto.

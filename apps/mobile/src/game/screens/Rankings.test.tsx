@@ -287,7 +287,7 @@ describe('the rankings', () => {
     const away = community();
     away.state.board = () => null;
     show(away.community, 'es');
-    const said = await screen.findByText('No se han podido leer las clasificaciones. Inténtalo más tarde.');
+    const said = await screen.findByText('No se han podido leer los rankings. Inténtalo más tarde.');
     expect(said.closest('[role="status"]')).not.toBeNull();
   });
 

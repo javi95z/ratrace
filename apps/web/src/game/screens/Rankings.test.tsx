@@ -163,7 +163,7 @@ describe('the rankings', () => {
     const away = community();
     away.state.board = () => null;
     show(away.community, 'es');
-    expect(await screen.findByText('No se han podido leer las clasificaciones. Inténtalo más tarde.')).toBeTruthy();
+    expect(await screen.findByText('No se han podido leer los rankings. Inténtalo más tarde.')).toBeTruthy();
   });
 
   it('lets the player choose the name they appear under, and checks how it is written before it asks', async () => {

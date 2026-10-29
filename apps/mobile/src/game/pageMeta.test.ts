@@ -69,7 +69,7 @@ describe('the head of a page', () => {
   it('is the web\'s exactly when the site is the web\'s: the canonical of /es/rankings against the one Next wrote', () => {
     const tags = headTagsOf('es', 'rankings', wordsOf('es'), WEB_SITE).map(line);
     expect(tags).toContain(`link:canonical=${new URL('/es/rankings', WEB_SITE).href}`);
-    expect(tags).toContain('title=Clasificaciones · The Rat Race');
+    expect(tags).toContain('title=Rankings · The Rat Race');
     expect(SITE_URL.href).toBe(WEB_SITE.href);
   });
 

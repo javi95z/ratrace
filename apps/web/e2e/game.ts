@@ -16,7 +16,7 @@ export const WORDS = {
     play: 'Jugar la ronda', nextRound: 'Siguiente ronda', finish: 'Ver cómo acabó', theEnd: 'Fin', news: 'Noticias', choices: /^Tus opciones/,
     happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => new RegExp(`^(Ronda )?${n} de 20( ·|$)`),
     continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
-    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Negocios', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Clasificaciones', guide: 'Guía', skipGuide: 'Quitar la guía',
+    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Negocios', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Rankings', guide: 'Guía', skipGuide: 'Quitar la guía',
   },
   ru: {
     newLife: 'Новая жизнь', start: 'Начать эту жизнь', toCards: 'Что приготовила жизнь', nextCard: 'Следующая карта', toFinance: 'К финансам',

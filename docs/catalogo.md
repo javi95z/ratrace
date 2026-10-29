@@ -386,11 +386,11 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 <img src="../art/clean/cards/card.weekly_challenge.png" alt="Reto de la semana">
 
-La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Cuenta un intento al día, y la clasificación guarda el mejor; practica cuantas veces quieras.
+La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Cuenta un intento al día, y el ranking guarda el mejor; practica cuantas veces quieras.
 
 Cada semana ISO va de lunes a domingo en UTC. La semana determina una vida y una regla para todos; el servidor guarda la semilla que hace iguales los mercados y las cartas del intento oficial.
 
-Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para la clasificación.
+Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para el ranking.
 
 |  | Regla | Condición |
 | --- | --- | --- |
