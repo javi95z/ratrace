@@ -1389,7 +1389,9 @@
     "hiddenName": "???",
     "hiddenHint": "Something to do with: {group}",
     "legendaryKicker": "Legendary badge",
-    "legendaryGo": "Continue"
+    "legendaryGo": "Continue",
+    "accept": "Accept",
+    "step": "{n} of {total}"
   },
   "collection": {
     "title": "Collection",

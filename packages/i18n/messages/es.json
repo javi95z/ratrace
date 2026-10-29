@@ -1389,7 +1389,9 @@
     "hiddenName": "¿?",
     "hiddenHint": "Algo relacionado con: {group}",
     "legendaryKicker": "Insignia legendaria",
-    "legendaryGo": "Continuar"
+    "legendaryGo": "Continuar",
+    "accept": "Aceptar",
+    "step": "{n} de {total}"
   },
   "collection": {
     "title": "Colección",

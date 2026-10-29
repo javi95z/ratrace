@@ -1389,7 +1389,9 @@
     "hiddenName": "???",
     "hiddenHint": "Что-то связанное с: {group}",
     "legendaryKicker": "Легендарный значок",
-    "legendaryGo": "Дальше"
+    "legendaryGo": "Дальше",
+    "accept": "Принять",
+    "step": "{n} из {total}"
   },
   "collection": {
     "title": "Коллекция",
