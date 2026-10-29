@@ -36,7 +36,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(338);
+    expect(content.cards).toHaveLength(342);
     expect(lives).toHaveLength(24);
   });
 
@@ -52,7 +52,8 @@ describe('the v1 content', () => {
       // and the people, deeper: one more in career, investing, housing, family and lifestyle.
       // Content 1.52: the four careers added last, four cards each: twelve in career, three in housing and one in investing;
       // and three for each of the eleven careers before them: thirty-two in career and one in business.
-      career: 90, education: 9, business: 26, investing: 30, housing: 36, lifestyle: 46,
+      // Content 1.53: four for the well connected, two in career and two in investing.
+      career: 92, education: 9, business: 26, investing: 32, housing: 36, lifestyle: 46,
       family: 28, health: 6, luck: 23, world: 18, tax: 14, laterLife: 12,
     });
   });

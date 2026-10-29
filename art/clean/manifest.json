@@ -4901,6 +4901,26 @@
       "width": 288,
       "height": 120
     },
+    "card.network_investors": {
+      "file": "cards/card.network_investors.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.network_board_seat": {
+      "file": "cards/card.network_board_seat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.network_listing": {
+      "file": "cards/card.network_listing.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.network_referral": {
+      "file": "cards/card.network_referral.png",
+      "width": 288,
+      "height": 120
+    },
     "work.aviation.0": {
       "file": "cards/work.aviation.0.png",
       "width": 288,

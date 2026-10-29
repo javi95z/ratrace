@@ -1562,4 +1562,21 @@ export const cards: Record<string, CardText> = {
     'Leave with your clients',
     ['Ask your firm to match it', 'Your firm matches part of it to keep you.', 'Your firm calls your bluff. Now everyone knows you looked elsewhere.'],
   ]),
+  network_investors: c('Dinner with investors', 'A table of people who fund companies. Over dessert, one of them offers you a place in their next private round.', [
+    'Just listen',
+    ['Join the round', 'The company is bought. Your stake comes back four times over.', 'The company runs out of money, and your stake with it.'],
+  ]),
+  network_board_seat: c('A seat on the board', 'A company you know well wants you on its board: a fee every year, and a meeting that eats into every month.', [
+    'Turn it down',
+    'Take the seat',
+  ]),
+  network_listing: c('Shares below the market', '{asset:nvidia} is selling new shares to a few chosen buyers, below the market price. A banker you know can get you in.', [
+    'Pass',
+    'Take a small allocation',
+    'Take a large allocation',
+  ]),
+  network_referral: c('A word in the right ear', 'A contact has put your name forward for the post above yours. The interview is next week.', [
+    'Thank them',
+    ['Go to the interview', 'They offer you the post.', 'They pick someone from inside. Your contact is sorry.'],
+  ]),
 };

@@ -365,6 +365,11 @@ export const cardArt: Record<string, string> = {
   sales_giant_client: scene('sales_giant_client'),
   sales_quota: scene('sales_quota'),
   sales_poached: scene('sales_poached'),
+  // Content 1.53: four cards for the well connected (cards-64, stand-ins until drawn).
+  network_investors: scene('network_investors'),
+  network_board_seat: scene('network_board_seat'),
+  network_listing: scene('network_listing'),
+  network_referral: scene('network_referral'),
 };
 
 /**

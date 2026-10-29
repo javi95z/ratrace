@@ -447,4 +447,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   sales_giant_client: ['Se cierra el trato, se reparte la comisión y os invitáis a cenar.', null],
   sales_quota: [null, null, null],
   sales_poached: ['Te quedas. Tu jefe nunca sabrá de la llamada.', 'Empresa nueva, los mismos clientes y antiguos compañeros que ya no saludan.', null],
+  network_investors: ['Una buena cena, y una mesa que ahora sabe tu nombre.', null],
+  network_board_seat: ['Das las gracias. Tus semanas siguen siendo tuyas.', 'Una retribución cada año, tu nombre en la memoria y una tarde al mes que ya no es tuya.'],
+  network_listing: ['Tus acciones se las lleva otro.', 'Acciones al precio de los de dentro. Ahora miras el mercado de chips.', 'Un buen trozo al precio de los de dentro, y mucho en juego en una sola empresa.'],
+  network_referral: ['Una comida para darle las gracias, y un contacto que no se enfría.', null],
 };

@@ -1562,4 +1562,21 @@ export const cards: Record<string, CardText> = {
     'Irte con tus clientes',
     ['Pedir que te igualen la oferta', 'Tu empresa iguala parte de la oferta para retenerte.', 'Tu empresa no se lo cree. Ahora todos saben que buscabas fuera.'],
   ]),
+  network_investors: c('Cena con inversores', 'Una mesa de gente que financia empresas. En el postre, uno te ofrece entrar en su próxima ronda privada.', [
+    'Solo escuchar',
+    ['Entrar en la ronda', 'Compran la empresa. Tu parte vuelve multiplicada por cuatro.', 'La empresa se queda sin dinero, y tu parte con ella.'],
+  ]),
+  network_board_seat: c('Un puesto en el consejo', 'Una empresa que conoces bien te quiere en su consejo: una retribución cada año y una reunión que se come parte de cada mes.', [
+    'Rechazarlo',
+    'Aceptar el puesto',
+  ]),
+  network_listing: c('Acciones por debajo del mercado', '{asset:nvidia} vende acciones nuevas a unos pocos compradores elegidos, por debajo del precio de mercado. Un banquero que conoces puede meterte.', [
+    'Pasar',
+    'Pedir un paquete pequeño',
+    'Pedir un paquete grande',
+  ]),
+  network_referral: c('Una palabra al oído adecuado', 'Un contacto ha dado tu nombre para el puesto de encima del tuyo. La entrevista es la semana que viene.', [
+    'Darle las gracias',
+    ['Ir a la entrevista', 'Te ofrecen el puesto.', 'Eligen a alguien de dentro. Tu contacto lo siente.'],
+  ]),
 };

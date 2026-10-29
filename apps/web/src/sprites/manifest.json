@@ -1829,6 +1829,26 @@
     "w": 288,
     "h": 120
   },
+  "card.network_board_seat": {
+    "src": "cards/card.network_board_seat.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.network_investors": {
+    "src": "cards/card.network_investors.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.network_listing": {
+    "src": "cards/card.network_listing.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.network_referral": {
+    "src": "cards/card.network_referral.png",
+    "w": 288,
+    "h": 120
+  },
   "card.newsroom": {
     "src": "cards/card.newsroom.png",
     "w": 288,
