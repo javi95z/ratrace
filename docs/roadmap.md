@@ -34,6 +34,12 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 20 | Phone apps | Android first, as the installable game wrapped for Google Play (about three weeks, most of it Google's closed test); iPhone later, with Capacitor or Expo on top of the shared packages | Planned | M | P3 |
 | 21 | Express life | A quick mode of ten rounds | Parked | M | P3 |
 
+## Rules to fix with the next version bump
+
+Small faults the client only works around; each needs an engine change, so a new `ENGINE_VERSION`, and goes in with the next one:
+
+- A business run full time still accepts a `tendBusiness` order and charges its point of focus for nothing. The app drops the order when the player goes full time (2026-10-29), but one path still spends it: back to the old job, "Run it yourself" switched on, then the move back cancelled. The engine should refuse `tendBusiness` (or charge nothing) for a business run full time.
+
 ## In the drawer
 
 Ideas kept for later, from looking at Busybodies (playbusybodies.com, a cosy settlement game for the browser), 2026-10-19:
