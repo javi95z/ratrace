@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '@ratrace/i18n/lo
 import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useMemo } from 'react';
 import { Language } from '../ui/text';
+import { cardWordsReady, loadCardWords } from './languageWords';
 import { PAGES, type Page } from './pageList';
 import { SITE_URL } from './site';
 
@@ -67,14 +68,26 @@ export interface Go {
   home(): void;
 }
 
+/** The pages where a life is played, which read the cards' text: the web loads it apart (`languageWords.web.ts`), and a move to one waits for it. */
+const PLAYING: ReadonlySet<Page> = new Set<Page>(['play', 'room']);
+
+/**
+ * A move to a page, made at once, or, to a page that plays a life in a language whose cards are not in yet (the web), once they are: the page opens
+ * with them, never empty for a moment. A fetch that fails moves all the same: the page then waits for them itself, and says so if they cannot be had.
+ */
+function moveTo(page: Page, locale: string, move: () => void): void {
+  if (!PLAYING.has(page) || !isLocale(locale) || cardWordsReady(locale)) move();
+  else loadCardWords(locale).then(move, move);
+}
+
 /** The moves, in `param`'s language if it is one of the game's, else in the language of the game (`speaking`). */
 function useGoIn(param: unknown, speaking: string): Go {
   const router = useRouter();
   const locale = isLocale(param) ? param : speaking;
   return useMemo<Go>(
     () => ({
-      push: (page, options) => router.push(hrefOf(page, { locale, ...options })),
-      replace: (page, options) => router.replace(hrefOf(page, { locale, ...options })),
+      push: (page, options) => moveTo(page, options?.locale ?? locale, () => router.push(hrefOf(page, { locale, ...options }))),
+      replace: (page, options) => moveTo(page, options?.locale ?? locale, () => router.replace(hrefOf(page, { locale, ...options }))),
       home: () => router.dismissTo(hrefOf('', { locale })),
     }),
     [router, locale],

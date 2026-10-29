@@ -1,4 +1,4 @@
-import { textFor, type ContentText, type Names } from '@ratrace/content';
+import { cardsFor, textFor, type ContentText, type Names } from '@ratrace/content';
 import { messagesFor, type Messages } from '@ratrace/i18n';
 import type { Locale } from '@ratrace/i18n/locales';
 import { useMemo } from 'react';
@@ -32,6 +32,31 @@ export function languageReady(locale: Locale): boolean {
 
 /** Loads a language's words ahead of the game speaking it: nothing to load on the phone. */
 export function loadLanguageWords(locale: Locale): Promise<void> {
+  void locale;
+  return Promise.resolve();
+}
+
+/** The cards' text of each language, every name filled in, made once each. */
+const cards = new Map<Locale, ContentText['cards']>();
+
+/** The cards' text in a language, every name filled in: there at once, on the phone (the web loads it where a life is played). */
+export function useCardText(locale: Locale): ContentText['cards'] {
+  let known = cards.get(locale);
+  if (known === undefined) {
+    known = cardsFor(locale);
+    cards.set(locale, known);
+  }
+  return known;
+}
+
+/** Whether a language's cards can be read at once: always, on the phone. */
+export function cardWordsReady(locale: Locale): boolean {
+  void locale;
+  return true;
+}
+
+/** Loads a language's cards ahead of a life in play: nothing to load on the phone. */
+export function loadCardWords(locale: Locale): Promise<void> {
   void locale;
   return Promise.resolve();
 }

@@ -8,6 +8,8 @@ import { afterEach, expect, test, vi } from 'vitest';
  */
 
 const loaded = { new: 0, play: 0 };
+const cards: string[] = [];
+vi.mock('./languageWords', () => ({ loadCardWords: (locale: string) => (cards.push(locale), Promise.resolve()) }));
 vi.mock('../app/[locale]/new', () => {
   loaded.new += 1;
   return { default: () => null };
@@ -23,23 +25,31 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const { Language } = await import('../ui/text');
+
 function FrontDoor() {
   useWarmPages();
   return null;
 }
 
-test('loads the code of New and Play once the page is idle, and not before', async () => {
+test('loads the code of New and Play once the page is idle, and the cards of its language a life is played with, and not before', async () => {
   const idle: Array<() => void> = [];
   vi.stubGlobal('requestIdleCallback', (run: () => void) => idle.push(run));
   vi.stubGlobal('cancelIdleCallback', () => undefined);
-  render(<FrontDoor />);
+  render(
+    <Language.Provider value="es">
+      <FrontDoor />
+    </Language.Provider>,
+  );
   await act(async () => {
     await new Promise((settled) => setTimeout(settled, 0));
   });
   expect(loaded).toEqual({ new: 0, play: 0 });
+  expect(cards).toEqual([]);
   await act(async () => {
     for (const run of idle.splice(0)) run();
     await new Promise((settled) => setTimeout(settled, 0));
   });
   expect(loaded).toEqual({ new: 1, play: 1 });
+  expect(cards).toEqual(['es']);
 });

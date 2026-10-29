@@ -14,7 +14,7 @@ import { Sprite } from '../../ui/Sprite';
 import { bannerSize, shrunkTo, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
-import { useGame, useInRoom, useSaving, useSettings, useT, useWords } from '../context';
+import { useCards, useGame, useInRoom, useSaving, useSettings, useT, useWords } from '../context';
 import { useOwnT } from '../ownWords';
 import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
@@ -377,6 +377,7 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
   const life = useT('finance.lifestyle');
   const estate = useT('finance.property');
   const { content, text, names, fmt } = useWords();
+  const cards = useCards();
   const p = shown.player;
   const living = quoteLiving(content, shown);
   const perYear = (cents: number) => common('perYear', { amount: fmt.money(cents) });
@@ -477,12 +478,12 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
                 <View role="list" style={{ marginTop: 6, gap: 2 }}>
                   {cover.pays.map(({ cardId, pct }) => (
                     <View role="listitem" key={cardId}>
-                      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-200">{t('pays', { pct, card: text.cards[cardId].title })}</ReadText>
+                      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-200">{t('pays', { pct, card: cards[cardId].title })}</ReadText>
                     </View>
                   ))}
                   {cover.opens.map((cardId) => (
                     <View role="listitem" key={cardId}>
-                      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-200">{t('opens', { card: text.cards[cardId].title })}</ReadText>
+                      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-200">{t('opens', { card: cards[cardId].title })}</ReadText>
                     </View>
                   ))}
                 </View>

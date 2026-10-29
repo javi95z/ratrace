@@ -16,7 +16,7 @@ import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, GUTTER, SHELL_WIDTH } from '../../ui/theme';
-import { useGame, useProfile, useRanking, useRuns, useSettings, useT, useWords } from '../context';
+import { useCardsAhead, useGame, useProfile, useRanking, useRuns, useSettings, useT, useWords } from '../context';
 import { anotherLife } from '../lives';
 import { BackLink } from './BackLink';
 import { LifeFace } from './LifeFace';
@@ -204,6 +204,8 @@ function InProgress() {
  * the server) or their own, and a ranked life of theirs in progress on another device is asked about, never ended by starting here.
  */
 export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
+  // The life begun here plays its cards: their words are fetched while the player chooses (the web's, languageWords.web.ts).
+  useCardsAhead();
   const t = useT('newLife');
   const common = useT('common');
   const go = useGo();

@@ -27,7 +27,7 @@ import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS, EXTRA } from '../../ui/theme';
-import { GameScope, useClock, useCommunity, useGame, useProfile, useRoom, useSettings, useTrack, useWords } from '../context';
+import { GameScope, useCardsAhead, useClock, useCommunity, useGame, useProfile, useRoom, useSettings, useTrack, useWords } from '../context';
 import { lifeRows } from '../lives';
 import { useGo } from '../pages';
 import { useOwnT } from '../ownWords';
@@ -135,6 +135,8 @@ export interface Answering {
  * its notice's button, answered here whatever the page shows.
  */
 export function Room({ code, friend, answering }: { code?: string; friend?: string; answering?: Answering } = {}) {
+  // The game the room begins plays its cards: their words are fetched while the lobby waits, so it opens with them (the web's, languageWords.web.ts).
+  useCardsAhead();
   const [told, setTold] = useState<string | null>(null);
   // Moved on as a request is answered from a notice: the friends on the page are read again.
   const [friendsTurn, setFriendsTurn] = useState(0);

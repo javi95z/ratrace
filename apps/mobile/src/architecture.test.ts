@@ -467,6 +467,14 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(/\bhitSlop\b/.test('const a = 1; // no hitSlop here'.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).toBe(false);
   });
 
+  it('reads a card\'s text only through `useCards` (the web loads the cards apart, and leaves the words every page speaks without them), never from `text.cards`', () => {
+    const CARDS = /\btext\??\.cards\b/;
+    const code = (path: string) => readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    expect(mine.filter((path) => !/\.test\.tsx?$/.test(path) && CARDS.test(code(path))).map(rel)).toEqual([]);
+    expect(CARDS.test('const written = words.text.cards[def.id];')).toBe(true);
+    expect(CARDS.test('const written = cards[def.id]; // not text.cards'.replace(/\/\/.*$/gm, ''))).toBe(false);
+  });
+
   it('draws nothing with Skia in the game: no file under game/ names it or takes the kit\'s canvas, so the web export loads none of it for a screen (the share card, whose web twin comes later, is the one exception)', () => {
     const SKIA = /['"`]@shopify\/react-native-skia(\/[^'"`]*)?['"`]/;
     const CANVAS = /^@\/ui\/Canvas(\.web)?$/;

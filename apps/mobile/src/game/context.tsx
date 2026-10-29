@@ -1,4 +1,4 @@
-import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives, type ContentText } from '@ratrace/content';
 import type { BasketKeep } from '@ratrace/core/game/basket';
 import { bestsOfRuns, memoryMilestones, withBests } from '@ratrace/core/game/lifeMilestones';
 import type { MilestoneKeep } from '@ratrace/core/game/lifeMilestones';
@@ -60,7 +60,7 @@ import { useLanguage } from './useLanguage';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
 import { phoneMilestones } from './phoneMilestones';
-import { useContentText } from './languageWords';
+import { loadCardWords, useCardText, useContentText } from './languageWords';
 import { useT, WordsProvider } from './words';
 
 export { useT } from './words';
@@ -851,6 +851,21 @@ export const useClock = (): (() => number) => useGameContext().now;
 
 /** The content with its text and names in the language in use, and how numbers are written. */
 export const useWords = (): Words => useGameContext().words;
+
+/**
+ * The cards' text in the game's language, every name filled in: what a life in play reads of a card (its title, its body, its options and what each
+ * brings). The web loads it apart from the words every page speaks (`languageWords.web.ts`): the part of a page that reads it waits until it is in,
+ * and a move to a page that plays a life waits for it first (`pages.ts`). Never `useWords().text.cards`, which the web leaves empty.
+ */
+export const useCards = (): ContentText['cards'] => useCardText(useGameContext().locale);
+
+/** Starts loading the cards' text in the game's language, without waiting for it: a page from which a life begins (a room's lobby, a new life). */
+export function useCardsAhead(): void {
+  const { locale } = useGameContext();
+  useEffect(() => {
+    void loadCardWords(locale).catch(() => undefined);
+  }, [locale]);
+}
 
 /**
  * True where motion is to be left out: the OS asks for it, or the game's setting says so. What only moves is then not

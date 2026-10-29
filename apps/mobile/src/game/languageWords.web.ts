@@ -1,5 +1,5 @@
-import { textFor, type ContentText, type Names } from '@ratrace/content';
-import { addText } from '@ratrace/content/text/languages';
+import { cardsFor, textFor, type ContentText, type Names } from '@ratrace/content';
+import { addCards, addText } from '@ratrace/content/text/languages';
 import type { Messages } from '@ratrace/i18n';
 import type { Locale } from '@ratrace/i18n/locales';
 import { use, useMemo } from 'react';
@@ -15,11 +15,19 @@ import { use, useMemo } from 'react';
 
 /** One language's chunk, as `languages/<locale>.ts` gives it. */
 type Language = typeof import('./languages/en');
+/** One language's cards, a chunk of their own (`cardWords/<locale>.ts`): only a life in play reads them, and they weigh the most of its words. */
+type CardWords = typeof import('./cardWords/en');
 
 const CHUNKS: Readonly<Record<Locale, () => Promise<Language>>> = {
   en: () => import('./languages/en'),
   es: () => import('./languages/es'),
   ru: () => import('./languages/ru'),
+};
+
+const CARD_CHUNKS: Readonly<Record<Locale, () => Promise<CardWords>>> = {
+  en: () => import('./cardWords/en'),
+  es: () => import('./cardWords/es'),
+  ru: () => import('./cardWords/ru'),
 };
 
 /**
@@ -48,9 +56,19 @@ const messages = new Map<Locale, Messages>();
 /** Each language asked for: one fetch for every place that asks. A fetch that failed is kept as it failed, until it is asked for again (`loadLanguageWords`). */
 const loading = new Map<Locale, Load>();
 
+/** The cards of each language in, by language, every name filled in. */
+const cards = new Map<Locale, ContentText['cards']>();
+/** Each language's cards asked for: one fetch for every place that asks, a failed one kept until asked for again (`loadCardWords`). */
+const cardLoading = new Map<Locale, Load>();
+
 function add(locale: Locale, language: Language): void {
-  addText(locale, language.text, language.after);
+  addText(locale, language.text);
   messages.set(locale, language.messages as Messages);
+}
+
+function addCardWords(locale: Locale, words: CardWords): void {
+  addCards(locale, words.cards, words.after);
+  cards.delete(locale);
 }
 
 if (process.env.EXPO_SERVER) {
@@ -58,6 +76,9 @@ if (process.env.EXPO_SERVER) {
   add('en', require('./languages/en') as Language);
   add('es', require('./languages/es') as Language);
   add('ru', require('./languages/ru') as Language);
+  addCardWords('en', require('./cardWords/en') as CardWords);
+  addCardWords('es', require('./cardWords/es') as CardWords);
+  addCardWords('ru', require('./cardWords/ru') as CardWords);
 }
 
 /** The interface's words in a language, where they are in; nothing until then (nothing waits for them: the page of a fault, `PageFault.web.tsx`). */
@@ -106,4 +127,35 @@ export function useMessages(locale: Locale): Messages {
 export function useContentText(locale: Locale): { text: ContentText; names: Names } {
   use(wordsLoad(locale));
   return useMemo(() => textFor(locale), [locale]);
+}
+
+/** Whether a language's cards can be read at once (they are in). */
+export function cardWordsReady(locale: Locale): boolean {
+  const load = cardLoading.get(locale);
+  return process.env.EXPO_SERVER ? true : load !== undefined && (load as Load & { status?: string }).status === 'fulfilled';
+}
+
+/**
+ * Loads a language's cards (their chunk), once: what a life in play waits on, and what a move to its page waits for first (`pages.ts`), so the page
+ * opens with them in. One whose fetch failed is asked again by whoever asks next this way; a part of a page drawn meanwhile is told it failed.
+ */
+export function loadCardWords(locale: Locale): Load {
+  const known = cardLoading.get(locale);
+  if (known && !failed(known)) return known;
+  const load: Load = process.env.EXPO_SERVER
+    ? Object.assign(Promise.resolve(), { status: 'fulfilled' as const })
+    : readable(CARD_CHUNKS[locale]().then((words) => addCardWords(locale, words)));
+  cardLoading.set(locale, load);
+  return load;
+}
+
+/** The cards' text in a language, every name filled in, once it is in: until then the part of the page that reads it waits (`use`). */
+export function useCardText(locale: Locale): ContentText['cards'] {
+  use(cardLoading.get(locale) ?? loadCardWords(locale));
+  let known = cards.get(locale);
+  if (known === undefined) {
+    known = cardsFor(locale);
+    cards.set(locale, known);
+  }
+  return known;
 }

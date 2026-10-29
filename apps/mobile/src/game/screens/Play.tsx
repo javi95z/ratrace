@@ -19,7 +19,7 @@ import { COLORS } from '../../ui/theme';
 import { useIsDesk } from '../../ui/desk';
 import { dialogOpen, focusPart, pressMarked, tabStop, useKeyboardContext, useKeyboardScope } from '../../ui/keyboard';
 import { onHardwareBack } from '../../ui/hardwareBack';
-import { useGame, useSettings, useStill, useT, useWords } from '../context';
+import { useCards, useGame, useSettings, useStill, useT, useWords } from '../context';
 import { useOwnT } from '../ownWords';
 import { CardStage, Outcome } from './Cards';
 import { CrisisBar } from './Crisis';
@@ -339,6 +339,9 @@ export interface RoomSlots {
  * that is open takes Back first (its Modal does).
  */
 export function Play({ room }: { room?: RoomSlots } = {}) {
+  // A life in play reads its cards: on the web they come in a chunk of their own, and the page waits for them here, whole, never drawn without them
+  // (a move to it waits for them first, and a page drawn by the build keeps its HTML meanwhile: languageWords.web.ts).
+  useCards();
   const common = useT('common');
   const news = useT('news');
   const cards = useT('cards');

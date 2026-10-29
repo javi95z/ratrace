@@ -16,7 +16,7 @@ import { Sprite } from '../../ui/Sprite';
 import { bannerSize, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useCanSignIn, useClock, useCommunity, useGame, useRanking, useWords } from '../context';
+import { useCanSignIn, useCards, useClock, useCommunity, useGame, useRanking, useWords } from '../context';
 import { useAskedWhenShown } from '../askedWhenShown';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
@@ -425,7 +425,8 @@ export const ChallengeEntry = memo(function ChallengeEntry({ place, name, day, s
 export function ChallengeResult({ week }: { week: string }) {
   const t = useT('challenge');
   const common = useT('common');
-  const { text, fmt } = useWords();
+  const { fmt } = useWords();
+  const cards = useCards();
   const community = useCommunity();
   const [read, setRead] = useState<{ board: ChallengeRanking | null; choices: ChallengeChoice[] | null } | null>(null);
   const [all, setAll] = useState(false);
@@ -441,11 +442,11 @@ export function ChallengeResult({ week }: { week: string }) {
   }, [community, week]);
   const board = read?.board ?? null;
   const mine = board?.rows.find((row) => row.mine) ?? null;
-  const told = (read?.choices ?? []).filter((choice) => choice.answered > 0 && text.cards[choice.cardId] !== undefined);
+  const told = (read?.choices ?? []).filter((choice) => choice.answered > 0 && cards[choice.cardId] !== undefined);
   if (mine === null && told.length === 0) return null;
   const share = (choice: ChallengeChoice) => Math.round((choice.same * 100) / choice.answered);
   const line = (choice: ChallengeChoice) =>
-    t('choice', { card: text.cards[choice.cardId].title, option: text.cards[choice.cardId].options[choice.option]?.label ?? '', pct: share(choice), n: choice.answered });
+    t('choice', { card: cards[choice.cardId].title, option: cards[choice.cardId].options[choice.option]?.label ?? '', pct: share(choice), n: choice.answered });
   // The least followed first: what set this attempt apart.
   const rare = [...told].sort((a, b) => share(a) - share(b)).slice(0, 3);
   const top = mine !== null && board !== null && mine.place <= topTenth(board.entrants);

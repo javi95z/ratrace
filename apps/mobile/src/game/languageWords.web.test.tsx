@@ -129,3 +129,54 @@ test('a page drawn while its language cannot be had is told so, once, not left a
   expect(languageReady('ru')).toBe(true);
   quiet.mockRestore();
 });
+
+/*
+ * The cards' text is the heaviest of a language's words, and only a life in play reads it: it is a chunk of its own for each language, fetched where a
+ * life is played (the game's `useCards`, the moves to /play and /room, the front door's idle warming), never with the words every page speaks.
+ */
+test('the cards of a language are not in with its words: they come apart, once, for everyone who asks, and with every name filled in', async () => {
+  const { loadLanguageWords, cardWordsReady, loadCardWords, textFor } = await freshWords();
+  const content = await import('@ratrace/content');
+  await loadLanguageWords('es');
+  expect(cardWordsReady('es')).toBe(false);
+  expect(textFor('es').text.cards).toEqual({});
+  expect(() => content.cardsFor('es')).toThrow(/not loaded/);
+  const first = loadCardWords('es');
+  expect(loadCardWords('es')).toBe(first);
+  await first;
+  expect(cardWordsReady('es')).toBe(true);
+  const { cards } = await import('@ratrace/content/text/es.cards');
+  expect(content.cardsFor('es').career_raise.title).toBe(cards.career_raise.title);
+  // What follows a choice is written into it, and the names are filled in, as everywhere else.
+  expect(content.cardsFor('es').career_raise.options[0].after).toMatch(/\S/);
+  expect(JSON.stringify(content.cardsFor('es'))).not.toMatch(/\{(item|asset|city|brand|person):/);
+  expect(cardWordsReady('en')).toBe(false);
+});
+
+test('a part of a page that reads a card waits for the cards of its language, then reads them', async () => {
+  const { useCardText, loadLanguageWords, loadCardWords, Suspense, act, render, screen } = await freshWords();
+  await loadLanguageWords('ru');
+  const drawn: string[] = [];
+  function Waits() {
+    drawn.push('waits');
+    return null;
+  }
+  function Reads() {
+    const cards = useCardText('ru');
+    drawn.push('reads');
+    return <p data-testid="reads">{cards.career_raise.title}</p>;
+  }
+  await act(async () => {
+    render(
+      <Suspense fallback={<Waits />}>
+        <Reads />
+      </Suspense>,
+    );
+  });
+  await act(async () => {
+    await loadCardWords('ru');
+  });
+  expect(drawn[0]).toBe('waits');
+  expect(drawn.at(-1)).toBe('reads');
+  expect(screen.getByTestId('reads').textContent).toMatch(/[А-Яа-я]/);
+});

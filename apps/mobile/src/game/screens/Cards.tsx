@@ -22,7 +22,7 @@ import { LEVEL_2, LEVEL_3 } from '../../ui/headingLevel';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useHaptic } from '../../ui/haptic';
-import { useGame, useStill, useT, useWords } from '../context';
+import { useCards, useGame, useStill, useT, useWords } from '../context';
 import { useRivals } from '../useRivals';
 import { CareerPreview } from './CareerPreview';
 import { Celebrations } from './Celebrations';
@@ -109,13 +109,14 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
+  const cards = useCards();
   const option = def.options[index];
   // What the player is paid or pays every year: an outcome may end one of them.
   const owned = useGame((s) => s.view?.player.life.recurring);
   const itemStatus = useItemStatus(useGame((s) => s.view));
   // The home an option would sell, named on its tag.
   const livedIn = useGame((s) => (s.view ? homeOf(s.view.player, words.content) : null));
-  const written = words.text.cards[def.id].options[index];
+  const written = cards[def.id].options[index];
   let total = 0;
   for (const outcome of preview.outcomes) total += outcome.weight;
   // What cannot be chosen is dimmed part by part, not as a whole: the reason it is locked must stay easy to read.
@@ -349,11 +350,11 @@ function useNamed(): (sentence: string) => string {
  * rare one is framed in gold and catches the light now and then; a legendary one shimmers all over and throws sparks.
  */
 function Card({ def }: { def: CardDef }) {
-  const { text } = useWords();
+  const cards = useCards();
   const art = useContext(ArtScale);
   const held = useContext(HeldShine);
   const rarity = cardRarity(def);
-  const written = text.cards[def.id];
+  const written = cards[def.id];
   const named = useNamed();
   // The ex, where the card draws one, of the other sex to the player.
   const lifeId = useGame((s) => s.lifeId);
@@ -427,6 +428,7 @@ export function CardStage() {
   const t = useT('cards');
   const jailT = useT('jail');
   const { content, text } = useWords();
+  const cards = useCards();
   const still = useStill();
   const view = useGame((s) => s.view);
   const busy = useGame((s) => s.busy);
@@ -488,7 +490,7 @@ export function CardStage() {
   }, [def?.id, keyboard, busy]);
   if (!view || !def) return null;
 
-  const written = text.cards[def.id];
+  const written = cards[def.id];
   // A choice that may end in prison says what prison is, beside the choices, never inside one.
   const mayJail = shown.some((i) => def.options[i].effects?.jail !== undefined || (def.options[i].outcomes ?? []).some((outcome) => outcome.effects?.jail !== undefined));
 
@@ -559,12 +561,12 @@ function ChangesBox({ paid, inline, children }: { paid: boolean; inline: boolean
 function Answered({ event }: { event: Extract<GameEvent, { kind: 'card' }> }) {
   const t = useT('cards');
   const words = useWords();
-  const { text } = words;
+  const cards = useCards();
   const offered = useGame((s) => s.offered);
   const lifeId = useGame((s) => s.lifeId);
   const art = useContext(ArtScale);
   const rise = useRise();
-  const written = text.cards[event.cardId];
+  const written = cards[event.cardId];
   const option = written.options[event.option];
   // The card as it stood when it was answered. Without it, as after a reload, the result is told without the odds.
   const was = offered && offered.cardId === event.cardId ? offered : null;
