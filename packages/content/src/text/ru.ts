@@ -1,8 +1,7 @@
-import { cards } from './ru.cards';
-import type { ContentText } from './types';
+import type { WordsText } from './types';
 import { cityHomesRu } from './homes';
 
-export const ru: ContentText = {
+export const ru: WordsText = {
   cities: {
     madrid: { tagline: 'Ровный старт: зарплаты средние, цены средние, обеды долгие.' },
     london: { tagline: 'Здесь делают карьеру в финансах, а зарплату отдают за аренду.' },
@@ -279,7 +278,6 @@ export const ru: ContentText = {
     tax: 'Налоги',
     laterLife: 'Зрелость',
   },
-  cards,
   regimes: { expansion: 'Рост', boom: 'Бум', slowdown: 'Замедление', recession: 'Рецессия', recovery: 'Восстановление' },
   cryptoPhases: { accumulation: 'Затишье', bull: 'Ралли', mania: 'Эйфория', winter: 'Зима' },
   headlines: {

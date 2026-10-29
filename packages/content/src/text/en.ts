@@ -1,8 +1,7 @@
-import { cards } from './en.cards';
-import type { ContentText } from './types';
+import type { WordsText } from './types';
 import { cityHomesEn } from './homes';
 
-export const en: ContentText = {
+export const en: WordsText = {
   cities: {
     madrid: { tagline: 'A balanced start: fair pay, fair prices, long lunches.' },
     london: { tagline: 'Where finance careers are made and rents are paid.' },
@@ -279,7 +278,6 @@ export const en: ContentText = {
     tax: 'Tax',
     laterLife: 'Later life',
   },
-  cards,
   regimes: { expansion: 'Expansion', boom: 'Boom', slowdown: 'Slowdown', recession: 'Recession', recovery: 'Recovery' },
   cryptoPhases: { accumulation: 'Quiet', bull: 'Bull run', mania: 'Mania', winter: 'Winter' },
   headlines: {

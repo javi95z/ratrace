@@ -1,18 +1,18 @@
 import type { Names } from '../names';
-import type { ContentText } from './types';
+import type { AfterText, ContentText } from './types';
 
 /*
  * What is done to the text of a language before the interface shows it, whatever language it is and however it was loaded: what follows each choice
  * written into its option, and every name placeholder filled from the language's names (`index.ts`, and the app's web's `index.web.ts`).
  */
 
-/** The text with what follows each choice written into the option it follows from. */
-export function withAfter(text: ContentText, after: Record<string, ReadonlyArray<string | null>>): ContentText {
-  const cards = Object.entries(text.cards).map(([id, card]) => {
+/** The cards' text with what follows each choice written into the option it follows from. */
+export function withAfter(cards: ContentText['cards'], after: AfterText): ContentText['cards'] {
+  const written = Object.entries(cards).map(([id, card]) => {
     const lines = Object.hasOwn(after, id) ? after[id] : [];
     return [id, { ...card, options: card.options.map((option, i) => (lines[i] ? { ...option, after: lines[i] } : option)) }];
   });
-  return { ...text, cards: Object.fromEntries(cards) as ContentText['cards'] };
+  return Object.fromEntries(written) as ContentText['cards'];
 }
 
 /** Placeholders that the name pack fills: {item:watch_rolex}, {asset:tesla}, {city:london}, {brand:google}, {person:inlaw}. */

@@ -1,8 +1,7 @@
-import { cards } from './es.cards';
-import type { ContentText } from './types';
+import type { WordsText } from './types';
 import { cityHomesEs } from './homes';
 
-export const es: ContentText = {
+export const es: WordsText = {
   cities: {
     madrid: { tagline: 'Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.' },
     london: { tagline: 'Donde se hacen las carreras en finanzas y se pagan los alquileres.' },
@@ -279,7 +278,6 @@ export const es: ContentText = {
     tax: 'Impuestos',
     laterLife: 'Madurez',
   },
-  cards,
   regimes: { expansion: 'Expansión', boom: 'Auge', slowdown: 'Desaceleración', recession: 'Recesión', recovery: 'Recuperación' },
   cryptoPhases: { accumulation: 'Calma', bull: 'Subida', mania: 'Euforia', winter: 'Invierno' },
   headlines: {

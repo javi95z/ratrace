@@ -90,6 +90,15 @@ export interface ContentText {
   ledger: Record<LedgerLine, string>;
 }
 
+/**
+ * A language's words as its `<locale>.ts` writes them: every sentence but the cards', which a life in play alone reads, and which are written apart
+ * (`<locale>.cards.ts`, and what follows each choice, `<locale>.after.ts`), so the app's web can load them in a chunk of their own.
+ */
+export type WordsText = Omit<ContentText, 'cards'>;
+
+/** What follows each choice that the dice do not decide, by card: one line an option, `null` where the dice speak (`<locale>.after.ts`). */
+export type AfterText = Record<string, ReadonlyArray<string | null>>;
+
 type OptionText = string | [label: string, ...outcomes: string[]];
 
 /** A card's text. An option is its label, or its label followed by one line per outcome. */

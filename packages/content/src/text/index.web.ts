@@ -1,7 +1,7 @@
 import { names } from '../names';
 import type { Locale, Names } from '../names';
 import { filled } from './fill';
-import { addedText } from './languages';
+import { addedCardText, addedText } from './languages';
 import type { ContentText } from './types';
 
 /*
@@ -10,7 +10,7 @@ import type { ContentText } from './types';
  * `game/languageWords.web.ts` adds each before the game speaks it).
  */
 
-export type { CardText, ContentText } from './types';
+export type { AfterText, CardText, ContentText, WordsText } from './types';
 export { fillNames, homeName } from './fill';
 
 /** The text exactly as written, with its placeholders. A language not loaded yet is an error: the game never speaks one before it is in. */
@@ -23,4 +23,11 @@ export function rawText(locale: Locale): ContentText {
 /** Everything the interface shows about the content in one language: the sentences, with every name filled in, and the names. */
 export function textFor(locale: Locale, pack: Names = names[locale]): { text: ContentText; names: Names } {
   return { text: filled(rawText(locale), pack), names: pack };
+}
+
+/** The cards' text in one language, every name filled in. Cards not loaded yet are an error: a life in play waits for them (`languageWords.web.ts`). */
+export function cardsFor(locale: Locale, pack: Names = names[locale]): ContentText['cards'] {
+  const cards = addedCardText(locale);
+  if (cards === undefined) throw new Error(`the cards of ${locale} are not loaded`);
+  return filled(cards, pack);
 }

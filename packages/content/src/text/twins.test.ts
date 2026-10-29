@@ -8,5 +8,5 @@ import * as loadedLanguages from './index.web';
  */
 test('the web twin of the text exports the same names as the text every other reader has', () => {
   expect(Object.keys(loadedLanguages).sort()).toEqual(Object.keys(everyLanguage).sort());
-  expect(Object.keys(everyLanguage).sort()).toEqual(['fillNames', 'homeName', 'rawText', 'textFor']);
+  expect(Object.keys(everyLanguage).sort()).toEqual(['cardsFor', 'fillNames', 'homeName', 'rawText', 'textFor']);
 });
