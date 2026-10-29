@@ -1,8 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
 import { CARD_SENTENCE, FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, GAME_FACES, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
+import WEB_STUBS from '../web-stubs/stubs';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -120,6 +121,44 @@ describe('judgeWebExport', () => {
   it('lists the older rules by their folder, not by one version', () => {
     expect(FORBIDDEN.map((entry) => entry.label)).toContain('the older rules (src/rules/v*.js)');
     expect(judgeWebExport([small], ['apps/mobile/src/rules/index.ts'])).toEqual([]);
+  });
+
+  // The modules the web reads a stand-in for (web-stubs/stubs.js, metro.config.js), as a pnpm install names them.
+  const pnpm = (pkg: string, file: string) => `../../node_modules/.pnpm/${pkg.replace('/', '+')}@1.0.0/node_modules/${pkg}/${file}`;
+  it.each([
+    pnpm('@supabase/storage-js', 'dist/index.mjs'),
+    pnpm('@supabase/auth-js', 'dist/module/GoTrueAdminApi.js'),
+    pnpm('expo-audio', 'build/AudioRecorder.web.js'),
+    pnpm('expo-audio', 'build/AudioPlaylist.web.js'),
+    pnpm('react-native-reanimated', 'scripts/validate-worklets-version.js'),
+    pnpm('react-native-reanimated', 'lib/module/layoutReanimation/defaultAnimations/index.js'),
+    pnpm('react-native-reanimated', 'lib/module/layoutReanimation/defaultTransitions/index.js'),
+    pnpm('react-native-reanimated', 'lib/module/layoutReanimation/web/index.js'),
+    pnpm('react-native-reanimated', 'lib/module/layoutReanimation/web/domUtils.js'),
+    pnpm('react-native-gesture-handler', 'lib/module/components/touchables/index.js'),
+    pnpm('react-native-gesture-handler', 'lib/module/components/Pressable/index.js'),
+    pnpm('react-native-gesture-handler', 'lib/module/v3/components/Touchable/Touchable.js'),
+  ])('reports a module the web stands in for, read after all: %s', (source) => {
+    const problems = judgeWebExport([small], ['node_modules/react/index.js', source]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain(source);
+  });
+
+  it('keeps what the web runs of the same libraries, and the stand-ins themselves', () => {
+    const kept = [
+      pnpm('@supabase/supabase-js', 'dist/index.mjs'),
+      pnpm('@supabase/auth-js', 'dist/module/GoTrueClient.js'),
+      pnpm('expo-audio', 'build/AudioPlayer.web.js'),
+      pnpm('react-native-reanimated', 'lib/module/layoutReanimation/animationBuilder/index.js'),
+      pnpm('react-native-reanimated', 'lib/module/layoutReanimation/web/componentUtils.js'),
+      pnpm('react-native-gesture-handler', 'lib/module/v3/components/GestureComponents.web.js'),
+      ...WEB_STUBS.map(({ stub }) => `/repo/apps/mobile/web-stubs/${stub}`),
+    ];
+    expect(judgeWebExport([small], kept)).toEqual([]);
+  });
+
+  it('has a stand-in for each module it names', () => {
+    for (const { stub } of WEB_STUBS) expect(existsSync(new URL(`../web-stubs/${stub}`, import.meta.url))).toBe(true);
   });
 });
 

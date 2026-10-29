@@ -75,6 +75,11 @@ export default [
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
+    // Metro reads its configuration as CommonJS, and the list of the web's stand-ins with it.
+    files: ['apps/mobile/metro.config.js', 'apps/mobile/web-stubs/*.js'],
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
     // The web app and the phone's: the rules of hooks (the walls between the screens and the session are their
     // architecture tests).
     files: ['apps/web/src/**/*.{ts,tsx}', 'apps/mobile/src/**/*.{ts,tsx}'],

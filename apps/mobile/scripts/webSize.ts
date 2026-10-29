@@ -8,6 +8,7 @@ import { cards as enCards } from '@ratrace/content/text/en.cards';
 import { LOCALES, MESSAGES } from '@ratrace/i18n';
 import { DEFAULT_LOCALE } from '@ratrace/i18n/locales';
 import { SITE_URL } from '../src/game/site';
+import WEB_STUBS from '../web-stubs/stubs';
 import { bundlesIn } from './rules';
 
 /**
@@ -255,6 +256,9 @@ export const FORBIDDEN: readonly { label: string; matches: (source: string) => b
   ...FORMATJS_POLYFILLS.map((name) => ({ label: name, matches: (source: string) => source.includes(`${name}/`) })),
   // The older rules a life in progress finishes under: the phone carries them; the web fetches them from the site.
   { label: 'the older rules (src/rules/v*.js)', matches: (source) => /src\/rules\/v[^/]*\.js$/.test(source) },
+  // The libraries' modules the site never runs, each read on the web as a stand-in of its own (web-stubs/stubs.js, metro.config.js): one in the
+  // bundle is a stand-in that no longer takes its place (a library that moved the file, a resolver that no longer runs).
+  ...WEB_STUBS.map(({ label, file }) => ({ label, matches: (source: string) => file.test(source) })),
 ];
 
 /** Where the export puts the app's own JavaScript: the only files the budget counts. */
