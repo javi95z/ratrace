@@ -320,11 +320,12 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false, member }
         </>
       ) : state.kind === 'member' ? (
         <>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* The address goes under the line where there is no room beside it (Spanish, on a phone 360 wide): never cut. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 2 }}>
             <GoogleMark size={18} />
             <PixelText size={16} tone="teal-300">{t('member')}</PixelText>
             {state.email ? (
-              <ReadText size={13} tone="ink-300" numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>
+              <ReadText size={13} tone="ink-300" style={{ flexShrink: 1, minWidth: 0 }}>
                 {t('memberAs', { email: maskEmail(state.email) })}
               </ReadText>
             ) : null}

@@ -153,7 +153,8 @@ describe('the rankings', () => {
     show(c);
     const lines = await linesOf('All time');
     // Each line: the place, the name, the starting life and the day it ended, and the score.
-    const day = formatFor('en').day(Date.UTC(2026, 9, 13));
+    // The day is held whole on its line: its spaces do not break.
+    const day = formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, '\u00a0');
     expect(lines.map((line) => line.textContent)).toEqual([`1Otra_RataSoftware engineer · ${day}900▸`, `2Rat BBBBNurse · ${day}800▸`, `9Rat MENurse · ${day}120▸`]);
     // The player's own line is the one they are on, as the web's `aria-current` says.
     expect(lines.map((line) => line.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true']);
@@ -223,7 +224,7 @@ describe('the rankings', () => {
     await linesOf('Best this week');
     await act(async () => waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]));
     await settled();
-    expect((await linesOf('Best this week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
+    expect((await linesOf('Best this week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, '\u00a0')}900▸`]);
   });
 
   it('is read again when pulled down: the ranking on screen asked anew, kept until the new one comes, the spinner turning until it has', async () => {

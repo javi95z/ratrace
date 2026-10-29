@@ -315,7 +315,7 @@ function Tile({ icon, label, onPress, whole = false }: { icon: string; label: st
       onPress={onPress}
     >
       <Sprite id={icon} />
-      <PixelText size={15} tone="ink-200" numberOfLines={1} style={{ textAlign: 'center' }}>{label}</PixelText>
+      <PixelText size={15} tone="ink-200" style={{ flexShrink: 1, textAlign: 'center' }}>{label}</PixelText>
     </Raised>
   );
 }

@@ -56,9 +56,10 @@ const RankLine = memo(function RankLine({ userId, place, lifeId, name, sub, scor
           <Bare style={{ width: 32, height: 32 }}>
             <LifeFace lifeId={lifeId} />
           </Bare>
+          {/* The name, and the life and the day under it, wrap where the line is narrow (a Russian life on a phone 360 wide): never cut. */}
           <View style={{ flex: 1, minWidth: 0 }}>
-            <ReadText numberOfLines={1}>{name}</ReadText>
-            <ReadText size={12} tone="ink-300" numberOfLines={1}>{sub}</ReadText>
+            <ReadText>{name}</ReadText>
+            <ReadText size={12} tone="ink-300">{sub}</ReadText>
           </View>
           <PixelText size={18} style={{ flexShrink: 0 }}>{score}</PixelText>
           <View aria-hidden importantForAccessibility="no-hide-descendants">
@@ -272,7 +273,8 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
       place: row.place,
       lifeId: row.lifeId,
       name: nameOf(row),
-      sub: `${text.lives[row.lifeId]?.name ?? row.lifeId} · ${fmt.day(row.finishedAt)}`,
+      // The day is held whole ("12 сент. 2026 г." never leaves its "г." alone on the next line), and goes under the life where they do not fit.
+      sub: `${text.lives[row.lifeId]?.name ?? row.lifeId} · ${fmt.day(row.finishedAt).replace(/ /g, '\u00a0')}`,
       score: fmt.number(row.score),
       mine: row.mine,
     }));

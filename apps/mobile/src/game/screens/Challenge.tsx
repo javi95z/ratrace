@@ -401,9 +401,10 @@ export const ChallengeEntry = memo(function ChallengeEntry({ place, name, day, s
     <View role="listitem" accessible accessibilityState={{ selected: mine }} aria-selected={mine}>
       <Framed kind="bevel" tone={mine ? GOLD : undefined} style={{ backgroundColor: COLORS[mine ? 'night-600' : 'night-700'], flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
         <PixelText size={17} tone="ink-200" style={{ width: 32, flexShrink: 0, textAlign: 'right' }}>{String(place)}</PixelText>
+        {/* The name and the day wrap where the line is narrow (the mark of the best tenth beside them, on a phone 360 wide): never cut. */}
         <View style={{ flex: 1, minWidth: 0 }}>
-          <ReadText numberOfLines={1}>{name}</ReadText>
-          <ReadText size={12} tone="ink-300" numberOfLines={1}>{day}</ReadText>
+          <ReadText>{name}</ReadText>
+          <ReadText size={12} tone="ink-300">{day}</ReadText>
         </View>
         {top ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
