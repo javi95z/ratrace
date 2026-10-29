@@ -1184,7 +1184,7 @@ export const cards: Record<string, CardText> = {
   rich_uncle_castle: c('El castillo del tío abuelo', 'Un tío abuelo al que no conociste te deja un castillo. Y, dice el notario, lo que debiera.', [
     'Renunciar a la herencia',
     ['Aceptarla y venderlo todo', 'Lo compra una cadena hotelera. Las deudas eran pocas.', 'Las deudas no eran pocas. La factura tampoco.'],
-    ['Quedarte el castillo', 'Un título, una torre y un tejado con goteras.', 'Llegan juntos el tejado y los acreedores.'],
+    ['Quedarte el castillo', 'El castillo es tuyo y se alquila para bodas: un título, una torre y un tejado con goteras.', 'Llegan juntos el tejado y los acreedores.'],
   ]),
   rich_yacht_rocks: c('El barco en las rocas', 'El patrón sacó tu barco para una fiesta suya y lo dejó en las rocas. Con invitados a bordo.', [
     'Pagar a todos sin ruido',

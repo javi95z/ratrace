@@ -11,7 +11,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Carreras](#carreras) | 15 |
 | [Ciudades](#ciudades) | 10 |
 | [Objetos](#objetos) | 67, de ellos 8 coches |
-| [Inmuebles](#inmuebles) | 26 |
+| [Inmuebles](#inmuebles) | 27 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 342 |
@@ -979,6 +979,7 @@ El estatus de la vivienda es el de la casa en la que vives. Además, las viviend
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/homes/home.kiosk.png" alt="Quiosco junto al metro"> | Quiosco junto al metro | 8 % del piso | 22.400 $ |  | Solo para alquilar | 95 % de lo que rinde una vivienda |
 | <img src="../art/clean/homes/home.market_stall.png" alt="Puesto en el mercado flotante"> | Puesto en el mercado flotante | 10 % del piso | 28.000 $ |  | Solo para alquilar | 95 % de lo que rinde una vivienda |
+| <img src="../art/clean/homes/home.castle.png" alt="Castillo del tío abuelo"> | Castillo del tío abuelo | 10 % del piso | 28.000 $ |  | Solo para alquilar | 100 % de lo que rinde una vivienda |
 | <img src="../art/clean/homes/home.parking.png" alt="Plaza de garaje"> | Plaza de garaje | 12 % del piso | 33.600 $ |  | Solo para alquilar | 90 % de lo que rinde una vivienda |
 | <img src="../art/clean/homes/home.hawker_stall.png" alt="Puesto en un hawker centre"> | Puesto en un hawker centre | 15 % del piso | 42.000 $ |  | Solo para alquilar | 100 % de lo que rinde una vivienda |
 | <img src="../art/clean/homes/home.rooftop.png" alt="Azotea para antenas"> | Azotea para antenas | 20 % del piso | 56.000 $ |  | Solo para alquilar | 100 % de lo que rinde una vivienda |

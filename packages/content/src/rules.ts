@@ -15,10 +15,18 @@ import { usd } from './money';
  * Each city also sells one thing to let that only it has, and the cheap ones among them, like the
  * parking space, let for no more than a home. A whole block of flats is not for sale where land is
  * the dearest of all. How much each kind lets for in each city is the city's to say (`propertyRentPct`).
+ *
+ * One kind is never sold: the castle a card leaves the player, let like the others, which gives its standing and costs
+ * its upkeep while it is owned.
  */
 export const propertyTypes: PropertyTypeDef[] = [
   { id: 'kiosk', pricePct: 8, status: 0, rentalOnly: true, rentPct: 95, cities: ['moscow'] },
   { id: 'market_stall', pricePct: 10, status: 0, rentalOnly: true, rentPct: 95, cities: ['bangkok'] },
+  // A great-uncle's castle, which no city sells: only his card hands one over, free and with his debts. A ruin far
+  // out of town, it is worth little and nobody lives in it: it is let for weddings and parties, gives its standing
+  // while it is owned, and costs about what the weddings bring to keep standing. Worth more, kept and sold the same
+  // round it would pay better than selling it all on the card.
+  { id: 'castle', pricePct: 10, status: 0, rentalOnly: true, rentPct: 100, cardOnly: true, upkeepBp: 500, ownedStatus: 8 },
   { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 90 },
   { id: 'hawker_stall', pricePct: 15, status: 0, rentalOnly: true, rentPct: 100, cities: ['singapore'] },
   { id: 'rooftop', pricePct: 20, status: 0, rentalOnly: true, rentPct: 100, cities: ['mexico_city'] },

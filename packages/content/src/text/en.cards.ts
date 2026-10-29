@@ -1184,7 +1184,7 @@ export const cards: Record<string, CardText> = {
   rich_uncle_castle: c('A great-uncle\'s castle', 'A great-uncle you never knew leaves you a castle. And, the notary says, whatever he owed.', [
     'Renounce the inheritance',
     ['Accept it and sell it all', 'A hotel chain buys it. The debts were small.', 'The debts were not small. Neither is the bill.'],
-    ['Keep the castle', 'A title, a tower and a roof that leaks.', 'The roof, and then the creditors, arrive together.'],
+    ['Keep the castle', 'The castle is yours, let out for weddings: a title, a tower and a roof that leaks.', 'The roof, and then the creditors, arrive together.'],
   ]),
   rich_yacht_rocks: c('The boat on the rocks', 'The skipper took your boat out for a party of his own and left it on the rocks. With guests aboard.', [
     'Pay everyone off quietly',

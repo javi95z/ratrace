@@ -78,7 +78,7 @@ export const es: WordsText = {
   propertyTypes: {
     parking: 'Plaza de garaje', studio: 'Estudio', flat: 'Piso', loft: 'Loft', shop: 'Local comercial', townhouse: 'Adosado', house: 'Casa familiar', office: 'Oficina',
     duplex: 'Dúplex', warehouse: 'Nave industrial', chalet: 'Chalet', penthouse: 'Ático', estate: 'Finca', villa: 'Villa', block: 'Bloque de pisos', mansion: 'Mansión',
-    kiosk: 'Quiosco junto al metro', market_stall: 'Puesto en el mercado flotante', hawker_stall: 'Puesto en un hawker centre', rooftop: 'Azotea para antenas', billboard: 'Valla en Times Square', yacht_berth: 'Amarre en la Marina', tourist_flat: 'Piso turístico en el centro', vault: 'Cámara acorazada en Paradeplatz', student_house: 'Casa de estudiantes', capsule_hotel: 'Hotel cápsula en Shinjuku',
+    kiosk: 'Quiosco junto al metro', market_stall: 'Puesto en el mercado flotante', hawker_stall: 'Puesto en un hawker centre', rooftop: 'Azotea para antenas', billboard: 'Valla en Times Square', yacht_berth: 'Amarre en la Marina', tourist_flat: 'Piso turístico en el centro', vault: 'Cámara acorazada en Paradeplatz', student_house: 'Casa de estudiantes', capsule_hotel: 'Hotel cápsula en Shinjuku', castle: 'Castillo del tío abuelo',
   },
   cityHomes: cityHomesEs,
   rentTiers: ['Habitación alquilada', 'Piso alquilado'],

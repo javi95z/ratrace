@@ -64,10 +64,15 @@ export const richCards: CardDef[] = [
     { effects: { cashNetWorthPct: -6, status: 10 } },
   ]),
   // A great-uncle nobody knew leaves a castle, and his debts, which the lawyers size to the heir's own fortune.
+  // Sold at once it is cash; kept, it is a property of the player's, free, let for weddings, and sold whenever
+  // the player likes: its standing and its upkeep last as long as it is owned.
   card('rich_uncle_castle', 'family', { ...ONCE, when: { minNetWorth: RICH } }, [
     {},
     { outcomes: [{ weight: 60, effects: { cashNetWorthPct: 4 } }, { weight: 40, effects: { cashNetWorthPct: -3 } }] },
-    { effects: { status: 8, recurring: [yearly('castle', 'expense', 30_000, null)] }, outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cashNetWorthPct: -3 } }] },
+    {
+      effects: { property: { typeId: 'castle', pricePct: 100, downPct: 100, rented: true, inherited: true } },
+      outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cashNetWorthPct: -3 } }],
+    },
   ]),
   // The skipper takes the boat out for a party of his own and puts it on the rocks, with guests aboard.
   card('rich_yacht_rocks', 'lifestyle', { ...ONCE, when: { items: ['sea_sailboat'], minNetWorth: RICH } }, [

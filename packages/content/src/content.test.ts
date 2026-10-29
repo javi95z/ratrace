@@ -1,4 +1,4 @@
-import { applyRound, assetYieldBp, previewCard, businessRound, createGame, depositRateBp, INDEX_START, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
+import { applyBp, applyCard, applyRound, assetYieldBp, previewCard, propertyPrice, businessRound, createGame, depositRateBp, INDEX_START, quoteItem, quoteOwnedProperty, quoteProperty, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './kinds';
 import { START_AGE } from './badges';
@@ -16,16 +16,19 @@ describe('the v1 content', () => {
     expect(content.careers).toHaveLength(15);
     expect(content.items).toHaveLength(67);
     expect(content.propertyTypes.filter((type) => type.cities === undefined).map((type) => type.id)).toEqual([
-      'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
+      'castle', 'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
+    // One of them no city sells: the great-uncle's castle, which only his card hands over, free, and which gives its standing and costs its upkeep while it is owned.
+    expect(content.propertyTypes.filter((type) => type.cardOnly === true).map((type) => [type.id, type.upkeepBp, type.ownedStatus])).toEqual([['castle', 500, 8]]);
     // Five of them are investments only: nobody lives in a parking space, behind a shop counter, at a desk, among pallets, or in twelve flats at once.
-    expect(content.propertyTypes.filter((type) => type.rentalOnly && type.cities === undefined).map((type) => type.id)).toEqual(['parking', 'shop', 'office', 'warehouse', 'block']);
+    expect(content.propertyTypes.filter((type) => type.rentalOnly && type.cities === undefined && type.cardOnly !== true).map((type) => type.id)).toEqual(['parking', 'shop', 'office', 'warehouse', 'block']);
     // And each city sells one thing to let of its own, which nobody lives in either.
     const local = content.propertyTypes.filter((type) => type.cities !== undefined);
     expect(local.map((type) => type.cities).flat().sort()).toEqual(content.cities.map((city) => city.id).sort());
     for (const type of local) expect(type.rentalOnly, type.id).toBe(true);
     // Among homes, a dearer one is always the grander one: no home is a worse buy than a cheaper one for someone who wants status.
-    const homes = content.propertyTypes.filter((type) => !type.rentalOnly);
+    // The castle is bought by nobody, so it stands outside the ladder.
+    const homes = content.propertyTypes.filter((type) => !type.rentalOnly && type.cardOnly !== true);
     for (let i = 1; i < homes.length; i++) expect(homes[i].status, homes[i].id).toBeGreaterThan(homes[i - 1].status);
     // Only what cannot be lived in has a rent of its own. A parking space lets for a little less than a home,
     // because its small price is already an advantage; the dearer kinds let for a little more.
@@ -267,6 +270,36 @@ describe('the v1 content', () => {
         found.push([card.id, plain, better]);
       });
     expect(found.sort()).toEqual([...UPGRADES].sort());
+  });
+
+  it('leaves the great-uncle\'s castle to keep as a property of the player\'s: free, let, with its standing and upkeep while owned, and the debts maybe', () => {
+    const outcomes = new Set<string>();
+    for (const seed of ['castle-1', 'castle-2', 'castle-3', 'castle-4', 'castle-5', 'castle-6']) {
+      const state = createGame({ content, start: lives[0].start }, seed);
+      state.player.cash = 300_000_000;
+      const before = state.player;
+      const after = applyCard(content, { ...state, hand: ['rich_uncle_castle'], answered: 0 }, 2).state.player;
+      const castle = after.properties.find((property) => property.typeId === 'castle');
+      // A property in the player's city, worth 10% of a flat there, let from the start, owned outright and paid nothing for.
+      expect(castle).toMatchObject({ cityId: before.cityId, value: propertyPrice(content, state.timeline[state.round], before.cityId, 'castle'), rented: true, mortgageId: null });
+      expect(after.debts).toEqual(before.debts);
+      // Its upkeep is an expense of the life while it is owned, in place of the old card's bare yearly bill, and so is its standing.
+      expect(after.extraExpensesAnnual - before.extraExpensesAnnual).toBe(applyBp((content.cities.find((city) => city.id === before.cityId)!.flatPrice * 10) / 100, 500));
+      expect(after.life.recurring.some((entry) => entry.tag === 'castle')).toBe(false);
+      expect(after.life.bonusStatus).toBe(before.life.bonusStatus);
+      expect(after.statusPoints - before.statusPoints).toBe(8);
+      // The great-uncle's debts, two times in five: 3% of what the player was worth, in cash.
+      outcomes.add(after.cash === before.cash ? 'clean' : 'debts');
+      // It is let at the city's rent, and sold like any property, its standing and its upkeep going with it.
+      const finance = { ...state, player: after, hand: [], answered: 0, phase: 'finance' as const };
+      expect(quoteOwnedProperty(content, viewOf(finance), castle!.id)).toMatchObject({ value: castle!.value, letOnly: true, rented: true, mortgage: null, estateStatus: 8, ownedStatus: 8 });
+      const sold = applyRound(content, finance, { orders: [{ type: 'sellProperty', propertyId: castle!.id }] }).state.player;
+      expect(sold.properties.some((property) => property.typeId === 'castle')).toBe(false);
+      expect(sold.extraExpensesAnnual).toBe(before.extraExpensesAnnual);
+    }
+    expect([...outcomes].sort()).toEqual(['clean', 'debts']);
+    // No shop sells one.
+    expect(quoteProperty(content, viewOf(createGame({ content, start: lives[0].start }, 'shop')), 'castle').soldHere).toBe(false);
   });
 
   it('offers the plain gig to someone without a car, and only the better one to someone with one', () => {

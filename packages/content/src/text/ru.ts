@@ -78,7 +78,7 @@ export const ru: WordsText = {
   propertyTypes: {
     parking: 'Машино-место', studio: 'Студия', flat: 'Квартира', loft: 'Лофт', shop: 'Торговая точка', townhouse: 'Таунхаус', house: 'Семейный дом', office: 'Офисный этаж',
     duplex: 'Дуплекс', warehouse: 'Склад', chalet: 'Шале', penthouse: 'Пентхаус', estate: 'Поместье', villa: 'Вилла', block: 'Доходный дом', mansion: 'Особняк',
-    kiosk: 'Ларёк у метро', market_stall: 'Лавка на плавучем рынке', hawker_stall: 'Место в хокер-центре', rooftop: 'Крыша под антенны', billboard: 'Билборд на Таймс-сквер', yacht_berth: 'Причал в Марине', tourist_flat: 'Квартира для туристов в центре', vault: 'Банковское хранилище на Парадеплац', student_house: 'Дом для студентов', capsule_hotel: 'Капсульный отель в Синдзюку',
+    kiosk: 'Ларёк у метро', market_stall: 'Лавка на плавучем рынке', hawker_stall: 'Место в хокер-центре', rooftop: 'Крыша под антенны', billboard: 'Билборд на Таймс-сквер', yacht_berth: 'Причал в Марине', tourist_flat: 'Квартира для туристов в центре', vault: 'Банковское хранилище на Парадеплац', student_house: 'Дом для студентов', capsule_hotel: 'Капсульный отель в Синдзюку', castle: 'Замок двоюродного деда',
   },
   cityHomes: cityHomesRu,
   rentTiers: ['Съёмная комната', 'Съёмная квартира'],

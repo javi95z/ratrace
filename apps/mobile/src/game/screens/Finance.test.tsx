@@ -792,8 +792,8 @@ describe('property that is only for letting', () => {
     const lets = panel('To let in Dubai');
     // Each list in the order the game keeps them: the cheapest first. A home is drawn as Dubai builds it.
     expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => `dubai.${type.id}`));
-    // What Dubai sells to let: the five every city sells, and its berths in the Marina.
-    const letHere = content.propertyTypes.filter((type) => type.rentalOnly && (type.cities ?? ['dubai']).includes('dubai'));
+    // What Dubai sells to let: the five every city sells, and its berths in the Marina; never the castle, which only a card hands over.
+    const letHere = content.propertyTypes.filter((type) => type.rentalOnly && type.cardOnly !== true && (type.cities ?? ['dubai']).includes('dubai'));
     expect(kinds(lets)).toEqual(letHere.map((type) => propertyArt(type.id, 'dubai').replace(/^home\./, '')));
     expect(letHere.map((type) => type.id)).toEqual(['parking', 'yacht_berth', 'shop', 'office', 'warehouse', 'block']);
     expect(kinds(homes)).toHaveLength(11);

@@ -78,7 +78,7 @@ export const en: WordsText = {
   propertyTypes: {
     parking: 'Parking space', studio: 'Studio', flat: 'Flat', loft: 'Loft', shop: 'Shop unit', townhouse: 'Townhouse', house: 'Family house', office: 'Office floor',
     duplex: 'Duplex', warehouse: 'Warehouse', chalet: 'Chalet', penthouse: 'Penthouse', estate: 'Country estate', villa: 'Villa', block: 'Apartment block', mansion: 'Mansion',
-    kiosk: 'Kiosk by the metro', market_stall: 'Floating market stall', hawker_stall: 'Hawker centre stall', rooftop: 'Rooftop for antennas', billboard: 'Billboard on Times Square', yacht_berth: 'Berth at the Marina', tourist_flat: 'Holiday let in the centre', vault: 'Bank vault on Paradeplatz', student_house: 'Student house', capsule_hotel: 'Capsule hotel in Shinjuku',
+    kiosk: 'Kiosk by the metro', market_stall: 'Floating market stall', hawker_stall: 'Hawker centre stall', rooftop: 'Rooftop for antennas', billboard: 'Billboard on Times Square', yacht_berth: 'Berth at the Marina', tourist_flat: 'Holiday let in the centre', vault: 'Bank vault on Paradeplatz', student_house: 'Student house', capsule_hotel: 'Capsule hotel in Shinjuku', castle: 'Great-uncle\'s castle',
   },
   cityHomes: cityHomesEn,
   rentTiers: ['Rented room', 'Rented flat'],

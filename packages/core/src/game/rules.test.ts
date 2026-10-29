@@ -37,7 +37,8 @@ describe('what the rules of each version know', () => {
       for (const typeId of Object.keys(PROPERTIES_SINCE)) expect(holds(source, typeId), `${typeId} in ${engine}`).toBe(rulesSell(engine, typeId));
     }
     const oldest = [...bundles].sort((a, b) => (atLeast(a.engine, b.engine) ? 1 : -1))[0];
-    expect(content.propertyTypes.filter((type) => !holds(oldest.source, type.id) && PROPERTIES_SINCE[type.id] === undefined).map((type) => type.id)).toEqual([]);
+    // What no city sells, only a card hands over, needs no version: no shop offers it.
+    expect(content.propertyTypes.filter((type) => type.cardOnly !== true && !holds(oldest.source, type.id) && PROPERTIES_SINCE[type.id] === undefined).map((type) => type.id)).toEqual([]);
   });
 
   it('leaves out of a round what older rules would refuse', () => {
