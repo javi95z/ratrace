@@ -1513,6 +1513,7 @@
   "account": {
     "title": "Аккаунт",
     "keep": "Войти через Google",
+    "signInShort": "Войти",
     "member": "Привязан к Google",
     "memberAs": "{email}",
     "failed": "Не удалось войти. Ты по-прежнему гость.",

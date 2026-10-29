@@ -1513,6 +1513,7 @@
   "account": {
     "title": "Account",
     "keep": "Sign in with Google",
+    "signInShort": "Sign in",
     "member": "Linked to Google",
     "memberAs": "{email}",
     "failed": "Could not sign in. You are still a guest.",

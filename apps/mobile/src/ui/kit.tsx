@@ -99,10 +99,11 @@ export function Button({
   primary = false,
   hint,
   expanded,
+  label,
   onPress,
   children,
   ref,
-}: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number; primary?: boolean; hint?: ReactNode; expanded?: boolean; ref?: Ref<HostInstance> }) {
+}: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number; primary?: boolean; hint?: ReactNode; expanded?: boolean; ref?: Ref<HostInstance>; label?: string }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   const badge = primary ? <KeyboardHint>{'Ctrl/⌘ ↵'}</KeyboardHint> : (hint ?? null);
@@ -112,6 +113,8 @@ export function Button({
     <Pressable
       ref={ref}
       accessibilityRole="button"
+      // A button whose words are short for its room (the front door's "Sign in", half a row) is named in full for a screen reader.
+      {...(label === undefined ? null : { accessibilityLabel: label })}
       accessibilityState={{ disabled, ...(expanded === undefined ? null : { expanded }) }}
       {...(expanded === undefined ? null : { 'aria-expanded': expanded })}
       {...(primary ? { dataSet: { primaryAction: true }, 'aria-keyshortcuts': 'Control+Enter Meta+Enter' } : null)}

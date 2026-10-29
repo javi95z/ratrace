@@ -22,7 +22,7 @@ import { useOwnT } from '../ownWords';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './RoomCard';
 import { LANGUAGE_IN_CORNER, LEGAL_IN_SETTINGS } from './frontDoor';
-import { HomeAccount, HomePreferences, LanguageMenu } from './Settings';
+import { HomeAccount, LanguageMenu } from './Settings';
 import { PerfDrawn } from '../../ui/perf';
 import { InstallApp, useInstallOffer } from '../../pwa/install';
 import { useGo } from '../pages';
@@ -101,10 +101,12 @@ export function Home() {
     // foot clears the home indicator.
     <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 32, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
       <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
-      <View style={{ position: 'absolute', top: CORNER_TOP, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
-        {LANGUAGE_IN_CORNER ? <LanguageMenu /> : null}
-        <HomePreferences />
-      </View>
+      {/* On the web, the language's square in the corner; the settings are a button at the foot, under the account. */}
+      {LANGUAGE_IN_CORNER ? (
+        <View style={{ position: 'absolute', top: CORNER_TOP, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
+          <LanguageMenu />
+        </View>
+      ) : null}
       {/* A first visit meets the mascot; someone coming back is waved at. */}
       {returning ? <DoorPicture id={ratArt('wave')} most={176} least={56} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={176} least={56} below={-8} />}
       <View style={{ alignItems: 'center' }}>
@@ -177,7 +179,8 @@ export function Home() {
         )}
       </View>
 
-      {/* Under the tiles, with no frame round it, one place for the account: a member's way to their profile; a guest's way into Google, and their profile beside it. */}
+      {/* Under the tiles, with no frame round it, one place for the account (a member's way to their profile; a guest's way into Google, and their
+          profile beside it), and the settings under it. */}
       <View style={{ width: '100%' }}>
         <HomeAccount profile={<ProfileLink />} />
       </View>
@@ -385,10 +388,10 @@ function ProfileLink() {
   );
 }
 
-/** Where the corner's buttons (the settings' gear, on the web the language's square too) stand, from the top of the page. */
+/** Where the corner's button (the web's language square) stands, from the top of the page. */
 const CORNER_TOP = 16;
-/** How far the corner's buttons reach into the column, with a gap: the gear's 44 on the phone, the language's square and the gear on the web. */
-const CORNER_REACH = (LANGUAGE_IN_CORNER ? 44 + 8 + 44 : 44) + 8;
+/** How far the corner's button reaches into the column, with a gap: the language's square on the web; nothing on the phone. */
+const CORNER_REACH = LANGUAGE_IN_CORNER ? 44 + 8 : 0;
 
 /** The room under the last thing of the page (the web's `pb-8`). */
 const FOOT = 32;

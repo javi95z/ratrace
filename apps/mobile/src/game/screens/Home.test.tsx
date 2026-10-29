@@ -25,8 +25,19 @@ afterEach(cleanup);
 
 const en = messagesFor('en');
 
-/** The buttons that open the settings: the gear in the corner, the only one. */
+/** The buttons that open the settings: the one at the foot of the door, the only one. */
 const settingsButtons = (name = 'Settings') => screen.getAllByRole('button', { name });
+
+/** An account that only says who is playing. */
+const accountAs = (state: AccountState) => ({
+  state: () => state,
+  subscribe: () => () => {},
+  start: async () => undefined,
+  keepWithGoogle: async () => false,
+  useExistingAccount: async () => false,
+  dismissNotice: () => undefined,
+  signOut: async () => false,
+});
 
 describe('the front door', () => {
   it('offers a new life to someone new, and says where it will be kept only behind the settings', async () => {
@@ -74,14 +85,19 @@ describe('the front door', () => {
     expect(within(sheet).getByRole('switch', { name: /^Sound/ }).getAttribute('aria-checked')).toBe('false');
   });
 
-  it('has the settings once, behind the gear in the corner: no row at the foot takes the room the door needs', async () => {
-    renderGame(<Home />, memoryServices());
+  it('has the settings once, a button at the foot under the account, the last thing of the door', async () => {
+    renderGame(<Home />, { ...memoryServices(), account: accountAs({ kind: 'guest', userId: 'u', notice: null }) });
     await screen.findByRole('link', { name: 'New life' });
     expect(settingsButtons()).toHaveLength(1);
-    expect(settingsButtons()[0].querySelector('[data-sprite="icon.settings"]')).not.toBeNull();
-    // The gear comes first, before the door's buttons, for a keyboard and a screen reader as for the eye.
-    expect(settingsButtons()[0].compareDocumentPosition(screen.getByRole('link', { name: 'New life' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    fireEvent.click(settingsButtons()[0]);
+    const settings = settingsButtons()[0];
+    expect(settings.querySelector('[data-sprite="icon.settings"]')).not.toBeNull();
+    // Under the guest's row of Google and the profile: after both, and after every link of the door.
+    for (const before of [screen.getByRole('button', { name: 'Sign in with Google' }), ...screen.getAllByRole('link')]) {
+      expect(before.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    // Half the row, the way into Google says only "Sign in", and is named whole for a screen reader.
+    expect(screen.getByRole('button', { name: 'Sign in with Google' }).textContent).toBe('Sign in');
+    fireEvent.click(settings);
     expect(await screen.findByRole('heading', { name: 'Settings' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull());
@@ -197,7 +213,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('keeps its corner to the settings alone: the language is chosen in them, as a phone app\'s', async () => {
+  it('has no language in a corner: it is chosen in the settings, as a phone app\'s', async () => {
     renderGame(<Home />, memoryServices());
     await screen.findByRole('link', { name: 'New life' });
     expect(screen.queryByRole('button', { name: 'Language' })).toBeNull();
@@ -500,16 +516,6 @@ describe('the life waiting in the account', () => {
 });
 
 describe('the account at the foot of the front door', () => {
-  /** An account that only says who is playing. */
-  const accountAs = (state: AccountState) => ({
-    state: () => state,
-    subscribe: () => () => {},
-    start: async () => undefined,
-    keepWithGoogle: async () => false,
-    useExistingAccount: async () => false,
-    dismissNotice: () => undefined,
-    signOut: async () => false,
-  });
 
   it('shows a guest the way into Google at the foot with their profile beside it on its row, and nothing else there: no settings, said where things are kept only for a phone with no account', async () => {
     renderGame(<Home />, { ...memoryServices(), account: accountAs({ kind: 'guest', userId: 'u', notice: null }) });

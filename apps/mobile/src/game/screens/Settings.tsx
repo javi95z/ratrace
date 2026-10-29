@@ -362,9 +362,10 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false, member, 
             // Google on the left, the profile on the right, each half of the row.
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Button variant="secondary" wide disabled={travelling} onPress={travel}>
+                {/* Half the row: the short word, the mark saying whose sign-in it is; the whole sentence for a screen reader. */}
+                <Button variant="secondary" wide disabled={travelling} onPress={travel} label={t('keep')}>
                   <GoogleMark />
-                  {t('keep')}
+                  {t('signInShort')}
                 </Button>
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>{beside}</View>
@@ -609,26 +610,24 @@ function LegalLink({ onPress }: { onPress(): void }) {
 }
 
 /** The settings of the front door, from the corner: one button with a gear. */
-export function HomePreferences() {
+/**
+ * The foot of the front door, with no frame round it: one place for the account, and the settings under it, a button the width of the column. A
+ * guest is offered the way into Google there, their profile beside it on its row (`profile`, their rat on it); a member is led to their profile
+ * instead, and told they are kept in the settings. No account at all for a phone with no cloud behind it: only the settings.
+ */
+export function HomeAccount({ profile }: { profile: ReactNode }) {
   const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
-    <>
-      <Raised role="button" label={t('title')} bg="night-700" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => setOpen(true)}>
+    <View style={{ gap: 8 }}>
+      <AccountBlock compact member={profile} beside={profile} />
+      <Button variant="secondary" wide onPress={() => setOpen(true)}>
         <Sprite id="icon.settings" />
-      </Raised>
+        {t('title')}
+      </Button>
       <HomeSettingsSheet open={open} onClose={() => setOpen(false)} />
-    </>
+    </View>
   );
-}
-
-/**
- * The foot of the front door, with no frame round it: one place for the account. A guest is offered the way into Google there; a member is led to
- * their profile instead (`profile`, their rat on it), where that button was, and is told they are kept in the settings. Nothing for a phone with no
- * account. The settings themselves are behind the gear in the corner (`HomePreferences`).
- */
-export function HomeAccount({ profile }: { profile: ReactNode }) {
-  return <AccountBlock compact member={profile} beside={profile} />;
 }
 
 /** Where the life stands: who, how far along, and what it is worth so far. */

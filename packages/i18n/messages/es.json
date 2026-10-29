@@ -1513,6 +1513,7 @@
   "account": {
     "title": "Cuenta",
     "keep": "Entrar con Google",
+    "signInShort": "Entrar",
     "member": "Sesión iniciada con Google",
     "memberAs": "{email}",
     "failed": "No se ha podido entrar. Sigues sin cuenta.",
