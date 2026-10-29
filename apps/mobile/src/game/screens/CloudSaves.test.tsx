@@ -144,7 +144,9 @@ describe('a guest whose Google account is already a player\'s, on the phone', { 
     await signIn(keep);
     const offer = await screen.findByRole('button', { name: /Pick up the life from your other device/ });
     expect(offer.textContent).toContain('Software engineer · age 28');
-    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain('Linked to Google');
+    // A member now: the way to their profile stands where the way into Google was.
+    expect(within(screen.getByRole('region', { name: 'Account' })).getByRole('link', { name: 'Your profile' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();
     // The phone's own life is the one to continue, as it was, on the phone and on the screen.
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
     expect(((await phone.device.loadGame()) as SavedGame).lifeId).toBe('nurse');
