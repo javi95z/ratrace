@@ -4,6 +4,7 @@ import { ageAt } from '@ratrace/core/game/present';
 import { useFocusEffect } from 'expo-router';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sheetsGone } from '../../ui/back';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Raised, reach, usePress } from '../../ui/kit';
@@ -51,6 +52,7 @@ export function Home() {
   const challenge = useGame((s) => s.challenge);
   const saving = useSaving();
   const go = useGo();
+  const inset = useSafeAreaInsets();
   // New and Continue lead to /new and /play: on the web their code starts loading once the door is idle (warmPages.web.ts).
   useWarmPages();
   const open = status === 'playing' && lifeId !== null && round !== null && cityId !== null;
@@ -94,18 +96,16 @@ export function Home() {
   };
 
   return (
-    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
+    // The door is never scrolled on a phone: the picture on top takes the room the rest leaves (`DoorPicture`), and the page scrolls only where even
+    // its smallest picture leaves too little. Its foot clears the home indicator.
+    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 32, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
       <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
       <View style={{ position: 'absolute', top: 16, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
         {LANGUAGE_IN_CORNER ? <LanguageMenu /> : null}
         <HomePreferences />
       </View>
       {/* A first visit meets the mascot; someone coming back is waved at. */}
-      {returning ? (
-        <Sprite id={ratArt('wave')} fallback={{ w: 128, h: 128 }} style={{ marginBottom: -4 }} />
-      ) : (
-        <Sprite id={FRONT_PICTURE} fallback={{ w: 256, h: 256 }} style={{ marginBottom: -8 }} />
-      )}
+      {returning ? <DoorPicture id={ratArt('wave')} most={128} least={64} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={256} least={96} below={-8} />}
       <View style={{ alignItems: 'center' }}>
         <View accessibilityRole="header">
           <PixelText size={returning ? 28 : 34} tone="gold-500" lineHeight={returning ? 28 : 34}>{meta('title')}</PixelText>
@@ -159,30 +159,12 @@ export function Home() {
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             <FriendRequests />
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Raised
-                role="link"
-                bg="night-700"
-                place={{ flex: 1 }}
-                style={{ flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-                onPress={() => go.push('collection')}
-              >
-                <Sprite id="icon.star" />
-                <PixelText size={15} tone="ink-200">{t('collection')}</PixelText>
-              </Raised>
-              <Raised
-                role="link"
-                bg="night-700"
-                place={{ flex: 1 }}
-                style={{ flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-                onPress={() => go.push('records')}
-              >
-                <Sprite id="icon.trophy" />
-                <PixelText size={15} tone="ink-200">{t('records')}</PixelText>
-              </Raised>
+            {/* One row of tiles, an icon over a word: the collection, the records and, where someone is signed in to ask the others, the rankings. */}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Tile icon="icon.star" label={t('collection')} onPress={() => go.push('collection')} />
+              <Tile icon="icon.trophy" label={t('records')} onPress={() => go.push('records')} />
+              <RankingsLink />
             </View>
-            {/* The rankings are the other players': there is a way to them only where someone is signed in to ask. Across the row, the web's `col-span-2`. */}
-            <RankingsLink />
             {/* The web's words for a life that is newer, or waiting, or gone from another tab, tell of a page and a connection: the phone's own say update the app. */}
             {lost ? <Notice role="status">{lost === 'newer' ? phone('lostNewer') : lost === 'waiting' ? phone('lostWaiting') : t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</Notice> : null}
             {moved && status === 'none' ? (
@@ -194,7 +176,7 @@ export function Home() {
         )}
       </View>
 
-      {/* At the foot, as it always was, with no frame round it: the account, the player's profile and the settings, these also behind the gear above. */}
+      {/* At the foot, with no frame round it, one place for the account: the way into Google for a guest, the way to their profile for a member. */}
       <View style={{ width: '100%', marginTop: 'auto' }}>
         <HomeAccount profile={<ProfileLink />} />
       </View>
@@ -298,23 +280,54 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
   );
 }
 
+/**
+ * The front door's picture, as large as the room the rest of the door leaves it, `most` at most and `least` at least: its box takes what is left of
+ * the screen's height (it grows from nothing, the others keeping their own), and the picture is drawn into a square of that box's height, nearest
+ * neighbour. Until the box is measured (and in the web's HTML) it is drawn at `most`, cut by the box. `below` is the room it gives back underneath.
+ */
+function DoorPicture({ id, most, least, below }: { id: string; most: number; least: number; below: number }) {
+  const [side, setSide] = useState(most);
+  return (
+    <View
+      style={{ alignSelf: 'stretch', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: least, maxHeight: most, marginBottom: below, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+      onLayout={(event) => setSide(pictureSide(event.nativeEvent.layout.height, most, least))}
+    >
+      <Sprite id={id} size={{ w: side, h: side }} />
+    </View>
+  );
+}
+
+/** The side of the door's picture in a box `room` high: whole points, between `least` and `most`. */
+export function pictureSide(room: number, most: number, least: number): number {
+  return Math.max(least, Math.min(most, Math.floor(room)));
+}
+
+/**
+ * One of the door's row of tiles: an icon over its word. Each starts as wide as its word and the row's room left is shared among them alike, so that a
+ * longer word (the Spanish rankings', "Clasificaciones") keeps its whole width on a phone 375 wide.
+ */
+function Tile({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+  return (
+    <Raised
+      role="link"
+      bg="night-700"
+      place={{ flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 0 }}
+      style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 8 }}
+      onPress={onPress}
+    >
+      <Sprite id={icon} />
+      <PixelText size={15} tone="ink-200" numberOfLines={1} style={{ textAlign: 'center' }}>{label}</PixelText>
+    </Raised>
+  );
+}
+
 /** The way to the rankings, where someone is signed in to ask the others (a leaf of its own: the connection coming and going draws nothing). */
 function RankingsLink() {
   const t = useT('home');
   const go = useGo();
   const signedIn = useSignedIn();
   if (!signedIn) return null;
-  return (
-    <Raised
-      role="link"
-      bg="night-700"
-      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
-      onPress={() => go.push('rankings')}
-    >
-      <Sprite id="icon.status" />
-      <PixelText size={15} tone="ink-200">{t('rankings')}</PixelText>
-    </Raised>
-  );
+  return <Tile icon="icon.status" label={t('rankings')} onPress={() => go.push('rankings')} />;
 }
 
 /**
@@ -346,7 +359,10 @@ function FriendRequests() {
   );
 }
 
-/** The way to the player's profile, with their rat on it: there for anyone with an account, a guest's as a member's, whose profile the others see. */
+/**
+ * The way to the player's profile, with their rat on it: a member's, in the account's place at the foot (a guest is offered Google there instead, and
+ * reaches their profile from a game's lobby, where the others see their name and rat).
+ */
 function ProfileLink() {
   const t = useT('home');
   const { state } = useAccount();

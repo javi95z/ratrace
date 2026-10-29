@@ -278,7 +278,7 @@ function useAnnounced(words: string | null) {
  * Google account that is already a player's is taken, with a second trip to Google the player is told of. Nothing is shown at all where the game has
  * no cloud behind it, or could not reach it. `signOut` offers to sign out: in the settings themselves, not at the foot of the front door.
  */
-function AccountBlock({ compact = false, signOut: offerSignOut = false }: { compact?: boolean; signOut?: boolean }) {
+function AccountBlock({ compact = false, signOut: offerSignOut = false, member }: { compact?: boolean; signOut?: boolean; member?: ReactNode }) {
   const t = useT('account');
   const { state, keepWithGoogle, dismissNotice } = useAccount();
   const waiting = useAccountSaving(outOfReach);
@@ -312,7 +312,13 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false }: { comp
   return (
     // A part of the panel it stands in, set off by a rule: never a box inside a box.
     <View role="region" aria-label={t('title')} style={compact ? { gap: 8 } : { gap: 8, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 12 }}>
-      {state.kind === 'member' ? (
+      {state.kind === 'member' && member !== undefined ? (
+        // Where a member is shown something else in the account's place (the front door's way to their profile): the line of the account is in the settings.
+        <>
+          {member}
+          {saved}
+        </>
+      ) : state.kind === 'member' ? (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <GoogleMark size={18} />
@@ -599,23 +605,12 @@ export function HomePreferences() {
 }
 
 /**
- * The foot of the front door, with no frame round it (the web's `HomeAccount`): the account, with the way into Google for a guest; the player's
- * profile where there is one; and the settings, a button below it.
+ * The foot of the front door, with no frame round it: one place for the account. A guest is offered the way into Google there; a member is led to
+ * their profile instead (`profile`, their rat on it), where that button was, and is told they are kept in the settings. Nothing for a phone with no
+ * account. The settings themselves are behind the gear in the corner (`HomePreferences`).
  */
-export function HomeAccount({ profile = null }: { profile?: ReactNode }) {
-  const t = useT('settings');
-  const [open, setOpen] = useState(false);
-  return (
-    <View style={{ gap: 8 }}>
-      <AccountBlock compact />
-      {profile}
-      <Button variant="secondary" wide onPress={() => setOpen(true)}>
-        <Sprite id="icon.settings" />
-        {t('title')}
-      </Button>
-      <HomeSettingsSheet open={open} onClose={() => setOpen(false)} />
-    </View>
-  );
+export function HomeAccount({ profile }: { profile: ReactNode }) {
+  return <AccountBlock compact member={profile} />;
 }
 
 /** Where the life stands: who, how far along, and what it is worth so far. */
