@@ -1609,6 +1609,7 @@
       "networkCards": "better options on cards",
       "management": "Profit +{profit}%, manager −{off} points",
       "managementExtra": "one more business",
+      "startFail": "fail at the start −{off} points",
       "health": "Health insurance −{off}%",
       "healthCards": "injuries without physio",
       "healthFocus": "+1 focus a round",

@@ -162,6 +162,7 @@ const base: Content = {
     salePct: { expansion: 95, boom: 100, slowdown: 85, recession: 70, recovery: 90 },
     rampPct: [],
     managementFailOffPct: 0,
+    networkFailOffPct: 0,
     failRecoverPct: 40,
   },
   items: [

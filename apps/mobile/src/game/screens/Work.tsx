@@ -290,10 +290,15 @@ function skillGives(t: ReturnType<typeof useT>, content: Content, skill: SkillId
         ...(level >= r.languagesPartnerFrom ? [t('skillDoes.languagesPartner')] : []),
       ];
     case 'network':
-      return [t('skillDoes.network', { hunt: level * r.networkHuntPct, status: level * r.networkStatus }), ...(level >= 2 ? [t('skillDoes.networkCards')] : [])];
+      return [
+        t('skillDoes.network', { hunt: level * r.networkHuntPct, status: level * r.networkStatus }),
+        ...(level >= 1 ? [t('skillDoes.startFail', { off: level * content.business.networkFailOffPct })] : []),
+        ...(level >= 2 ? [t('skillDoes.networkCards')] : []),
+      ];
     case 'management':
       return [
         t('skillDoes.management', { profit: level * r.managementProfitPct, off: level * r.managementManagerOffPct }),
+        ...(level >= 1 ? [t('skillDoes.startFail', { off: level * content.business.managementFailOffPct })] : []),
         ...(level >= r.managementExtraFrom ? [t('skillDoes.managementExtra')] : []),
       ];
     case 'health':

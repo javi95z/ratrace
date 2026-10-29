@@ -1609,6 +1609,7 @@
       "networkCards": "mejores opciones en cartas",
       "management": "Beneficio +{profit} %, encargado −{off} puntos",
       "managementExtra": "un negocio más",
+      "startFail": "fracaso al empezar −{off} puntos",
       "health": "Seguro de salud −{off} %",
       "healthCards": "lesiones sin fisio",
       "healthFocus": "+1 de foco por ronda",

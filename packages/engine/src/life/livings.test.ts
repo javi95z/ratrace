@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { businessRound } from '../business';
+import { businessRound, failChance } from '../business';
 import { incomeForRound } from '../economy';
 import { optionBreaks, orderBreaks } from '../limits';
 import { applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
+import { quoteBusinesses } from '../quotes';
 import { Rng, seedRng } from '../rng';
 import type { CardDef, Content, GameState, LifeStart } from '../types';
 import { drawHand } from './cards';
 import { lodgerOf, ownPay, refreshDerived, statusParts, workModeOf } from './derive';
 import { applyEffects } from './effects';
 import { focusLock, focusTotal } from './orders';
+import { pointsOfLevel } from './skills';
+import { viewOf } from '../view';
 
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 2 }, careerSkill: 10, financeSkill: 0, focus: 3 };
 const start = (c: Content, life: Partial<LifeStart> = {}): GameState => createGame({ content: c, start: { ...fixtureStart(), cash: 200_000_00, life: { ...office, ...life } } }, 'livings');
@@ -222,6 +225,29 @@ describe('a new business', () => {
     const { state, events } = applyRound(c, start(c), { orders: [{ type: 'startBusiness', typeId: 'stall', capital: 10_000_00 }] });
     expect(state.player.businesses).toEqual([]);
     expect(events).toContainEqual({ kind: 'businessFailed', typeId: 'stall', recovered: 4_000_00 });
+  });
+
+  it('fails less for an owner who knows how to run things, and less again for one who knows people', () => {
+    const c = fixtureContent();
+    c.business.managementFailOffPct = 5;
+    c.business.networkFailOffPct = 3;
+    const type = { ...c.business.types[0], failPct: 25 };
+    expect(failChance(type, c, 0, 0)).toBe(25);
+    expect(failChance(type, c, 1, 0)).toBe(20);
+    expect(failChance(type, c, 0, 3)).toBe(16);
+    expect(failChance(type, c, 2, 2)).toBe(9);
+    // Never below nothing.
+    expect(failChance(type, c, 3, 3)).toBe(1);
+    expect(failChance({ ...type, failPct: 9 }, c, 3, 3)).toBe(0);
+
+    // In play: a kind that fails one in nine never fails for someone at the top of their network, and the quote says so.
+    (c.business.types[0] as { failPct: number }).failPct = 9;
+    const state = start(c);
+    state.player.life.skills.network = pointsOfLevel(3, c);
+    expect(quoteBusinesses(c, viewOf(state)).kinds[0].failChancePct).toBe(0);
+    const { state: after, events } = applyRound(c, state, { orders: [{ type: 'startBusiness', typeId: 'stall', capital: 10_000_00 }] });
+    expect(after.player.businesses).toHaveLength(1);
+    expect(events.some((e) => e.kind === 'businessFailed')).toBe(false);
   });
 });
 

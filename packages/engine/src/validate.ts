@@ -175,7 +175,7 @@ export function validateContent(c: Content): string[] {
     errors.push('business.payouts must be whole percentages from 0 to 100, rising');
   }
   if (!Array.isArray(business.rampPct) || business.rampPct.some((pct) => !(isCount(pct) && pct <= 100))) errors.push('business.rampPct must be whole percentages up to 100');
-  if (!isCount(business.managementFailOffPct) || !(isCount(business.failRecoverPct) && business.failRecoverPct <= 100)) errors.push('business needs whole numbers for the management off a failure and what a failure gives back');
+  if (!isCount(business.managementFailOffPct) || !isCount(business.networkFailOffPct) || !(isCount(business.failRecoverPct) && business.failRecoverPct <= 100)) errors.push('business needs whole numbers for the management and the network off a failure and what a failure gives back');
   for (const type of business.types ?? []) if (!(isCount(type.failPct) && type.failPct <= 100)) errors.push(`business type ${type.id} needs a chance of failing from 0 to 100`);
   if (!within(business.neglectProfitPct, 0, 100) || !within(business.neglectDecayBp, 0, 10_000)) errors.push('business neglect must take a share of the profit and of the capital, no more than all of either');
   for (const regime of REGIMES) {

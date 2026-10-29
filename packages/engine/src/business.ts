@@ -173,9 +173,13 @@ export function executeBusinessOrder(p: PlayerState, order: BusinessOrder, ctx: 
   }
 }
 
-/** The chance in percent that a business of this kind fails in its first round, for an owner with this much management. */
-export function failChance(type: BusinessTypeDef, content: Content, management: SkillLevel): number {
-  return Math.max(0, type.failPct - management * content.business.managementFailOffPct);
+/**
+ * The chance in percent that a business of this kind fails in its first round, for an owner with this much
+ * management and this much network: knowing how to run things, and knowing the people who become its first customers.
+ */
+export function failChance(type: BusinessTypeDef, content: Content, management: SkillLevel, network: SkillLevel): number {
+  const rules = content.business;
+  return Math.max(0, type.failPct - management * rules.managementFailOffPct - network * rules.networkFailOffPct);
 }
 
 /**
@@ -188,6 +192,7 @@ export function growBusinesses(p: PlayerState, content: Content, now: WorldState
   const failed: Array<{ typeId: string; recovered: Cents }> = [];
   const kept: Business[] = [];
   const management = skillLevel(p, 'management', content);
+  const network = skillLevel(p, 'network', content);
   // What a good round is: one that made a good share of what the job pays.
   const rule = content.life.fullTime;
   const pay = indexed(ownPay(p, content), now) * content.yearsPerRound;
@@ -195,7 +200,7 @@ export function growBusinesses(p: PlayerState, content: Content, now: WorldState
     const round = businessRound(business, content, now, management);
     const strong = pay > 0 && round.profit * 100 >= pay * rule.strongPct ? (business.strong ?? 0) + 1 : 0;
     // Its first round is the test: many new businesses do not see a second. What is left of it is sold for parts.
-    if (business.age === 0 && rng.chance(failChance(businessTypeOf(content, business.typeId), content, management))) {
+    if (business.age === 0 && rng.chance(failChance(businessTypeOf(content, business.typeId), content, management, network))) {
       const recovered = mulDiv(business.capital, content.business.failRecoverPct, 100);
       p.cash += recovered;
       failed.push({ typeId: business.typeId, recovered });

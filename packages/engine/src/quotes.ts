@@ -747,7 +747,7 @@ export function quoteBusinesses(content: Content, view: GameView): BusinessesQuo
       managerPct: type.managerPct,
       minFinanceSkill: type.minFinanceSkill,
       lock: businessLock(p, type, content),
-      failChancePct: failChance(type, content, management),
+      failChancePct: failChance(type, content, management, skillLevel(p, 'network', content)),
     })),
     max: maxBusinessesOf(p, content),
     payouts: [...content.business.payouts],

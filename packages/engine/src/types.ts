@@ -953,6 +953,8 @@ export interface BusinessRules {
   rampPct: ReadonlyArray<number>;
   /** Points taken off the chance of failing at the start for each level of management. */
   managementFailOffPct: number;
+  /** Points taken off the chance of failing at the start for each level of network: the contacts that bring the first customers. */
+  networkFailOffPct: number;
   /** What is got back of the capital of a business that fails at the start, in percent. */
   failRecoverPct: number;
 }

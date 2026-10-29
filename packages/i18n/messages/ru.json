@@ -1609,6 +1609,7 @@
       "networkCards": "варианты получше в картах",
       "management": "Прибыль +{profit}%, управляющий −{off, plural, one {# пункт} few {# пункта} many {# пунктов} other {# пункта}}",
       "managementExtra": "ещё одно дело",
+      "startFail": "провал на старте −{off, plural, one {# пункт} few {# пункта} many {# пунктов} other {# пункта}}",
       "health": "Медстраховка −{off}%",
       "healthCards": "травмы без физиотерапии",
       "healthFocus": "+1 к фокусу за раунд",

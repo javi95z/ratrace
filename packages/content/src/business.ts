@@ -38,5 +38,8 @@ export const business: BusinessRules = {
   // Many do not see their second round: an app most of all, a trade of one's own least. Someone who
   // knows how to run things fails less, and a failure is sold for parts.
   managementFailOffPct: 5,
+  // Someone who knows people fails less too, a little less than one who knows how to run things: contacts
+  // bring a new business its first customers, but it is the running of it that keeps them.
+  networkFailOffPct: 3,
   failRecoverPct: 40,
 };
