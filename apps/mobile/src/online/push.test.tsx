@@ -658,9 +658,13 @@ describe('the token, kept up to date with the account', () => {
     notices.token = SECOND;
     act(() => notices.newToken({ type: 'ios', data: 'apns-2' }));
     await waitFor(() => expect(asked).toContain(`stop ${FIRST}`));
-    expect(asked).toEqual([`notify ${SECOND} ios en`, `read ${FIRST}`, `set ${SECOND} true`, `stop ${FIRST}`]);
+    expect(asked.slice(0, 4)).toEqual([`notify ${SECOND} ios en`, `read ${FIRST}`, `set ${SECOND} true`, `stop ${FIRST}`]);
+    // The settings may read the market's switch again for the new token once it is kept (when depends on the machine's pace): nothing else.
+    expect(asked.slice(4).filter((ask) => ask !== `read ${SECOND}`)).toEqual([]);
     expect(notices.tokenAsks.at(-1)).toEqual({ projectId: PROJECT, devicePushToken: { type: 'ios', data: 'apns-2' } });
-    // The same token again is nothing new.
+    // The same token again is nothing new (once what the new one set off has settled).
+    await settle();
+    await settle();
     asked.length = 0;
     act(() => notices.newToken({ type: 'ios', data: 'apns-2' }));
     await settle();
