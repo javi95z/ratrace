@@ -511,13 +511,18 @@ describe('the account at the foot of the front door', () => {
     signOut: async () => false,
   });
 
-  it('shows a guest the way into Google at the foot, and nothing else there: no profile, no settings, said where things are kept only for a phone with no account', async () => {
+  it('shows a guest the way into Google at the foot with their profile beside it on its row, and nothing else there: no settings, said where things are kept only for a phone with no account', async () => {
     renderGame(<Home />, { ...memoryServices(), account: accountAs({ kind: 'guest', userId: 'u', notice: null }) });
     await screen.findByRole('link', { name: 'New life' });
     const foot = screen.getByRole('region', { name: 'Account' });
-    expect(within(foot).getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
-    expect(within(foot).queryAllByRole('link')).toEqual([]);
-    expect(screen.queryByRole('link', { name: 'Your profile' })).toBeNull();
+    const google = within(foot).getByRole('button', { name: 'Sign in with Google' });
+    const profile = within(foot).getByRole('link', { name: 'Your profile' });
+    expect(within(foot).getAllByRole('link')).toEqual([profile]);
+    // One row: Google on the left, the profile on the right.
+    let row = google.parentElement as HTMLElement;
+    while (!row.contains(profile)) row = row.parentElement as HTMLElement;
+    expect(getComputedStyle(row).flexDirection).toBe('row');
+    expect(google.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(foot).queryByRole('button', { name: 'Settings' })).toBeNull();
     // At the foot with no frame round it, as the web's: no box of the settings holds the account.
     expect(foot.closest('[aria-label="Settings"]')).toBeNull();
@@ -730,8 +735,8 @@ describe('the front door of a player with an account', () => {
     while (!row.contains(screen.getByRole('link', { name: 'History' }))) row = row.parentElement as HTMLElement;
     expect(within(row).getAllByRole('link').map((link) => link.textContent)).toEqual(['Collection', 'History']);
     expect(row.compareDocumentPosition(rankings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // A guest has no profile on the door: the way into Google stands where it would be.
-    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings']);
+    // A guest's profile stands beside the way into Google, at the foot.
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings', 'Your profile']);
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
   });
 
@@ -765,7 +770,7 @@ describe('the front door of a player with an account', () => {
     expect(asked).toEqual([]);
   });
 
-  it('leads a member to their profile with their rat on it, at the foot where a guest is offered Google; a guest has none there, and is given it once kept', async () => {
+  it('leads a member to their profile with their rat on it, at the foot where a guest is offered Google beside it; once kept, the profile has the row', async () => {
     const asked: string[] = [];
     const services = { ...memoryServices(), community: () => othersOf({ me: async () => (asked.push('me'), { nickname: 'Rata', friendCode: 'ABCD2345', avatar: null }) }) };
     renderGame(<Home />, { ...services, account: accountOf(MEMBER).account });
@@ -780,11 +785,11 @@ describe('the front door of a player with an account', () => {
     // The rat on it is the member's own, as their profile on the server keeps it.
     await waitFor(() => expect(asked).toContain('me'));
     cleanup();
-    // A guest: the way into Google in its place, and no profile on the door; once kept with Google, the profile takes the button's place.
+    // A guest: the way into Google, and their profile beside it; once kept with Google, the profile has the row to itself.
     const { account, become } = accountOf(GUEST);
     renderGame(<Home />, { ...services, account });
     expect(await screen.findByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Your profile' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Your profile' })).toBeTruthy();
     become(MEMBER);
     expect(await screen.findByRole('link', { name: 'Your profile' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();

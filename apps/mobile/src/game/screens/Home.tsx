@@ -177,7 +177,7 @@ export function Home() {
         )}
       </View>
 
-      {/* Under the tiles, with no frame round it, one place for the account: the way into Google for a guest, the way to their profile for a member. */}
+      {/* Under the tiles, with no frame round it, one place for the account: a member's way to their profile; a guest's way into Google, and their profile beside it. */}
       <View style={{ width: '100%' }}>
         <HomeAccount profile={<ProfileLink />} />
       </View>
@@ -359,8 +359,8 @@ function FriendRequests() {
 }
 
 /**
- * The way to the player's profile, with their rat on it: a member's, in the account's place at the foot (a guest is offered Google there instead, and
- * reaches their profile from a game's lobby, where the others see their name and rat).
+ * The way to the player's profile, with their rat on it: a member's, in the account's place at the foot; a guest's, beside the way into Google, on
+ * its row.
  */
 function ProfileLink() {
   const t = useT('home');

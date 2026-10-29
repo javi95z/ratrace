@@ -278,7 +278,11 @@ function useAnnounced(words: string | null) {
  * Google account that is already a player's is taken, with a second trip to Google the player is told of. Nothing is shown at all where the game has
  * no cloud behind it, or could not reach it. `signOut` offers to sign out: in the settings themselves, not at the foot of the front door.
  */
-function AccountBlock({ compact = false, signOut: offerSignOut = false, member }: { compact?: boolean; signOut?: boolean; member?: ReactNode }) {
+/**
+ * `member` stands in the account's place for a member (the front door's way to their profile); `beside` stands to the right of a guest's Google
+ * button, on its row (the same way to their profile: a guest has one too).
+ */
+function AccountBlock({ compact = false, signOut: offerSignOut = false, member, beside }: { compact?: boolean; signOut?: boolean; member?: ReactNode; beside?: ReactNode }) {
   const t = useT('account');
   const { state, keepWithGoogle, dismissNotice } = useAccount();
   const waiting = useAccountSaving(outOfReach);
@@ -349,10 +353,23 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false, member }
               </Button>
             </View>
           ) : null}
-          <Button variant="secondary" wide disabled={travelling} onPress={travel}>
-            <GoogleMark />
-            {t('keep')}
-          </Button>
+          {beside === undefined ? (
+            <Button variant="secondary" wide disabled={travelling} onPress={travel}>
+              <GoogleMark />
+              {t('keep')}
+            </Button>
+          ) : (
+            // Google on the left, the profile on the right, each half of the row.
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Button variant="secondary" wide disabled={travelling} onPress={travel}>
+                  <GoogleMark />
+                  {t('keep')}
+                </Button>
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>{beside}</View>
+            </View>
+          )}
           {saved}
         </>
       )}
@@ -611,7 +628,7 @@ export function HomePreferences() {
  * account. The settings themselves are behind the gear in the corner (`HomePreferences`).
  */
 export function HomeAccount({ profile }: { profile: ReactNode }) {
-  return <AccountBlock compact member={profile} />;
+  return <AccountBlock compact member={profile} beside={profile} />;
 }
 
 /** Where the life stands: who, how far along, and what it is worth so far. */
