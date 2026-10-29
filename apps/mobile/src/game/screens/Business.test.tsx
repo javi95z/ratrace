@@ -4,7 +4,7 @@ import { messagesFor } from '@ratrace/i18n';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { formatFor } from '@ratrace/core/lib/format';
 import type { GameSession, SavedGame } from '@ratrace/core/session/types';
-import { quoteBusinesses, viewOf } from '@ratrace/engine';
+import { focusLeft, previewRound, quoteBusinesses, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { createElement } from 'react';
@@ -354,6 +354,58 @@ describe('the business tab', () => {
     expect(tend().getAttribute('aria-selected')).toBe('true');
     expect(manager().getAttribute('aria-selected')).toBe('false');
     expect(probe.state!.orders.filter((order) => order.type === 'tendBusiness' || order.type === 'setBusiness')).toEqual([{ type: 'tendBusiness', businessId: expect.any(String) }]);
+  });
+
+  it('drops the order to run it oneself when the business becomes the job, and gives its focus back', async () => {
+    // The founder's shop, strong enough to leave her job for, and nobody running it yet this round.
+    const { services, session } = await inFinance('founder');
+    changed(services, session, (view) => ({ ...view, player: { ...view.player, businesses: view.player.businesses.map((b) => ({ ...b, tended: false, strong: content.life.fullTime.strongRounds })) } }));
+    await openTab(services);
+    const view = probe.state!.view!;
+    const shopId = view.player.businesses[0].id;
+    expect(probe.state!.orders).toEqual([{ type: 'tendBusiness', businessId: shopId }]);
+    fireEvent.click(within(yours()).getByRole('button', { name: /Online shop/ }));
+    fireEvent.click(within(sheetTitled('Online shop')).getByRole('button', { name: 'Leave your job for it' }));
+    await settled();
+    // Only the job's change is left: run full time it needs no focus of the owner's, and the point is free again.
+    expect(probe.state!.orders).toEqual([{ type: 'goFullTime', businessId: shopId }]);
+    expect(focusLeft(probe.state!.preview!.player)).toBe(focusLeft(previewRound(content, view, { orders: [{ type: 'goFullTime', businessId: shopId }] }).player));
+    expect(focusLeft(probe.state!.preview!.player)).toBeGreaterThan(focusLeft(previewRound(content, view, { orders: [{ type: 'tendBusiness', businessId: shopId }, { type: 'goFullTime', businessId: shopId }] }).player));
+    // Nothing to run: neither switch is offered, in the list or in its sheet.
+    fireEvent.click(within(sheetTitled('Online shop')).getByRole('button', { name: 'Close' }));
+    await sheetGone('Online shop');
+    expect(within(yours()).queryByRole('button', { name: /Run it yourself/ })).toBeNull();
+    expect(within(yours()).queryByRole('button', { name: /Manager · / })).toBeNull();
+  });
+
+  it('offers no switch for a business run full time, and the round begins with no order for it', async () => {
+    const { services, session } = await inFinance('founder');
+    changed(services, session, (view) => ({ ...view, player: { ...view.player, businesses: view.player.businesses.map((b) => ({ ...b, tended: false, fullTime: true })) } }));
+    await openTab(services);
+    expect(probe.state!.orders).toEqual([]);
+    expect(within(yours()).queryByRole('button', { name: /Run it yourself/ })).toBeNull();
+    expect(within(yours()).queryByRole('button', { name: /Manager · / })).toBeNull();
+  });
+
+  it('gives a business taken off full time this round no order of its own: it is run only once the player switches it on', async () => {
+    const { services, session } = await inFinance('founder');
+    changed(services, session, (view) => ({
+      ...view,
+      player: { ...view.player, life: { ...view.player.life, formerCareer: view.player.life.career, career: null }, businesses: view.player.businesses.map((b) => ({ ...b, tended: false, fullTime: true })) },
+    }));
+    await openTab(services);
+    const shopId = probe.state!.view!.player.businesses[0].id;
+    act(() => {
+      probe.state!.setOrder((order) => order.type === 'backToWork', { type: 'backToWork' });
+    });
+    await settled();
+    // The defaults were made at the round's start, when it was the job: it is nobody's to run until the player says so.
+    expect(probe.state!.orders).toEqual([{ type: 'backToWork' }]);
+    const tend = () => within(yours()).getByRole('button', { name: /Run it yourself/ });
+    expect(tend().getAttribute('aria-selected')).toBe('false');
+    fireEvent.click(tend());
+    await settled();
+    expect(probe.state!.orders).toEqual([{ type: 'backToWork' }, { type: 'tendBusiness', businessId: shopId }]);
   });
 
   it('lets the player take back a business a manager has run since an earlier round: the manager goes, and the focus runs it', async () => {

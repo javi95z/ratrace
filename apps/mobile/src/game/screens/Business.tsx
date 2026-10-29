@@ -119,6 +119,7 @@ const BusinessLine = memo(function BusinessLine({
   managerPct,
   payoutPct,
   neglected,
+  fullTime,
   standing,
   standingTended,
   focusLeft,
@@ -136,6 +137,8 @@ const BusinessLine = memo(function BusinessLine({
   managerPct: number;
   payoutPct: number;
   neglected: boolean;
+  /** Run full time, as the round stands: there is nothing to run, by the owner's focus or a manager. */
+  fullTime: boolean;
   /** The business stood before this round's orders: one opened by an order of this round is not the player's to run until the round is played. */
   standing: boolean;
   standingTended: boolean;
@@ -168,7 +171,7 @@ const BusinessLine = memo(function BusinessLine({
         </View>
       </Pressable>
       {neglected ? <ReadText size={12} lineHeight={12 * SNUG} tone="wine-300" style={{ marginTop: 4 }}>{t('neglectedShort')}</ReadText> : null}
-      {standing ? (
+      {standing && !fullTime ? (
         <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
           <QuickSwitch on={tended && !manager} disabled={standingTended || (!tended && focusLeft < 1)} label={t('quickTend')} onChange={(on) => running.tend(on)} />
           <QuickSwitch on={manager} label={t('quickManager', { pct: managerPct })} onChange={(on) => running.manage(on)} />
@@ -258,6 +261,7 @@ export function BusinessTab() {
                 managerPct={business.managerPct}
                 payoutPct={business.payoutPct}
                 neglected={business.neglected}
+                fullTime={business.fullTime === true}
                 standing={standing !== undefined}
                 standingTended={standing?.tended ?? false}
                 focusLeft={quote.focusLeft}
@@ -367,6 +371,12 @@ function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
   const rule = content.life.fullTime;
   const p = view.player;
   const isLeaving = (order: Order) => order.type === 'goFullTime';
+  // Run full time it needs none of the owner's spare focus: an order to run it oneself would only spend a point for nothing.
+  const isTending = (order: Order) => order.type === 'tendBusiness' && order.businessId === business.id;
+  const go = () => {
+    if (leaving) setOrder(isLeaving, null);
+    else if (setOrder(isLeaving, { type: 'goFullTime', businessId: business.id })) setOrder(isTending, null);
+  };
   if (business.fullTime === true) {
     return (
       <View style={{ borderLeftWidth: 4, borderLeftColor: COLORS['teal-300'], paddingLeft: 10 }}>
@@ -381,7 +391,7 @@ function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
   const job = text.careers[p.life.career.id].levels[p.life.career.level];
   return (
     <View style={{ gap: 6 }}>
-      <Button variant={leaving ? 'primary' : 'secondary'} onPress={() => setOrder(isLeaving, leaving ? null : { type: 'goFullTime', businessId: business.id })}>
+      <Button variant={leaving ? 'primary' : 'secondary'} onPress={go}>
         {leaving ? t('fullTime.leaving') : t('fullTime.go')}
       </Button>
       <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300">{t('fullTime.goHint', { job, pct: rule.profitPct - 100, focus: rule.focus })}</ReadText>
