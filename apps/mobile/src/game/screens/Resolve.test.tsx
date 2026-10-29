@@ -361,6 +361,35 @@ describe('what the round brought besides the money', () => {
     expect(onGround(faded[0], 'night-700')).toBe(true);
   });
 
+  it('tells what changed the life first, then the money, and last, under it all, the notes that only inform: a status worn off, a crisis over', async () => {
+    const trip = { itemId: 'travel_weekend', value: 0, roundsLeft: 1, paid: 0, age: 0 };
+    await inPlay({
+      world: (view) => {
+        if (view.round === 0) {
+          view.player.life.items.push(trip);
+          view.player.life.collection.push(trip.itemId);
+          view.timeline[0].crisis = { id: 'crash', year: 3, of: 3 };
+        }
+      },
+      events: (all) => [...all, { kind: 'promoted', careerId: 'healthcare', level: 1 }],
+    });
+    const page = document.body.textContent ?? '';
+    const at = (words: string) => {
+      const i = page.indexOf(words);
+      expect(i, words).toBeGreaterThanOrEqual(0);
+      return i;
+    };
+    const promoted = at('Promoted: ');
+    const money = at('Cash now');
+    const worn = at('Ryanair weekend: its status has worn off.');
+    const over = at('The Great Crash is over.');
+    expect(promoted).toBeLessThan(at(text.ledger.salary));
+    expect(money).toBeLessThan(worn);
+    expect(money).toBeLessThan(over);
+    // Under the family's words too: at the very bottom.
+    expect(at('At the Christmas dinner')).toBeLessThan(worn);
+  });
+
   it('tells each piece of news in its colour, and cheers a promotion', async () => {
     await inPlay({ events: (all) => [...all, { kind: 'promoted', careerId: 'healthcare', level: 1 }, { kind: 'lent', to: 'abcd1234-ffff', amount: 100_000, rateBp: 500, rounds: 2 }] });
     const notes = screen.getAllByRole('status');

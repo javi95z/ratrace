@@ -423,9 +423,14 @@ const TEASED = ['teased', 'teased2', 'teased3'] as const;
  * What happened in a round besides the money, the biggest news first. `t` translates the `resolve`
  * section; `whoIs` names a player of a game with friends by their id.
  */
-export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[], whoIs: (userId: string) => string = () => '?'): RoundNote[] {
-  const told: Array<{ rank: number; note: RoundNote }> = [];
-  const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
+export function roundNotes(words: Words, t: Translate, events: GameEvent[], whoIs: (userId: string) => string = () => '?'): RoundNote[] {
+  return keptNotes(words, t, events, whoIs).map((each) => each.note);
+}
+
+/** The news of a round as `roundNotes` tells it, each with the kind of event it tells (for `byWeight` in resultNotes.ts). */
+export function keptNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[], whoIs: (userId: string) => string = () => '?'): Array<{ kind: GameEvent['kind']; note: RoundNote }> {
+  const told: Array<{ rank: number; kind: GameEvent['kind']; note: RoundNote }> = [];
+  const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), kind: event.kind, note });
   const levelled: Array<Extract<GameEvent, { kind: 'skill' }>> = [];
   for (const event of events) {
     switch (event.kind) {
@@ -553,13 +558,13 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
   // Skills that rose in the same round are one line, not one each.
   if (levelled.length === 1) {
     const [only] = levelled;
-    told.push({ rank: TOLD.indexOf('skill'), note: { tone: 'good', icon: skillArt[only.skill], title: t('skill', { skill: text.skills[only.skill], level: only.level }) } });
+    told.push({ rank: TOLD.indexOf('skill'), kind: 'skill', note: { tone: 'good', icon: skillArt[only.skill], title: t('skill', { skill: text.skills[only.skill], level: only.level }) } });
   } else if (levelled.length > 1) {
     const list = levelled.map((event) => `${text.skills[event.skill]} ${event.level}`).join(', ');
-    told.push({ rank: TOLD.indexOf('skill'), note: { tone: 'good', icon: skillArt[levelled[0].skill], title: t('skills', { list }) } });
+    told.push({ rank: TOLD.indexOf('skill'), kind: 'skill', note: { tone: 'good', icon: skillArt[levelled[0].skill], title: t('skills', { list }) } });
   }
   // A stable sort: two events of a kind stay in the order they happened.
-  return told.sort((a, b) => a.rank - b.rank).map((entry) => entry.note);
+  return told.sort((a, b) => a.rank - b.rank).map(({ kind, note }) => ({ kind, note }));
 }
 
 /**

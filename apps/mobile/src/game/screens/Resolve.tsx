@@ -2,7 +2,8 @@ import { itemArt, milestoneArt } from '@ratrace/content';
 import type { MilestoneScene } from '@ratrace/content';
 import { wornOff } from '@ratrace/core/game/fading';
 import { milestoneOf } from '@ratrace/core/game/milestones';
-import { ageAt, roundNotes } from '@ratrace/core/game/present';
+import { ageAt, keptNotes } from '@ratrace/core/game/present';
+import { byWeight } from '@ratrace/core/game/resultNotes';
 import type { RoundNote } from '@ratrace/core/game/present';
 import { bankQuip, familyQuip, ratOutfit } from '@ratrace/core/game/quips';
 import { netWorth } from '@ratrace/engine';
@@ -295,12 +296,15 @@ export function Resolve() {
   const scene = milestoneOf(story, before.round, view.round);
   // Who did something to this life, in a game with friends, by the name the room shows.
   const whoIs = (userId: string) => names?.[userId] ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
-  const notes = roundNotes(words, t, events, whoIs);
+  const notes = keptNotes(words, t, events, whoIs);
   // The status that ran out with the round, a line each: the number fell, and this is why.
-  const faded = wornOff(content, before.player, resolved.orders ?? [], view.player).map((itemId): RoundNote => ({ tone: 'plain', icon: itemArt(itemId), title: t('wornOff', { item: words.names.items[itemId] }) }));
+  const faded = wornOff(content, before.player, resolved.orders ?? [], view.player).map((itemId) => ({ kind: 'wornOff' as const, note: { tone: 'plain', icon: itemArt(itemId), title: t('wornOff', { item: words.names.items[itemId] }) } satisfies RoundNote }));
   const lines = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
   // A crisis that was on when the round was played and is not now has just ended.
   const ended = before.timeline[before.round]?.crisis && !view.timeline[view.round]?.crisis ? before.timeline[before.round].crisis : null;
+  const over = ended ? [{ kind: 'crisisOver' as const, note: { tone: 'good', icon: 'icon.economy', title: crisis('over', { crisis: text.crises[ended.id].name }), hint: crisis('overHint') } satisfies RoundNote }] : [];
+  // What changed the life above the money; what only informs (a status worn off, a crisis over) under it all (resultNotes.ts).
+  const { major, minor } = byWeight<RoundNote>([...notes, ...faded, ...over]);
   const worthBefore = netWorth(before.player);
   const worthNow = netWorth(view.player);
   const bank = bankQuip(before, view, events);
@@ -327,8 +331,7 @@ export function Resolve() {
       <Celebrations />
       {/* A milestone of the life gets its picture, on the round it happened in. */}
       {scene ? <Milestone scene={scene} /> : null}
-      {ended ? <Note note={{ tone: 'good', icon: 'icon.economy', title: crisis('over', { crisis: text.crises[ended.id].name }), hint: crisis('overHint') }} /> : null}
-      {[...notes, ...faded].map((note, i) => (
+      {major.map((note, i) => (
         <Note key={i} note={note} />
       ))}
 
@@ -356,6 +359,10 @@ export function Resolve() {
               <Said title={t('family.title')} words={t(`family.${family}`)} />
             </View>
           </Panel>
+
+          {minor.map((note, i) => (
+            <Note key={i} note={note} />
+          ))}
         </>
       ) : null}
     </View>
