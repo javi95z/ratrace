@@ -71,10 +71,11 @@ const sheetOpen = () => document.querySelector('[aria-modal="true"]');
 
 /** The light of a sheet's frame: gold, wine, or the plain navy of a sheet that carries a choice (the web's `data-tone`). */
 function toneOf(open: HTMLElement): 'gold' | 'wine' | 'plain' {
-  // The frame is the first box up from the title that is drawn with its strips (a bevel: four of outline, four of edge).
+  // The frame is the first box up from the title that is drawn with its strips (a bevel: outline and edge on its three sides, a sheet risen from
+  // the foot having none along its foot, ui/overlay.tsx).
   for (let box = within(open).getAllByRole('heading')[0].parentElement; box !== null && box !== open; box = box.parentElement) {
     const strips = [...box.querySelectorAll<HTMLElement>(':scope > div')].filter((strip) => strip.style.position === 'absolute').map((strip) => strip.style.backgroundColor);
-    if (strips.length < 8) continue;
+    if (strips.length < 6) continue;
     return strips.includes(rgb(COLORS['gold-200'])) ? 'gold' : strips.includes(rgb(COLORS['wine-500'])) ? 'wine' : 'plain';
   }
   throw new Error('no frame round the sheet');
