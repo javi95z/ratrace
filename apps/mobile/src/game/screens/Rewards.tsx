@@ -71,7 +71,7 @@ function BadgeReward({ badgeId }: { badgeId: string }) {
       <PixelText size={13} tone="ink-200" style={{ ...kicker, ...(tone ? { color: tone } : null) }}>
         {t('kicker', { rarity })}
       </PixelText>
-      <View style={{ marginVertical: legendary ? 16 : 4, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ marginVertical: legendary ? (BURST - 96) / 2 : 4, alignItems: 'center', justifyContent: 'center' }}>
         {legendary ? <Sunburst /> : null}
         <Animated.View style={medal}>
           <Medal badgeId={badgeId} />
@@ -85,7 +85,7 @@ function BadgeReward({ badgeId }: { badgeId: string }) {
 }
 
 /** How wide a legendary medal's rays reach, and how many there are. */
-const BURST = 160;
+const BURST = 136;
 const RAYS = 12;
 /** One turn of the rays, slow: a glow that lives, not a spinner. */
 const TURN_MS = 24_000;
@@ -116,7 +116,7 @@ function Sunburst() {
       {Array.from({ length: RAYS }, (_, i) => (
         <View
           key={i}
-          style={{ position: 'absolute', width: 6, height: BURST, backgroundColor: COLORS[i % 2 === 0 ? 'gold-500' : 'gold-200'], opacity: 0.22, transform: [{ rotate: `${(180 / RAYS) * i}deg` }] }}
+          style={{ position: 'absolute', width: 6, height: BURST, backgroundColor: COLORS[i % 2 === 0 ? 'gold-500' : 'gold-700'], opacity: 0.45, transform: [{ rotate: `${(180 / RAYS) * i}deg` }] }}
         />
       ))}
     </Animated.View>
