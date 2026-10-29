@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { MESSAGES } from '@ratrace/i18n';
 import { describe, expect, it } from 'vitest';
-import { FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, GAME_FACES, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
+import { CARD_SENTENCE, FIRST_PAGE, FIRST_PAGE_GZIP_BUDGET, firstWordsOf, FORBIDDEN, JS_GZIP_BUDGET, exportEnv, firstPageOf, judgeFirstVisit, judgeHeads, judgeSiteFiles, judgeWebExport, GAME_FACES, mib, pageFiles, SITE_FILES, sourcesOf } from './webSize';
 
 /** A JS file of this many bytes that gzip cannot shrink (random-looking), so its gzip size is about its own. */
 function noise(bytes: number): Buffer {
@@ -230,6 +230,7 @@ describe('the first page', () => {
     expect(judgeWebExport([clean, words, text, firstPage([clean.path])], [])).toEqual([]);
     expect(judgeWebExport([clean, words, text, firstPage([clean.path, words.path, text.path])], [])).toEqual([
       expect.stringMatching(/first page .* carries words of a language: \/packages\/i18n\/messages\/es\.json, \/packages\/content\/src\/text\/ru\.cards\.ts/),
+      expect.stringMatching(/first page .* carries the cards' text: \/packages\/content\/src\/text\/ru\.cards\.ts/),
     ]);
   });
 });
@@ -273,6 +274,27 @@ describe('the first page\'s words', () => {
     // The words are its first draw's, not its HTML's: the check that its HTML's scripts carry none still holds.
     expect(judgeWebExport(files, []).filter((problem) => /carries words/.test(problem))).toEqual([]);
     expect(firstWordsOf([named, html])).toEqual([]);
+  });
+});
+
+describe('the cards\' text', () => {
+  it('is never the first page\'s, not even in its words: a life in play loads the cards of its language, a chunk of their own', async () => {
+    const named = { path: `${APP}entry.js`, bytes: Buffer.from(`x;{"paths":{"12":["/${APP}en-abc.js"]}}`), sources: ['/apps/mobile/src/game/languageWords.web.ts'] };
+    const html = { path: FIRST_PAGE, bytes: Buffer.from(`<html><body>${MESSAGES.en.meta.description}<script src="/${named.path}"></script></body></html>`) };
+    const words = (sources: string[], text = 'x') => ({ path: `${APP}en-abc.js`, bytes: Buffer.from(text), sources: ['/apps/mobile/src/game/languages/en.ts', ...sources] });
+    const lean = words(['/packages/i18n/messages/en.json', '/packages/content/src/text/en.ts']);
+    expect(judgeWebExport([named, lean, html], []).filter((problem) => /cards/.test(problem))).toEqual([]);
+    // By the files they are written in (the cards and what follows each choice)...
+    expect(judgeWebExport([named, words(['/packages/content/src/text/en.cards.ts', '/packages/content/src/text/en.after.ts']), html], []).filter((problem) => /cards/.test(problem))).toEqual([
+      expect.stringMatching(/first page .* carries the cards' text: \/packages\/content\/src\/text\/en\.cards\.ts, \/packages\/content\/src\/text\/en\.after\.ts/),
+    ]);
+    // ...and by a sentence of a card, wherever the build put it: one no other words of the game say.
+    const { en } = await import('@ratrace/content/text/en');
+    expect(JSON.stringify(MESSAGES.en)).not.toContain(CARD_SENTENCE);
+    expect(JSON.stringify(en)).not.toContain(CARD_SENTENCE);
+    expect(judgeWebExport([named, words([], `var t="${CARD_SENTENCE}"`), html], []).filter((problem) => /cards/.test(problem))).toEqual([
+      expect.stringMatching(new RegExp(`first page .* carries the cards' text: "${CARD_SENTENCE}"`)),
+    ]);
   });
 });
 

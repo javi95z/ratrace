@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { cards as enCards } from '@ratrace/content/text/en.cards';
 import { LOCALES, MESSAGES } from '@ratrace/i18n';
 import { DEFAULT_LOCALE } from '@ratrace/i18n/locales';
 import { SITE_URL } from '../src/game/site';
@@ -94,6 +95,14 @@ export function firstPageOf(files: readonly ExportFile[], requested: readonly st
   const scripts = [...new Set([...named, ...asked])].map((path) => byPath.get(path)).filter((file) => file !== undefined);
   return { scripts, weight: [first, ...scripts].reduce((total, file) => total + gzipSync(file.bytes).length, 0) };
 }
+
+/** The sources of the cards' text in any language: the cards and what follows each choice, a chunk of their own a life in play loads. */
+const CARD_WORDS = /\/packages\/content\/src\/text\/(en|es|ru)\.(cards|after)\.ts$/;
+/**
+ * A sentence of a card in English, which no script of the first page may hold, whatever files the build took it from: `career_raise`'s body, which
+ * nothing else says (its title is also a use of focus at work, among the words every page speaks).
+ */
+export const CARD_SENTENCE = enCards.career_raise.body;
 
 /** The source of the first page's own words: the chunk of its language (`game/languageWords.web.ts` loads it when the page first speaks). */
 const FIRST_WORDS = '/apps/mobile/src/game/languages/en.ts';
@@ -275,6 +284,10 @@ export function judgeWebExport(files: ExportFile[], sources: string[], rules: re
     const named = firstPageOf(files)?.scripts ?? [];
     const words = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => WORDS.test(source)))];
     if (words.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries words of a language: ${words.join(', ')}`);
+    // Nor, in anything it loads, its words among them, the cards' text: a life in play loads the cards of its language (game/languageWords.web.ts).
+    const cardFiles = [...new Set(first.scripts.flatMap((script) => script.sources ?? []).filter((source) => CARD_WORDS.test(source)))];
+    const said = first.scripts.some((script) => script.bytes.includes(CARD_SENTENCE));
+    if (cardFiles.length > 0 || said) problems.push(`the first page (${FIRST_PAGE}) carries the cards' text: ${[...cardFiles, ...(said ? [`"${CARD_SENTENCE}"`] : [])].join(', ')}`);
     // Nor the page of nothing (`screens/NotFound.web.tsx`): the 404's own chunk, which a page in a language the game lacks loads only then.
     const nothing = [...new Set(named.flatMap((script) => script.sources ?? []).filter((source) => source.endsWith('/screens/NotFound.web.tsx')))];
     if (nothing.length > 0) problems.push(`the first page (${FIRST_PAGE}) carries the page of nothing: ${nothing.join(', ')}`);
