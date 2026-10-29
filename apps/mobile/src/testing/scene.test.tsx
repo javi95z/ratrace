@@ -293,29 +293,24 @@ test('the scene of an amount is the sheet that moves cash to savings, open over 
   expect(screen.queryByRole('main')).toBeNull();
 });
 
-test('the scene of a legendary badge is its sheet over the Hud of the card that earned it: the stage it belongs to is mounted (as the web\'s, hidden) and draws nothing in the page', async () => {
+test('the scene of a legendary badge is the reward sheet over the Hud of the card that earned it, the rarest of the step\'s two first: the stage it belongs to is mounted (as the web\'s, hidden) and draws nothing in the page', async () => {
   render(<SceneView name="celebrate-legendary" />);
   const sheet = (await screen.findByRole('heading', { name: 'Viral by mistake' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
   expect(sheet.textContent).toContain('Legendary badge');
+  expect(sheet.textContent).toContain('1 of 2');
   expect(sheet.querySelector('[data-sprite="rim.gem"]')).toBeTruthy();
+  expect(within(sheet).getByRole('button', { name: 'Accept' })).toBeTruthy();
   expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
-  // The small cards of the step (the legendary one, and the first hundred thousand its fortune brought) are in the stage, which is in the page and takes no room.
-  const cards = screen.getAllByRole('status');
-  expect(cards.map((card) => card.querySelector('[data-rarity]')?.getAttribute('data-rarity'))).toEqual(['common', 'legendary']);
-  for (const card of cards) {
-    let box: HTMLElement | null = card;
-    while (box && box.style.overflowX !== 'hidden') box = box.parentElement;
-    expect([box?.style.width, box?.style.height, box?.style.position]).toEqual(['0px', '0px', 'absolute']);
-  }
+  // No small card of a badge anywhere in the page.
+  expect(screen.queryAllByRole('status')).toEqual([]);
 });
 
-test('the scene of the badges a step earned is their small cards under the Hud, with the legendary one\'s sheet already taken in', async () => {
+test('the scene of the badges a step earned, once accepted, leaves nothing of them under the Hud', async () => {
   render(<SceneView name="celebrate-earned" />);
-  const cards = await screen.findAllByRole('status', {}, WAIT);
-  expect(cards.map((card) => card.querySelector('[data-rarity]')?.getAttribute('data-rarity'))).toEqual(['common', 'legendary']);
-  expect(cards[1].textContent).toContain('Viral by mistake');
-  expect(screen.queryByText('Legendary badge')).toBeNull();
-  expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: /Cash/ }, WAIT)).toBeTruthy();
+  expect(screen.queryAllByRole('status')).toEqual([]);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.queryByText('Viral by mistake')).toBeNull();
 });
 
 test('the scene of a milestone reached for the first time ever is its whole screen, the step\'s two badges inside it, and no badge\'s sheet besides', async () => {
@@ -330,13 +325,14 @@ test('the scene of a milestone reached for the first time ever is its whole scre
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
 });
 
-test('the scene of a milestone in a later life is its banner under the Hud, the badge of the step in it', async () => {
+test('the scene of a milestone in a later life is its banner under the Hud, the step\'s badges left to their reward sheet (accepted in the scene)', async () => {
   render(<SceneView name="celebrate-milestone-banner" />);
   const [banner, ...rest] = await screen.findAllByRole('status', {}, WAIT);
   expect(rest).toEqual([]);
   expect(banner.textContent).toContain('100k net worth');
   expect(banner.textContent).toContain('At 26');
   expect(banner.textContent).not.toContain('New record');
+  expect(banner.textContent).not.toContain('Viral by mistake');
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 

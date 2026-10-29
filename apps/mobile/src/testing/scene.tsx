@@ -1,4 +1,4 @@
-import { BADGE_RARITY, content, progressOf, rarityOf } from '@ratrace/content';
+import { BADGE_RARITY, content, progressOf } from '@ratrace/content';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud, sceneMilestones, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
@@ -134,25 +134,26 @@ function Savings() {
 /**
  * The stage a sheet of a scene belongs to, mounted and drawn nowhere in the page: what the web's shot leaves of its stage (`HUD_ONLY` hides it,
  * and a sheet it opens is drawn over the page all the same). A legendary badge (`celebrate-legendary`) is shown by the result of the card that
- * earned it (`Outcome`, which draws `Celebrations`): its scene compares the sheet over the Hud alone, so its `Celebrations` stands here, its sheet
- * over the Hud and its small card in a box of no size. The result itself is compared in `play-outcome-r1`.
+ * earned it (`Outcome`, which draws `Celebrations`): its scene compares the reward sheet over the Hud alone, so its `Celebrations` stands here,
+ * its sheet over the Hud. The result itself is compared in `play-outcome-r1`.
  */
 function HiddenStage({ children }: { children: ReactNode }) {
   return <View style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>{children}</View>;
 }
 
-/** The legendary badges a scene shows as taken in already: every one there is. */
-const LEGENDARY: readonly string[] = Object.keys(BADGE_RARITY).filter((id) => rarityOf(id) === 'legendary');
+/** The badges a scene shows as accepted already: every one there is. */
+const ACCEPTED: readonly string[] = Object.keys(BADGE_RARITY);
 
 /**
- * The small cards of what a step earned (`celebrate-earned`), its legendary sheet taken in, where the result of a card has them: 12 under the Hud's
- * figures (Play's `paddingTop: 4` and the page's gap of 8, the web's `pt-3`) and 12 apart (the result's `gap-3`). The web's shot takes everything
- * else of the stage out (`CELEBRATIONS_ONLY`); its page presses the sheet's button, which the phone's Celebrations is given as its initial state.
+ * What a step earned once its reward sheet is accepted (`celebrate-earned`): nothing is left of it in the result, where a milestone's banner stands
+ * (`celebrate-milestone-banner`), 12 under the Hud's figures (Play's `paddingTop: 4` and the page's gap of 8, the web's `pt-3`). The web's shot takes
+ * everything else of the stage out (`CELEBRATIONS_ONLY`); its page presses the sheet's button, which the phone's Celebrations is given as its initial
+ * state.
  */
 function EarnedStage() {
   return (
     <View style={{ paddingTop: 4, gap: 12 }}>
-      <Celebrations seen={LEGENDARY} />
+      <Celebrations seen={ACCEPTED} />
     </View>
   );
 }

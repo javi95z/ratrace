@@ -195,15 +195,15 @@ test('a sheet that a screen not ported yet opens is drawn beside the Hud on both
   expect(app).toContain("celebrate: (scene) => (scene.name === 'celebrate-earned' || scene.name === 'celebrate-milestone-banner' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),");
 });
 
-test('the small cards of a step are drawn with its legendary sheet taken in: the web\'s page presses its own button to move on, the phone\'s Celebrations is told it was seen', () => {
+test('a step\'s result is drawn with its rewards taken in: the web\'s page presses its own button to move on, the phone\'s Celebrations is told every badge was accepted', () => {
   // The web: the one button of the legendary sheet, which it marks with the badge (`data-legendary`), pressed once in the page, not by the shot.
   expect(web).toContain("const TAKEN_IN = '[data-legendary] button';");
   const celebrations = read('../../web/src/game/screens/Celebrations.tsx');
   expect(celebrations).toContain('<div data-legendary={grand} className="relative flex flex-col items-center gap-3 text-center">');
   const sheet = celebrations.slice(celebrations.indexOf('<div data-legendary'), celebrations.indexOf('</Sheet>'));
   expect([...sheet.matchAll(/<Button /g)]).toHaveLength(1);
-  // The phone: its initial state, and the cards where the web's result of a card has them: 12 under the Hud's figures, 12 apart.
-  expect(app).toContain('<Celebrations seen={LEGENDARY} />');
+  // The phone: its initial state (no reward sheet, and nothing of the rewards left inline), where the web's result of a card is: 12 under the Hud's figures.
+  expect(app).toContain('<Celebrations seen={ACCEPTED} />');
   expect(app).toContain('<View style={{ paddingTop: 4, gap: 12 }}>');
 });
 
