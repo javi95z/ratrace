@@ -100,8 +100,9 @@ describe('the front door drawn on the server', () => {
     );
     const mascot = /<img [^>]*src="\/sprites\/brand\.mascot\.png"[^>]*>/.exec(html)?.[0] ?? '';
     expect(mascot).not.toBe('');
-    expect(mascot).toContain('width="256"');
-    expect(mascot).toContain('height="256"');
+    // Drawn at the door's largest, 176, until the browser measures the room it has.
+    expect(mascot).toContain('width="176"');
+    expect(mascot).toContain('height="176"');
     expect(mascot).toContain('alt=""');
   });
 
