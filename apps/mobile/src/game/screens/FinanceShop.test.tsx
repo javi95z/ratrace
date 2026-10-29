@@ -83,7 +83,10 @@ function played(services: ReturnType<typeof memoryServices>, ui: ReactNode = <Pl
 
 /** What the shop sells in the player's city, and what of it is in reach, as the engine quotes it for the round as it stands. */
 function shelfOf(view: GameView) {
-  const all = content.items.map((item) => ({ item, quote: quoteItem(content, view, item.id), owned: view.player.life.items.some((owned) => owned.itemId === item.id) })).filter((entry) => entry.quote.soldHere);
+  // A trip or a charter whose status still runs is not on the shelf: it cannot be bought again until it wears off.
+  const all = content.items
+    .map((item) => ({ item, quote: quoteItem(content, view, item.id), owned: view.player.life.items.some((owned) => owned.itemId === item.id) }))
+    .filter((entry) => entry.quote.soldHere && !(entry.owned && entry.item.kind === 'experience'));
   const reach = (entry: { quote: ItemQuote; owned: boolean }) =>
     entry.owned || entry.quote.price <= view.player.cash || entry.quote.finance?.lock === null || entry.quote.used?.lock === null || entry.quote.noInvoice?.lock === null;
   return { all, inReach: all.filter(reach) };
@@ -203,6 +206,17 @@ describe('a tile of the shop', () => {
     expect(safari?.perks?.focus).toBeGreaterThan(0);
     expect(within(button(new RegExp(names.items.travel_safari))).getByText(`Focus +${safari?.perks?.focus}`)).toBeTruthy();
     expect(within(seat).queryByText(/^Focus/)).toBeNull();
+  });
+
+  it('leaves off the shelf a trip whose status still runs, until it wears off', async () => {
+    const { services, session } = await inFinance('nurse');
+    const sailing = content.items.find((item) => item.id === 'sea_sailing_course');
+    expect(sailing?.kind === 'experience' && sailing.boostRounds).toBeGreaterThan(1);
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'sea_sailing_course' }] });
+    await toFinance(session);
+    expect(viewOf(await stateOf(services)).player.life.items.some((owned) => owned.itemId === 'sea_sailing_course')).toBe(true);
+    await openShop(services);
+    expect(within(shopPanel()).queryByRole('button', { name: new RegExp(names.items.sea_sailing_course) })).toBeNull();
   });
 
   it('lays the picture above the words in a narrow column, and beside them from 400 wide (the web\'s container query), two to a row either way', async () => {

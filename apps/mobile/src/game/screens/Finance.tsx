@@ -2165,7 +2165,8 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
   // The same for every tile and every drawing, so a tile is drawn again only when what it shows changes (`ShelfTile` is memoised).
   const onOpen = useCallback((itemId: string) => setOpen(itemId), []);
   const ladders = useMemo(() => [...new Set(content.items.map((item) => item.ladder))], [content]);
-  // Every thing the city sells, quoted once for the round as it stands. The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
+  // Every thing the city sells, quoted once for the round as it stands. The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all,
+  // nor a trip or a charter whose status still runs, which cannot be bought again until it wears off.
   const shelves = useMemo(
     () =>
       ladders.map((ladder) => ({
@@ -2173,7 +2174,7 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
         items: content.items
           .filter((item) => item.ladder === ladder)
           .map((item) => ({ item, quote: quoteItem(content, shown, item.id), owned: shown.player.life.items.some((owned) => owned.itemId === item.id) }))
-          .filter((entry) => entry.quote.soldHere),
+          .filter((entry) => entry.quote.soldHere && !(entry.owned && entry.item.kind === 'experience')),
       })),
     [content, ladders, shown],
   );
