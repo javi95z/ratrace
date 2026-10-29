@@ -1,5 +1,6 @@
 import { content, lives } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
+import { slow } from './slow';
 import { bots } from '@ratrace/content';
 import { compare, seedsFor } from './simulate';
 import type { BotSummary } from './simulate';
@@ -16,7 +17,7 @@ const SEEDS = 60;
 describe('balance', () => {
   let table: Record<string, BotSummary> = {};
 
-  it('plays every bot through every starting life', { timeout: 180_000 }, () => {
+  it('plays every bot through every starting life', { timeout: slow(180_000) }, () => {
     expect(starting.map((life) => life.id)).toEqual(['nurse', 'engineer', 'civil_servant']);
     const { summaries, results } = compare(content, starting, seedsFor(SEEDS), bots);
     table = Object.fromEntries(summaries.map((s) => [s.bot, s]));

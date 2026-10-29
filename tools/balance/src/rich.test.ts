@@ -1,6 +1,7 @@
 import { bots, content, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, realNetWorth, viewOf } from '@ratrace/engine';
 import { expect, it } from 'vitest';
+import { slow } from './slow';
 import { seedsFor } from './simulate';
 
 /**
@@ -33,4 +34,4 @@ it('deals the troubles of a fortune to the rich, and never to the poor', () => {
   expect(poor).toEqual([]);
   expect(dealt.indexer).toBeGreaterThan(10);
   expect(dealt.chaser).toBe(0);
-}, 120_000);
+}, slow(120_000));

@@ -2,6 +2,7 @@ import { bots, cardPeople, content, lives } from '@ratrace/content';
 import type { Bot } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
 import { expect, it } from 'vitest';
+import { slow } from './slow';
 import { peopleReport } from './people';
 import { seedsFor } from './simulate';
 
@@ -13,7 +14,7 @@ import { seedsFor } from './simulate';
  */
 const starting = lives.filter((life) => ['nurse', 'engineer', 'civil_servant'].includes(life.id));
 
-it('meets two or three people in a life, the parents always, and each of the others in a fair share of lives', { timeout: 300_000 }, () => {
+it('meets two or three people in a life, the parents always, and each of the others in a fair share of lives', { timeout: slow(300_000) }, () => {
   const report = peopleReport(content, starting, seedsFor(15), bots);
   expect(report.perLife.mean).toBeGreaterThanOrEqual(2.3);
   expect(report.perLife.mean).toBeLessThanOrEqual(3.3);
@@ -24,7 +25,7 @@ it('meets two or three people in a life, the parents always, and each of the oth
   }
 });
 
-it('carries each story on to its later cards, for a player who says yes', { timeout: 300_000 }, () => {
+it('carries each story on to its later cards, for a player who says yes', { timeout: slow(300_000) }, () => {
   const saver = bots.find((bot) => bot.id === 'saver')!;
   const willing: Bot = {
     id: 'willing',
@@ -49,7 +50,7 @@ it('carries each story on to its later cards, for a player who says yes', { time
  * every bot, by a player who says yes (as the saver otherwise, again taking the founder's cheque, and again as the landlord, who has a mortgage), and by one who answers a
  * person's cards at random among what is open.
  */
-it('ends each story every way it can be told, in some life', { timeout: 600_000 }, () => {
+it('ends each story every way it can be told, in some life', { timeout: slow(600_000) }, () => {
   const saver = bots.find((bot) => bot.id === 'saver')!;
   // The landlord, who buys homes on a mortgage: the adviser's insurance needs one.
   const landlord = bots.find((bot) => bot.id === 'landlord')!;

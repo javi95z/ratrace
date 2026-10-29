@@ -3,6 +3,7 @@ import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
 import type { Bot } from '@ratrace/content';
 import type { GameState, GameView, RejectReason } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
+import { slow } from './slow';
 import { playLife } from './simulate';
 
 const bot = (id: string): Bot => {
@@ -44,7 +45,7 @@ describe('bots', () => {
     expect(bots.map((b) => b.id)).toEqual(['saver', 'indexer', 'gambler', 'chaser', 'landlord', 'random']);
   });
 
-  it('play every life to the end without writing an order the game cannot read', { timeout: 60_000 }, () => {
+  it('play every life to the end without writing an order the game cannot read', { timeout: slow(60_000) }, () => {
     for (const b of bots) {
       for (const life of lives) {
         const refused = watch(b, life.id, 'bots-1');

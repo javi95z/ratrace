@@ -1,5 +1,6 @@
 import { BADGE_RARITY, badges, content, lives, RARITY_BANDS } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
+import { slow } from './slow';
 import { badgeShares } from './badges';
 import { bots } from '@ratrace/content';
 import { seedsFor } from './simulate';
@@ -11,7 +12,7 @@ import { seedsFor } from './simulate';
  * (what the bots never try) are not measured.
  */
 describe('the rarity of the badges', () => {
-  it('matches how often each is earned, give or take', { timeout: 300_000 }, () => {
+  it('matches how often each is earned, give or take', { timeout: slow(300_000) }, () => {
     const shares = badgeShares(content, lives, seedsFor(6), bots);
     const room: Record<string, [number, number]> = {
       common: [RARITY_BANDS.common[0] - 10, 100],

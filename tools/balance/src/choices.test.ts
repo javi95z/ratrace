@@ -2,6 +2,7 @@ import { bots, content, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, previewCard, viewOf } from '@ratrace/engine';
 import type { GameLimits } from '@ratrace/engine';
 import { expect, it } from 'vitest';
+import { slow } from './slow';
 import { seedsFor } from './simulate';
 
 /**
@@ -36,4 +37,4 @@ it('shows no card of the game with fewer than two options the player can take', 
   expect(playing).toHaveLength(3);
   expect(shown).toBeGreaterThan(1_000);
   expect(short).toEqual([]);
-}, 120_000);
+}, slow(120_000));
