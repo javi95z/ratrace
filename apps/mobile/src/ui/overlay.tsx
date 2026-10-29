@@ -409,8 +409,10 @@ function SheetPanel({
             <Animated.View style={[{ width: '100%', maxWidth: SHELL_WIDTH, flexShrink: 1, minHeight: 0 }, desk ? rise : null]}>
               <Animated.View testID="sheet-pull" onLayout={pull.measure} style={[{ flexShrink: 1, minHeight: 0 }, pull.panelStyle]}>
                 <View ref={panel} {...sheetPanelProps()} style={{ flexShrink: 1, minHeight: 0 }}>
+                  {/* Risen from the foot, it runs off the screen there: its frame has no edge along its foot (`cut` top). In the middle of a desk's screen it has all four. */}
                   <Framed
                     kind="bevel"
+                    cut={desk ? undefined : 'top'}
                     tone={tone === 'gold' ? GOLD : tone === 'wine' ? WINE : {}}
                     style={{ backgroundColor: COLORS['night-800'], maxHeight: height * 0.88, flexShrink: 1, minHeight: 0 }}
                   >

@@ -43,3 +43,25 @@ describe('a sheet on the web', () => {
     expect(box.style.paddingBottom).toBe('');
   });
 });
+
+describe('the foot of a sheet', () => {
+  /** The strips of the sheet's frame that draw an edge along its foot. */
+  async function footEdges(width: number) {
+    await sheetAt(width);
+    // The frame's box: the nearest box round the sheet's words that holds the frame's strips, boxes laid over it that hold nothing.
+    const isStrip = (el: Element): el is HTMLElement => el instanceof HTMLElement && el.style.position === 'absolute' && el.children.length === 0;
+    let framed = screen.getByText('inside') as HTMLElement;
+    while (framed.parentElement && ![...framed.children].some(isStrip)) framed = framed.parentElement;
+    const strips = [...framed.children].filter(isStrip);
+    expect(strips.length).toBeGreaterThan(0);
+    return strips.filter((strip) => Number.parseFloat(strip.style.borderBottomWidth || '0') > 0);
+  }
+
+  it('has no frame along it where the sheet rises from the foot of the screen: it runs off the screen', async () => {
+    expect(await footEdges(1000)).toEqual([]);
+  });
+
+  it('keeps the whole frame on a sheet in the middle of a wide screen', async () => {
+    expect((await footEdges(1280)).length).toBeGreaterThan(0);
+  });
+});
