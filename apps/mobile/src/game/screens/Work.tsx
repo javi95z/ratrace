@@ -9,7 +9,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { webBaseline, webLine } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bar, Bare, KeyFigure, LineTag, Panel, Raised, Row, Tag, Toggle, usePress } from '../../ui/kit';
+import { Bar, Bare, KeyFigure, LineTag, Panel, Raised, Tag, Toggle, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { bannerSize, spriteBox } from '../../ui/sprites';
@@ -31,8 +31,8 @@ import { splitMastered, useFocusNote } from './focusNote';
  * of anything else, leaves it as it is.
  */
 
-type About = 'career' | 'finance' | 'focus' | SkillId;
-const TITLE: Record<'career' | 'finance' | 'focus', string> = { career: 'careerTitle', finance: 'financeTitle', focus: 'focusTitle' };
+type About = 'career' | 'finance' | SkillId;
+const TITLE: Record<'career' | 'finance', string> = { career: 'careerTitle', finance: 'financeTitle' };
 const isSkill = (about: About): about is SkillId => (SKILLS as readonly string[]).includes(about);
 
 /** The size the picture of a workplace is drawn at where it is missing (the web's fallback). */
@@ -106,8 +106,8 @@ function Workplace({ id }: { id: string }) {
 
 /**
  * The player's working life at a glance: the job and what it pays, how far the next rung is and
- * what it would pay, what they know about money and how much focus the round has left. Each line
- * opens the whole of what it sums up. Every figure is the engine's own.
+ * what it would pay, and what they know. Each line opens the whole of what it sums up. Every figure is
+ * the engine's own. The round's focus is the HUD's own figure, and its sheet is opened there.
  */
 export function WorkPanel({ shown }: { shown: GameView }) {
   const t = useT('work');
@@ -181,16 +181,6 @@ export function WorkPanel({ shown }: { shown: GameView }) {
           </View>
         ) : null}
       </Opener>
-      <Opener onOpen={() => setAbout('focus')}>
-        <Row
-          style={{ borderTopWidth: 2, borderTopColor: COLORS['night-900'] }}
-          left={t('focus')}
-          sub={work.focus.bonus === 0 ? t('focusSub') : work.traits.focus === 0 ? t('focusRested', { n: work.focus.bonus }) : work.traits.focus === work.focus.bonus ? t('focusJob', { n: work.focus.bonus }) : t('focusExtra', { n: work.focus.bonus })}
-          right={
-            <Figured size={15}>{`${work.focus.left}/${work.focus.total}`}</Figured>
-          }
-        />
-      </Opener>
 
       {/* What the player knows besides the trade: set off by a rule, one line each, every line opening its levels. */}
       <View role="region" aria-label={t('skills')} style={{ borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 }}>
@@ -217,10 +207,8 @@ export function WorkPanel({ shown }: { shown: GameView }) {
                 <CareerLadder work={work} shown={shown} />
                 <Retirement shown={shown} />
               </>
-            ) : about === 'finance' ? (
-              <FinanceLevels finance={skills.finance} />
             ) : (
-              <FocusUses work={work} skills={skills} />
+              <FinanceLevels finance={skills.finance} />
             )}
           </View>
         </Sheet>

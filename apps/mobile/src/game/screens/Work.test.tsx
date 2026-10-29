@@ -2,7 +2,10 @@
 import { content } from '@ratrace/content';
 import { formatFor } from '@ratrace/core/lib/format';
 import type { SavedGame } from '@ratrace/core/session/types';
-import { quoteWork, viewOf } from '@ratrace/engine';
+import { quoteSkills, quoteWork, viewOf } from '@ratrace/engine';
+import type { GameView } from '@ratrace/engine';
+import { useState } from 'react';
+import { Pressable } from 'react-native';
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
@@ -12,7 +15,8 @@ import { spriteBox } from '../../ui/sprites';
 import { bannerSize } from '../../ui/sprites';
 import { useShown } from './Hud';
 import { Play } from './Play';
-import { WorkPanel } from './Work';
+import { FocusUses, WorkPanel } from './Work';
+import { Sheet } from '../../ui/overlay';
 
 /*
  * The work panel of the profile (the web's Work.test.tsx). The web shows it beside the game on a wide screen; the phone's profile (Task 17) holds
@@ -46,8 +50,30 @@ function Profiled() {
   return playing ? <Shown /> : null;
 }
 function Shown() {
-  return <WorkPanel shown={useShown()} />;
+  const shown = useShown();
+  return (
+    <>
+      <WorkPanel shown={shown} />
+      <FocusOpener shown={shown} />
+    </>
+  );
 }
+
+/** The sheet of focus as the HUD's Focus figure opens it (the work panel no longer has a line for it): the uses, at what they are worth. */
+function FocusOpener({ shown }: { shown: GameView }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable accessibilityRole="button" aria-label="Open focus" onPress={() => setOpen(true)} />
+      {open ? (
+        <Sheet open onClose={() => setOpen(false)} title="Focus" closeLabel="Close">
+          <FocusUses work={quoteWork(content, shown)} skills={quoteSkills(content, shown)} />
+        </Sheet>
+      ) : null}
+    </>
+  );
+}
+const openFocus = () => fireEvent.click(screen.getByRole('button', { name: 'Open focus' }));
 
 /** A nurse at the news of her first round. */
 async function nurse() {
@@ -73,10 +99,9 @@ describe('the work panel of the profile', () => {
     expect(has(panel, `${fmt.money(next.payAnnual)}/yr`)).toBe(true);
     expect(has(panel, `Next: Senior nurse · ${fmt.money(next.payAnnual)}/yr`)).toBe(true);
     expect(next.payAnnual).toBeGreaterThan(here.payAnnual);
-    // The two other lines are named for what they are, not for the career they could be mistaken for.
+    // The other line is named for what it is, not for the career it could be mistaken for; the round's focus is the HUD's, not the panel's.
     expect(has(panel, 'Finance')).toBe(true);
-    expect(has(panel, 'Focus this round')).toBe(true);
-    expect(has(panel, `${work.focus.left}/${work.focus.total}`)).toBe(true);
+    expect(has(panel, 'Focus this round')).toBe(false);
     // Her ward as it looks from the first rung, as wide as the panel (drawn once its width is known), and the sign of her trade beside her title.
     expect(panel.querySelector('[data-sprite="work.healthcare.0"]')).toBeNull();
     layOut(panel, 354);
@@ -151,7 +176,7 @@ describe('the work panel of the profile', () => {
 
   it('opens what focus is spent on, each use at what it is worth to this player', async () => {
     const { work, panel } = await nurse();
-    fireEvent.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
+    openFocus();
     const sheet = sheetTitled('Focus');
     expect(has(sheet, `+${work.overtimePct}% pay this round.`)).toBe(true);
     expect(has(sheet, `+${work.studySkill} career skill, on top of what working gives · ${work.rungStudy.left} of ${work.rungStudy.max} left at this rung`)).toBe(true);
@@ -177,8 +202,7 @@ describe('the work panel of the profile', () => {
 
     renderGame(<Profiled />, services);
     const panel = await screen.findByLabelText('Work');
-    expect(has(panel, '+1 from the rest your trip gave you')).toBe(true);
-    fireEvent.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
+    openFocus();
     const sheet = sheetTitled('Focus');
     expect(has(sheet, `${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBe(true);
     // The parts of what focus is, joined by one space each, as the web's page sets them: none left over where one says nothing.
@@ -194,10 +218,19 @@ describe('the work panel of the profile', () => {
       const state = structuredClone(base);
       state.player.life.career = { id: career, level: 0 };
       change(state);
-      renderGame(<WorkPanel shown={viewOf(state)} />, services);
+      renderGame(
+        <>
+          <WorkPanel shown={viewOf(state)} />
+          <FocusOpener shown={viewOf(state)} />
+        </>,
+        services,
+      );
       const panel = await screen.findByLabelText('Work');
-      const row = [...panel.querySelectorAll<HTMLElement>('[role="button"]')].find((button) => has(button, 'Focus this round'));
-      const sub = row?.textContent ?? '';
+      // What the focus is made of, as its sheet says it.
+      openFocus();
+      const sub = sheetTitled('Focus').textContent ?? '';
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      await settled();
       fireEvent.click(within(panel).getAllByRole('button')[0]);
       const list = within(sheetTitled('Your career')).queryByRole('list', { name: 'What sets this career apart' });
       const lines = list ? within(list).getAllByRole('listitem').map((li) => li.textContent) : [];
@@ -210,7 +243,7 @@ describe('the work panel of the profile', () => {
       state.player.life.focusBonus = 1;
     });
     expect(teacher.lines).toEqual(['It leaves time over: +1 focus every round.']);
-    expect(teacher.sub).toContain('+1 because your job leaves time over');
+    expect(teacher.sub).toContain('1 comes from your job, which leaves time over.');
 
     const swing = content.careers.find((career) => career.id === 'sales')?.cyclePct?.[base.timeline[0].regime] ?? 0;
     expect((await traitsOf('sales')).lines).toEqual([
@@ -230,7 +263,13 @@ describe('the work panel of the profile', () => {
     const state = structuredClone(((await services.store.loadGame()) as SavedGame).state);
     // Retired early, as a card can leave her: no career, and so no ladder to show.
     state.player.life.career = null;
-    renderGame(<WorkPanel shown={viewOf(state)} />, services);
+    renderGame(
+      <>
+        <WorkPanel shown={viewOf(state)} />
+        <FocusOpener shown={viewOf(state)} />
+      </>,
+      services,
+    );
     const panel = await screen.findByLabelText('Work');
     expect(has(panel, 'No job')).toBe(true);
     expect(within(panel).queryByRole('progressbar')).toBeNull();
@@ -240,7 +279,7 @@ describe('the work panel of the profile', () => {
     expect(has(sheetTitled('Your career'), /^You have no job on a career ladder\./)).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     await settled();
-    fireEvent.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
+    openFocus();
     expect(has(sheetTitled('Focus'), /^Without a job there is no overtime/)).toBe(true);
   });
 
@@ -280,18 +319,15 @@ describe('the work panel of the profile', () => {
   });
 });
 
-describe('focus from the work panel', () => {
-  // (The web's Finance.test.tsx: the panel stands beside the finances on a wide screen; on the phone it is the profile's, which the portrait opens over
-  // them: the real one, in Play.)
+describe('focus from the HUD', () => {
+  // The round's focus is the HUD's own figure, beside the cash, the flow and the status: its sheet, in Play.
   it('is spent from the sheet of focus as from the Lifestyle tab, while the finances are open', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);
     renderGame(<Play />, services);
     await screen.findByRole('tablist');
-    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
-    const work = within(sheetTitled('Your life')).getByLabelText('Work');
-    fireEvent.click(within(work).getByRole('button', { name: /^Focus this round/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: /^\d+\/\d+, Focus/ })[0]);
     const sheet = sheetTitled('Focus');
     expect(has(sheet, 'Tap to choose. It takes effect when the round is played.')).toBe(true);
     // Three ways to work, five to learn, and a rest.

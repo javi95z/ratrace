@@ -485,14 +485,12 @@ describe('a round in a room', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(screen.getByRole('button', { name: 'Open your profile' }));
-    const work = within(await sheetOf('Your life')).getByLabelText('Work');
-    press(within(work).getByRole('button', { name: /^Focus this round/ }));
+    // The round's focus is the HUD's figure: its sheet holds the tease too.
+    press(screen.getAllByRole('button', { name: /^\d+\/\d+, Focus/ })[0]);
     const sheet = await sheetOf('Focus');
     press(within(sheet).getByRole('switch', { name: /Tease a rival/ }));
     await waitFor(() => expect(within(sheet).getByRole('radio', { name: 'Rat BBBB' }).getAttribute('aria-checked')).toBe('true'));
     press(within(sheet).getByRole('button', { name: 'Close' }));
-    press(within(await sheetOf('Your life')).getByRole('button', { name: 'Close' }));
     await settled();
     press(button(/Play the round/));
     await screen.findByText('Waiting for the others');

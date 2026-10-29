@@ -722,7 +722,7 @@ describe('the profile', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Open your profile' }));
     const profile = screen.getByRole('heading', { name: 'Your life' }).closest('[aria-modal="true"]') as HTMLElement;
     // A panel's title is set in capitals, as the web's stylesheet sets it.
-    for (const label of ['WORK', 'Finance', 'Focus this round', 'INCOME STATEMENT, PER YEAR', 'BALANCE SHEET', 'Net worth']) {
+    for (const label of ['WORK', 'Finance', 'INCOME STATEMENT, PER YEAR', 'BALANCE SHEET', 'Net worth']) {
       expect(within(profile).getByText(label), label).toBeTruthy();
     }
     expect(within(profile).getByRole('link', { name: /Leave to the home screen/ })).toBeTruthy();
