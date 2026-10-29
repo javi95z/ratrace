@@ -38,7 +38,7 @@ const SPARKS: Record<BadgeRarity, { colours: readonly ColorToken[]; count: numbe
 
 const kicker = { letterSpacing: 13 * 0.14, textTransform: 'uppercase', textAlign: 'center' } as const;
 
-/** A badge (its name the sheet's title): its medal spinning in, large, throwing sparks of its colours, its rarity in the colour of its rim, and how it was earned. */
+/** A badge (its name the sheet's title): its rarity as its heading, in the colour of its rim; its medal spinning in, large, throwing sparks of its colours; and how it was earned. */
 function BadgeReward({ badgeId }: { badgeId: string }) {
   const t = useT('badges');
   const { text } = useWords();
@@ -47,8 +47,9 @@ function BadgeReward({ badgeId }: { badgeId: string }) {
   const tone = RARITY_TONE[rarity];
   return (
     <View {...{ dataSet: { reward: `badge.${badgeId}` } }} style={{ alignItems: 'center', gap: 8 }}>
-      <PixelText size={13} tone={rarity === 'legendary' ? 'teal-300' : 'gold-500'} style={kicker}>
-        {rarity === 'legendary' ? t('legendaryKicker') : t('earned')}
+      {/* The heading says the rarity, in the colour of its rim. */}
+      <PixelText size={13} tone="ink-200" style={{ ...kicker, ...(tone ? { color: tone } : null) }}>
+        {t('kicker', { rarity })}
       </PixelText>
       <View style={{ marginVertical: 4 }}>
         <Animated.View style={medal}>
@@ -56,7 +57,6 @@ function BadgeReward({ badgeId }: { badgeId: string }) {
         </Animated.View>
         <Sparks {...SPARKS[rarity]} delayMs={500} />
       </View>
-      <PixelText size={12} style={{ letterSpacing: 12 * 0.1, textTransform: 'uppercase', ...(tone ? { color: tone } : null) }}>{t(`rarity.${rarity}`)}</PixelText>
       <ReadText size={15} lineHeight={15 * SNUG} tone="ink-200" style={{ textAlign: 'center' }}>{text.badges[badgeId]?.how ?? ''}</ReadText>
     </View>
   );
@@ -112,7 +112,7 @@ function useSaid() {
   const title = useTitle();
   return (reward: Reward) =>
     reward.kind === 'badge'
-      ? [rarityOf(reward.id) === 'legendary' ? t('legendaryKicker') : t('earned'), title(reward), t(`rarity.${rarityOf(reward.id)}`), text.badges[reward.id]?.how ?? '']
+      ? [t('kicker', { rarity: rarityOf(reward.id) }), title(reward), text.badges[reward.id]?.how ?? '']
       : [t('unlocked'), title(reward), text.lives[reward.id]?.name ?? '', text.lives[reward.id]?.perk ?? ''];
 }
 

@@ -1391,7 +1391,8 @@
     "legendaryKicker": "Legendary badge",
     "legendaryGo": "Continue",
     "accept": "Accept",
-    "step": "{n} of {total}"
+    "step": "{n} of {total}",
+    "kicker": "{rarity, select, legendary {Legendary badge} rare {Rare badge} uncommon {Uncommon badge} other {Badge earned}}"
   },
   "collection": {
     "title": "Collection",

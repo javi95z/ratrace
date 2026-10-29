@@ -1391,7 +1391,8 @@
     "legendaryKicker": "Легендарный значок",
     "legendaryGo": "Дальше",
     "accept": "Принять",
-    "step": "{n} из {total}"
+    "step": "{n} из {total}",
+    "kicker": "{rarity, select, legendary {Легендарный значок} rare {Редкий значок} uncommon {Необычный значок} other {Значок получен}}"
   },
   "collection": {
     "title": "Коллекция",

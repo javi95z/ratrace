@@ -68,13 +68,14 @@ const rewardSheet = (name: string) => screen.getByRole('heading', { name }).clos
 const lifeName = (id: string) => textFor('en').text.lives[id].name;
 
 describe('a reward', () => {
-  it('shows a badge earned by a round in a sheet over its result: the medal large, its name, its rarity in the colour of its rim and how it was earned', () => {
+  it('shows a badge earned by a round in a sheet over its result: its name, its rarity said once as its heading in the colour of its rim, the medal large and how it was earned', () => {
     const id = idOf('rare');
     shown.earned = [id];
     renderGame(<Celebrations />, memoryServices());
     const sheet = rewardSheet(badgeName(id));
-    expect(within(sheet).getByText('Badge earned')).toBeTruthy();
-    expect(within(sheet).getByText('Rare').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
+    expect(within(sheet).getByText('Rare badge').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
+    expect(within(sheet).queryByText('Rare')).toBeNull();
+    expect(within(sheet).queryByText('Badge earned')).toBeNull();
     expect(within(sheet).getByText(textFor('en').text.badges[id].how)).toBeTruthy();
     // The medal at its large size, in the rim of its rarity.
     const medal = sheet.querySelector('[data-rarity="rare"]') as HTMLElement;
@@ -120,12 +121,19 @@ describe('a reward', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
-  it('takes a legendary badge in the same sheet, under its own kicker', () => {
+  it('heads each rarity in its own words: a legendary, an uncommon and a common badge', () => {
     shown.earned = [idOf('legendary')];
     renderGame(<Celebrations />, memoryServices());
     const sheet = rewardSheet(badgeName(idOf('legendary')));
-    expect(within(sheet).getByText('Legendary badge')).toBeTruthy();
+    expect(within(sheet).getByText('Legendary badge').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['teal-300']));
     expect(sheet.querySelector(`[data-sprite="${RIM_ART.legendary}"]`)).toBeTruthy();
+    cleanup();
+    shown.earned = [idOf('uncommon'), idOf('common')];
+    renderGame(<Celebrations />, memoryServices());
+    expect(within(screen.getByRole('dialog')).getByText('Uncommon badge')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    const common = within(screen.getByRole('dialog')).getByText('Badge earned');
+    expect(common.closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(EXTRA.bronze));
   });
 
   it('is shown once: the result drawn again after Accept shows none, and one not accepted yet is shown again', async () => {

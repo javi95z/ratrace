@@ -1391,7 +1391,8 @@
     "legendaryKicker": "Insignia legendaria",
     "legendaryGo": "Continuar",
     "accept": "Aceptar",
-    "step": "{n} de {total}"
+    "step": "{n} de {total}",
+    "kicker": "{rarity, select, legendary {Insignia legendaria} rare {Insignia rara} uncommon {Insignia poco común} other {Insignia conseguida}}"
   },
   "collection": {
     "title": "Colección",
