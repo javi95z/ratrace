@@ -101,7 +101,8 @@ export function Button({
   expanded,
   onPress,
   children,
-}: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number; primary?: boolean; hint?: ReactNode; expanded?: boolean }) {
+  ref,
+}: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number; primary?: boolean; hint?: ReactNode; expanded?: boolean; ref?: Ref<HostInstance> }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   const badge = primary ? <KeyboardHint>{'Ctrl/⌘ ↵'}</KeyboardHint> : (hint ?? null);
@@ -109,6 +110,7 @@ export function Button({
   const keyboard = useKeyboardMode() && badge !== null;
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityState={{ disabled, ...(expanded === undefined ? null : { expanded }) }}
       {...(expanded === undefined ? null : { 'aria-expanded': expanded })}
