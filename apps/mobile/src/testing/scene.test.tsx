@@ -313,16 +313,28 @@ test('the scene of the badges a step earned, once accepted, leaves nothing of th
   expect(screen.queryByText('Viral by mistake')).toBeNull();
 });
 
-test('the scene of a milestone reached for the first time ever is its whole screen, the step\'s two badges inside it, and no badge\'s sheet besides', async () => {
+test('the scene of a milestone reached for the first time ever is the first step of the round\'s one sheet, the step\'s badges after it, the rarest first: one headline, its scene, no portrait', async () => {
   render(<SceneView name="celebrate-milestone" />);
-  const sheet = (await screen.findByRole('heading', { name: '100k net worth' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  const sheet = (await screen.findByRole('heading', { name: '100k net worth at 26!' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(sheet.textContent).toContain('1 of 3');
   expect(sheet.textContent).toContain('First time ever!');
-  expect(sheet.textContent).toContain('100k net worth at 26!');
-  expect(sheet.textContent).toContain('Viral by mistake');
-  expect(sheet.querySelector('[data-milestone="worth100k"]')).toBeTruthy();
-  // One moment for the step: no legendary badge's sheet, and none of the badges' small cards.
-  expect(screen.queryByText('Legendary badge')).toBeNull();
+  expect(sheet.textContent).toContain('Six figures to your name.');
+  // The headline said once, as the sheet's title; the name alone nowhere else.
+  expect(within(sheet).getAllByText((_, el) => el?.textContent === '100k net worth at 26!' && el.children.length === 0)).toHaveLength(1);
+  expect(sheet.textContent?.split('100k net worth').length).toBe(2);
+  // The milestone's scene, and no portrait of the life.
+  expect(sheet.querySelector('[data-reward="milestone.worth100k"]')).toBeTruthy();
+  expect(sheet.querySelector('[data-sprite^="portrait."]')).toBeNull();
+  expect(within(sheet).getByRole('button', { name: 'Onwards!' })).toBeTruthy();
+  // One sheet: the badges are its next steps, not inside the milestone, the rarest first.
+  expect(sheet.textContent).not.toContain('Viral by mistake');
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
+  fireEvent.click(within(sheet).getByRole('button', { name: 'Onwards!' }));
+  const legendary = screen.getByRole('heading', { name: 'Viral by mistake' }).closest('[aria-modal="true"]') as HTMLElement;
+  expect(legendary.textContent).toContain('2 of 3');
+  expect(legendary.textContent).toContain('Legendary badge');
+  fireEvent.click(within(legendary).getByRole('button', { name: 'Accept' }));
+  expect(screen.getByRole('dialog').textContent).toContain('3 of 3');
 });
 
 test('the scene of a milestone in a later life is its banner under the Hud, the step\'s badges left to their reward sheet (accepted in the scene)', async () => {

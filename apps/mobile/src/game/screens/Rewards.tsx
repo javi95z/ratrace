@@ -1,30 +1,36 @@
-import { careerArt, cityIcon, lives, portraitArt, rarityOf } from '@ratrace/content';
+import { careerArt, cityIcon, LIFE_MILESTONE_ART, lives, portraitArt, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
+import type { Reached } from '@ratrace/core/game/lifeMilestones';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, View, type HostInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useMedal } from '../../ui/animations';
+import { useMedal, useReveal } from '../../ui/animations';
 import { Bare, Button } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
+import { spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useSettings, useT, useWords } from '../context';
+import { hrefOf } from '../pages';
+import { canShareLink, shareLink } from '../sharing';
+import { SITE_URL } from '../site';
 import { acceptReward, rewardAccepted } from '../rewardsAccepted';
 import { Difficulty } from './LifeSummary';
+import { Loop } from './Loop';
 import { Medal } from './Medal';
 import { RARITY_TONE } from './rarityStyle';
 
 /*
- * What a round or a life's end gives the player for the first time ever, a badge or a life to live, told in one standard moment: a sheet over the
- * summary, one reward at a time, each with its Accept. Several at once are shown in turn in the same sheet ("1 of 3"); closing it any other way
+ * A round's big moments in one standard sheet over its summary, one step at a time: a milestone of the life that has the whole screen, and what
+ * the round or a life's end gives the player for the first time ever, a badge or a life to live, each with its Accept (a milestone's Onwards). Several at once are shown in turn in the same sheet ("1 of 3"); closing it any other way
  * (the backdrop, its Close, Back, Escape) accepts them all. A reward is shown once: what has been accepted is kept for as long as the app runs, by
  * life, so a summary drawn again (a page left and come back to, a tablet turned) does not show it again.
  */
 
-export type Reward = { kind: 'badge'; id: string } | { kind: 'life'; id: string };
+export type Reward = { kind: 'badge'; id: string } | { kind: 'life'; id: string } | { kind: 'milestone'; id: string; reached: Reached };
 
 const keyOf = (gameId: string | null, reward: Reward) => `${gameId ?? ''}:${reward.kind}:${reward.id}`;
 
@@ -98,11 +104,67 @@ function LifeReward({ lifeId }: { lifeId: string }) {
   );
 }
 
+/** The size a milestone's scene is drawn at when its art is missing. */
+const SCENE_FALLBACK = { w: 288, h: 120 };
+
+/** What a milestone says: its headline at its age (the sheet's title, said once), the record or first time it is, and its line. */
+function useMilestoneWords() {
+  const t = useT('milestone');
+  return (each: Reached) => {
+    const name = t(`names.${each.id}`);
+    // A record is a younger age than any before; the first time ever has nothing to beat.
+    const note = each.best === null ? t('first') : each.age < each.best ? t('record', { age: each.best }) : null;
+    return { name, headline: t('headline', { name, age: each.age }), line: t(`lines.${each.id}`), kicker: note ?? t('kicker') };
+  };
+}
+
+/** A milestone: what it is (the first time ever, a record) where a badge says its rarity, its scene edge to edge with the cheer and the fireworks over its corners, and its line. */
+function MilestoneReward({ reached }: { reached: Reached }) {
+  const words = useMilestoneWords()(reached);
+  const reveal = useReveal();
+  const art = LIFE_MILESTONE_ART[reached.id];
+  const box = spriteBox(art, 1, 1, SCENE_FALLBACK);
+  const [width, setWidth] = useState(0);
+  const height = width === 0 ? 0 : Math.round((width * box.h) / box.w);
+  return (
+    <View {...{ dataSet: { reward: `milestone.${reached.id}` } }} style={{ alignItems: 'center', gap: 12 }}>
+      <PixelText size={13} tone="gold-500" style={kicker}>{words.kicker}</PixelText>
+      <View
+        aria-hidden
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        onLayout={(event) => setWidth(Math.floor(event.nativeEvent.layout.width))}
+        style={{ alignSelf: 'stretch', height }}
+      >
+        {width > 0 ? (
+          <Animated.View style={[{ height, overflow: 'hidden' }, reveal]}>
+            <Sprite id={art} fallback={SCENE_FALLBACK} size={{ w: width, h: height }} />
+          </Animated.View>
+        ) : null}
+        {/* The cheer and the fireworks over the scene's top corners: decoration, none of it where motion is left out. */}
+        <View style={{ position: 'absolute', left: 4, top: 4 }}>
+          <Loop name="burst" ms={180} />
+        </View>
+        <View style={{ position: 'absolute', right: 4, top: 4 }}>
+          <Loop name="cheer" ms={180} />
+        </View>
+      </View>
+      <ReadText size={15} lineHeight={15 * SNUG} style={{ textAlign: 'center' }}>{words.line}</ReadText>
+    </View>
+  );
+}
+
 /** What a reward is called: the sheet's title, which a screen reader hears as the dialog's name. */
 function useTitle() {
   const { text } = useWords();
   const { locale } = useSettings();
-  return (reward: Reward) => (reward.kind === 'badge' ? (text.badges[reward.id]?.name ?? reward.id) : (characterName(reward.id, locale) ?? text.lives[reward.id]?.name ?? reward.id));
+  const milestone = useMilestoneWords();
+  return (reward: Reward) =>
+    reward.kind === 'milestone'
+      ? milestone(reward.reached).headline
+      : reward.kind === 'badge'
+        ? (text.badges[reward.id]?.name ?? reward.id)
+        : (characterName(reward.id, locale) ?? text.lives[reward.id]?.name ?? reward.id);
 }
 
 /** What a reward says to a screen reader as it comes on screen in the sheet: its kicker, its name and what it is. */
@@ -110,10 +172,13 @@ function useSaid() {
   const t = useT('badges');
   const { text } = useWords();
   const title = useTitle();
+  const milestone = useMilestoneWords();
   return (reward: Reward) =>
-    reward.kind === 'badge'
-      ? [t('kicker', { rarity: rarityOf(reward.id) }), title(reward), text.badges[reward.id]?.how ?? '']
-      : [t('unlocked'), title(reward), text.lives[reward.id]?.name ?? '', text.lives[reward.id]?.perk ?? ''];
+    reward.kind === 'milestone'
+      ? [milestone(reward.reached).kicker, title(reward), milestone(reward.reached).line]
+      : reward.kind === 'badge'
+        ? [t('kicker', { rarity: rarityOf(reward.id) }), title(reward), text.badges[reward.id]?.how ?? '']
+        : [t('unlocked'), title(reward), text.lives[reward.id]?.name ?? '', text.lives[reward.id]?.perk ?? ''];
 }
 
 /**
@@ -140,8 +205,11 @@ export function RewardSheet({
   const t = useT('badges');
   const end = useT('end');
   const common = useT('common');
+  const onwards = useT('milestone');
+  const { locale } = useSettings();
   const title = useTitle();
   const said = useSaid();
+  const milestoneWords = useMilestoneWords();
   const [, accept] = useReducer((n: number) => n + 1, 0);
   // Which rewards this sheet shows: those not accepted already when it first saw them. One accepted stays among them, so that "1 of 3" counts
   // what came, and the sheet closes as a sheet closes rather than vanishing.
@@ -187,6 +255,17 @@ export function RewardSheet({
     accept();
   };
   const tryIt = onTry && showing.kind === 'life' ? onTry : null;
+  // A milestone is shared from its step, with its headline, as it always was.
+  const share = showing.kind === 'milestone' && canShareLink();
+  const send = async () => {
+    if (showing.kind !== 'milestone') return;
+    const { name, headline } = milestoneWords(showing.reached);
+    try {
+      await shareLink(name, onwards('shareText', { headline }), new URL(hrefOf('', { locale }), SITE_URL).href);
+    } catch {
+      // The share sheet would not open: the moment is still on screen.
+    }
+  };
 
   return (
     <Sheet open={open} onClose={acceptAll} title={title(showing)} closeLabel={common('close')} tone="gold" initialFocus={acceptButton}>
@@ -196,12 +275,17 @@ export function RewardSheet({
         ) : null}
         {/* A reward after the first comes into the same sheet: told by TalkBack and the web's readers as it comes. */}
         <View key={keyOf(gameId, showing)} accessibilityLiveRegion="polite" aria-live="polite">
-          {showing.kind === 'badge' ? <BadgeReward badgeId={showing.id} /> : <LifeReward lifeId={showing.id} />}
+          {showing.kind === 'milestone' ? <MilestoneReward reached={showing.reached} /> : showing.kind === 'badge' ? <BadgeReward badgeId={showing.id} /> : <LifeReward lifeId={showing.id} />}
         </View>
         <View style={{ gap: 8 }}>
           <Button ref={acceptButton} variant="primary" wide onPress={acceptOne}>
-            {t('accept')}
+            {showing.kind === 'milestone' ? onwards('go') : t('accept')}
           </Button>
+          {share ? (
+            <Button variant="secondary" wide onPress={() => void send()}>
+              {onwards('share')}
+            </Button>
+          ) : null}
           {tryIt ? (
             <Button
               variant="secondary"
