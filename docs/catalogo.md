@@ -1498,7 +1498,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.motorbike_window.png" alt="Una moto, a tu edad"> | **Una moto, a tu edad**<br>Una Ducati en el escaparate y la sensación de que la vida se pasa. | 1. Ni hablar<br>2. Comprarla<br>3. Comprarla a plazos |
 | <img src="../art/clean/cards/card.mentor_session.png" alt="Ser mentor"> | **Ser mentor**<br>Una asociación busca jubilados que guíen a jóvenes que empiezan. Unas horas a la semana. | 1. Prefieres tu huerto<br>2. Ser mentor |
 | <img src="../art/clean/cards/card.scam_message.png" alt="Un mensaje urgente"> | **Un mensaje urgente**<br>«Mamá, papá, se me ha roto el móvil. Este es mi número nuevo. Necesito 3.000 $ hoy.» | 1. Ignorarlo<br>2. Hacer la transferencia<br>3. Llamar al número de siempre<br>4. Reconocer la estafa al vuelo |
-| <img src="../art/clean/cards/card.parents_inheritance.png" alt="En el notario"> | **En el notario**<br>Una foto, unas llaves y una carpeta: lo que dejaron tus padres, y lo que debían. | 1. Renunciar a todo<br>2. Aceptarla<br>3. Aceptarla: conoces sus papeles |
+| <img src="../art/clean/cards/card.parents_inheritance.png" alt="En el notario"> | **En el notario**<br>Una foto, unas llaves y una carpeta: lo que dejaron tus padres. En la carpeta también está lo que debían. Nadie sabe cuánto. | 1. Renunciar a todo<br>2. Aceptarla tal cual, con deudas y todo<br>3. Aceptarla: conoces sus papeles<br>4. Aceptarla a beneficio de inventario |
 
 ## Crisis
 
