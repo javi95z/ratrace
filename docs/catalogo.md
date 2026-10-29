@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.52.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.53.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 26 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 338 |
+| [Cartas](#cartas) | 342 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 63 |
 
@@ -1098,7 +1098,7 @@ La sospecha baja 8 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (90)
+### Carrera (92)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1192,6 +1192,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.sales_giant_client.png" alt="El cliente gigante"> | **El cliente gigante**<br>Un cliente enorme busca proveedor. En solitario es difícil; con un compañero, seguro, a mitad de comisión. | 1. Compartirlo con un compañero<br>2. Ir a por él en solitario |
 | <img src="../art/clean/cards/card.sales_quota.png" alt="Una cuota imposible"> | **Una cuota imposible**<br>El nuevo director comercial dobla la cuota a todos. Si la cumples, hay bonus; si no, baja el fijo. | 1. Darlo todo<br>2. Negociarla a la baja<br>3. Negociarla con las cifras en la mano |
 | <img src="../art/clean/cards/card.sales_poached.png" alt="La competencia te llama"> | **La competencia te llama**<br>La competencia te quiere, y a tus clientes contigo. Paga bien, y tu empresa no lo perdonará. | 1. Quedarte donde estás<br>2. Irte con tus clientes<br>3. Pedir que te igualen la oferta |
+| <img src="../art/clean/cards/card.network_board_seat.png" alt="Un puesto en el consejo"> | **Un puesto en el consejo**<br>Una empresa que conoces bien te quiere en su consejo: una retribución cada año y una reunión que se come parte de cada mes. | 1. Rechazarlo<br>2. Aceptar el puesto |
+| <img src="../art/clean/cards/card.network_referral.png" alt="Una palabra al oído adecuado"> | **Una palabra al oído adecuado**<br>Un contacto ha dado tu nombre para el puesto de encima del tuyo. La entrevista es la semana que viene. | 1. Darle las gracias<br>2. Ir a la entrevista |
 
 ### Formación (9)
 
@@ -1238,7 +1240,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rich_hostile_bid.png" alt="Una oferta por tu negocio"> | **Una oferta por tu negocio**<br>Un rival diez veces mayor quiere tu negocio, y avisa de que puede ponértelo difícil si dices que no. | 1. Rechazarla<br>2. Vender a su precio<br>3. Plantarles cara |
 | <img src="../art/clean/cards/card.hospitality_next_door.png" alt="El bar de al lado"> | **El bar de al lado**<br>Se traspasa el bar de al lado, con todo dentro. Conoces a cada cliente, y cada error de su dueño. | 1. Dejarlo pasar<br>2. Quedarte el traspaso |
 
-### Inversión (30)
+### Inversión (32)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1272,6 +1274,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.advisor_fund.png" alt="Un fondo garantizado"> | **Un fondo garantizado**<br>Borja, del banco, tiene un fondo para ti: garantizado, dice, y con una comisión pequeñísima. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado en su lugar |
 | <img src="../art/clean/cards/card.founder_bell.png" alt="El toque de campana"> | **El toque de campana**<br>Bea toca la campana en el primer día de su empresa en bolsa. Te saluda desde el escenario. | 1. Aplaudir desde la sala<br>2. Comprar acciones el primer día<br>3. Pedirle trabajo |
 | <img src="../art/clean/cards/card.realestate_off_market.png" alt="Fuera de mercado"> | **Fuera de mercado**<br>Un casero quiere vender en silencio un piso alquilado, antes de anunciarlo. Eres el primero en saberlo. | 1. Pasárselo a un cliente<br>2. Comprarlo tú |
+| <img src="../art/clean/cards/card.network_investors.png" alt="Cena con inversores"> | **Cena con inversores**<br>Una mesa de gente que financia empresas. En el postre, uno te ofrece entrar en su próxima ronda privada. | 1. Solo escuchar<br>2. Entrar en la ronda |
+| <img src="../art/clean/cards/card.network_listing.png" alt="Acciones por debajo del mercado"> | **Acciones por debajo del mercado**<br>Nvidia vende acciones nuevas a unos pocos compradores elegidos, por debajo del precio de mercado. Un banquero que conoces puede meterte. | 1. Pasar<br>2. Pedir un paquete pequeño<br>3. Pedir un paquete grande |
 
 ### Vivienda (36)
 
