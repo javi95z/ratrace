@@ -5,7 +5,7 @@ import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
-import { lodgerOf, workModeOf } from './life/derive';
+import { lodgerOf, propertyUpkeepAnnual, workModeOf } from './life/derive';
 import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lesserShare, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt, statusParts } from './life/derive';
 import { helpedHome, raiseChance, workModeLock } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
@@ -74,8 +74,12 @@ export interface OwnedPropertyQuote {
   mortgage: { principal: Cents; rateBp: Bp; roundsLeft: number; variable: boolean } | null;
   /** What a sale would leave after the mortgage is repaid, before any tax on the gain. */
   netOnSale: Cents;
-  /** What it adds to status as a grand home owned besides the one lived in; 0 when it does not count so. */
+  /** What it adds to status as a grand home owned besides the one lived in, and as what gives status merely owned; 0 when it does not count so. */
   estateStatus: number;
+  /** The part of `estateStatus` it gives merely for being owned, let or lived in. */
+  ownedStatus: number;
+  /** What keeping it up costs a year at today's prices, lived in, let or empty; 0 for a kind that costs nothing to keep. */
+  upkeepAnnual: Cents;
 }
 
 /** What a grand home owned besides the one lived in adds to status, by its place among them; 0 for any other. */
@@ -140,7 +144,9 @@ export function quoteOwnedProperty(content: Content, view: GameView, propertyId:
       ? { principal: debt.principal, rateBp: debtRateBp(debt, content, view.timeline[view.round], p), roundsLeft: debt.roundsLeft, variable: debt.kind === 'mortgageVariable' }
       : null,
     netOnSale: property.value - (debt?.principal ?? 0),
-    estateStatus: estateStatusOf(p, content, property),
+    estateStatus: estateStatusOf(p, content, property) + (propertyTypeOf(content, property.typeId).ownedStatus ?? 0),
+    ownedStatus: propertyTypeOf(content, property.typeId).ownedStatus ?? 0,
+    upkeepAnnual: indexed(propertyUpkeepAnnual(content, property.cityId, property.typeId), view.timeline[view.round]),
   };
 }
 

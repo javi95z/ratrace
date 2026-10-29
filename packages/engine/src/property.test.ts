@@ -114,6 +114,10 @@ describe('what each city sells and lets', () => {
     expect(propertySoldIn(content, 'block', 'home')).toBe(false);
     expect(propertySoldIn(content, 'block', 'haven')).toBe(true);
     expect(propertySoldIn(content, 'castle', 'home')).toBe(false);
+    // What only a card hands over is sold nowhere, and cannot be bought.
+    const keep = { ...content, propertyTypes: [...content.propertyTypes, { id: 'keep', pricePct: 40, status: 8, cardOnly: true }] };
+    expect(propertySoldIn(keep, 'keep', 'home')).toBe(false);
+    expect(executeBuyProperty(p, { type: 'buyProperty', typeId: 'keep', downPayment: 0, mortgage: 'none', rented: false }, { ...ctx, content: keep })).toBe('not-sold-here');
     const before = JSON.stringify(p);
     for (const typeId of ['stall', 'block']) expect(executeBuyProperty(p, { type: 'buyProperty', typeId, downPayment: 0, mortgage: 'none', rented: true }, ctx)).toBe('not-sold-here');
     expect(JSON.stringify(p)).toBe(before);

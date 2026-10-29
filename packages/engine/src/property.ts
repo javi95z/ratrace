@@ -46,10 +46,10 @@ export function rentYieldBp(content: Content, cityId: string, typeId: string): B
   return Math.round((city.rentYieldBp * (type?.rentPct ?? 100) * (city.propertyRentPct?.[typeId] ?? 100)) / 10_000);
 }
 
-/** True where a kind of property is sold: a city's own kinds only there, and no city's missing ones. */
+/** True where a kind of property is sold: a city's own kinds only there, no city's missing ones, and nowhere what only a card hands over. */
 export function propertySoldIn(content: Content, typeId: string, cityId: string): boolean {
   const type = content.propertyTypes.find((t) => t.id === typeId);
-  if (!type) return false;
+  if (!type || type.cardOnly === true) return false;
   return (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId);
 }
 

@@ -4,6 +4,7 @@ import type { Effects, LifeStart, PlayerState, WorldState } from '../types';
 import { generateTimeline } from '../world';
 import { deriveExpenses, derivePassive, deriveSalary, deriveStatus } from './derive';
 import { applyEffects } from './effects';
+import { propertyPrice } from '../property';
 
 const content = fixtureContent();
 const world0 = generateTimeline('effects', content)[0];
@@ -268,6 +269,27 @@ describe('applyEffects: things bought through a card', () => {
     expect(rich.properties[0]).toMatchObject({ rented: true, mortgageId: null, value: 15_000_000, basis: 15_000_000 });
     const perk = after({ property: { typeId: 'studio', pricePct: 100, downPct: 50, rented: false } }, player(() => {}, { flags: ['cheap_mortgage'] }));
     expect(perk.debts[0].fixedRateBp).toBe(350);
+  });
+
+  it('hands over an inherited property for nothing, and charges its upkeep and gives its standing while it is owned', () => {
+    const keep = { ...content, propertyTypes: [...content.propertyTypes, { id: 'castle', pricePct: 40, status: 8, cardOnly: true, upkeepBp: 400, ownedStatus: 5 }] };
+    const p = player();
+    applyEffects(p, { property: { typeId: 'castle', pricePct: 100, downPct: 100, rented: false, inherited: true } }, { content: keep, world: dearer, round: 4 });
+    // Nothing paid, no purchase tax, nothing borrowed: worth the market price, 40% of the 25,000,000 flat at today's prices.
+    expect(p.cash).toBe(10_000_000);
+    expect(p.debts).toEqual([]);
+    const market = propertyPrice(keep, dearer, 'home', 'castle');
+    expect(market).toBe(10_000_000);
+    expect(p.properties).toEqual([{ id: 'property-1', cityId: 'home', typeId: 'castle', value: market, basis: market, rented: false, mortgageId: null }]);
+    // Four percent a year of its price at the start, 10,000,000, as an expense of the life, lived in, let or empty.
+    expect(p.extraExpensesAnnual).toBe(deriveExpenses(player(), keep) + 400_000);
+    // Let, it is no home, and still gives the status it gives merely owned.
+    p.properties[0].rented = true;
+    expect(deriveExpenses(p, keep)).toBe(deriveExpenses(player(), keep) + 400_000);
+    expect(deriveStatus(p, keep, 4)).toBe(deriveStatus(player(), keep, 4) + 5);
+    p.properties = [];
+    expect(deriveExpenses(p, keep)).toBe(deriveExpenses(player(), keep));
+    expect(deriveStatus(p, keep, 4)).toBe(deriveStatus(player(), keep, 4));
   });
 });
 

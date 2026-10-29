@@ -178,6 +178,13 @@ export function isRetired(p: PlayerState): boolean {
   return p.life.retiredAtRound !== null && p.life.career === null;
 }
 
+/** What keeping up a property of this kind in this city costs a year, in start-of-game dollars: a share of its price at the start. */
+export function propertyUpkeepAnnual(content: Content, cityId: string, typeId: string): Cents {
+  const type = propertyTypeOf(content, typeId);
+  if (type.upkeepBp === undefined) return 0;
+  return applyBp(mulDiv(cityOf(content, cityId).flatPrice, type.pricePct, 100), type.upkeepBp);
+}
+
 /** Yearly expenses beyond living cost and debt, in start-of-game dollars. */
 export function deriveExpenses(p: PlayerState, content: Content): Cents {
   const life = p.life;
@@ -190,6 +197,8 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
     if (life.insurance[kind]) total += insurancePremium(p, content, kind, life.healthCoverSince ?? 0);
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
+  // A property dear to keep up costs it whoever lives in it, and empty or let alike.
+  for (const property of p.properties) total += propertyUpkeepAnnual(content, property.cityId, property.typeId);
   // An offshore company has its fee, year after year, whatever it saves; so has a residency.
   if (life.evasion.shell) total += content.evasion.shellFeeAnnual;
   total += residencyOf(p, content)?.feeAnnual ?? 0;
@@ -301,6 +310,8 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
       .slice(0, grand.counted);
     for (const status of others) estates += mulDiv(status, grand.pct, 100);
   }
+  // A castle is a standing for as long as it is owned, let or not.
+  for (const property of p.properties) estates += propertyTypeOf(content, property.typeId).ownedStatus ?? 0;
   return {
     items,
     estates,

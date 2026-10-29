@@ -230,7 +230,8 @@ export function parse(line: string, scene: Scene): Command {
       return amount === null ? error('bad-amount') : order({ type: 'repay', debtId: debt.id, amount });
     }
     case 'home': {
-      const type = find(content.propertyTypes, args[0], (t) => [t.id, text.propertyTypes[t.id]]);
+      // What only a card hands over is not for sale.
+      const type = find(content.propertyTypes.filter((t) => t.cardOnly !== true), args[0], (t) => [t.id, text.propertyTypes[t.id]]);
       if (!type) return error('unknown-home');
       const rest = args.slice(1).map((w) => w.toLowerCase());
       const rented = rest.some((w) => WORDS.rent.includes(w as never));

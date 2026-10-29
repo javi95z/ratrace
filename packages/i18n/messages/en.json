@@ -191,7 +191,7 @@
     "openNews": "Read the paper again",
     "newsTitle": "The paper",
     "statusEstates": "Grand homes owned",
-    "statusEstatesHint": "The two best grand homes you own besides the one you live in, at half.",
+    "statusEstatesHint": "The two best grand homes you own besides the one you live in, at half; and a castle, if you have one.",
     "statusNetwork": "Contacts",
     "focus": "Focus",
     "focusHint": "Focus left this round, of all you have"
@@ -500,6 +500,7 @@
     "loan": "Loan of {amount}",
     "buyHome": "You buy a home: {home}",
     "buyRental": "You buy a rental: {home}",
+    "inheritHome": "You inherit a property: {home}",
     "refinanceFixed": "Your variable mortgages go fixed, at {rate}",
     "refinanceVariable": "Your fixed mortgages go variable",
     "sellHome": "You sell your home",
@@ -672,7 +673,8 @@
       "sellDo": "Sell and keep {amount}",
       "sellUndo": "Until the round is played you can take it off your orders.",
       "estateStatus": "Grand home: +{n} status",
-      "estateHint": "A grand home gives half its status even when you do not live in it: the two best count."
+      "estateHint": "A grand home gives half its status even when you do not live in it: the two best count.",
+      "upkeep": "Upkeep a year"
     },
     "debt": {
       "none": "You owe nothing.",

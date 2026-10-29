@@ -31,6 +31,17 @@ describe('validateContent', () => {
     expect(errors).toContain('city home needs a whole, positive rent percentage for flat');
   });
 
+  it('takes a kind only a card hands over as sold nowhere, and holds its upkeep and its status while owned to positive whole numbers', () => {
+    const c = fixtureContent();
+    const kinds = [...c.propertyTypes, { id: 'keep', pricePct: 40, status: 8, cardOnly: true, upkeepBp: 400, ownedStatus: 8 }];
+    expect(validateContent({ ...c, propertyTypes: kinds })).toEqual([]);
+    const broken = [...c.propertyTypes, { id: 'keep', pricePct: 40, status: 8, cardOnly: false, upkeepBp: 0, ownedStatus: -1 }];
+    const errors = validateContent({ ...c, propertyTypes: broken });
+    expect(errors).toContain('property type keep is card-only or says nothing');
+    expect(errors).toContain('property type keep needs a whole, positive upkeep');
+    expect(errors).toContain('property type keep needs a whole, positive status while owned');
+  });
+
   it('reports an unknown pension asset', () => {
     expect(validateContent({ ...fixtureContent(), pensionAssetId: 'nope' })).toContain('pensionAssetId nope is not an asset');
   });

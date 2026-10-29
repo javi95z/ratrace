@@ -97,7 +97,7 @@ export interface Ui {
     yearly: (amount: string, years: number | null) => string;
     leaveJob: string; newCareer: string; promotion: string; demotion: string; moveTo: string; partnerIn: string; partnerOut: string;
     child: (n: number) => string; get: string; invest: (amount: string, asset: string) => string; pension: string; loan: string;
-    buyHome: string; toRentOut: string; refinance: [fixed: string, variable: string]; sellHome: string; homeValue: string;
+    buyHome: string; inherit: string; toRentOut: string; refinance: [fixed: string, variable: string]; sellHome: string; homeValue: string;
     lose: (pct: number, what: string) => string; savingsWord: string; lifestyleFloor: string;
   };
 }
@@ -221,7 +221,7 @@ const en: Ui = {
     leaveJob: 'you stop working', newCareer: 'new career:', promotion: 'a step up', demotion: 'a step down', moveTo: 'you move to',
     partnerIn: 'you share your life and your bills', partnerOut: 'you separate',
     child: (n) => (n === 1 ? 'a child' : `${n} children`), get: 'you get', invest: (amount, asset) => `${amount} into ${asset}`, pension: 'into your pension',
-    loan: 'loan of', buyHome: 'you buy:', toRentOut: 'to rent out', refinance: ['mortgage becomes fixed', 'mortgage becomes variable'],
+    loan: 'loan of', buyHome: 'you buy:', inherit: 'you inherit:', toRentOut: 'to rent out', refinance: ['mortgage becomes fixed', 'mortgage becomes variable'],
     sellHome: 'you sell your home', homeValue: 'home value', lose: (pct, what) => `you lose ${pct}% of your ${what}`, savingsWord: 'savings',
     lifestyleFloor: 'lifestyle at least',
   },
@@ -346,7 +346,7 @@ const es: Ui = {
     leaveJob: 'dejas de trabajar', newCareer: 'nueva carrera:', promotion: 'un ascenso', demotion: 'un paso atrás', moveTo: 'te mudas a',
     partnerIn: 'compartes tu vida y tus facturas', partnerOut: 'os separáis',
     child: (n) => (n === 1 ? 'un hijo' : `${n} hijos`), get: 'te llevas', invest: (amount, asset) => `${amount} en ${asset}`, pension: 'a tu plan de pensiones',
-    loan: 'préstamo de', buyHome: 'compras:', toRentOut: 'para alquilar', refinance: ['la hipoteca pasa a fija', 'la hipoteca pasa a variable'],
+    loan: 'préstamo de', buyHome: 'compras:', inherit: 'heredas:', toRentOut: 'para alquilar', refinance: ['la hipoteca pasa a fija', 'la hipoteca pasa a variable'],
     sellHome: 'vendes tu casa', homeValue: 'valor de tu casa', lose: (pct, what) => `pierdes el ${pct} % de tu ${what}`, savingsWord: 'ahorro',
     lifestyleFloor: 'estilo de vida mínimo:',
   },
@@ -484,7 +484,7 @@ const ru: Ui = {
     leaveJob: 'работы больше нет', newCareer: 'новая карьера:', promotion: 'повышение', demotion: 'понижение', moveTo: 'переезд в',
     partnerIn: 'жизнь вдвоём', partnerOut: 'расставание',
     child: (n) => `${n} ${counted(n, 'ребёнок', 'ребёнка', 'детей')}`, get: 'получаешь:', invest: (amount, asset) => `${asset} на ${amount}`, pension: 'в пенсионный план',
-    loan: 'кредит на', buyHome: 'покупаешь:', toRentOut: 'под сдачу', refinance: ['ипотека теперь фиксированная', 'ипотека теперь плавающая'],
+    loan: 'кредит на', buyHome: 'покупаешь:', inherit: 'наследство:', toRentOut: 'под сдачу', refinance: ['ипотека теперь фиксированная', 'ипотека теперь плавающая'],
     sellHome: 'продаёшь своё жильё', homeValue: 'цена жилья', lose: (pct, what) => `теряешь ${pct}%: ${what}`, savingsWord: 'сбережения',
     lifestyleFloor: 'образ жизни не ниже:',
   },

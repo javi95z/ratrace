@@ -165,8 +165,11 @@ export function validateContent(c: Content): string[] {
       if (!Array.isArray(ids) || ids.length === 0) errors.push(`property type ${type.id} needs ${field} as a list of cities, or none`);
       else for (const id of ids) if (!c.cities.some((city) => city.id === id)) errors.push(`property type ${type.id} names an unknown city in ${field}: ${String(id)}`);
     }
-    // Sold somewhere: a kind no city sells is a mistake, not a rule.
-    if (!c.cities.some((city) => (type.cities === undefined || type.cities.includes(city.id)) && !(type.notIn ?? []).includes(city.id))) errors.push(`property type ${type.id} is sold in no city`);
+    if (type.cardOnly !== undefined && type.cardOnly !== true) errors.push(`property type ${type.id} is card-only or says nothing`);
+    if (type.upkeepBp !== undefined && !(isCount(type.upkeepBp) && type.upkeepBp > 0)) errors.push(`property type ${type.id} needs a whole, positive upkeep`);
+    if (type.ownedStatus !== undefined && !(isCount(type.ownedStatus) && type.ownedStatus > 0)) errors.push(`property type ${type.id} needs a whole, positive status while owned`);
+    // Sold somewhere: a kind no city sells is a mistake, not a rule, unless only a card hands it over.
+    if (type.cardOnly !== true && !c.cities.some((city) => (type.cities === undefined || type.cities.includes(city.id)) && !(type.notIn ?? []).includes(city.id))) errors.push(`property type ${type.id} is sold in no city`);
   }
 
   const business = c.business;

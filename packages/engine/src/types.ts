@@ -272,6 +272,15 @@ export interface PropertyTypeDef {
   cities?: readonly string[];
   /** The cities that sell none, by id. */
   notIn?: readonly string[];
+  /** True for what no city sells: only a card hands one over. It is let, lived in and sold like any other of its kind. */
+  cardOnly?: boolean;
+  /** Status points it gives while it is owned, let or lived in, wherever it is: a standing of its own, counted with the grand homes owned. None where left out. */
+  ownedStatus?: number;
+  /**
+   * What keeping one up costs a year while it is owned, lived in, let or empty, as a share of its price at the
+   * start of the game in its city, in bp. It follows the price level, as other expenses do. None where left out.
+   */
+  upkeepBp?: Bp;
 }
 
 export interface CareerLevel {
@@ -786,8 +795,10 @@ export interface Effects {
    * Buys a property in the player's city at `pricePct` percent of the market price,
    * paying `downPct` percent of that in cash and the rest with a fixed mortgage.
    * The property is worth what was paid for it, so a bargain cannot be sold on at once for more.
+   * An `inherited` one is handed over instead: worth `pricePct` percent of the market price, with nothing
+   * paid for it, no purchase tax and no mortgage (`downPct` is then 100).
    */
-  property?: { typeId: string; pricePct: number; downPct: number; rented: boolean };
+  property?: { typeId: string; pricePct: number; downPct: number; rented: boolean; inherited?: boolean };
   /** Turns every mortgage into this kind, at today's rate. */
   refinance?: 'fixed' | 'variable';
   /** Sells the home the player lives in, repays its mortgage, and makes them a tenant. Untaxed. */

@@ -89,10 +89,11 @@ function buyProperty(p: PlayerState, deal: NonNullable<Effects['property']>, at:
   const market = propertyPrice(content, world, p.cityId, deal.typeId);
   const price = mulDiv(market, deal.pricePct, 100);
   const down = mulDiv(price, deal.downPct, 100);
-  p.cash -= down + purchaseTax(effectiveTax(cityOf(content, p.cityId), world), price);
+  // An inheritance costs nothing to take: no price, no purchase tax, nothing borrowed.
+  if (deal.inherited !== true) p.cash -= down + purchaseTax(effectiveTax(cityOf(content, p.cityId), world), price);
 
   let mortgageId: string | null = null;
-  if (price > down) {
+  if (deal.inherited !== true && price > down) {
     mortgageId = newId(p, 'debt');
     p.debts.push({
       id: mortgageId,

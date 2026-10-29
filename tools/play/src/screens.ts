@@ -276,7 +276,7 @@ export function effectPhrases(pen: Pen, state: GameState, effects: Effects | und
   if (effects.invest) out.push(e.invest(dollars(effects.invest.amount), names.assets[effects.invest.assetId].name));
   if (effects.pension) out.push(`+${dollars(effects.pension)} ${e.pension}`);
   if (effects.loan) out.push(`${e.loan} ${dollars(effects.loan)}`);
-  if (effects.property) out.push(`${e.buyHome} ${text.propertyTypes[effects.property.typeId].toLowerCase()}${effects.property.rented ? ` ${e.toRentOut}` : ''}`);
+  if (effects.property) out.push(`${effects.property.inherited ? e.inherit : e.buyHome} ${text.propertyTypes[effects.property.typeId].toLowerCase()}${effects.property.rented ? ` ${e.toRentOut}` : ''}`);
   if (effects.refinance) out.push(e.refinance[effects.refinance === 'fixed' ? 0 : 1]);
   if (effects.sellHome) out.push(e.sellHome);
   if (effects.homeValue) out.push(`${e.homeValue} ${fmt.signed(indexed(effects.homeValue, world))}`);

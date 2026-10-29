@@ -183,6 +183,9 @@ describe('validateContent: cards', () => {
     expect(effect({ property: { typeId: 'studio', pricePct: 0, downPct: 20, rented: false } })).toEqual(['card offer option 1 has a property price outside 1..200 percent']);
     expect(effect({ property: { typeId: 'studio', pricePct: 90, downPct: 101, rented: false } })).toEqual(['card offer option 1 has a down payment outside 0..100 percent']);
     expect(effect({ property: { typeId: 'studio', pricePct: 90, downPct: 20, rented: 'no' } })).toEqual(['card offer option 1 needs true or false for a property being rented']);
+    expect(effect({ property: { typeId: 'studio', pricePct: 100, downPct: 100, rented: false, inherited: 'yes' } })).toEqual(['card offer option 1 is inherited or says nothing']);
+    expect(effect({ property: { typeId: 'studio', pricePct: 100, downPct: 20, rented: false, inherited: true } })).toEqual(['card offer option 1 borrows for an inheritance, which costs nothing']);
+    expect(effect({ property: { typeId: 'studio', pricePct: 100, downPct: 100, rented: false, inherited: true } })).toEqual([]);
     expect(effect({ lose: { what: 'land', pct: 10 } })).toEqual(['card offer option 1 loses an unknown holding: land']);
     expect(effect({ lose: { what: 'deposit', pct: 101 } })).toEqual(['card offer option 1 has a loss outside 0..100 percent']);
   });

@@ -148,7 +148,7 @@ function notchAbove(content: Content, item: ItemDef): ItemDef {
 
 /** The home a notch above the player's, sold in the city (a place only to let has no status); the same at the top. */
 function homeAbove(content: Content, typeId: string, cityId: string): PropertyTypeDef | null {
-  const sold = content.propertyTypes.filter((type) => type.status > 0 && (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId));
+  const sold = content.propertyTypes.filter((type) => type.status > 0 && type.cardOnly !== true && (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId));
   const theirs = content.propertyTypes.find((type) => type.id === typeId);
   if (!theirs) return null;
   let best: PropertyTypeDef | null = null;

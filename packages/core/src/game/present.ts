@@ -270,7 +270,7 @@ export function effectTags(
   if (effects.invest) add('plain', t('invest', { amount: dollars(effects.invest.amount), asset: names.assets[effects.invest.assetId].name }));
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));
   if (effects.loan) add('bad', t('loan', { amount: dollars(effects.loan) }));
-  if (effects.property) add('plain', t(effects.property.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[effects.property.typeId] }));
+  if (effects.property) add(effects.property.inherited ? 'good' : 'plain', t(effects.property.inherited ? 'inheritHome' : effects.property.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[effects.property.typeId] }));
   if (effects.refinance) add('plain', t(effects.refinance === 'fixed' ? 'refinanceFixed' : 'refinanceVariable', { rate: fmt.rate(world.policyRateBp + content.debt.mortgageSpreadBp) }));
   // The home sold is the one lived in, named where it is known: a landlord's flats are kept.
   if (effects.sellHome) add('plain', livedIn ? t('sellHomeNamed', { home: homeName(text, livedIn.typeId, livedIn.cityId) }) : t('sellHome'));

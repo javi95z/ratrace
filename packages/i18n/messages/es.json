@@ -191,7 +191,7 @@
     "openNews": "Volver a leer el Diario",
     "newsTitle": "El Diario",
     "statusEstates": "Patrimonio de lujo",
-    "statusEstatesHint": "Las dos mejores viviendas de lujo que tienes y en las que no vives, a la mitad.",
+    "statusEstatesHint": "Las dos mejores viviendas de lujo que tienes y en las que no vives, a la mitad; y un castillo, si lo tienes.",
     "statusNetwork": "Contactos",
     "focus": "Foco",
     "focusHint": "Foco que te queda esta ronda, de todo el que tienes"
@@ -500,6 +500,7 @@
     "loan": "Préstamo de {amount}",
     "buyHome": "Compras una vivienda: {home}",
     "buyRental": "Compras para alquilar: {home}",
+    "inheritHome": "Heredas una propiedad: {home}",
     "refinanceFixed": "Tus hipotecas variables pasan a fijo, al {rate}",
     "refinanceVariable": "Tus hipotecas fijas pasan a variable",
     "sellHome": "Vendes tu casa",
@@ -672,7 +673,8 @@
       "sellDo": "Vender y quedarte {amount}",
       "sellUndo": "Hasta jugar la ronda puedes quitarlo de tus órdenes.",
       "estateStatus": "Patrimonio de lujo: +{n} de estatus",
-      "estateHint": "Una vivienda de lujo da la mitad de su estatus aunque no vivas en ella: cuentan las dos mejores."
+      "estateHint": "Una vivienda de lujo da la mitad de su estatus aunque no vivas en ella: cuentan las dos mejores.",
+      "upkeep": "Mantenimiento al año"
     },
     "debt": {
       "none": "No debes nada.",

@@ -200,6 +200,8 @@ export function validateCards(c: Content): string[] {
       if (!within(deal.pricePct, 1, 200)) return 'has a property price outside 1..200 percent';
       if (!within(deal.downPct, 0, 100)) return 'has a down payment outside 0..100 percent';
       if (!isFlag(deal.rented)) return 'needs true or false for a property being rented';
+      if (deal.inherited !== undefined && deal.inherited !== true) return 'is inherited or says nothing';
+      if (deal.inherited === true && deal.downPct !== 100) return 'borrows for an inheritance, which costs nothing';
       return deal.rented === false && c.propertyTypes.some((x) => x.id === deal.typeId && x.rentalOnly === true) ? `hands over a ${String(deal.typeId)} to live in, and nobody can` : null;
     },
     lose: (value) => {

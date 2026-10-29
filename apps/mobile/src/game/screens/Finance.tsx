@@ -855,13 +855,15 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
             </View>
           ) : null}
         </View>
-        {quote.estateStatus > 0 ? <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>{t('estateHint')}</ReadText> : null}
+        {quote.estateStatus > quote.ownedStatus ? <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>{t('estateHint')}</ReadText> : null}
 
         <Panel>
           <Row left={t('worth')} right={<Figure tone="gold-500">{fmt.money(quote.value)}</Figure>} />
           <Row left={t('paid')} right={fmt.money(quote.paid)} />
           <Row left={t('gain')} right={<Figure tone={gain < 0 ? 'wine-300' : 'teal-300'}>{fmt.signed(gain)}</Figure>} />
           {quote.letOnly || quote.rented ? <Row left={t('rent')} right={<Figure tone="teal-300">{fmt.signed(quote.rentAnnual)}</Figure>} /> : <Row left={t('wouldLet')} right={fmt.money(quote.rentAnnual)} />}
+          {/* What only a card hands over may cost a fortune to keep up, lived in, let or empty. */}
+          {quote.upkeepAnnual > 0 ? <Row left={t('upkeep')} right={<Figure tone="wine-300">{fmt.signed(-quote.upkeepAnnual)}</Figure>} /> : null}
         </Panel>
 
         <Panel title={t('mortgage')}>
