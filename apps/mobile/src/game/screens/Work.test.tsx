@@ -175,7 +175,7 @@ describe('the work panel of the profile', () => {
   });
 
   it('opens what focus is spent on, each use at what it is worth to this player', async () => {
-    const { work, panel } = await nurse();
+    const { work } = await nurse();
     openFocus();
     const sheet = sheetTitled('Focus');
     expect(has(sheet, `+${work.overtimePct}% pay this round.`)).toBe(true);
@@ -201,7 +201,7 @@ describe('the work panel of the profile', () => {
     expect(work.focus).toEqual({ left: before.focus.total + 1, total: before.focus.total + 1, bonus: 1, lost: 0 });
 
     renderGame(<Profiled />, services);
-    const panel = await screen.findByLabelText('Work');
+    await screen.findByLabelText('Work');
     openFocus();
     const sheet = sheetTitled('Focus');
     expect(has(sheet, `${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBe(true);
