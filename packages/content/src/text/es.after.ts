@@ -381,7 +381,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   advisor_insurance: ['Apunta algo en tu ficha. No ves qué.', 'Otra firma, y un recibo cada año durante veinte años.', 'La misma cobertura por un tercio del precio. Se ofende.'],
   parents_help: ['Están orgullosos de ti, y un poco dolidos.', 'Tu madre llora. Tu padre hace como que no.'],
   parents_care: ['Una buena residencia, con jardín. Vas a verlos los domingos.', 'Tardes en su casa, media jornada y una cuidadora por las mañanas. Duro, y lo que toca.'],
-  parents_inheritance: ['Te quedas con la foto. Lo demás, para el banco.', null, 'Llevaste sus papeles durante años. Ninguna sorpresa.'],
+  parents_inheritance: ['Te quedas con la foto. Lo demás, para el banco.', null, 'Llevaste sus papeles durante años. Ninguna sorpresa.', null],
   cousin_wedding: ['Una ensaladera. Te da las gracias con mucha educación.', 'Algo de la lista, y un abrazo en la puerta.', 'Un fin de semana en París. Toda la mesa se entera.'],
   ex_new_car: ['El autobús llega tarde. Como siempre.', 'Un {item:car_tesla_model_3}, en un color del que te arrepentirás.', 'Dos días, tres fotos, cien «me gusta».'],
   classmate_job: ['Te quedas. Tu jefe nunca lo sabrá.', null, 'Dices una cifra. La pagan.'],

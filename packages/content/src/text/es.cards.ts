@@ -1293,10 +1293,11 @@ export const cards: Record<string, CardText> = {
     'Pagar una residencia',
     'Cuidarlos tú',
   ]),
-  parents_inheritance: c('En el notario', 'Una foto, unas llaves y una carpeta: lo que dejaron tus padres, y lo que debían.', [
+  parents_inheritance: c('En el notario', 'Una foto, unas llaves y una carpeta: lo que dejaron tus padres. En la carpeta también está lo que debían. Nadie sabe cuánto.', [
     'Renunciar a todo',
-    ['Aceptarla', 'El piso, unos ahorros y ninguna deuda.', 'El piso estaba hipotecado dos veces. Pagas lo que queda.'],
+    ['Aceptarla tal cual, con deudas y todo', 'El piso, unos ahorros y ninguna deuda.', 'El piso estaba hipotecado dos veces. Las deudas superan la herencia: el resto lo pagas tú.'],
     'Aceptarla: conoces sus papeles',
+    ['Aceptarla a beneficio de inventario', 'El notario cobra lo suyo. Luego, el piso y unos ahorros, sin deudas.', 'Las deudas se comen la herencia y ahí se paran. Solo pierdes lo del notario.'],
   ]),
   cousin_wedding: c('Una invitación de boda', 'Una invitación con el borde dorado, de {rival:cousin}. Una boda, y una lista de regalos.', [
     'Algo pequeño',

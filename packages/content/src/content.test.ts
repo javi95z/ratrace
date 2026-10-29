@@ -250,6 +250,7 @@ describe('the v1 content', () => {
     ['celeb_kardashion', 1, 2],
     ['life_gig_apps', 1, 2],
     ['parents_inheritance', 1, 2],
+    ['parents_inheritance', 3, 2],
     ['classmate_job', 1, 2],
     ['sales_quota', 1, 2],
   ];

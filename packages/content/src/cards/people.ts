@@ -154,9 +154,13 @@ export const peopleCards: CardDef[] = [
   ])),
   card('parents_inheritance', 'laterLife', { once: true, weight: FAMILY, when: { minRound: 15 } }, person('parents', [
     {},
-    // Someone who knows their papers is offered only the sure way of accepting it.
+    // As it comes, debts and all: the estate, or debts beyond it, which the heir pays.
     { when: { unless: { flags: ['parents_warm'] } }, outcomes: [{ weight: 60, effects: { cash: usd(30_000) } }, { weight: 40, effects: { cash: usd(-10_000), setFlags: ['parents_debts'] } }] },
+    // Someone who knows their papers knows there are no debts: the sure way of accepting it, in place of both blind ones.
+    // It keeps its place, and the inventory comes last: a life under older rules reads its options' words by their place.
     { when: { flags: ['parents_warm'] }, effects: { cash: usd(30_000) } },
+    // With the benefit of inventory: the notary's fee, then the debts paid only as far as the estate goes, never past it.
+    { when: { unless: { flags: ['parents_warm'] } }, effects: { cash: usd(-2_000) }, outcomes: [{ weight: 60, effects: { cash: usd(30_000) } }, { weight: 40, effects: { setFlags: ['parents_debts'] } }] },
   ])),
 
   // The player's own people, of the paper: the cousin's wedding, the ex's new car, the classmate's firm.

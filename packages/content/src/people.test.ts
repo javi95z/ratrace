@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CardDef, Effects } from '@ratrace/engine';
+import type { CardDef, CardOption, Effects } from '@ratrace/engine';
 import { content } from './content';
 import { cardPeople, metFlag, PEOPLE, personEndings } from './people';
 import { rawText } from './text';
@@ -91,5 +91,30 @@ describe('what the people\'s cards leave behind', () => {
   it('keeps the landlord in the city the tenancy began in: his later cards need the flag a move clears', () => {
     for (const id of ['landlord_raise', 'landlord_sale']) expect(card(id).when?.flags ?? [], id).toContain('landlord_here');
     for (const option of card('landlord_damp').options) expect(option.effects?.setFlags ?? []).toContain('landlord_here');
+  });
+
+  it('takes the parents\' inheritance as it comes, debts and all, or with the benefit of inventory, which never costs more than its fee', () => {
+    const [renounce, asItComes, knowsPapers, inventory] = card('parents_inheritance').options;
+    const cashOf = (effects: Effects | undefined) => effects?.cash ?? 0;
+    const worst = (option: CardOption) => cashOf(option.effects) + Math.min(...(option.outcomes ?? [{ effects: {} }]).map((o) => cashOf(o.effects)));
+    const best = (option: CardOption) => cashOf(option.effects) + Math.max(...(option.outcomes ?? [{ effects: {} }]).map((o) => cashOf(o.effects)));
+    expect(cashOf(renounce.effects)).toBe(0);
+    // As it comes: the estate, or the debts it leaves, which are told.
+    expect(asItComes.outcomes?.map((o) => o.weight)).toEqual([60, 40]);
+    expect(worst(asItComes)).toBeLessThan(0);
+    expect(asItComes.outcomes?.[1].effects.setFlags).toContain('parents_debts');
+    // With the benefit of inventory: a notary's fee, the same estate on the same odds, and the debts never past what is left.
+    const fee = -cashOf(inventory.effects);
+    const gain = best(asItComes);
+    expect(fee).toBeGreaterThanOrEqual(gain * 0.05);
+    expect(fee).toBeLessThanOrEqual(gain * 0.08);
+    expect(inventory.outcomes?.map((o) => o.weight)).toEqual([60, 40]);
+    expect(worst(inventory)).toBe(-fee);
+    expect(best(inventory)).toBe(gain - fee);
+    expect(inventory.outcomes?.[1].effects.setFlags).toContain('parents_debts');
+    // One who knows their papers knows there are no debts: the sure estate, in place of both ways of accepting it blind.
+    expect(knowsPapers.when).toEqual({ flags: ['parents_warm'] });
+    expect(cashOf(knowsPapers.effects)).toBe(gain);
+    for (const blind of [asItComes, inventory]) expect(blind.when).toEqual({ unless: { flags: ['parents_warm'] } });
   });
 });
