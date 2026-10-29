@@ -172,22 +172,29 @@ test('the rankings are their own screen, opened on the ranking the link names: a
   } as unknown as Community;
   renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
   expect(screen.getByRole('heading', { name: 'Rankings' })).toBeTruthy();
-  await waitFor(() => expect(asked).toEqual(['all everyone']));
+  await waitFor(() => expect(asked).toEqual(['week everyone']));
   cleanup();
   asked.length = 0;
   params.tab = 'friends';
   renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
   await waitFor(() => expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true'));
-  await waitFor(() => expect(asked).toEqual(['all friends']));
+  await waitFor(() => expect(asked).toEqual(['week friends']));
   cleanup();
   params.tab = 'challenge';
   renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
   expect(await screen.findByText("Nobody has finished this week's challenge yet.")).toBeTruthy();
   cleanup();
-  // A tab the page does not have opens it as it is: all time.
+  // A tab the page does not have opens it as it is: everyone's, this week.
   params.tab = 'nowhere';
   renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
-  expect(screen.getByRole('tab', { name: 'All time' }).getAttribute('aria-selected')).toBe('true');
+  expect(screen.getByRole('tab', { name: 'Global' }).getAttribute('aria-selected')).toBe('true');
+  cleanup();
+  // The tab of all time before, `?tab=all`: everyone's, of all time.
+  asked.length = 0;
+  params.tab = 'all';
+  renderGame(<RankingsRoute />, { ...memoryServices(), community: () => community });
+  await waitFor(() => expect(asked).toEqual(['all everyone']));
+  expect(screen.getByRole('tab', { name: 'Global' }).getAttribute('aria-selected')).toBe('true');
   cleanup();
   // And the web's own link to the friends, `/{l}/rankings#friends` (the front door's, and a phone's `theratrace://rankings#friends`): the hash, as
   // the router hands it (`#`).

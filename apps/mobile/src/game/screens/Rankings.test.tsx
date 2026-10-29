@@ -10,7 +10,7 @@ import type { Renders } from '../../testing/renders';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { useGame } from '../context';
 import { Rankings } from './Rankings';
-import type { Kind } from './Rankings';
+import type { Opening } from './Rankings';
 import { useState, type ReactElement } from 'react';
 
 afterEach(cleanup);
@@ -110,9 +110,9 @@ function community(over: Partial<Community> = {}) {
 }
 const show = (with_: Community | null, locale: 'en' | 'es' = 'en', props: Parameters<typeof Rankings>[0] = {}) => renderGame(<Rankings {...props} />, { ...memoryServices(), community: () => with_ }, locale);
 /** The page with the tab its route names, which a test changes while the page is open (`followed.to`), as a link followed then does. */
-const followed: { to?: (tab: Kind) => void } = {};
+const followed: { to?: (tab: Opening) => void } = {};
 function Followed() {
-  const [tab, setTab] = useState<Kind>('all');
+  const [tab, setTab] = useState<Opening>('global');
   followed.to = setTab;
   return <Rankings tab={tab} />;
 }
@@ -148,54 +148,87 @@ describe('the rankings', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/en');
   });
 
-  it('lists the best ranked life of each player, the highest first, and marks the player\'s own line', async () => {
+  it('lists the best ranked life of each player this week, the highest first, and pins the player\'s own line at its foot when it is far below', async () => {
     const { community: c, asked } = community();
     show(c);
-    const lines = await linesOf('All time');
+    const lines = await linesOf('Global');
     // Each line: the place, the name, the starting life and the day it ended, and the score.
     // The day is held whole on its line: its spaces do not break.
-    const day = formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, '\u00a0');
-    expect(lines.map((line) => line.textContent)).toEqual([`1Otra_RataSoftware engineer · ${day}900▸`, `2Rat BBBBNurse · ${day}800▸`, `9Rat MENurse · ${day}120▸`]);
-    // The player's own line is the one they are on, as the web's `aria-current` says.
-    expect(lines.map((line) => line.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true']);
+    const day = formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, ' ');
+    expect(lines.map((line) => line.textContent)).toEqual([`1Otra_RataSoftware engineer · ${day}900▸`, `2Rat BBBBNurse · ${day}800▸`]);
+    expect(lines.map((line) => line.getAttribute('aria-selected'))).toEqual(['false', 'false']);
+    // The player is ninth, past the lines the ranking lists: their own line stands at the foot of the page, lit as theirs (the web's `aria-current`).
+    const [mine] = await linesOf('Your place');
+    expect(mine.textContent).toBe(`9YouNurse · ${day}120▸`);
+    expect(mine.getAttribute('aria-selected')).toBe('true');
     // Each line opens the life behind it, in a sheet.
     expect(within(lines[0]).getByRole('button')).toBeTruthy();
-    expect(asked).toEqual(['ranking all everyone any']);
+    expect(asked).toEqual(['ranking week everyone any']);
   });
 
-  it('shows the ranking of the week, and the one among friends, when asked', async () => {
+  it('lists the player\'s own line among the others where it follows them, and pins nothing', async () => {
+    const { community: c, state } = community();
+    state.board = () => [row(1, 'aaaa1111-0000'), row(2, 'me', { mine: true }), row(3, 'bbbb2222-0000')];
+    show(c);
+    const lines = await linesOf('Global');
+    expect(lines.map((line) => line.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false']);
+    expect(rankingOf('Your place')).toBeNull();
+  });
+
+  it('has three rankings, everyone\'s and the friends\' of this week or of all time, and the week\'s challenge', async () => {
     const { community: c, asked } = community();
     show(c);
-    await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
-    await linesOf('Best this week');
+    await linesOf('Global');
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Global', 'Friends', 'Weekly challenge']);
+    expect(screen.getByRole('tablist', { name: 'Which ranking' })).toBeTruthy();
+    // This week first, and what it counts said for the week.
+    const period = screen.getByRole('radiogroup', { name: 'Which period' });
+    expect(within(period).getAllByRole('radio').map((one) => [one.textContent, one.getAttribute('aria-checked')])).toEqual([['This week', 'true'], ['All time', 'false']]);
+    expect(screen.getByText("Each player's best ranked life this week. Only lives played on the server count.")).toBeTruthy();
+    fireEvent.click(within(period).getByRole('radio', { name: 'All time' }));
+    await waitFor(() => expect(asked).toContain('ranking all everyone any'));
+    expect(screen.getByText('The best ranked life of each player. Only lives played on the server count.')).toBeTruthy();
+    // The period chosen stays chosen among friends.
     fireEvent.click(screen.getByRole('tab', { name: 'Friends' }));
     await linesOf('Friends');
-    expect(asked).toEqual(['ranking all everyone any', 'ranking week everyone any', 'ranking all friends any']);
+    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Which period' })).getByRole('radio', { name: 'This week' }));
+    await waitFor(() => expect(asked).toContain('ranking week friends any'));
+    expect(asked).toEqual(['ranking week everyone any', 'ranking all everyone any', 'ranking all friends any', 'ranking week friends any']);
     expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true');
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['All time', 'Best this week', 'Friends', 'Weekly challenge']);
-    expect(screen.getByRole('tablist', { name: 'Which ranking' })).toBeTruthy();
+    // The week's challenge has no period of its own.
+    fireEvent.click(screen.getByRole('tab', { name: 'Weekly challenge' }));
+    await screen.findByText("Nobody has finished this week's challenge yet.");
+    expect(screen.queryByRole('radiogroup', { name: 'Which period' })).toBeNull();
   });
 
-  it('opens on the ranking a link names: among friends (a friend request\'s notice), or the week\'s challenge', async () => {
+  it('opens on the ranking a link names: among friends (a friend request\'s notice), the week\'s challenge, and the tabs of before', async () => {
     const { community: c, asked } = community();
     show(c, 'en', { tab: 'friends' });
     await linesOf('Friends');
-    expect(asked).toEqual(['ranking all friends any']);
-    // The friends themselves are where they are played with.
-    fireEvent.click(screen.getByRole('button', { name: 'Your friends and their requests' }));
-    expect(router.push).toHaveBeenCalledWith('/en/room');
+    expect(asked).toEqual(['ranking week friends any']);
+    // No way off the page to the friends: they are answered and asked for here.
+    expect(screen.queryByRole('button', { name: /their requests/ })).toBeNull();
     cleanup();
     const other = community();
     show(other.community, 'en', { tab: 'challenge' });
     expect(await screen.findByText("Nobody has finished this week's challenge yet.")).toBeTruthy();
     expect(other.asked).toEqual([]);
+    // `?tab=week` and `?tab=all`, the tabs the global ranking was before: everyone's, of that period.
+    for (const [tab, period] of [['week', 'This week'], ['all', 'All time']] as const) {
+      cleanup();
+      const before = community();
+      show(before.community, 'en', { tab });
+      await linesOf('Global');
+      expect(screen.getByRole('tab', { name: 'Global' }).getAttribute('aria-selected')).toBe('true');
+      expect(screen.getByRole('radio', { name: period }).getAttribute('aria-checked')).toBe('true');
+      expect(before.asked).toEqual([`ranking ${tab} everyone any`]);
+    }
   });
 
   it('narrows a ranking to one starting life, and widens it again', async () => {
     const { community: c, asked } = community();
     show(c);
-    await linesOf('All time');
+    await linesOf('Global');
     // The game's own picker: a button that says what is chosen, and a list in a sheet.
     fireEvent.click(screen.getByRole('button', { name: 'Starting life: Any life' }));
     const list = within(sheetOf('Starting life')).getByRole('radiogroup', { name: 'Starting life' });
@@ -203,13 +236,13 @@ describe('the rankings', () => {
     expect(options.map((option) => option.textContent?.replace('✓', '')).slice(0, 3)).toEqual(['Any life', 'Nurse', 'Software engineer']);
     expect(options[0].getAttribute('aria-checked')).toBe('true');
     fireEvent.click(within(list).getByRole('radio', { name: 'Nurse' }));
-    await waitFor(() => expect(asked).toContain('ranking all everyone nurse'));
-    // The life chosen stays chosen from one ranking to the next.
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
     await waitFor(() => expect(asked).toContain('ranking week everyone nurse'));
+    // The life chosen stays chosen from one ranking to the next.
+    fireEvent.click(screen.getByRole('radio', { name: 'All time' }));
+    await waitFor(() => expect(asked).toContain('ranking all everyone nurse'));
     fireEvent.click(screen.getByRole('button', { name: 'Starting life: Nurse' }));
     fireEvent.click(within(within(sheetOf('Starting life')).getByRole('radiogroup', { name: 'Starting life' })).getByRole('radio', { name: /^Any life/ }));
-    await waitFor(() => expect(asked[asked.length - 1]).toBe('ranking week everyone any'));
+    await waitFor(() => expect(asked[asked.length - 1]).toBe('ranking all everyone any'));
   });
 
   it('shows a ranking only for what was asked last, whichever answer comes last', async () => {
@@ -217,14 +250,14 @@ describe('the rankings', () => {
     const { community: c } = community({ ranking: (query) => new Promise((answer) => waiting.push({ query, answer })) });
     show(c);
     await waitFor(() => expect(waiting).toHaveLength(1));
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'All time' }));
     await waitFor(() => expect(waiting).toHaveLength(2));
-    // The week answers first, and all time after it: the week is what the player is looking at.
-    await act(async () => waiting[1].answer([row(1, 'week0000-0000')]));
-    await linesOf('Best this week');
-    await act(async () => waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]));
+    // All time answers first, and the week after it: all time is what the player is looking at.
+    await act(async () => waiting[1].answer([row(1, 'allt0000-0000')]));
+    await linesOf('Global');
+    await act(async () => waiting[0].answer([row(1, 'week0000-0000'), row(2, 'week1111-0000')]));
     await settled();
-    expect((await linesOf('Best this week')).map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, '\u00a0')}900▸`]);
+    expect((await linesOf('Global')).map((line) => line.textContent)).toEqual([`1Rat ALLTNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13)).replace(/ /g, ' ')}900▸`]);
   });
 
   it('is read again when pulled down: the ranking on screen asked anew, kept until the new one comes, the spinner turning until it has', async () => {
@@ -253,7 +286,7 @@ describe('the rankings', () => {
     act(() => letCome());
     await screen.findByText('Nueva_Rata');
     await waitFor(() => expect(pull().props.refreshing).toBe(false));
-    expect(asked.filter((one) => one.startsWith('ranking'))).toEqual(['ranking all everyone any', 'ranking all everyone any']);
+    expect(asked.filter((one) => one.startsWith('ranking'))).toEqual(['ranking week everyone any', 'ranking week everyone any']);
   });
 
   it('reads the ranking among friends again, and the week\'s challenge on its own, when pulled down on their tabs', async () => {
@@ -263,7 +296,7 @@ describe('the rankings', () => {
     await linesOf('Friends');
     const pull = () => listed.at(-1)!.refreshControl as ReactElement<{ refreshing: boolean; onRefresh(): void }>;
     act(() => pull().props.onRefresh());
-    await waitFor(() => expect(asked.filter((one) => one === 'ranking all friends any')).toHaveLength(2));
+    await waitFor(() => expect(asked.filter((one) => one === 'ranking week friends any')).toHaveLength(2));
     fireEvent.click(screen.getByRole('tab', { name: 'Weekly challenge' }));
     await waitFor(() => expect(boards).toBe(1));
     act(() => pull().props.onRefresh());
@@ -283,7 +316,7 @@ describe('the rankings', () => {
     show(empty.community);
     expect(await screen.findByText('Nobody has finished a ranked life here yet. Yours could be the first.')).toBeTruthy();
     expect(anyLines()).toEqual([]);
-    expect(rankingOf('All time')).toBeNull();
+    expect(rankingOf('Global')).toBeNull();
     cleanup();
     const away = community();
     away.state.board = () => null;
@@ -295,35 +328,34 @@ describe('the rankings', () => {
   it('says it is reading a ranking while it is on its way', async () => {
     show(community({ ranking: () => new Promise(() => {}) }).community);
     expect(await screen.findByText('Loading…')).toBeTruthy();
-    expect(screen.getByText('The best ranked life of each player. Only lives played on the server count.')).toBeTruthy();
+    expect(screen.getByText("Each player's best ranked life this week. Only lives played on the server count.")).toBeTruthy();
   });
 
   it('shows nothing of one ranking under the name of another while that other is on its way', async () => {
-    const { community: c } = community({ ranking: (query) => (query.period === 'all' ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
+    const { community: c } = community({ ranking: (query) => (query.period === 'week' ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
     show(c);
-    await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
-    // The week has not answered: what is on screen is that it is being read, not the lines of all time.
+    await linesOf('Global');
+    fireEvent.click(screen.getByRole('radio', { name: 'All time' }));
+    // All time has not answered: what is on screen is that it is being read, not the lines of the week.
     expect(anyLines()).toEqual([]);
-    expect(rankingOf('All time')).toBeNull();
-    expect(rankingOf('Best this week')).toBeNull();
+    expect(rankingOf('Global')).toBeNull();
     expect(screen.getByText('Loading…')).toBeTruthy();
     // Back where the answer is known, it is there at once.
-    fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
-    expect(rankingOf('All time')).not.toBeNull();
-    expect(await linesOf('All time')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('radio', { name: 'This week' }));
+    expect(rankingOf('Global')).not.toBeNull();
+    expect(await linesOf('Global')).toHaveLength(1);
   });
 
   it('keeps the ranking on screen while it is read again', async () => {
     let asks = 0;
     const { community: c } = community({ ranking: () => ((asks += 1) === 1 ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
     show(c);
-    await linesOf('All time');
+    await linesOf('Global');
     // Pulled down, it is read again.
     pullDown();
     await waitFor(() => expect(asks).toBe(2));
     // The second answer never comes here: the first is still what is shown.
-    expect(await linesOf('All time')).toHaveLength(1);
+    expect(await linesOf('Global')).toHaveLength(1);
   });
 
   it('opens the life behind a line: how it ended, what it was worth, where it was lived and what it earned', async () => {
@@ -331,7 +363,7 @@ describe('the rankings', () => {
     const asked: unknown[] = [];
     const { community: c } = community({ run: async (line) => (asked.push(line), detail) });
     show(c);
-    const [first] = await linesOf('All time');
+    const [first] = await linesOf('Global');
     fireEvent.click(within(first).getByRole('button'));
     const sheet = sheetOf('Otra_Rata');
     expect(asked).toEqual([expect.objectContaining({ userId: 'aaaa1111-0000', lifeId: 'engineer', score: 900 })]);
@@ -354,12 +386,12 @@ describe('the rankings', () => {
     let asks = 0;
     const { community: c } = community({ run: async () => ((asks += 1), null) });
     show(c);
-    const [first] = await linesOf('All time');
+    const [first] = await linesOf('Global');
     fireEvent.click(within(first).getByRole('button'));
     await within(sheetOf('Otra_Rata')).findByText('This life could not be read.');
     fireEvent.click(within(sheetOf('Otra_Rata')).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Otra_Rata' })).toBeNull());
-    fireEvent.click(within((await linesOf('All time'))[0]).getByRole('button'));
+    fireEvent.click(within((await linesOf('Global'))[0]).getByRole('button'));
     await within(sheetOf('Otra_Rata')).findByText('This life could not be read.');
     expect(asks).toBe(2);
   });
@@ -367,7 +399,7 @@ describe('the rankings', () => {
   it('says so when the life behind a line cannot be read', async () => {
     const { community: c } = community({ run: async () => null });
     show(c);
-    const [first] = await linesOf('All time');
+    const [first] = await linesOf('Global');
     fireEvent.click(within(first).getByRole('button'));
     expect(await within(sheetOf('Otra_Rata')).findByText('This life could not be read.')).toBeTruthy();
   });
@@ -424,21 +456,21 @@ describe('what the rankings are drawn again for', () => {
     ];
     state.board = same;
     show(c);
-    await linesOf('All time');
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
-    await linesOf('Best this week');
-    fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
-    await linesOf('All time');
+    await linesOf('Global');
+    fireEvent.click(screen.getByRole('radio', { name: 'This week' }));
+    await linesOf('Global');
+    fireEvent.click(screen.getByRole('radio', { name: 'All time' }));
+    await linesOf('Global');
     await settled();
     // Each answer known, a ranking switched to is drawn from it at once: the line that is the same in both is the same line, not drawn again.
     const engineer = spriteRenders.get('portrait.engineer.22');
     const civil = spriteRenders.get('portrait.civil_servant.22');
-    fireEvent.click(screen.getByRole('tab', { name: 'Best this week' }));
-    await linesOf('Best this week');
+    fireEvent.click(screen.getByRole('radio', { name: 'This week' }));
+    await linesOf('Global');
     await settled();
     expect(spriteRenders.get('portrait.engineer.22')).toBe(engineer);
     expect(spriteRenders.get('portrait.heir.22')).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('tab', { name: 'All time' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'All time' }));
     await settled();
     expect(spriteRenders.get('portrait.engineer.22')).toBe(engineer);
     expect(spriteRenders.get('portrait.civil_servant.22')).toBeGreaterThan(civil ?? 0);
@@ -448,7 +480,7 @@ describe('what the rankings are drawn again for', () => {
     let asks = 0;
     const { community: c } = community({ ranking: async () => ((asks += 1), [row(1, 'aaaa1111-0000', { nickname: 'Otra_Rata' })]) });
     show(c);
-    await linesOf('All time');
+    await linesOf('Global');
     await settled();
     const portraits = spriteRenders.get('portrait.nurse.22');
     // Pulled down: the ranking is read again, and answers the same lines.
@@ -476,7 +508,7 @@ describe('what the rankings are drawn again for', () => {
       </>,
       services,
     );
-    await linesOf('All time');
+    await linesOf('Global');
     await settled(() => probe.state?.start('nurse'));
     await settled(() => probe.state?.leaveNews());
     const before = renders.count;
@@ -493,9 +525,69 @@ describe('the rankings, followed and kept up to date', () => {
   it('opens on the ranking a link names when it is followed with the page open (a notice tapped)', async () => {
     const { community: c, asked } = community();
     renderGame(<Followed />, { ...memoryServices(), community: () => c });
-    await linesOf('All time');
+    await linesOf('Global');
     act(() => followed.to?.('friends'));
     await waitFor(() => expect(screen.getByRole('tab', { name: 'Friends' }).getAttribute('aria-selected')).toBe('true'));
-    await waitFor(() => expect(asked).toContain('ranking all friends any'));
+    await waitFor(() => expect(asked).toContain('ranking week friends any'));
+  });
+});
+
+describe('the friends among the rankings', () => {
+  const friend = (userId: string, nickname: string | null = null): Friend => ({ userId, nickname, avatar: null });
+
+  it('says how many requests wait in the tab\'s name, and answers them in a sheet from a line at the top of the ranking among friends', async () => {
+    const { community: c, asked, state } = community();
+    state.friends = { friends: [friend('dddd4444-0000', 'Amiga'), friend('eeee5555-0000', 'Amigo')], incoming: [friend('aaaa1111-0000', 'Otra_Rata'), friend('cccc3333-0000')], outgoing: [] };
+    show(c);
+    await linesOf('Global');
+    const tab = await screen.findByRole('tab', { name: 'Friends · 2' });
+    // The line of the requests is the friends' ranking's alone.
+    expect(screen.queryByRole('button', { name: /friend requests/ })).toBeNull();
+    fireEvent.click(tab);
+    await linesOf('Friends');
+    fireEvent.click(screen.getByRole('button', { name: '2 friend requests' }));
+    const sheet = sheetOf('Friend requests');
+    expect(within(sheet).getByText('Otra_Rata')).toBeTruthy();
+    expect(within(sheet).getByText('Rat CCCC')).toBeTruthy();
+    fireEvent.click(within(sheet).getAllByRole('button', { name: 'Accept' })[0]);
+    await waitFor(() => expect(asked).toContain('answer aaaa1111-0000 yes'));
+    // A friend made: the ranking among friends is asked again, and one request is left.
+    await waitFor(() => expect(asked.filter((one) => one === 'ranking week friends any')).toHaveLength(2));
+    await screen.findByRole('tab', { name: 'Friends · 1' });
+    expect(within(sheetOf('Friend requests')).queryByText('Otra_Rata')).toBeNull();
+    fireEvent.click(within(sheetOf('Friend requests')).getByRole('button', { name: 'Decline' }));
+    await waitFor(() => expect(asked).toContain('answer cccc3333-0000 no'));
+    // None left: the sheet goes, the line with it, and the tab is the friends' again.
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Friend requests' })).toBeNull());
+    expect(await screen.findByRole('tab', { name: 'Friends' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /friend request/ })).toBeNull();
+  });
+
+  it('asks a player with one friend or none to add some, with their friend code and its QR code in a sheet', async () => {
+    const { community: c, state } = community();
+    state.friends = { friends: [friend('dddd4444-0000', 'Amiga')], incoming: [], outgoing: [] };
+    show(c, 'en', { tab: 'friends' });
+    await linesOf('Friends');
+    expect(await screen.findByText('Compare your lives with your friends.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add friends' }));
+    const sheet = sheetOf('Your friend code');
+    expect(within(sheet).getByText('ABCD2345')).toBeTruthy();
+    // Not among everyone.
+    cleanup();
+    show(community().community);
+    await linesOf('Global');
+    await settled();
+    expect(screen.queryByText('Compare your lives with your friends.')).toBeNull();
+  });
+
+  it('asks nothing of a player with two friends or more', async () => {
+    const { community: c, state } = community();
+    state.friends = { friends: [friend('dddd4444-0000', 'Amiga'), friend('eeee5555-0000', 'Amigo')], incoming: [], outgoing: [] };
+    show(c, 'en', { tab: 'friends' });
+    await linesOf('Friends');
+    await settled();
+    expect(screen.queryByText('Compare your lives with your friends.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add friends' })).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Friends' })).toBeTruthy();
   });
 });

@@ -83,6 +83,9 @@ describe('the link a tap opens', () => {
     ['theratrace://play', { page: 'play', query: {} }],
     ['theratrace://rankings?tab=friends', { page: 'rankings', query: { tab: 'friends' } }],
     ['theratrace://rankings?tab=challenge', { page: 'rankings', query: { tab: 'challenge' } }],
+    ['theratrace://rankings?tab=global', { page: 'rankings', query: { tab: 'global' } }],
+    // The tabs of before, a period of everyone's ranking now.
+    ['theratrace://rankings?tab=week', { page: 'rankings', query: { tab: 'week' } }],
     // What the screen does not read is left behind.
     ['theratrace://room?code=K7Q2XM&next=https://evil.example', { page: 'room', query: { code: 'K7Q2XM' } }],
     ['theratrace://room/?code=K7Q2XM', { page: 'room', query: { code: 'K7Q2XM' } }],

@@ -6,10 +6,10 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bare, Button, Figure, KeyFigure, Notice, pressDown, Row, usePress } from '../../ui/kit';
+import { Bare, Button, Figure, KeyFigure, Notice, pressDown, Row, Segmented, usePress } from '../../ui/kit';
 import { Loading } from '../../ui/Loading';
-import { Sheet, Tabs } from '../../ui/overlay';
-import { ListScreen } from '../../ui/Page';
+import { Sheet, Tabs, Toast } from '../../ui/overlay';
+import { BottomBar, ListScreen } from '../../ui/Page';
 import { WIDE_COLUMN } from '../../ui/desk';
 import { PerfDrawn } from '../../ui/perf';
 import { Picker } from '../../ui/Picker';
@@ -17,16 +17,30 @@ import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, EXTRA } from '../../ui/theme';
 import { useCommunity, useWords } from '../context';
-import { useGo } from '../pages';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ChallengeBoard, ChallengeEntry, topTenth, useChallengeBoard } from './Challenge';
+import { FriendInvite, FriendRequests, useFriendCode, useFriendships } from './Friends';
 import { LifeFace } from './LifeFace';
 import { Medal } from './Medal';
 import { WorthGraph } from './WorthGraph';
 
-export type Kind = 'all' | 'week' | 'friends' | 'challenge';
-const KINDS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
+/** The rankings' tabs: everyone's, the player's friends', and the week's challenge. */
+export type Tab = 'global' | 'friends' | 'challenge';
+/** The period of everyone's ranking and the friends': this week, or all time. */
+export type Period = 'week' | 'all';
+/**
+ * What a link opens the page on (the route's `?tab=`): a tab, or a period of everyone's ranking (`week` and `all`, the tabs it had before: a link of
+ * then, a notice's or a scene's, opens on the same ranking).
+ */
+export type Opening = Tab | Period;
+export const OPENINGS: readonly Opening[] = ['global', 'friends', 'challenge', 'week', 'all'];
+const TABS: readonly Tab[] = ['global', 'friends', 'challenge'];
+const PERIODS: readonly Period[] = ['week', 'all'];
+/** The tab and the period a link opens on: a period alone is everyone's ranking of it. */
+const openingOf = (opening: Opening): { tab: Tab; period?: Period } => (opening === 'week' || opening === 'all' ? { tab: 'global', period: opening } : { tab: opening });
+/** Fewer friends than this, and the ranking among them asks the player to add some. */
+const FEW_FRIENDS = 2;
 /** How a name is written. The database checks it again, and what it says. */
 export const NAME = /^[A-Za-z0-9_]{3,16}$/;
 
@@ -52,7 +66,8 @@ const RankLine = memo(function RankLine({ userId, place, lifeId, name, sub, scor
     <View role="listitem" aria-selected={mine}>
       <Pressable accessibilityRole="button" accessibilityState={{ selected: mine }} accessibilityHint={phone('opensLife')} onPress={press} style={({ pressed }) => pressDown(pressed)}>
         <Framed kind="bevel" tone={mine ? GOLD : undefined} style={{ backgroundColor: COLORS[mine ? 'night-600' : 'night-700'], flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
-          <PixelText size={17} style={{ width: 32, flexShrink: 0, textAlign: 'right', color: placeColour(place) }}>{String(place)}</PixelText>
+          {/* At least two digits' room, more for a place past them (the player's own, a thousandth): never cut. */}
+          <PixelText size={17} style={{ minWidth: 32, flexShrink: 0, textAlign: 'right', color: placeColour(place) }}>{String(place)}</PixelText>
           <Bare style={{ width: 32, height: 32 }}>
             <LifeFace lifeId={lifeId} />
           </Bare>
@@ -188,30 +203,59 @@ type Line =
 /** A line's name in the list. */
 const keyOf = (line: Line): string => line.key;
 
-/** What is asked of the cloud for a ranking: its kind and its starting life, the name its answer is known by. */
-const askingOf = (kind: Kind, lifeId: string | null): string => `${kind} ${lifeId ?? ''}`;
+/** What is asked of the cloud for a ranking: its tab, its period and its starting life, the name its answer is known by. */
+const askingOf = (tab: Tab, period: Period, lifeId: string | null): string => `${tab} ${period} ${lifeId ?? ''}`;
 
 /**
- * The rankings: the best ranked life of each player, of all time, of this week, or among the player's friends, of any starting life or of one; and the
- * ranking of the week's challenge. Only lives the server played are in them, so every line can be set beside every other. Everything here is asked of
- * the cloud and shown as it answers. The player's friends themselves are on the games with others' page, which the ranking among them leads to.
- *
- * The page is one list that draws only the lines near the screen (a ranking is fifty lines and the player's own): its head (the title, the tabs, what
- * the ranking came to) is the list's header; its rows are the ranking's lines. `tab` is the ranking it opens on (the route's `?tab=`, a link on the
- * week's challenge).
+ * The player's own line where the ranking lists it apart from the others: the server answers the first fifty and the player's own, which is past them
+ * when its place does not follow the line before it. Null where it is among them, or not there.
  */
-export function Rankings({ tab }: { tab?: Kind } = {}) {
+const apartOf = (rows: readonly RankingRow[]): RankingRow | null => {
+  const at = rows.findIndex((row) => row.mine);
+  return at > 0 && rows[at].place !== rows[at - 1].place + 1 ? rows[at] : null;
+};
+
+/** The line of the requests waiting on the player, at the top of the ranking among friends: pressed, it opens them (`FriendRequests`). */
+function RequestsLine({ count, onOpen }: { count: number; onOpen(): void }) {
+  const t = useT('rankings');
+  const press = usePress({ onPress: onOpen });
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={t('requestsWaiting', { count })} onPress={press} style={({ pressed }) => pressDown(pressed)}>
+      <Framed kind="bevel" tone={GOLD} style={{ backgroundColor: COLORS['night-600'], flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 12, paddingVertical: 8 }}>
+        <ReadText size={14} tone="gold-200" style={{ flex: 1, minWidth: 0 }}>{t('requestsWaiting', { count })}</ReadText>
+        <View aria-hidden importantForAccessibility="no-hide-descendants">
+          <PixelText size={14} tone="ink-300">{'›'}</PixelText>
+        </View>
+      </Framed>
+    </Pressable>
+  );
+}
+
+/**
+ * The rankings: the best ranked life of each player, of everyone or among the player's friends, of this week or of all time, of any starting life or
+ * of one; and the ranking of the week's challenge. Only lives the server played are in them, so every line can be set beside every other. Everything
+ * here is asked of the cloud and shown as it answers. Among friends, the requests waiting on the player are a line at the top, answered in a sheet, and
+ * a player with one friend or none is asked to add some (their invitation, `FriendInvite`); the rest of the friends are on the games with others' page.
+ *
+ * The page is one list that draws only the lines near the screen (a ranking is fifty lines and the player's own): its head (the title, the tabs, the
+ * period, what the ranking came to) is the list's header; its rows are the ranking's lines. The player's own line, where the ranking has it past its
+ * fifty, stands pinned at the foot of the page. `tab` is the ranking it opens on (the route's `?tab=`, a link on the week's challenge).
+ */
+export function Rankings({ tab: opening }: { tab?: Opening } = {}) {
   const t = useT('rankings');
   const challenge = useT('challenge');
   const common = useT('common');
   const { text, fmt } = useWords();
   const community = useCommunity();
-  const go = useGo();
-  const [kind, setKind] = useState<Kind>(tab ?? 'all');
+  const [tab, setTab] = useState<Tab>(opening === undefined ? 'global' : openingOf(opening).tab);
+  const [period, setPeriod] = useState<Period>((opening === undefined ? undefined : openingOf(opening).period) ?? 'week');
   // A link followed while the page is open (a notice tapped) opens it on what the link names.
   useEffect(() => {
-    if (tab !== undefined) setKind(tab);
-  }, [tab]);
+    if (opening === undefined) return;
+    const { tab: to, period: during } = openingOf(opening);
+    setTab(to);
+    if (during !== undefined) setPeriod(during);
+  }, [opening]);
   const [lifeId, setLifeId] = useState<string | null>(null);
   /**
    * Each answer, by what it answers: a ranking is shown only for what is being asked now, and one asked before is shown at once while it is asked
@@ -219,38 +263,55 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
    */
   const [answers, setAnswers] = useState<Readonly<Record<string, RankingRow[] | null>>>({});
   const [opened, setOpened] = useState<RankingRow | null>(null);
-  const asking = askingOf(kind, lifeId);
+  // The player's friends: the requests waiting on them (the tab says how many), and how many friends they have.
+  const friends = useFriendships(community);
+  const incoming = friends.list?.incoming ?? [];
+  const code = useFriendCode(community);
+  const [answering, setAnswering] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [told, setTold] = useState<string | null>(null);
+  // A friend made is in the ranking among friends: it is asked again.
+  const [made, setMade] = useState(0);
+  const asking = askingOf(tab, period, lifeId);
   const nameOf = useCallback((row: { userId: string; nickname: string | null }) => row.nickname ?? t('nameless', { tag: tagOf(row.userId) }), [t]);
   /** `undefined` while the answer is on its way; null when it could not be read. */
   const rows = Object.hasOwn(answers, asking) ? answers[asking] : undefined;
 
   useEffect(() => {
-    if (community === null || kind === 'challenge') return;
+    if (community === null || tab === 'challenge') return;
     let wanted = true;
-    void community.ranking({ period: kind === 'week' ? 'week' : 'all', friends: kind === 'friends', lifeId }).then((found) => {
+    void community.ranking({ period, friends: tab === 'friends', lifeId }).then((found) => {
       if (wanted) setAnswers((known) => ({ ...known, [asking]: found }));
     });
     return () => {
       wanted = false;
     };
-  }, [community, kind, lifeId, asking]);
-  const challengeBoard = useChallengeBoard(community, kind === 'challenge');
+  }, [community, tab, period, lifeId, asking, made]);
+  const challengeBoard = useChallengeBoard(community, tab === 'challenge');
   const board = challengeBoard.board;
   // Pulled down, the page reads again what it shows: the ranking, or the week's challenge. What is on screen stays until the new answer comes.
-  const reading = useRef({ community, kind, lifeId, asking });
-  reading.current = { community, kind, lifeId, asking };
+  const reading = useRef({ community, tab, period, lifeId, asking });
+  reading.current = { community, tab, period, lifeId, asking };
   const reloadBoard = challengeBoard.reload;
+  const reloadFriends = friends.reload;
   const refresh = useCallback(async () => {
     const now = reading.current;
     if (now.community === null) return;
-    if (now.kind === 'challenge') return reloadBoard();
-    await now.community
-      .ranking({ period: now.kind === 'week' ? 'week' : 'all', friends: now.kind === 'friends', lifeId: now.lifeId })
-      .then((found) => setAnswers((known) => ({ ...known, [now.asking]: found })));
-  }, [reloadBoard]);
+    if (now.tab === 'challenge') return reloadBoard();
+    await Promise.all([
+      now.community.ranking({ period: now.period, friends: now.tab === 'friends', lifeId: now.lifeId }).then((found) => setAnswers((known) => ({ ...known, [now.asking]: found }))),
+      now.tab === 'friends' ? reloadFriends() : null,
+    ]);
+  }, [reloadBoard, reloadFriends]);
+  const answerFriend = friends.answer;
+  const answer = useCallback((userId: string, yes: boolean) => void answerFriend(userId, yes).then(() => yes && setMade((n) => n + 1)), [answerFriend]);
+  // The player's own line past the ranking's fifty, pinned at the foot of the page rather than listed after them.
+  const apart = tab === 'challenge' || !rows ? null : apartOf(rows);
+  /** The starting life and the day under a line's name. The day is held whole ("12 сент. 2026 г." never leaves its "г." alone on the next line). */
+  const subOf = useCallback((row: RankingRow) => `${text.lives[row.lifeId]?.name ?? row.lifeId} · ${fmt.day(row.finishedAt).replace(/ /g, ' ')}`, [text, fmt]);
   // The lines on screen, made again only when the answer or the words change: a line's datum is all it shows.
   const lines = useMemo<Line[]>(() => {
-    if (kind === 'challenge') {
+    if (tab === 'challenge') {
       if (!board) return [];
       const top = topTenth(board.entrants);
       return board.rows.map((entry, i) => ({
@@ -265,21 +326,22 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
         mine: entry.mine,
       }));
     }
-    const ranking: Line[] = (rows ?? []).map((row, i) => ({
-      kind: 'rank',
-      key: `rank-${row.userId}`,
-      first: i === 0,
-      userId: row.userId,
-      place: row.place,
-      lifeId: row.lifeId,
-      name: nameOf(row),
-      // The day is held whole ("12 сент. 2026 г." never leaves its "г." alone on the next line), and goes under the life where they do not fit.
-      sub: `${text.lives[row.lifeId]?.name ?? row.lifeId} · ${fmt.day(row.finishedAt).replace(/ /g, '\u00a0')}`,
-      score: fmt.number(row.score),
-      mine: row.mine,
-    }));
+    const ranking: Line[] = (rows ?? [])
+      .filter((row) => row !== apart)
+      .map((row, i) => ({
+        kind: 'rank',
+        key: `rank-${row.userId}`,
+        first: i === 0,
+        userId: row.userId,
+        place: row.place,
+        lifeId: row.lifeId,
+        name: nameOf(row),
+        sub: subOf(row),
+        score: fmt.number(row.score),
+        mine: row.mine,
+      }));
     return ranking;
-  }, [kind, board, rows, nameOf, text, fmt, challenge]);
+  }, [tab, board, rows, apart, nameOf, subOf, fmt, challenge]);
   const ranked = lines.filter((line) => line.kind === 'rank' || line.kind === 'entry').length;
   // The line pressed, among the lines on screen: read when it is pressed, so the press stays the same function and no line is drawn again for it.
   const shown = useRef(rows);
@@ -289,6 +351,10 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
     () => [{ value: null, label: t('anyLife'), icon: 'icon.trophy' }, ...lives.map((life) => ({ value: life.id, label: text.lives[life.id]?.name ?? life.id, face: portraitArt(life.id, 22) }))],
     [t, text],
   );
+  const tabs = TABS.map((id) => ({ id, label: id === 'friends' && incoming.length > 0 ? t('friendsWaiting', { count: incoming.length }) : t(id) }));
+  const periods = PERIODS.map((value) => ({ value, label: t(value === 'week' ? 'thisWeek' : 'all') }));
+  // Among friends, a player with one friend or none (once their friends are read) is asked to add some.
+  const few = tab === 'friends' && friends.list != null && friends.list.friends.length < FEW_FRIENDS;
 
   const head = (
     <View style={{ gap: 16 }}>
@@ -308,28 +374,25 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
           <View>
             {/* The tabs run to the edges of the screen, their own gutter inside them (the web's `-mx-3`). */}
             <View style={{ marginHorizontal: -12 }}>
-              <Tabs<Kind> label={t('kinds')} tabs={KINDS.map((id) => ({ id, label: t(id) }))} value={kind} onChange={setKind} />
+              <Tabs<Tab> label={t('kinds')} tabs={tabs} value={tab} onChange={setTab} />
             </View>
             {/* The web's panel of the tab (`role="tabpanel"`, `pt-1`): its head here, its lines the rows of the page's list under it. */}
             <View style={{ paddingTop: 4, gap: 8 }}>
-              {kind === 'challenge' ? (
+              {tab === 'challenge' ? (
                 <ChallengeBoard board={board} />
               ) : (
                 <>
-                  <ReadText size={12} tone="ink-300">{t('hint')}</ReadText>
+                  {tab === 'friends' && incoming.length > 0 ? <RequestsLine count={incoming.length} onOpen={() => setAnswering(true)} /> : null}
+                  <Segmented<Period> label={t('period')} value={period} onChange={setPeriod} options={periods} />
+                  <ReadText size={12} tone="ink-300">{t(period === 'week' ? 'hintWeek' : 'hint')}</ReadText>
                   <Picker<string | null> label={t('life')} value={lifeId} onChange={setLifeId} closeLabel={common('close')} options={lifeOptions} />
                   {rows === undefined ? <Loading>{common('loading')}</Loading> : null}
                   {rows === null ? <Notice role="status">{t('unreachable')}</Notice> : null}
-                  {rows?.length === 0 ? (
+                  {/* Among few friends, the way to add more says what an empty ranking would. */}
+                  {rows?.length === 0 && !few ? (
                     <Framed kind="frame" style={{ backgroundColor: COLORS['night-700'], padding: 12 }}>
                       <ReadText size={14} tone="ink-200">{t('empty')}</ReadText>
                     </Framed>
-                  ) : null}
-                  {/* The player's friends, and the way to add more, are where they are played with. */}
-                  {kind === 'friends' ? (
-                    <Button variant="secondary" wide onPress={() => go.push('room')}>
-                      {t('toFriends')}
-                    </Button>
                   ) : null}
                 </>
               )}
@@ -339,6 +402,18 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
       )}
     </View>
   );
+
+  // Under the ranking among few friends: what it is for, and the way to add some (shown once the player's code is read).
+  const foot = few ? (
+    <View style={{ gap: 8, paddingTop: 16, alignItems: 'center' }}>
+      <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG} style={{ textAlign: 'center' }}>{t('fewFriends')}</ReadText>
+      {code !== null ? (
+        <Button variant="primary" wide onPress={() => setInviting(true)}>
+          {t('addFriends')}
+        </Button>
+      ) : null}
+    </View>
+  ) : undefined;
 
   const item = (line: Line): ReactElement => (
     // 8 under the head (the panel's `gap-2`), 6 between lines (the list's `gap-1.5`).
@@ -357,18 +432,33 @@ export function Rankings({ tab }: { tab?: Kind } = {}) {
       <ListScreen
         width={WIDE_COLUMN}
         head={head}
+        foot={foot}
         data={lines}
         keyOf={keyOf}
         item={item}
         // Always a list, named by its ranking once it has lines: a list that came and went would make the page another box each time on the web's
         // renderer (react-native-web draws a list as a `ul`), which the tests draw on, and every box of its head and foot anew with it.
         role="list"
-        label={ranked > 0 ? (kind === 'challenge' ? challenge('rankingTitle') : t(kind)) : undefined}
+        label={ranked > 0 ? (tab === 'challenge' ? challenge('rankingTitle') : t(tab)) : undefined}
         contentStyle={{ paddingBottom: 40 }}
         // Pulled down, it reads the ranking on screen again: only where there is a cloud to ask.
         onRefresh={community === null ? undefined : refresh}
       />
-      {community !== null ? <RunSheet community={community} row={opened} nameOf={nameOf} onClose={() => setOpened(null)} /> : null}
+      {apart ? (
+        <BottomBar>
+          <View role="list" aria-label={t('yourPlace')}>
+            <RankLine userId={apart.userId} place={apart.place} lifeId={apart.lifeId} name={t('you')} sub={subOf(apart)} score={fmt.number(apart.score)} mine onOpen={openLine} />
+          </View>
+        </BottomBar>
+      ) : null}
+      {community !== null ? (
+        <>
+          <RunSheet community={community} row={opened} nameOf={nameOf} onClose={() => setOpened(null)} />
+          <FriendRequests open={answering && incoming.length > 0} incoming={incoming} busy={friends.busy} onAnswer={answer} onClose={() => setAnswering(false)} />
+          {inviting && code !== null ? <FriendInvite code={code} onClose={() => setInviting(false)} onTold={setTold} /> : null}
+        </>
+      ) : null}
+      <Toast message={told} onDone={() => setTold(null)} />
     </View>
   );
 }

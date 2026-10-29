@@ -228,7 +228,7 @@ function FriendForm({ busy, said, onAsk, initial = '' }: { busy: boolean; said: 
  * The player's friend code, pressed: as a QR code another phone's camera reads (the games with others' page with the code ready to send,
  * `friendLink`, which Android opens in the app), as words and a link for the phone's share sheet, or copied.
  */
-function FriendInvite({ code, onClose, onTold }: { code: string; onClose(): void; onTold(message: string): void }) {
+export function FriendInvite({ code, onClose, onTold }: { code: string; onClose(): void; onTold(message: string): void }) {
   const t = useT('rankings');
   const room = useT('room');
   const player = useT('player');
@@ -269,13 +269,11 @@ function FriendInvite({ code, onClose, onTold }: { code: string; onClose(): void
   );
 }
 
-/** The player's own friend code, on a line of its own, pressed to share it (`FriendInvite`). Nothing until it is read. */
-function MyCode({ community, onTold }: { community: Community; onTold(message: string): void }) {
-  const t = useT('rankings');
-  const room = useT('room');
+/** The player's own friend code, as the cloud says it: null until it is read, or where it cannot be. */
+export function useFriendCode(community: Community | null): string | null {
   const [code, setCode] = useState<string | null>(null);
-  const [sharing, setSharing] = useState(false);
   useEffect(() => {
+    if (community === null) return;
     let wanted = true;
     void community.me().then((me) => {
       if (wanted) setCode(me?.friendCode ?? null);
@@ -284,6 +282,15 @@ function MyCode({ community, onTold }: { community: Community; onTold(message: s
       wanted = false;
     };
   }, [community]);
+  return code;
+}
+
+/** The player's own friend code, on a line of its own, pressed to share it (`FriendInvite`). Nothing until it is read. */
+function MyCode({ community, onTold }: { community: Community; onTold(message: string): void }) {
+  const t = useT('rankings');
+  const room = useT('room');
+  const code = useFriendCode(community);
+  const [sharing, setSharing] = useState(false);
   const press = usePress({ onPress: () => setSharing(true) });
   if (code === null) return null;
   return (
@@ -299,6 +306,38 @@ function MyCode({ community, onTold }: { community: Community; onTold(message: s
       </Pressable>
       {sharing ? <FriendInvite code={code} onClose={() => setSharing(false)} onTold={onTold} /> : null}
     </>
+  );
+}
+
+/**
+ * The requests waiting on the player, in a sheet of their own (opened from the ranking among friends): each one's rat and whole name, and its answers
+ * under them, the sheet's width shared between the two (`busy` while an answer is on its way).
+ */
+export function FriendRequests({ open, incoming, busy, onAnswer, onClose }: { open: boolean; incoming: readonly Friend[]; busy: boolean; onAnswer(userId: string, yes: boolean): void; onClose(): void }) {
+  const t = useT('rankings');
+  const common = useT('common');
+  const nameOf = useFriendName();
+  return (
+    <Sheet open={open} onClose={onClose} title={t('requests')} closeLabel={common('close')}>
+      <View role="list" aria-label={t('requests')} style={{ gap: 12 }}>
+        {incoming.map((friend) => (
+          <View key={friend.userId} role="listitem" style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <RatAvatar look={ratLookOf(friend.avatar, friend.userId)} size="sm" />
+              <ReadText size={14} style={{ flex: 1, minWidth: 0 }}>{nameOf(friend)}</ReadText>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Button variant="primary" cell disabled={busy} onPress={() => onAnswer(friend.userId, true)}>
+                {t('accept')}
+              </Button>
+              <Button variant="secondary" cell disabled={busy} onPress={() => onAnswer(friend.userId, false)}>
+                {t('decline')}
+              </Button>
+            </View>
+          </View>
+        ))}
+      </View>
+    </Sheet>
   );
 }
 

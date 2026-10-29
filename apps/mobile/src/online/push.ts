@@ -105,7 +105,7 @@ const PAGES: Partial<Record<Page, Record<string, RegExp>>> = {
   room: { code: /^[A-Za-z0-9]{6}$/, accept: USER_ID, decline: USER_ID },
   // A friend request's notice's buttons answer it (`?accept=<id>`, `?decline=<id>`): the asker's id. Sent here before the friends moved to the games
   // with others' page, which the rankings' page leads them to.
-  rankings: { tab: /^(all|week|friends|challenge)$/, accept: USER_ID, decline: USER_ID },
+  rankings: { tab: /^(global|friends|challenge|week|all)$/, accept: USER_ID, decline: USER_ID },
 };
 /** Longer than any link the server sends. */
 const LONGEST = 200;

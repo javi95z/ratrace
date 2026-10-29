@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { useGo } from '../../game/pages';
-import { Rankings, type Kind } from '../../game/screens/Rankings';
+import { OPENINGS, Rankings } from '../../game/screens/Rankings';
 import { PageHead } from '../../game/pageHead';
 import { InLanguage } from '../../game/screens/InLanguage';
 
@@ -10,10 +10,10 @@ export { generateStaticParams } from '../../game/pages';
 
 /**
  * The rankings a link can open on: the web's `#friends` (the front door's link, and a phone's `theratrace://rankings#friends`) and `?tab=challenge`, and
- * any tab by `?tab=`. The player's friends are on the games with others' page: a link that brings a friend's code or a friend request's answer here
- * (`?friend=`, `?accept=`, `?decline=`: a QR code or a notice from before they moved) is led there, its query kept.
+ * any tab by `?tab=` (`week` and `all` too, everyone's ranking of that period, the tabs it had before). The player's friends are on the games with others'
+ * page: a link that brings a friend's code or a friend request's answer here (`?friend=`, `?accept=`, `?decline=`: a QR code or a notice from before
+ * they moved) is led there, its query kept. The requests are answered on the ranking among friends too.
  */
-const TABS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
 const FRIENDS: readonly string[] = ['friend', 'accept', 'decline'];
 
 export default function RankingsRoute() {
@@ -30,7 +30,7 @@ export default function RankingsRoute() {
   return (
     <InLanguage>
       <PageHead page="rankings" />
-      <Rankings tab={TABS.find((kind) => kind === params.tab) ?? (params['#'] === 'friends' ? 'friends' : undefined)} />
+      <Rankings tab={OPENINGS.find((opening) => opening === params.tab) ?? (params['#'] === 'friends' ? 'friends' : undefined)} />
     </InLanguage>
   );
 }

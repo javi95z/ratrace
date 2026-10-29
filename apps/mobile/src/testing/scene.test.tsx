@@ -681,7 +681,7 @@ test('the scenes of the collection are the collection itself, open on its badges
 
 test('the scenes of the rankings are the rankings themselves, told of the scene\'s other players (no cloud), each open on the ranking its name says without a tap', async () => {
   render(<SceneView name="rankings-all" />);
-  const all = await screen.findByRole('list', { name: 'All time' }, WAIT);
+  const all = await screen.findByRole('list', { name: 'Global' }, WAIT);
   const lines = within(all).getAllByRole('listitem').filter((item) => item.parentElement?.closest('[role="list"]') === all);
   expect(lines).toHaveLength(8);
   expect(lines[0].textContent).toContain('Queso_Grande');
@@ -690,19 +690,21 @@ test('the scenes of the rankings are the rankings themselves, told of the scene\
   expect(screen.queryByRole('textbox')).toBeNull();
   cleanup();
   render(<SceneView name="rankings-week" />);
-  expect(await screen.findByRole('list', { name: 'Best this week' }, WAIT)).toBeTruthy();
+  expect(await screen.findByRole('list', { name: 'Global' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('radio', { name: 'This week' }).getAttribute('aria-checked')).toBe('true');
   cleanup();
-  // Among friends: their ranking, and the way to the friends themselves, on the games with others' page.
+  // Among friends: their ranking, a request waiting on the player in the tab's name and on a line at its top, answered in a sheet.
   render(<SceneView name="rankings-friends" />);
   expect(await screen.findByRole('list', { name: 'Friends' }, WAIT)).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Your friends and their requests' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: '1 friend request' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('tab', { name: 'Friends · 1' })).toBeTruthy();
   cleanup();
   render(<SceneView name="rankings-challenge" />);
   expect(await screen.findByText('40 players · the best 4 are in the top 10%', {}, WAIT)).toBeTruthy();
   cleanup();
   // The name is changed on the profile now: this scene is the rankings as they are.
   render(<SceneView name="rankings-nickname" />);
-  expect(await screen.findByRole('list', { name: 'All time' }, WAIT)).toBeTruthy();
+  expect(await screen.findByRole('list', { name: 'Global' }, WAIT)).toBeTruthy();
   expect(screen.queryByRole('textbox', { name: 'Name' })).toBeNull();
 });
 
