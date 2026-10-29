@@ -636,6 +636,7 @@
       "ownedNone": "You own no property.",
       "sell": "Sell for {amount}",
       "selling": "Sold when the round is played",
+      "undoBuy": "Bought this round · Undo",
       "rented": "Rented out",
       "livedIn": "You live here",
       "empty": "Standing empty",

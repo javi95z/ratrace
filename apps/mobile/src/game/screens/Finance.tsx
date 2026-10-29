@@ -7,7 +7,7 @@ import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, pri
 import { rulesSell } from '@ratrace/core/game/rules';
 import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, mortgageSwitch, previewRound, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, PlayerState, RentTier, UsedQuote, WorkMode, WorldState } from '@ratrace/engine';
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
@@ -908,6 +908,8 @@ function PropertyTab() {
   const { view, shown, p } = useRound();
   const setOrder = useGame((s) => s.setOrder);
   const addOrder = useGame((s) => s.addOrder);
+  const orders = useGame((s) => s.orders);
+  const removeOrder = useGame((s) => s.removeOrder);
   const [buying, setBuying] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
   const [toSell, setToSell] = useState<string | null>(null);
@@ -963,6 +965,38 @@ function PropertyTab() {
     });
   }, [content, view, shown, canLodge]);
 
+  // A home bought this round is still an order: it cannot be sold before it is paid for, only bought no more. The engine adds each home a round buys
+  // after those owned, in the order the round buys them, so the k-th new home of a kind is the k-th order for that kind in the basket.
+  const boughtBy = useMemo(() => {
+    const before = new Set(view.player.properties.map((property) => property.id));
+    const ordersOf = new Map<string, number[]>();
+    orders.forEach((order, i) => {
+      if (order.type === 'buyProperty') ordersOf.set(order.typeId, [...(ordersOf.get(order.typeId) ?? []), i]);
+    });
+    const seen = new Map<string, number>();
+    const by = new Map<string, number>();
+    for (const property of shown.player.properties) {
+      if (before.has(property.id)) continue;
+      const k = seen.get(property.typeId) ?? 0;
+      seen.set(property.typeId, k + 1);
+      const at = ordersOf.get(property.typeId)?.[k];
+      if (at !== undefined) by.set(property.id, at);
+    }
+    return by;
+  }, [view, shown, orders]);
+  // Read when pressed, so the rows are not drawn again each time the basket changes.
+  const boughtByNow = useRef(boughtBy);
+  useEffect(() => {
+    boughtByNow.current = boughtBy;
+  }, [boughtBy]);
+  const undoBuy = useCallback(
+    (id: string) => {
+      const at = boughtByNow.current.get(id);
+      if (at !== undefined) removeOrder(at);
+    },
+    [removeOrder],
+  );
+
   // Somewhere to live, and what is only bought to let: two shelves, each with its cheapest first. Only what this city sells, and what the rules the
   // life is played under know; what can only be let is offered only to someone with the Finance to let it: without it, that shelf is not there.
   const shelves = useMemo(() => {
@@ -975,7 +1009,7 @@ function PropertyTab() {
       <Panel title={t('owned')} label={t('owned')}>
         {owned.length === 0 ? <ReadText size={14} tone="ink-300">{t('ownedNone')}</ReadText> : null}
         {owned.map((home, i) => (
-          <OwnedHome key={home.id} {...home} last={i === owned.length - 1} onOpen={open} onRent={rent} onSell={sell} onLodger={lodge} />
+          <OwnedHome key={home.id} {...home} last={i === owned.length - 1} onOpen={open} onRent={rent} onSell={sell} onUndoBuy={undoBuy} onLodger={lodge} />
         ))}
       </Panel>
 
@@ -1037,6 +1071,7 @@ const OwnedHome = memo(function OwnedHome({
   onOpen,
   onRent,
   onSell,
+  onUndoBuy,
   onLodger,
 }: {
   id: string;
@@ -1059,6 +1094,7 @@ const OwnedHome = memo(function OwnedHome({
   onOpen(id: string): void;
   onRent(id: string, to: boolean, was: boolean): void;
   onSell(id: string): void;
+  onUndoBuy(id: string): void;
   onLodger(on: boolean): void;
 }) {
   const t = useT('finance.property');
@@ -1075,7 +1111,7 @@ const OwnedHome = memo(function OwnedHome({
       : [
           { label: menuWords('details'), onPress: () => onOpen(id) },
           ...(mine && !letOnly ? [{ label: rented ? t('stopRenting') : t('startRenting'), onPress: () => onRent(id, !rented, wasRented) }] : []),
-          ...(mine ? [{ label: t('sell', { amount: fmt.compact(value) }), onPress: () => onSell(id), danger: true }] : []),
+          ...(mine ? [{ label: t('sell', { amount: fmt.compact(value) }), onPress: () => onSell(id), danger: true }] : [{ label: t('undoBuy'), onPress: () => onUndoBuy(id) }]),
         ],
   });
   return (
@@ -1115,7 +1151,14 @@ const OwnedHome = memo(function OwnedHome({
             {t('sell', { amount: fmt.compact(value) })}
           </Button>
         </View>
-      ) : null}
+      ) : (
+        // Bought this round: the order can be taken back, not the home sold before it is paid for.
+        <View style={{ marginTop: 8 }}>
+          <Button variant="secondary" wide onPress={() => onUndoBuy(id)}>
+            {t('undoBuy')}
+          </Button>
+        </View>
+      )}
       {/* The home lived in, with a room to spare: it can take a lodger. */}
       {lodgerOn !== null ? (
         <View style={{ marginTop: 8 }}>

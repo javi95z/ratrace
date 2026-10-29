@@ -636,6 +636,7 @@
       "ownedNone": "No tienes ningún inmueble.",
       "sell": "Vender por {amount}",
       "selling": "Se vende al jugar la ronda",
+      "undoBuy": "Comprada esta ronda · Deshacer",
       "rented": "En alquiler",
       "livedIn": "Vives aquí",
       "empty": "Vacío",

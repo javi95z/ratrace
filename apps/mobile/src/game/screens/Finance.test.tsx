@@ -747,6 +747,27 @@ describe('the homes a player owns', () => {
     expect(button('1 order')).toBeTruthy();
   });
 
+  it('offers to undo a home bought this round, which cannot be sold before it is paid for: the order is taken out and the home goes', async () => {
+    const { services, session } = await mortgaged();
+    // Cash for a second studio, as rounds of saving would leave it.
+    const rich = changed(services, session, (view) => ({ ...view, player: { ...view.player, cash: view.player.cash + 100_000_000 } }));
+    const quote = quoteProperty(content, rich(), 'studio');
+    played(services);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Property' }));
+    const owned = panel('Your properties');
+    expect(within(owned).getAllByText('Studio in JLT')).toHaveLength(1);
+    let taken = false;
+    await settled(() => void (taken = probe.state!.addOrder({ type: 'buyProperty', typeId: 'studio', downPayment: quote.price, mortgage: 'none', rented: false })));
+    expect(taken).toBe(true);
+    await waitFor(() => expect(within(owned).getAllByText('Studio in JLT')).toHaveLength(2));
+    const undo = within(owned).getByRole('button', { name: 'Bought this round · Undo' });
+    // The two homes owned before (the flat and the first studio) keep their sale; the one bought now has only its undo.
+    expect(within(owned).getAllByRole('button', { name: /^Sell for/ })).toHaveLength(2);
+    fireEvent.click(undo);
+    await waitFor(() => expect(probe.state?.orders.some((order) => order.type === 'buyProperty')).toBe(false));
+    await waitFor(() => expect(within(owned).getAllByText('Studio in JLT')).toHaveLength(1));
+  });
+
   it('says "You live here" of the one home the engine says the player lives in, not of every home in town', async () => {
     const { services, session } = await mortgaged();
     expect(session.view().player.properties).toHaveLength(2);
