@@ -177,13 +177,16 @@ describe('the business tab', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await openTab(user);
+    // The round begins with the owner running it, as far as the focus goes (core's round defaults); taken back, nobody runs it.
     const row = within(screen.getByRole('region', { name: 'Your businesses' })).getByRole('button', { name: /Online shop/ });
-    expect(row.textContent).toContain('Nobody runs it: it makes half and wears down');
     await user.click(row);
     const sheet = screen.getByRole('dialog', { name: 'Online shop' });
+    const tend = within(sheet).getByRole('switch', { name: /^Give it your focus this round/ });
+    expect(tend.getAttribute('aria-checked')).toBe('true');
+    await user.click(tend);
+    expect(tend.getAttribute('aria-checked')).toBe('false');
     expect(within(sheet).getByText(`Without your focus or a manager it makes only ${content.business.neglectProfitPct}% of what it could, and loses value.`)).toBeTruthy();
 
-    const tend = within(sheet).getByRole('switch', { name: /^Give it your focus this round/ });
     await user.click(tend);
     expect(tend.getAttribute('aria-checked')).toBe('true');
     expect(ordersOf()).toEqual(['Give your focus to Online shop']);
@@ -245,7 +248,7 @@ describe('the business tab', () => {
     await openTab(user);
     const panel = screen.getByRole('region', { name: 'Your businesses' });
     const tend = () => within(panel).getByRole('button', { name: /Run it yourself/ }) as HTMLButtonElement;
-    await user.click(tend());
+    // The round begins with the owner running it (core's round defaults).
     expect(tend().getAttribute('aria-pressed')).toBe('true');
     await user.click(within(panel).getByRole('button', { name: /Manager · / }));
     // Never both: the manager runs it, the order to run it oneself is gone, and nothing is stuck on.
