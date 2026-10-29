@@ -105,13 +105,17 @@ describe('the files written into the export', () => {
       const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
       return { data, width: info.width, height: info.height, channels: info.channels };
     };
+    const differing: string[] = [];
     for (const file of ['og.png', 'favicon.ico', ...ICONS.map((icon) => `icons/${icon.file}`)]) {
       const mine = await pixels(join(made, file));
       const theirs = await pixels(new URL(file, web).pathname);
       expect(mine.width, file).toBe(theirs.width);
       expect(mine.height, file).toBe(theirs.height);
-      expect(mine.data.equals(theirs.data), `${file} pixels`).toBe(true);
+      let off = 0;
+      for (let at = 0; at < mine.data.length; at += mine.channels) if (!mine.data.subarray(at, at + mine.channels).equals(theirs.data.subarray(at, at + theirs.channels))) off++;
+      if (off > 0) differing.push(`${file}: ${off} of ${mine.width * mine.height} pixels`);
     }
+    expect(differing).toEqual([]);
     expect(await sharp(join(made, 'og.png')).metadata()).toMatchObject({ width: 1200, height: 630, format: 'png' });
     expect(ICONS.map((icon) => [icon.file, icon.size])).toEqual([
       ['icon-192.png', 192],
