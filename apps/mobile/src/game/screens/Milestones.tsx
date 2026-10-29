@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
-import { useMedal, useRise } from '../../ui/animations';
+import { useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Glow } from '../../ui/Glow';
@@ -17,9 +17,8 @@ import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useGame, useInRoom, useStill, useT, useWords } from '../context';
+import { useGame, useInRoom, useStill, useT } from '../context';
 import { Loop } from './Loop';
-import { Medal } from './Medal';
 import { RARITY_GLOW } from './rarityStyle';
 
 /*
@@ -96,33 +95,13 @@ function Hopping({ lifeId, age, size }: { lifeId: string; age: number; size: num
   );
 }
 
-/** A badge the same step earned, inside the milestone's moment: its medal turning in, its name and what it is for. */
-function BadgeInside({ badgeId }: { badgeId: string }) {
-  const t = useT('badges');
-  const { text } = useWords();
-  const medal = useMedal({ delayMs: 400 });
-  const rarity = rarityOf(badgeId);
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <Animated.View style={[{ flexShrink: 0 }, medal]}>
-        <Medal badgeId={badgeId} size="sm" />
-      </Animated.View>
-      <View style={{ minWidth: 0, flexShrink: 1 }}>
-        <PixelText size={11} tone="gold-500" style={{ letterSpacing: 11 * 0.05, textTransform: 'uppercase' }}>{`${t('earned')} · ${t(`rarity.${rarity}`)}`}</PixelText>
-        <PixelText size={15} lineHeight={15 * TIGHT}>{text.badges[badgeId]?.name ?? badgeId}</PixelText>
-      </View>
-    </View>
-  );
-}
-
-/** The other milestones of the same step, under the one that leads, and the badges: what the moment carries besides its lead. */
-export function Carried({ others, badges }: { others: readonly Reached[]; badges: readonly string[] }) {
+/** The other milestones of the same step, under the one that leads in its banner. */
+function Carried({ others }: { others: readonly Reached[] }) {
   const t = useT('milestone');
   const said = useSaid();
-  if (others.length === 0 && badges.length === 0) return null;
+  if (others.length === 0) return null;
   return (
-    <View style={{ gap: 8, alignSelf: 'stretch' }}>
-      {others.length > 0 ? (
+    <View style={{ alignSelf: 'stretch' }}>
         <View style={{ gap: 2 }}>
           <PixelText size={11} tone="ink-300" style={{ letterSpacing: 11 * 0.1, textTransform: 'uppercase' }}>{t('also')}</PixelText>
           {others.map((each) => {
@@ -135,49 +114,18 @@ export function Carried({ others, badges }: { others: readonly Reached[]; badges
             );
           })}
         </View>
-      ) : null}
-      {badges.map((id) => (
-        <BadgeInside key={id} badgeId={id} />
-      ))}
     </View>
   );
 }
 
-/** The milestone each moment that has the screen is. */
-const OF_MOMENT = { escape: 'escaped', million: 'worth1m' } as const;
-
-/**
- * What a moment that already has the screen (the first million, the way out) carries of the step's milestones: the record, and the rest of the
- * step, in the moment that leads only. A milestone with a moment of its own (the first million in the step of the way out) is told by its own.
- */
-export function MomentMilestones({ kind }: { kind: keyof typeof OF_MOMENT }) {
-  const plan = useCelebration();
-  const said = useSaid();
-  if (plan.where !== 'moment' || plan.lead.id !== OF_MOMENT[kind]) return null;
-  const { note } = said(plan.lead);
-  const others = plan.others.filter((each) => each.id !== 'escaped' && each.id !== 'worth1m');
-  return (
-    <View style={{ gap: 8 }}>
-      {note !== null ? (
-        <PixelText size={13} tone="gold-500" style={{ textAlign: 'center' }}>
-          {note}
-        </PixelText>
-      ) : null}
-      <Carried others={others} badges={plan.badges} />
-    </View>
-  );
-}
-
-/** A milestone as a banner that rises with the step's result, the step's badges inside it: it stops nothing. */
+/** A milestone as a banner that rises with the step's result: it stops nothing (the step's badges are steps of the round's sheet). */
 export function MilestoneBanner({ plan, lifeId }: { plan: Carrying; lifeId: string }) {
   const t = useT('milestone');
-  const badges = useT('badges');
-  const { text } = useWords();
   const said = useSaid();
   const rise = useRise();
   const { name, line, note } = said(plan.lead);
   useAnnounced(
-    [t('kicker'), name, t('at', { age: plan.lead.age }), note ?? '', line, ...plan.others.map((each) => said(each).name), ...plan.badges.map((id) => `${badges('earned')}: ${text.badges[id]?.name ?? id}`)]
+    [t('kicker'), name, t('at', { age: plan.lead.age }), note ?? '', line, ...plan.others.map((each) => said(each).name)]
       .filter(Boolean)
       .join('. '),
   );
@@ -203,7 +151,7 @@ export function MilestoneBanner({ plan, lifeId }: { plan: Carrying; lifeId: stri
               <Loop name="cheer" ms={180} />
             </View>
           </View>
-          <Carried others={plan.others} badges={plan.badges} />
+          <Carried others={plan.others} />
         </Framed>
       </Animated.View>
     </View>

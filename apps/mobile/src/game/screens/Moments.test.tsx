@@ -93,6 +93,9 @@ describe('a moment of a life', () => {
     expect(within(moment).getByText('Your passive income, after tax')).toBeTruthy();
     expect(within(moment).getByText('What your life costs')).toBeTruthy();
     expect(moment.querySelector('[data-confetti]')).not.toBeNull();
+    // A step of the round's one sheet, as a milestone's: its scene, and no portrait of the life.
+    expect(moment.querySelector('[data-reward^="moment."]')).not.toBeNull();
+    expect(moment.querySelector('[data-sprite^="portrait."]')).toBeNull();
     expect(heard).toContain('escape');
     // The fanfare has the floor: the ledger does not roll under it.
     expect(heard).not.toContain('round');
@@ -124,8 +127,13 @@ describe('a moment of a life', () => {
     });
     await playRound();
     fireEvent.click(within(await sheet('Bankrupt')).getByRole('button', { name: 'Start again' }));
-    fireEvent.click(within(await sheet('Out of the rat race!')).getByRole('button', { name: 'Close' }));
-    fireEvent.click(within(await sheet('Your first million')).getByRole('button', { name: 'On to the next' }));
+    // The way out and the first million: two steps of the round's one sheet.
+    const out = await sheet('Out of the rat race!');
+    expect(out.textContent).toContain('1 of 2');
+    fireEvent.click(within(out).getByRole('button', { name: 'Carry on, for the fun of it' }));
+    const million = await sheet('Your first million');
+    expect(million.textContent).toContain('2 of 2');
+    fireEvent.click(within(million).getByRole('button', { name: 'On to the next' }));
     await waitFor(() => expect(sheetOpen()).toBeNull());
   });
 
@@ -139,20 +147,22 @@ describe('a moment of a life', () => {
 });
 
 describe('a moment and a legendary badge of the same round', () => {
-  it('take their turns, one sheet at a time (iOS presents one Modal at a time), the badges of the round inside the first: one moment for the step', async () => {
+  it('are steps of the round\'s one sheet: the way out first, then the badge, never a list of badges inside the moment', async () => {
     // The influencer of the early escape, at the finances of the round that takes her out of the rat race at 36 and earns `escaped_before_40`.
     const { store } = await earlyEscape();
     renderGame(<Play />, memoryServices(store));
     fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
     const moment = await sheet('Out of the rat race!');
-    // The legendary badge of the way out is carried in its moment (Milestones.tsx), never a sheet of its own after it.
-    expect(within(moment).getByText('Out before 40')).toBeTruthy();
     expect(within(moment).getByText('First time ever!')).toBeTruthy();
-    expect(screen.queryByText('Legendary badge')).toBeNull();
+    expect(within(moment).queryByText('Out before 40')).toBeNull();
+    expect(moment.textContent).toMatch(/1 of \d/);
     fireEvent.click(within(moment).getByRole('button', { name: 'Carry on, for the fun of it' }));
-    // Under engine 0.45 her first million came in an earlier round: the way out is the step's one moment, and the badge never follows it.
+    // The legendary badge of the way out is a step of its own after it, in the same sheet.
+    const badge = await sheet('Out before 40');
+    expect(within(badge).getByText('Legendary badge')).toBeTruthy();
+    fireEvent.click(within(badge).getByRole('button', { name: 'Accept' }));
+    while (sheetOpen()?.textContent?.includes('Accept')) fireEvent.click(within(sheetOpen() as HTMLElement).getByRole('button', { name: 'Accept' }));
     await waitFor(() => expect(sheetOpen()).toBeNull());
-    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
   }, 60_000);
 });
 

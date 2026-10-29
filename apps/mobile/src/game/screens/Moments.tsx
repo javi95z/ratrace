@@ -18,7 +18,6 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
 import { useGame, useStill, useT, useWords } from '../context';
 import { CrisisDetails } from './Crisis';
-import { MomentMilestones } from './Milestones';
 
 /** Where each piece of confetti starts across the sheet, in percent, and how long it waits. Fixed, so it falls the same every time. */
 const CONFETTI: ReadonlyArray<readonly [left: number, delayMs: number, colour: ColorToken]> = [
@@ -37,7 +36,7 @@ function Piece({ left, delayMs, colour }: { left: number; delayMs: number; colou
  * web's stylesheet hides it, `[data-confetti]`). It is the last thing in the sheet, so it falls over what is in it, as the web's, which is placed,
  * falls over what is not.
  */
-function Confetti() {
+export function Confetti() {
   const still = useStill();
   if (still) return null;
   return (
@@ -80,7 +79,7 @@ function Figures({ children }: { children: ReactNode }) {
 }
 
 /** What each moment says, in the figures the game gave. */
-function Body({ moment, view }: { moment: Moment; view: GameView }) {
+export function MomentBody({ moment, view }: { moment: Moment; view: GameView }) {
   // The way out as the life's own rules measure it.
   const rules = useGame((s) => s.rules);
   const t = useT('moments');
@@ -133,6 +132,9 @@ function Body({ moment, view }: { moment: Moment; view: GameView }) {
   }
 }
 
+/** The moments told as steps of the round's sheet instead. */
+export const GOOD: ReadonlySet<Moment['kind']> = new Set(['escape', 'million']);
+
 /**
  * The moment the screen stops for: out of the rat race, the first million, bankruptcy, a crisis opening. Each has the screen to itself, with its
  * picture, until the player moves on; then the round goes on underneath as it was. Which moments are due is not decided here. One sheet, open while
@@ -151,17 +153,17 @@ export function Moments() {
   const [done, setDone] = useState<ReadonlySet<string>>(() => new Set());
   if (!view) return null;
 
-  const moment = momentsOf({ stage, view, resolved, story }).find((candidate) => !done.has(`${gameId}:${candidate.key}`));
+  // The way out and the first million are steps of the round's one sheet (Celebrations.tsx, Rewards.tsx): here, what goes wrong and the crises.
+  const moment = momentsOf({ stage, view, resolved, story }).find((candidate) => !GOOD.has(candidate.kind) && !done.has(`${gameId}:${candidate.key}`));
   if (!moment) return null;
   const close = () => setDone((seen) => new Set(seen).add(`${gameId}:${moment.key}`));
-  const good = moment.kind === 'escape' || moment.kind === 'million';
   const title = moment.kind === 'crisis' ? text.crises[moment.crisisId].name : t(`${moment.kind}.title`);
   const art = momentArt[moment.kind === 'crisis' ? moment.crisisId : moment.kind];
 
   return (
-    <Sheet open onClose={close} title={title} closeLabel={common('close')} tone={good ? 'gold' : 'wine'}>
+    <Sheet open onClose={close} title={title} closeLabel={common('close')} tone="wine">
       <View {...{ dataSet: { moment: moment.kind } }} style={{ gap: 12 }}>
-        <PixelText size={13} tone={good ? 'gold-500' : 'wine-300'} style={{ marginTop: -8, letterSpacing: 13 * 0.14, textTransform: 'uppercase' }}>
+        <PixelText size={13} tone="wine-300" style={{ letterSpacing: 13 * 0.14, textTransform: 'uppercase' }}>
           {moment.kind === 'crisis' ? t('crisis.kicker', { rounds: moment.rounds }) : t(`${moment.kind}.kicker`)}
         </PixelText>
         {/* Its frame is drawn outside its box, so what clips the picture is a box inside it (the web's `overflow-hidden` clips nothing of a frame). */}
@@ -170,13 +172,10 @@ export function Moments() {
             <Picture id={art} />
           </View>
         </Framed>
-        <Body moment={moment} view={view} />
-        {/* The milestone it is, with its record, and whatever else the same step reached and earned: one moment for the step (Milestones.tsx). */}
-        {moment.kind === 'escape' || moment.kind === 'million' ? <MomentMilestones kind={moment.kind} /> : null}
-        <Button variant={good ? 'primary' : 'secondary'} wide onPress={close}>
+        <MomentBody moment={moment} view={view} />
+        <Button variant="secondary" wide onPress={close}>
           {t(`${moment.kind}.go`)}
         </Button>
-        {good ? <Confetti /> : null}
       </View>
     </Sheet>
   );

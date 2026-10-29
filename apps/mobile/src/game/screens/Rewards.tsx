@@ -1,7 +1,8 @@
-import { careerArt, cityIcon, LIFE_MILESTONE_ART, lives, portraitArt, rarityOf } from '@ratrace/content';
+import { careerArt, cityIcon, LIFE_MILESTONE_ART, lives, momentArt, portraitArt, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import type { Reached } from '@ratrace/core/game/lifeMilestones';
+import type { Moment } from '@ratrace/core/game/moments';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, View, type HostInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -13,13 +14,14 @@ import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
-import { useSettings, useT, useWords } from '../context';
+import { useGame, useSettings, useT, useWords } from '../context';
 import { hrefOf } from '../pages';
 import { canShareLink, shareLink } from '../sharing';
 import { SITE_URL } from '../site';
 import { acceptReward, rewardAccepted } from '../rewardsAccepted';
 import { Difficulty } from './LifeSummary';
 import { Loop } from './Loop';
+import { Confetti, MomentBody } from './Moments';
 import { Medal } from './Medal';
 import { RARITY_TONE } from './rarityStyle';
 
@@ -30,7 +32,15 @@ import { RARITY_TONE } from './rarityStyle';
  * life, so a summary drawn again (a page left and come back to, a tablet turned) does not show it again.
  */
 
-export type Reward = { kind: 'badge'; id: string } | { kind: 'life'; id: string } | { kind: 'milestone'; id: string; reached: Reached };
+/** The way out and the first million: moments of a life the round stops for. */
+export type GoodMoment = Extract<Moment, { kind: 'escape' | 'million' }>;
+
+export type Reward =
+  | { kind: 'badge'; id: string }
+  | { kind: 'life'; id: string }
+  | { kind: 'milestone'; id: string; reached: Reached }
+  /** `lead`: the milestone it is, where the step reached it (the first time ever, a record). */
+  | { kind: 'moment'; id: string; moment: GoodMoment; lead: Reached | null };
 
 const keyOf = (gameId: string | null, reward: Reward) => `${gameId ?? ''}:${reward.kind}:${reward.id}`;
 
@@ -114,42 +124,67 @@ function useMilestoneWords() {
     const name = t(`names.${each.id}`);
     // A record is a younger age than any before; the first time ever has nothing to beat.
     const note = each.best === null ? t('first') : each.age < each.best ? t('record', { age: each.best }) : null;
-    return { name, headline: t('headline', { name, age: each.age }), line: t(`lines.${each.id}`), kicker: note ?? t('kicker') };
+    return { name, headline: t('headline', { name, age: each.age }), line: t(`lines.${each.id}`), note, kicker: note ?? t('kicker') };
   };
 }
 
-/** A milestone: what it is (the first time ever, a record) where a badge says its rarity, its scene edge to edge with the cheer and the fireworks over its corners, and its line. */
-function MilestoneReward({ reached }: { reached: Reached }) {
-  const words = useMilestoneWords()(reached);
+/** A scene edge to edge in the sheet's width, uncovered from the left as it comes up, the cheer and the fireworks over its top corners. */
+function WideScene({ art }: { art: string }) {
   const reveal = useReveal();
-  const art = LIFE_MILESTONE_ART[reached.id];
   const box = spriteBox(art, 1, 1, SCENE_FALLBACK);
   const [width, setWidth] = useState(0);
   const height = width === 0 ? 0 : Math.round((width * box.h) / box.w);
   return (
+    <View
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      onLayout={(event) => setWidth(Math.floor(event.nativeEvent.layout.width))}
+      style={{ alignSelf: 'stretch', height }}
+    >
+      {width > 0 ? (
+        <Animated.View style={[{ height, overflow: 'hidden' }, reveal]}>
+          <Sprite id={art} fallback={SCENE_FALLBACK} size={{ w: width, h: height }} />
+        </Animated.View>
+      ) : null}
+      {/* Decoration, none of it where motion is left out. */}
+      <View style={{ position: 'absolute', left: 4, top: 4 }}>
+        <Loop name="burst" ms={180} />
+      </View>
+      <View style={{ position: 'absolute', right: 4, top: 4 }}>
+        <Loop name="cheer" ms={180} />
+      </View>
+    </View>
+  );
+}
+
+/** A milestone: what it is (the first time ever, a record) where a badge says its rarity, its scene, and its line. */
+function MilestoneReward({ reached }: { reached: Reached }) {
+  const words = useMilestoneWords()(reached);
+  return (
     <View {...{ dataSet: { reward: `milestone.${reached.id}` } }} style={{ alignItems: 'center', gap: 12 }}>
       <PixelText size={13} tone="gold-500" style={kicker}>{words.kicker}</PixelText>
-      <View
-        aria-hidden
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        onLayout={(event) => setWidth(Math.floor(event.nativeEvent.layout.width))}
-        style={{ alignSelf: 'stretch', height }}
-      >
-        {width > 0 ? (
-          <Animated.View style={[{ height, overflow: 'hidden' }, reveal]}>
-            <Sprite id={art} fallback={SCENE_FALLBACK} size={{ w: width, h: height }} />
-          </Animated.View>
-        ) : null}
-        {/* The cheer and the fireworks over the scene's top corners: decoration, none of it where motion is left out. */}
-        <View style={{ position: 'absolute', left: 4, top: 4 }}>
-          <Loop name="burst" ms={180} />
-        </View>
-        <View style={{ position: 'absolute', right: 4, top: 4 }}>
-          <Loop name="cheer" ms={180} />
-        </View>
-      </View>
+      <WideScene art={LIFE_MILESTONE_ART[reached.id]} />
       <ReadText size={15} lineHeight={15 * SNUG} style={{ textAlign: 'center' }}>{words.line}</ReadText>
+    </View>
+  );
+}
+
+/**
+ * The way out, or the first million: what it is (the first time ever, a record, or the moment's own words), its scene, and what it says in the
+ * figures the game gave (the passive income against the life's costs; the net worth), with its note. Gold falls over it.
+ */
+function MomentReward({ moment, lead }: { moment: GoodMoment; lead: Reached | null }) {
+  const t = useT('moments');
+  const view = useGame((s) => s.view);
+  const words = useMilestoneWords();
+  if (!view) return null;
+  return (
+    <View {...{ dataSet: { reward: `moment.${moment.kind}` } }} style={{ gap: 12 }}>
+      <PixelText size={13} tone="gold-500" style={kicker}>{(lead ? words(lead).note : null) ?? t(`${moment.kind}.kicker`)}</PixelText>
+      <WideScene art={momentArt[moment.kind]} />
+      <MomentBody moment={moment} view={view} />
+      <Confetti />
     </View>
   );
 }
@@ -159,8 +194,11 @@ function useTitle() {
   const { text } = useWords();
   const { locale } = useSettings();
   const milestone = useMilestoneWords();
+  const moments = useT('moments');
   return (reward: Reward) =>
-    reward.kind === 'milestone'
+    reward.kind === 'moment'
+      ? moments(`${reward.moment.kind}.title`)
+      : reward.kind === 'milestone'
       ? milestone(reward.reached).headline
       : reward.kind === 'badge'
         ? (text.badges[reward.id]?.name ?? reward.id)
@@ -173,8 +211,11 @@ function useSaid() {
   const { text } = useWords();
   const title = useTitle();
   const milestone = useMilestoneWords();
+  const moments = useT('moments');
   return (reward: Reward) =>
-    reward.kind === 'milestone'
+    reward.kind === 'moment'
+      ? [(reward.lead ? milestone(reward.lead).note : null) ?? moments(`${reward.moment.kind}.kicker`), title(reward)]
+      : reward.kind === 'milestone'
       ? [milestone(reward.reached).kicker, title(reward), milestone(reward.reached).line]
       : reward.kind === 'badge'
         ? [t('kicker', { rarity: rarityOf(reward.id) }), title(reward), text.badges[reward.id]?.how ?? '']
@@ -206,6 +247,7 @@ export function RewardSheet({
   const end = useT('end');
   const common = useT('common');
   const onwards = useT('milestone');
+  const moments = useT('moments');
   const { locale } = useSettings();
   const title = useTitle();
   const said = useSaid();
@@ -256,10 +298,11 @@ export function RewardSheet({
   };
   const tryIt = onTry && showing.kind === 'life' ? onTry : null;
   // A milestone is shared from its step, with its headline, as it always was.
-  const share = showing.kind === 'milestone' && canShareLink();
+  const shared = showing.kind === 'milestone' ? showing.reached : showing.kind === 'moment' ? showing.lead : null;
+  const share = shared !== null && canShareLink();
   const send = async () => {
-    if (showing.kind !== 'milestone') return;
-    const { name, headline } = milestoneWords(showing.reached);
+    if (shared === null) return;
+    const { name, headline } = milestoneWords(shared);
     try {
       await shareLink(name, onwards('shareText', { headline }), new URL(hrefOf('', { locale }), SITE_URL).href);
     } catch {
@@ -275,11 +318,11 @@ export function RewardSheet({
         ) : null}
         {/* A reward after the first comes into the same sheet: told by TalkBack and the web's readers as it comes. */}
         <View key={keyOf(gameId, showing)} accessibilityLiveRegion="polite" aria-live="polite">
-          {showing.kind === 'milestone' ? <MilestoneReward reached={showing.reached} /> : showing.kind === 'badge' ? <BadgeReward badgeId={showing.id} /> : <LifeReward lifeId={showing.id} />}
+          {showing.kind === 'moment' ? <MomentReward moment={showing.moment} lead={showing.lead} /> : showing.kind === 'milestone' ? <MilestoneReward reached={showing.reached} /> : showing.kind === 'badge' ? <BadgeReward badgeId={showing.id} /> : <LifeReward lifeId={showing.id} />}
         </View>
         <View style={{ gap: 8 }}>
           <Button ref={acceptButton} variant="primary" wide onPress={acceptOne}>
-            {showing.kind === 'milestone' ? onwards('go') : t('accept')}
+            {showing.kind === 'moment' ? moments(`${showing.moment.kind}.go`) : showing.kind === 'milestone' ? onwards('go') : t('accept')}
           </Button>
           {share ? (
             <Button variant="secondary" wide onPress={() => void send()}>
