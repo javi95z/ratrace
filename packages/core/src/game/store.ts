@@ -9,6 +9,7 @@ import type { RankedLifeInTheWay } from '../session/errors';
 import type { GameSession, Lost, Sessions, StepResult } from '../session/types';
 import { knownOrders } from './rules';
 import { memoryBasket } from './basket';
+import { roundDefaults } from './roundDefaults';
 import type { BasketKeep } from './basket';
 import { memoryMilestones, milestonesOfStep } from './lifeMilestones';
 import type { MilestoneKeep, Reached } from './lifeMilestones';
@@ -281,13 +282,15 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
   };
 
   /**
-   * The round's basket as it was kept, settled, with its preview; null when the engine of this page will not judge the
+   * The round's basket as it was kept, or its defaults the first time, settled, with its preview; null when the engine of this page will not judge the
    * round at all. Then the life cannot be planned from here, and the screen says so: a button that does nothing, on a
    * card's result or anywhere, would be a dead end.
    */
   const plan = (view: GameView, gameId: string | null): ReturnType<typeof settle> | null => {
     try {
-      return settle(view, gameId === null ? [] : basket.load(gameId, view.round));
+      if (gameId === null) return settle(view, []);
+      // A round whose basket was never made begins with its defaults; one the player made, emptied or not, as they left it.
+      return settle(view, basket.load(gameId, view.round) ?? roundDefaults(content, view, session?.rules ?? ENGINE_VERSION));
     } catch (error) {
       console.error('the round could not be previewed:', error);
       return null;

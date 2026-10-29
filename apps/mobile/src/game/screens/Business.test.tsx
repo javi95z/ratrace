@@ -254,6 +254,12 @@ describe('the business tab', () => {
     const [shop] = quoteBusinesses(content, viewOf(state)).owned;
     expect(shop).toMatchObject({ tended: false, neglected: true });
     await openTab(services);
+    // The round begins with the owner running it, as an order the player can take out.
+    expect(probe.state!.orders).toEqual([{ type: 'tendBusiness', businessId: shop.id }]);
+    expect(within(yours()).getByRole('button', { name: /Online shop/ }).textContent).toContain('You run it this round');
+    fireEvent.click(within(yours()).getByRole('button', { name: /Run it yourself/ }));
+    await settled();
+    expect(probe.state!.orders).toEqual([]);
     const row = within(yours()).getByRole('button', { name: /Online shop/ });
     expect(row.textContent).toContain('Nobody runs it: it makes half and wears down');
     fireEvent.click(row);
@@ -334,8 +340,7 @@ describe('the business tab', () => {
     await openTab(services);
     const tend = () => within(yours()).getByRole('button', { name: /Run it yourself/ });
     const manager = () => within(yours()).getByRole('button', { name: /Manager · / });
-    fireEvent.click(tend());
-    await settled();
+    // The round begins with the owner running it.
     expect(tend().getAttribute('aria-selected')).toBe('true');
     fireEvent.click(manager());
     await settled();

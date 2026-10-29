@@ -19,18 +19,19 @@ export function basketOver(place: BasketText): BasketKeep {
     load(gameId, round) {
       try {
         const raw: unknown = JSON.parse(place.read() ?? 'null');
-        if (typeof raw !== 'object' || raw === null) return [];
+        if (typeof raw !== 'object' || raw === null) return null;
         const kept = raw as { gameId?: unknown; round?: unknown; orders?: unknown };
-        if (kept.gameId !== gameId || kept.round !== round || !Array.isArray(kept.orders)) return [];
+        if (kept.gameId !== gameId || kept.round !== round || !Array.isArray(kept.orders)) return null;
         // What is not an order would stop the round being planned at all, on every start, until the round were played.
         return kept.orders.filter((order): order is Order => typeof order === 'object' && order !== null && typeof (order as { type?: unknown }).type === 'string');
       } catch {
-        return [];
+        return null;
       }
     },
     save(gameId, round, orders) {
       try {
-        place.write(orders.length === 0 ? null : JSON.stringify({ gameId, round, orders }));
+        // An emptied basket is kept as empty, so the round does not begin again with its defaults.
+        place.write(JSON.stringify({ gameId, round, orders }));
       } catch {
         // Not kept: the orders are still on screen for as long as the app is.
       }

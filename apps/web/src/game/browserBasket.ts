@@ -8,17 +8,17 @@ export const browserBasket: BasketKeep = {
   load(gameId, round) {
     try {
       const raw: unknown = JSON.parse(window.localStorage.getItem(KEY) ?? 'null');
-      if (typeof raw !== 'object' || raw === null) return [];
+      if (typeof raw !== 'object' || raw === null) return null;
       const kept = raw as { gameId?: unknown; round?: unknown; orders?: unknown };
-      return kept.gameId === gameId && kept.round === round && Array.isArray(kept.orders) ? (kept.orders as Order[]) : [];
+      return kept.gameId === gameId && kept.round === round && Array.isArray(kept.orders) ? (kept.orders as Order[]) : null;
     } catch {
-      return [];
+      return null;
     }
   },
   save(gameId, round, orders) {
     try {
-      if (orders.length === 0) window.localStorage.removeItem(KEY);
-      else window.localStorage.setItem(KEY, JSON.stringify({ gameId, round, orders }));
+      // An emptied basket is kept as empty, so the round does not begin again with its defaults.
+      window.localStorage.setItem(KEY, JSON.stringify({ gameId, round, orders }));
     } catch {
       // Not kept: the orders are still on screen for as long as the page is.
     }

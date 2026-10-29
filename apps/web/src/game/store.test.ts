@@ -730,10 +730,49 @@ describe('what a step earned', () => {
     expect(second.getState().orders).toEqual([{ type: 'setLifestyle', tier: 2 }]);
 
     await second.getState().play();
-    expect(basket.kept).toBeNull();
+    expect(basket.kept?.orders).toEqual([]);
     const third = page();
     await third.getState().boot();
     expect(third.getState().orders).toEqual([]);
+  });
+
+  it('begins a round with the business nobody runs run by its owner, and does not bring it back once taken out', async () => {
+    const store = new MemoryStore();
+    const basket = memoryBasket();
+    const page = () => {
+      let ids = 0;
+      const sessions = new LocalSessions(store, content, lives, { newId: () => `biz-${(ids += 1)}`, newSeed: () => 'defaults-seed', now: () => (ids += 1) });
+      return createGameStore({ sessions, content, basket });
+    };
+    // The founder is a life to unlock: this player has.
+    await store.saveProfile({ ...(await store.loadProfile()), unlocked: { founder: { at: 1, gameId: 'earlier' } } });
+    const first = page();
+    await first.getState().start('founder');
+    await answerHand(first.getState);
+    // Her shop opened with her first round, which counts as running it: nothing to run there.
+    expect(first.getState().orders).toEqual([]);
+    await first.getState().play();
+    first.getState().next();
+    await answerHand(first.getState);
+    const shopId = first.getState().view?.player.businesses[0].id;
+    const tend: Order = { type: 'tendBusiness', businessId: shopId as string };
+    expect(first.getState().orders).toEqual([tend]);
+    expect(first.getState().preview?.player.businesses[0].tended).toBe(true);
+
+    // Taken out, it stays out: on the same page, and on a page opened again for the same round.
+    first.getState().removeOrder(0);
+    expect(first.getState().orders).toEqual([]);
+    first.getState().toFinance();
+    expect(first.getState().orders).toEqual([]);
+    const second = page();
+    await second.getState().boot();
+    expect(second.getState()).toMatchObject({ stage: 'finance', orders: [] });
+
+    // The next round begins with it again.
+    await second.getState().play();
+    second.getState().next();
+    await answerHand(second.getState);
+    expect(second.getState().orders).toEqual([tend]);
   });
 
   it('remembers whether the player had a partner when a card was answered, for a card that brings one in', async () => {
