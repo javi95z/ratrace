@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { challengeOf, content, CONTENT_VERSION, endingArt, lives, rarityOf, textFor, weekOf } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, endingArt, lives, textFor, weekOf } from '@ratrace/content';
 import type { Ending } from '@ratrace/content';
 import { prizedBadge } from '@ratrace/core/game/present';
 import { LocalSessions } from '@ratrace/core/session/local';
@@ -119,12 +119,37 @@ describe('the end of a life, as it is left', () => {
     await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { nobody: { at: 1, gameId } } });
     const said = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     renderGame(<Play />, services);
-    const card = await screen.findByLabelText('A new life is open');
-    await settled(() => void fireEvent.click(within(card).getByRole('button', { name: 'Try it now' })));
-    expect(router.replace).toHaveBeenCalledWith('/en/new');
+    // The life it opened, in the reward sheet over the end: Try it now closes it, then begins the life.
+    const sheet = (await screen.findByText('New life unlocked')).closest('[aria-modal="true"]') as HTMLElement;
+    await settled(() => void fireEvent.click(within(sheet).getByRole('button', { name: 'Try it now' })));
+    await waitFor(() => expect(screen.queryByText('New life unlocked')).toBeNull());
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/en/new'));
     // In place of this screen, as "Live another life" goes: never a second Play on the stack.
     expect(router.push).not.toHaveBeenCalled();
     said.mockRestore();
+  });
+
+  it('begins the life it opened from its reward sheet: Try it now closes the sheet, then that life is on screen', async () => {
+    const { services, gameId } = await aWholeLife();
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { rider: { at: 1, gameId } } });
+    let lifeId: string | null = null;
+    function Hands() {
+      lifeId = useGame((s) => s.lifeId);
+      return null;
+    }
+    renderGame(
+      <>
+        <Play />
+        <Hands />
+      </>,
+      services,
+    );
+    const sheet = (await screen.findByText('New life unlocked')).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getByRole('heading', { name: 'Somchai' })).toBeTruthy();
+    await settled(() => void fireEvent.click(within(sheet).getByRole('button', { name: 'Try it now' })));
+    await waitFor(() => expect(lifeId).toBe('rider'));
+    expect(screen.queryByText('New life unlocked')).toBeNull();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('lets go of nothing once another life has taken its place', async () => {
@@ -196,7 +221,7 @@ describe('the end of a life, as it is drawn', () => {
     expect(document.querySelector('[data-ending]')).not.toBeNull();
   });
 
-  it('cheers a rare badge won for the first time, and says what the life did for the rat\'s rank', async () => {
+  it('cheers no badge in a box of its own (the badges of the life are in their list), and says what the life did for the rat\'s rank', async () => {
     // The engineer of the scenes' end, played by the saver: out of the rat race, a millionaire, and a rank higher.
     const store = await sceneStore('end-escaped');
     const services = memoryServices(store);
@@ -204,14 +229,12 @@ describe('the end of a life, as it is drawn', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     const [run] = await store.listRuns();
     const prized = prizedBadge(run.badges);
-    // The scene's life did win one (a rare badge, the first of its kind): the cheer is there to be found, not skipped for want of one.
+    // The scene's life did win one (a rare badge, the first of its kind): it is in the life's list of badges, and nowhere in a cheer of its own.
     expect(prized).toBeDefined();
     const name = text.badges[prized!.id].name;
-    const cheer = screen.getByText(rarityOf(prized!.id) === 'legendary' ? `A legendary badge: ${name}!` : `A rare badge: ${name}!`);
-    // Its words wrap within the row, between the confetti, as the web's do: found by hand, "A legendary badge: Lunch with Bufé!" ran on
-    // past the frame on one line, cut under the confetti.
-    // The line itself is the row's item (the pixel face's runs are spans inside it).
-    expect((cheer.closest('[dir="auto"]') as HTMLElement).style.flexShrink).toBe('1');
+    expect(screen.queryByText(`A legendary badge: ${name}!`)).toBeNull();
+    expect(screen.queryByText(`A rare badge: ${name}!`)).toBeNull();
+    expect(await screen.findByText(name)).toBeTruthy();
     const gained = (await store.loadProfile()).rank.lives[run.runId];
     expect(gained).toBeGreaterThan(0);
     expect(await screen.findByText(new RegExp(`^\\+${gained} points · `))).toBeTruthy();

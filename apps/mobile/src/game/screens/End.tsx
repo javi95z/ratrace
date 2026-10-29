@@ -1,9 +1,9 @@
-import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, personArt, portraitArt, rarityOf } from '@ratrace/content';
+import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, personArt, portraitArt } from '@ratrace/content';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { epilogue } from '@ratrace/core/game/epilogue';
 import { peopleEpilogue } from '@ratrace/core/game/people';
-import { ageAt, endingOf, escapeAge, prizedBadge } from '@ratrace/core/game/present';
+import { ageAt, endingOf, escapeAge } from '@ratrace/core/game/present';
 import { obituary } from '@ratrace/core/game/quips';
 import { bestsOf } from '@ratrace/core/game/records';
 import type { Best } from '@ratrace/core/game/records';
@@ -15,6 +15,8 @@ import { useDrawnFirst } from '../../ui/drawnFirst';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '../../ui/kit';
+import { sheetsGone } from '../../ui/back';
+import { useHaptic } from '../../ui/haptic';
 import { Sheet } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { Rising } from '../../ui/Rising';
@@ -28,8 +30,8 @@ import { BackLink } from './BackLink';
 import { ChallengeResult } from './Challenge';
 import { LifeLine } from './LifeLine';
 import { LifeMap, routeOf } from './LifeMap';
-import { Loop } from './Loop';
 import { Medal } from './Medal';
+import { RewardSheet } from './Rewards';
 import { RankGain } from './RankCard';
 import { RivalsBoard } from './Rivals';
 import { ShareCard } from './ShareCard';
@@ -176,7 +178,6 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const people = useMemo(() => peopleEpilogue(view.player.life.flags), [view]);
   const dead = obituary(content, view, bankruptcies);
   const standing = useStanding(lifeId, score.total);
-  const prized = prizedBadge(earned.filter(isNew));
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: escapeAge(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave. Worked out here, drawn only when the player asks for it.
   const picture = useMemo(
@@ -290,25 +291,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
       {/* What the life did for the rat's rank, and the step up when it made one. */}
       {gameId !== null ? <RankGain gameId={gameId} /> : null}
 
-      {/* A rare or legendary badge won for the first time is cheered, the rarest first. */}
-      {prized ? (
-        <Rising>
-          <View accessible role="status">
-            <Framed kind="frame" tone={GOLD} style={{ backgroundColor: COLORS['night-600'] }}>
-              <View style={{ overflow: 'hidden', paddingHorizontal: 12, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                <Loop name="confetti" style={{ position: 'absolute', left: 8 }} />
-                {/* The words are the row's one item that gives way, as the web's text in its flex row: a long badge name wraps between the confetti. */}
-                <PixelText size={16} tone="gold-200" style={{ textAlign: 'center', flexShrink: 1 }}>
-                  {t(rarityOf(prized.id) === 'legendary' ? 'legendaryBadge' : 'rareBadge', { name: text.badges[prized.id]?.name ?? prized.id })}
-                </PixelText>
-                <Loop name="confetti" style={{ position: 'absolute', right: 8 }} />
-              </View>
-            </Framed>
-          </View>
-        </Rising>
-      ) : null}
-
-      {bests.length > 0 || unlocked.length > 0 ? (
+      {bests.length > 0 ? (
         <View style={{ gap: 8 }}>
           {bests.map((best) => (
             <Rising key={best}>
@@ -319,11 +302,11 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
               </View>
             </Rising>
           ))}
-          {unlocked.map((id) => (
-            <UnlockedLife key={id} lifeId={id} />
-          ))}
         </View>
       ) : null}
+
+      {/* The lives this one opened, each a reward in its sheet over the end, with a way to begin it at once. */}
+      {unlocked.length > 0 ? <UnlockedLives lifeIds={unlocked} gameId={gameId} waiting={opened.share === true} /> : null}
 
       {/* The week's attempt, beside everyone else's: its place, and the choices that set it apart. */}
       {ranked && challenge !== null ? <ChallengeResult week={challenge} /> : null}
@@ -499,49 +482,27 @@ const EarnedBadge = memo(function EarnedBadge({ id, name, fresh, onOpen }: { id:
 });
 
 /**
- * A life the one just finished opened: who it is, and a way to begin it at once, on this very screen (the round store opens it, and Play draws it). If it
- * cannot begin from here, the page where a life is chosen, where that is asked, takes this screen's place.
+ * The lives the one just finished opened that have not been shown yet, in the standard reward sheet (Rewards.tsx), each with a way to begin it at
+ * once from this very screen (the round store opens it, and Play draws it), once the sheet has gone. If it cannot begin from here, the page where a
+ * life is chosen, where that is asked, takes this screen's place.
  */
-function UnlockedLife({ lifeId }: { lifeId: string }) {
-  const t = useT('end');
-  const { text } = useWords();
+function UnlockedLives({ lifeIds, gameId, waiting }: { lifeIds: readonly string[]; gameId: string | null; waiting: boolean }) {
   const go = useGo();
   const start = useGame((s) => s.start);
   const ranking = useRanking();
-  const [starting, setStarting] = useState(false);
-  const words = text.lives[lifeId];
-  const tryIt = async () => {
-    setStarting(true);
+  const haptic = useHaptic();
+  const tryIt = async (lifeId: string) => {
     try {
+      // The sheet gone first: a screen is never changed under a sheet still leaving.
+      await sheetsGone();
       // In place of this screen, as another life is begun from it: never a second Play on the stack.
       if (!(await start(lifeId, { ranked: ranking === 'yes' }))) go.replace('new');
     } catch (error) {
       console.error('the life could not be started:', error);
       go.replace('new');
-    } finally {
-      setStarting(false);
     }
   };
-  return (
-    <Rising>
-      <Framed kind="frame" tone={GOLD} accessibilityLabel={t('unlockedTitle')} style={{ backgroundColor: COLORS['gold-500'], padding: 8 }}>
-        <View accessible role="status">
-          <PixelText size={16} tone="ink-900" style={{ textAlign: 'center' }}>{t('unlocked', { life: words?.name ?? lifeId })}</PixelText>
-        </View>
-        <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Well style={{ width: 68, height: 68 }}>
-            <Sprite id={portraitArt(lifeId, 22)} fallback={{ w: 64, h: 64 }} />
-          </Well>
-          <ReadText size={13} tone="ink-900" lineHeight={13 * SNUG} style={{ flex: 1, minWidth: 0 }}>{t('unlockedBody', { life: words?.name ?? lifeId, perk: words?.perk ?? '' })}</ReadText>
-        </View>
-        <View style={{ marginTop: 8 }}>
-          <Button variant="primary" wide disabled={starting} onPress={() => void tryIt()}>
-            {t('tryNow')}
-          </Button>
-        </View>
-      </Framed>
-    </Rising>
-  );
+  return <RewardSheet rewards={lifeIds.map((id) => ({ kind: 'life' as const, id }))} gameId={gameId} waiting={waiting} onTry={(id) => void tryIt(id)} onOpen={() => haptic('success')} />;
 }
 
 /** After a life alone, for a player with an account and no game going: the same kind of life, against others, in one press. */
