@@ -19,7 +19,7 @@ import type { Renders } from '../../testing/renders';
 import { speaking } from '../../testing/memoryServices';
 import { adjustedRead } from '../../ui/fonts';
 import { sheetOpened } from '../../ui/back';
-import { Home } from './Home';
+import { Home, pictureSide } from './Home';
 
 afterEach(cleanup);
 
@@ -227,6 +227,15 @@ describe('the front door', () => {
     renderGame(<Home />, services);
     expect(screen.getByText('Loading…')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'New life' })).toBeNull();
+  });
+});
+
+describe('the picture on top of the door', () => {
+  it('takes the room the rest of the door leaves it, in whole points, no larger than its art and no smaller than its least', () => {
+    expect(pictureSide(400, 256, 96)).toBe(256);
+    expect(pictureSide(180.7, 256, 96)).toBe(180);
+    expect(pictureSide(40, 256, 96)).toBe(96);
+    expect(pictureSide(0, 128, 64)).toBe(64);
   });
 });
 
