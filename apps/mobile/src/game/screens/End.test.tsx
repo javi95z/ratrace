@@ -145,7 +145,7 @@ describe('the end of a life, as it is left', () => {
       services,
     );
     const sheet = (await screen.findByText('New life unlocked')).closest('[aria-modal="true"]') as HTMLElement;
-    expect(within(sheet).getByRole('heading', { name: 'Somchai' })).toBeTruthy();
+    expect(within(sheet).getByRole('heading', { name: `${textFor('en').text.lives.rider.name} · Somchai` })).toBeTruthy();
     await settled(() => void fireEvent.click(within(sheet).getByRole('button', { name: 'Try it now' })));
     await waitFor(() => expect(lifeId).toBe('rider'));
     expect(screen.queryByText('New life unlocked')).toBeNull();

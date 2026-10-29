@@ -1,25 +1,25 @@
-import { careerArt, cityIcon, LIFE_MILESTONE_ART, lives, momentArt, portraitArt, rarityOf } from '@ratrace/content';
+import { LIFE_MILESTONE_ART, momentArt, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import type { Reached } from '@ratrace/core/game/lifeMilestones';
 import type { Moment } from '@ratrace/core/game/moments';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, View, type HostInstance } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useMedal, useReveal } from '../../ui/animations';
-import { Bare, Button } from '../../ui/kit';
+import { Button } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
-import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
+import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
-import { useGame, useSettings, useT, useWords } from '../context';
+import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { hrefOf } from '../pages';
 import { canShareLink, shareLink } from '../sharing';
 import { SITE_URL } from '../site';
 import { acceptReward, rewardAccepted } from '../rewardsAccepted';
-import { Difficulty } from './LifeSummary';
+import { LifeDetails } from './LifeSummary';
 import { Loop } from './Loop';
 import { Confetti, MomentBody } from './Moments';
 import { Medal } from './Medal';
@@ -52,6 +52,9 @@ const SPARKS: Record<BadgeRarity, { colours: readonly ColorToken[]; count: numbe
   legendary: { colours: ['teal-300', 'cream', 'gold-500'], count: 18, reach: 52 },
 };
 
+/** A life unlocked's face, larger than the life's sheet draws it (96). */
+const LIFE_PORTRAIT = 120;
+
 const kicker = { letterSpacing: 13 * 0.14, textTransform: 'uppercase', textAlign: 'center' } as const;
 
 /** A badge (its name the sheet's title): its rarity as its heading, in the colour of its rim; its medal spinning in, large, throwing sparks of its colours; and how it was earned. */
@@ -60,56 +63,85 @@ function BadgeReward({ badgeId }: { badgeId: string }) {
   const { text } = useWords();
   const medal = useMedal();
   const rarity = rarityOf(badgeId);
-  const tone = RARITY_TONE[rarity];
+  const legendary = rarity === 'legendary';
+  // A legendary one's heading is gold, the rarest of its moments; the others say theirs in the colour of their rim.
+  const tone = legendary ? COLORS['gold-500'] : RARITY_TONE[rarity];
   return (
     <View {...{ dataSet: { reward: `badge.${badgeId}` } }} style={{ alignItems: 'center', gap: 8 }}>
-      {/* The heading says the rarity, in the colour of its rim. */}
       <PixelText size={13} tone="ink-200" style={{ ...kicker, ...(tone ? { color: tone } : null) }}>
         {t('kicker', { rarity })}
       </PixelText>
-      <View style={{ marginVertical: 4 }}>
+      <View style={{ marginVertical: legendary ? 16 : 4, alignItems: 'center', justifyContent: 'center' }}>
+        {legendary ? <Sunburst /> : null}
         <Animated.View style={medal}>
           <Medal badgeId={badgeId} />
         </Animated.View>
         <Sparks {...SPARKS[rarity]} delayMs={500} />
+        {legendary ? <Fireworks /> : null}
       </View>
       <ReadText size={15} lineHeight={15 * SNUG} tone="ink-200" style={{ textAlign: 'center' }}>{text.badges[badgeId]?.how ?? ''}</ReadText>
     </View>
   );
 }
 
-/** A life to live: who lives it, large, the job, where it starts, at what, and how hard it is, and what it is good at. */
+/** How wide a legendary medal's rays reach, and how many there are. */
+const BURST = 160;
+const RAYS = 12;
+/** One turn of the rays, slow: a glow that lives, not a spinner. */
+const TURN_MS = 24_000;
+
+/**
+ * Gold rays round a legendary medal, slowly turning: a ring of thin bars of gold, faint, on the phone's animation thread. Where motion is left out
+ * they stand still, a glow.
+ */
+function Sunburst() {
+  const still = useStill();
+  const turn = useSharedValue(0);
+  useEffect(() => {
+    if (still) return;
+    turn.value = 0;
+    turn.value = withRepeat(withTiming(360, { duration: TURN_MS, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(turn);
+  }, [still, turn]);
+  const turning = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value}deg` }] }));
+  return (
+    <Animated.View
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      {...{ dataSet: { rays: still ? 'still' : 'turning' } }}
+      pointerEvents="none"
+      style={[{ position: 'absolute', width: BURST, height: BURST, alignItems: 'center', justifyContent: 'center' }, still ? null : turning]}
+    >
+      {Array.from({ length: RAYS }, (_, i) => (
+        <View
+          key={i}
+          style={{ position: 'absolute', width: 6, height: BURST, backgroundColor: COLORS[i % 2 === 0 ? 'gold-500' : 'gold-200'], opacity: 0.22, transform: [{ rotate: `${(180 / RAYS) * i}deg` }] }}
+        />
+      ))}
+    </Animated.View>
+  );
+}
+
+/** The fireworks and the cheer over a legendary medal's top corners, as over a milestone's scene: none where motion is left out. */
+function Fireworks() {
+  const still = useStill();
+  if (still) return null;
+  return (
+    <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: 'absolute', left: -48, right: -48, top: -12, flexDirection: 'row', justifyContent: 'space-between' }}>
+      <Loop name="burst" ms={180} />
+      <Loop name="cheer" ms={180} />
+    </View>
+  );
+}
+
+/** A life to live: its face on its city's sky, and what the life's own sheet says of it, the city, the job, the cash and how hard it is (LifeSummary.tsx). */
 function LifeReward({ lifeId }: { lifeId: string }) {
   const t = useT('badges');
-  const { text } = useWords();
-  const { locale } = useSettings();
-  const life = lives.find((one) => one.id === lifeId);
-  const job = text.lives[lifeId]?.name ?? lifeId;
-  const name = characterName(lifeId, locale);
-  const career = life?.start.life?.career?.id;
   return (
-    <View {...{ dataSet: { reward: `life.${lifeId}` } }} style={{ alignItems: 'center', gap: 8 }}>
+    <View {...{ dataSet: { reward: `life.${lifeId}` } }} style={{ gap: 12 }}>
       <PixelText size={13} tone="gold-500" style={kicker}>{t('unlocked')}</PixelText>
-      <View style={{ marginVertical: 4 }}>
-        <Bare style={{ width: 96, height: 96, backgroundColor: COLORS['gold-200'] }}>
-          <Sprite id={portraitArt(lifeId, 22)} fallback={{ w: 64, h: 64 }} size={{ w: 96, h: 96 }} />
-        </Bare>
-        <View aria-hidden style={{ position: 'absolute', left: 48, top: 48, width: 0, height: 0 }}>
-          <Sparks colours={['gold-500', 'gold-200', 'cream']} count={12} reach={64} delayMs={300} />
-        </View>
-      </View>
-      {/* Who lives it is the sheet's title; the job under the face, where a life has someone named. */}
-      {name ? <PixelText size={17} lineHeight={17 * TIGHT} style={{ textAlign: 'center' }}>{job}</PixelText> : null}
-      {life ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-          <Sprite id={cityIcon(life.start.cityId)} size={{ w: 16, h: 16 }} />
-          {career ? <Sprite id={careerArt(career)} size={{ w: 16, h: 16 }} /> : null}
-          <View style={{ marginLeft: 2 }}>
-            <Difficulty lifeId={lifeId} />
-          </View>
-        </View>
-      ) : null}
-      <ReadText size={15} lineHeight={15 * SNUG} tone="ink-200" style={{ textAlign: 'center' }}>{text.lives[lifeId]?.perk ?? ''}</ReadText>
+      <LifeDetails id={lifeId} px={LIFE_PORTRAIT} notes={false} />
     </View>
   );
 }
@@ -202,7 +234,7 @@ function useTitle() {
       ? milestone(reward.reached).headline
       : reward.kind === 'badge'
         ? (text.badges[reward.id]?.name ?? reward.id)
-        : (characterName(reward.id, locale) ?? text.lives[reward.id]?.name ?? reward.id);
+        : [text.lives[reward.id]?.name ?? reward.id, characterName(reward.id, locale)].filter(Boolean).join(' · ');
 }
 
 /** What a reward says to a screen reader as it comes on screen in the sheet: its kicker, its name and what it is. */
@@ -219,7 +251,7 @@ function useSaid() {
       ? [milestone(reward.reached).kicker, title(reward), milestone(reward.reached).line]
       : reward.kind === 'badge'
         ? [t('kicker', { rarity: rarityOf(reward.id) }), title(reward), text.badges[reward.id]?.how ?? '']
-        : [t('unlocked'), title(reward), text.lives[reward.id]?.name ?? '', text.lives[reward.id]?.perk ?? ''];
+        : [t('unlocked'), title(reward)];
 }
 
 /**

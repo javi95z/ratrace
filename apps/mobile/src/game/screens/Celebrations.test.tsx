@@ -114,7 +114,7 @@ describe('a reward', () => {
     const life = screen.getByRole('dialog');
     expect(within(life).getByText('3 of 3')).toBeTruthy();
     expect(within(life).getByText('New life unlocked')).toBeTruthy();
-    expect(within(life).getByText(lifeName('rider'))).toBeTruthy();
+    expect(within(life).getByRole('heading', { name: `${lifeName('rider')} · Somchai` })).toBeTruthy();
     expect(life.querySelector('[data-sprite="portrait.rider.22"]')).toBeTruthy();
     expect(within(life).getByLabelText(/^Difficulty: /)).toBeTruthy();
     fireEvent.click(within(life).getByRole('button', { name: 'Accept' }));
@@ -125,7 +125,7 @@ describe('a reward', () => {
     shown.earned = [idOf('legendary')];
     renderGame(<Celebrations />, memoryServices());
     const sheet = rewardSheet(badgeName(idOf('legendary')));
-    expect(within(sheet).getByText('Legendary badge').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['teal-300']));
+    expect(within(sheet).getByText('Legendary badge').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
     expect(sheet.querySelector(`[data-sprite="${RIM_ART.legendary}"]`)).toBeTruthy();
     cleanup();
     shown.earned = [idOf('uncommon'), idOf('common')];
@@ -208,6 +208,52 @@ describe('a reward', () => {
       expect(scrolled, locale).toBeTruthy();
       cleanup();
     }
+  });
+
+  it('gives a legendary badge more: gold rays turning behind its medal, the fireworks and the cheer over it, its heading in gold', () => {
+    shown.earned = [idOf('legendary')];
+    renderGame(<Celebrations />, memoryServices());
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.querySelector('[data-rays="turning"]')).toBeTruthy();
+    expect(sheet.querySelector('[data-sprite^="anim.burst."]')).toBeTruthy();
+    expect(sheet.querySelector('[data-sprite^="anim.cheer."]')).toBeTruthy();
+    expect(within(sheet).getByText('Legendary badge').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
+    cleanup();
+    // The others stay as they were.
+    shown.earned = [idOf('rare')];
+    renderGame(<Celebrations />, memoryServices());
+    expect(screen.getByRole('dialog').querySelector('[data-rays]')).toBeNull();
+    expect(screen.getByRole('dialog').querySelector('[data-sprite^="anim.burst."]')).toBeNull();
+  });
+
+  it('keeps a legendary badge\'s rays still, and nothing bursting, where motion is left out', async () => {
+    const store = new MemoryStore();
+    await store.saveProfile({ ...newProfile(), settings: { ...newProfile().settings, reducedMotion: true } });
+    shown.earned = [idOf('legendary')];
+    renderGame(<Celebrations />, memoryServices(store));
+    await waitFor(() => expect(screen.getByRole('dialog').querySelector('[data-rays="still"]')).toBeTruthy());
+    expect(screen.getByRole('dialog').querySelector('[data-sprite^="anim.burst."]')).toBeNull();
+    expect(screen.getByRole('dialog').querySelector('[data-sprite^="anim.cheer."]')).toBeNull();
+  });
+
+  it('tells a life unlocked as the life\'s sheet does: who and what in its title, its face on its city\'s sky, the city, the job, the cash, how hard in a word and in dots; not its good and its bad', () => {
+    shown.earned = [];
+    shown.unlocked = ['heir'];
+    renderGame(<Celebrations />, memoryServices());
+    const sheet = rewardSheet(`${lifeName('heir')} · Max`);
+    const words = textFor('en');
+    expect(within(sheet).getByText('New life unlocked')).toBeTruthy();
+    expect(sheet.textContent).toContain(words.names.cities.dubai);
+    expect(sheet.textContent).toContain(words.text.careers.service.levels[0]);
+    expect(sheet.textContent).toMatch(/\$[\d,]+/);
+    expect(sheet.textContent).toMatch(/easy|normal|hard/i);
+    expect(within(sheet).getByLabelText(/^Difficulty: /)).toBeTruthy();
+    expect(sheet.textContent).not.toContain(words.text.lives.heir.perk);
+    expect(sheet.textContent).not.toContain(words.text.lives.heir.handicap);
+    // The face on the sky of its city, larger than the life's sheet draws it.
+    expect(sheet.querySelector('[data-sprite^="backdrop."]')).toBeTruthy();
+    // One title: the name is not said again under it.
+    expect(sheet.textContent?.split('Max').length).toBe(2);
   });
 
   it('is nothing at all when the step earned nothing', () => {

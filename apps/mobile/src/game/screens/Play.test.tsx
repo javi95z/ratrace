@@ -188,9 +188,8 @@ describe('the play screen', () => {
     renderGame(<Play />, services);
     fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
     fireEvent.click(choices()[0]);
-    const sheet = (await screen.findByRole('heading', { name: 'Max' })).closest('[aria-modal="true"]') as HTMLElement;
+    const sheet = (await screen.findByRole('heading', { name: 'Heir · Max' })).closest('[aria-modal="true"]') as HTMLElement;
     expect(within(sheet).getByText('New life unlocked')).toBeTruthy();
-    expect(within(sheet).getByText('Heir')).toBeTruthy();
     expect(within(sheet).queryByText('Badge earned')).toBeNull();
     expect(within(sheet).queryByRole('button', { name: 'Try it now' })).toBeNull();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Accept' }));
@@ -217,7 +216,7 @@ describe('the play screen', () => {
     expect(badge.textContent).toContain('1 of 2');
     expect(badge.textContent).toContain('Be worth a million');
     fireEvent.click(within(badge).getByRole('button', { name: 'Accept' }));
-    const life = screen.getByRole('heading', { name: 'Max' }).closest('[aria-modal="true"]') as HTMLElement;
+    const life = screen.getByRole('heading', { name: 'Heir · Max' }).closest('[aria-modal="true"]') as HTMLElement;
     expect(life.textContent).toContain('2 of 2');
     expect(life.textContent).toContain('New life unlocked');
     fireEvent.click(within(life).getByRole('button', { name: 'Accept' }));
