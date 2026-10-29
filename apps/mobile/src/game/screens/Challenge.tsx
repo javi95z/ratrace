@@ -1,4 +1,4 @@
-import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
+import { backdropArt, CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
@@ -12,7 +12,7 @@ import { LinkText } from '../../ui/LinkText';
 import { Loading } from '../../ui/Loading';
 import { Screen } from '../../ui/Page';
 import { Sheet } from '../../ui/overlay';
-import { Sprite } from '../../ui/Sprite';
+import { Sprite, SpriteLayers } from '../../ui/Sprite';
 import { bannerSize, spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
@@ -59,11 +59,20 @@ const keptEntry = (found: ChallengeEntryAnswer, drawn: ChallengeEntryAnswer): bo
 /** The places of a challenge's ranking that are in its best tenth: the first, at least. */
 export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
 
-/**
- * The week's life over its board, as the web draws it: its 64-point portrait in a 52-point well, held to the well's width by the page's
- * `img { max-width: 100% }` and left its own height (measured on the web's page: 52 × 64, standing 6 over the well and 6 under it).
- */
-const BOARD_FACE = { w: 52, h: 64 };
+/** The week's life over its board: its whole portrait on the sky of the city it begins in, square in its well, as a life's face is drawn elsewhere. */
+const BOARD_FACE = 48;
+
+function BoardFace({ lifeId }: { lifeId: string }) {
+  const city = lives.find((life) => life.id === lifeId)?.start.cityId;
+  const layers = useMemo(
+    () => [
+      ...(city ? [{ id: backdropArt(city), x: 0, y: 0, w: BOARD_FACE, h: BOARD_FACE }] : []),
+      { id: portraitArt(lifeId, 22), x: 0, y: 0, w: BOARD_FACE, h: BOARD_FACE },
+    ],
+    [lifeId, city],
+  );
+  return <SpriteLayers size={{ w: BOARD_FACE, h: BOARD_FACE }} layers={layers} />;
+}
 
 /** The challenge on the front door, built from the same raised card, portrait well and type hierarchy as the rest of the game. */
 export function WeeklyChallengeCard() {
@@ -368,7 +377,7 @@ export function ChallengeBoard({ board }: { board: ChallengeRanking | null | und
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Well style={{ width: 52, height: 52 }}>
-          <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} size={BOARD_FACE} />
+          <BoardFace lifeId={week.lifeId} />
         </Well>
         <View style={{ minWidth: 0, flexShrink: 1 }}>
           <PixelText size={17} numberOfLines={1}>{text.lives[week.lifeId]?.name ?? week.lifeId}</PixelText>
