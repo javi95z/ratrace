@@ -1,0 +1,88 @@
+# Roadmap step 17c: types, lint, the web's weight and every unit test on each push to dev and main and on each pull request.
+# `main` requires the check `ci` (the last job, which needs all the others). Nothing here uses a secret: the tests never reach the live project.
+name: CI
+
+on:
+  push:
+    branches: [dev, main, ci]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch (or pull request) cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: types, lint, web size
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # The app's postinstall copies the sprites and the older rules from the repo: no art tool beyond it.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -s typecheck
+      - run: pnpm -s lint
+      # The guard on the web's first page: the export built offline, weighed and searched for what only the phone needs.
+      - run: pnpm --filter @ratrace/mobile web:size
+
+  test:
+    name: tests ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The balance tests play thousands of lives on one thread each: they run in their own job, never beside the rest.
+      - run: pnpm -s vitest run --shard=${{ matrix.shard }}/4 --exclude 'tools/balance/**'
+
+  balance:
+    name: balance tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -s vitest run tools/balance
+
+  ci:
+    name: ci
+    if: always()
+    needs: [checks, test, balance]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        run: |
+          echo '${{ toJSON(needs) }}'
+          test '${{ needs.checks.result }}' = success
+          test '${{ needs.test.result }}' = success
+          test '${{ needs.balance.result }}' = success
