@@ -88,6 +88,8 @@ export function MomentBody({ moment, view }: { moment: Moment; view: GameView })
   const years = content.yearsPerRound;
   const said = (text: string) => <ReadText size={15} lineHeight={15 * SNUG}>{text}</ReadText>;
   const hint = (text: string) => <ReadText size={13} tone="ink-300">{text}</ReadText>;
+  // A figure's name wraps rather than be cut short where it runs long (Russian, a narrow phone): it is what the figure means.
+  const whole = (text: string) => <ReadText size={15} style={{ flexShrink: 1 }}>{text}</ReadText>;
 
   switch (moment.kind) {
     case 'escape': {
@@ -96,8 +98,8 @@ export function MomentBody({ moment, view }: { moment: Moment; view: GameView })
         <>
           {said(t('escape.body', { age: escapeAge(content, moment.round) }))}
           <Figures>
-            <Row left={t('escape.passive')} right={<Figure tone="teal-300">{t('perYear', { amount: fmt.money(Math.floor(escape.passiveAfterTax / years)) })}</Figure>} />
-            <Row left={t('escape.costs')} right={t('perYear', { amount: fmt.money(Math.floor(escape.outgoings / years)) })} />
+            <Row left={whole(t('escape.passive'))} right={<Figure tone="teal-300">{t('perYear', { amount: fmt.money(Math.floor(escape.passiveAfterTax / years)) })}</Figure>} />
+            <Row left={whole(t('escape.costs'))} right={t('perYear', { amount: fmt.money(Math.floor(escape.outgoings / years)) })} />
           </Figures>
           {hint(t('escape.hint'))}
         </>
@@ -108,7 +110,7 @@ export function MomentBody({ moment, view }: { moment: Moment; view: GameView })
         <>
           {said(t('million.body', { age }))}
           <Figures>
-            <Row left={t('million.worth')} right={<Figure tone="gold-500">{fmt.money(realNetWorth(view))}</Figure>} />
+            <Row left={whole(t('million.worth'))} right={<Figure tone="gold-500">{fmt.money(realNetWorth(view))}</Figure>} />
           </Figures>
           {hint(t('million.hint'))}
         </>
