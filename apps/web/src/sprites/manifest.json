@@ -2774,6 +2774,11 @@
     "w": 128,
     "h": 128
   },
+  "home.castle": {
+    "src": "homes/home.castle.png",
+    "w": 128,
+    "h": 128
+  },
   "home.chalet": {
     "src": "homes/home.chalet.png",
     "w": 128,

@@ -575,6 +575,7 @@ export const SOURCES: Record<string, SpriteSource> = {
   'home.billboard': require('../../assets/sprites/homes/home.billboard.png'),
   'home.block': require('../../assets/sprites/homes/home.block.png'),
   'home.capsule_hotel': require('../../assets/sprites/homes/home.capsule_hotel.png'),
+  'home.castle': require('../../assets/sprites/homes/home.castle.png'),
   'home.chalet': require('../../assets/sprites/homes/home.chalet.png'),
   'home.dubai.block': require('../../assets/sprites/homes/home.dubai.block.png'),
   'home.dubai.chalet': require('../../assets/sprites/homes/home.dubai.chalet.png'),

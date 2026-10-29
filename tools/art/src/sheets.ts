@@ -507,6 +507,8 @@ export const SHEETS: SheetSpec[] = [
   // v14: the rat in eight poses, and its head in eight hats (the avatars in layers of v15 take their place).
   { file: 'brand/brand-02', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 128, height: 128, ids: ['rat.cheer', 'rat.hide', 'rat.exit', 'rat.count', 'rat.sleep', 'rat.shock', 'rat.think', 'rat.wave'] },
   { file: 'brand/rats-01', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['rat.head.plain', 'rat.head.cap', 'rat.head.beanie', 'rat.head.top_hat', 'rat.head.headphones', 'rat.head.crown', 'rat.head.sunglasses', 'rat.head.chef'] },
+  // The great-uncle's castle, as a property of the player's: the castle on its hill cut from the card's own scene (cards-39) and set on the key.
+  { file: 'homes/homes-castle', group: 'homes', kind: 'objects', cols: 1, rows: 1, width: 128, height: 128, ids: ['home.castle'] },
   // A backdrop behind a portrait, one for each city, to tell lives apart at a glance.
   { file: 'portraits/backdrops-01', group: 'portraits', kind: 'scenes', cols: 5, rows: 2, width: 64, height: 64, ids: ['backdrop.madrid', 'backdrop.london', 'backdrop.new_york', 'backdrop.dubai', 'backdrop.singapore', 'backdrop.bangkok', 'backdrop.tokyo', 'backdrop.moscow', 'backdrop.mexico_city', 'backdrop.zurich'] },
   // The milestones of a life, told on the round they happen in (drawn again at the standard size in v22).

@@ -5956,6 +5956,11 @@
       "width": 64,
       "height": 64
     },
+    "home.castle": {
+      "file": "homes/home.castle.png",
+      "width": 128,
+      "height": 128
+    },
     "backdrop.madrid": {
       "file": "portraits/backdrop.madrid.png",
       "width": 64,
