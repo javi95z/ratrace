@@ -1,8 +1,9 @@
-import { cityIcon, lives } from '@ratrace/content';
+import { careerArt, cityIcon, lives } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import { difficultyOf } from '@ratrace/core/game/difficulty';
 import { View } from 'react-native';
 import { SrOnly } from '../../ui/kit';
+import { LifeFace } from './LifeFace';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, type ColorToken } from '../../ui/theme';
@@ -80,6 +81,62 @@ export function LifeSummary({ lifeId, light = false }: { lifeId: string; light?:
       </View>
       <ReadText size={12} lineHeight={12 * SNUG} tone={light ? 'teal-800' : 'teal-300'}>{`＋ ${written.perk}`}</ReadText>
       <ReadText size={12} lineHeight={12 * SNUG} tone={light ? 'wine-700' : 'wine-300'}>{`− ${written.handicap}`}</ReadText>
+    </View>
+  );
+}
+
+/**
+ * A life as its sheet tells it, on the page where a life is chosen and as a life unlocked (Rewards.tsx): its face on its city's sky, `px` square, and
+ * beside it the city, the job it starts in, the cash and how hard it is in a word; under them, with `notes`, what it is good at and what holds it back.
+ */
+export function LifeDetails({ id, px, notes = true }: { id: string; px: number; notes?: boolean }) {
+  const t = useT('newLife');
+  const { text, names, fmt } = useWords();
+  const life = lives.find((one) => one.id === id);
+  const written = text.lives[id];
+  if (!life || !written) return null;
+  const city = names.cities[life.start.cityId];
+  const cash = fmt.money(life.start.cash);
+  const career = life.start.life?.career;
+  const job = career ? text.careers[career.id]?.levels[career.level] : undefined;
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <LifeFace lifeId={id} size="lg" px={px} />
+        <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 }}>
+          <SrOnly>{[t('startsIn', { city, cash }), job].filter(Boolean).join('. ')}</SrOnly>
+          {/* What the sentence above says, for the eyes. */}
+          <View aria-hidden style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Sprite id={cityIcon(life.start.cityId)} size={{ w: 20, h: 20 }} />
+              <ReadText size={14} tone="ink-200" style={{ flexShrink: 1 }}>{city}</ReadText>
+            </View>
+            {career && job ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Sprite id={careerArt(career.id)} size={{ w: 20, h: 20 }} />
+                <ReadText size={14} tone="ink-200" style={{ flexShrink: 1 }}>{job}</ReadText>
+              </View>
+            ) : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Sprite id="icon.cash" size={{ w: 20, h: 20 }} />
+              <PixelText size={15} tone="ink-200">{cash}</PixelText>
+            </View>
+          </View>
+          {/* How hard, in its word and in the dots the grid of lives shows (the word says it to a screen reader). */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Difficulty lifeId={id} word />
+            <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Difficulty lifeId={id} />
+            </View>
+          </View>
+        </View>
+      </View>
+      {notes ? (
+        <>
+          <ReadText size={14} lineHeight={14 * SNUG} tone="teal-300">{`＋ ${written.perk}`}</ReadText>
+          <ReadText size={14} lineHeight={14 * SNUG} tone="wine-300">{`− ${written.handicap}`}</ReadText>
+        </>
+      ) : null}
     </View>
   );
 }

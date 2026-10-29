@@ -9,7 +9,7 @@ import { useWindowDimensions, View } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { useIsWide, WIDE_COLUMN } from '../../ui/desk';
 import { useHaptic } from '../../ui/haptic';
-import { Button, Notice, Raised, Segmented, SrOnly } from '../../ui/kit';
+import { Button, Notice, Raised, Segmented } from '../../ui/kit';
 import { focusedMark, focusMarked, onKeys, useKeyboardContext } from '../../ui/keyboard';
 import { Sheet } from '../../ui/overlay';
 import { Screen } from '../../ui/Page';
@@ -20,7 +20,7 @@ import { useCardsAhead, useGame, useProfile, useRanking, useRuns, useSettings, u
 import { anotherLife } from '../lives';
 import { BackLink } from './BackLink';
 import { LifeFace } from './LifeFace';
-import { Difficulty } from './LifeSummary';
+import { Difficulty, LifeDetails } from './LifeSummary';
 import { useGo } from '../pages';
 import { ElsewhereSheet } from './ElsewhereSheet';
 
@@ -120,41 +120,6 @@ function Silhouette({ id, px }: { id: string; px: number }) {
       <View style={{ position: 'absolute', bottom: 2, right: 2 }}>
         <Sprite id="icon.locked" fallback={{ w: 16, h: 16 }} size={{ w: 16, h: 16 }} />
       </View>
-    </View>
-  );
-}
-
-/** Where a life starts, with how much, and how hard it is, beside its portrait; then a line each of what it is good at and what holds it back. */
-function LifeDetails({ id }: { id: string }) {
-  const t = useT('newLife');
-  const { text, names, fmt } = useWords();
-  const life = byId.get(id);
-  const written = text.lives[id];
-  if (!life || !written) return null;
-  const city = names.cities[life.start.cityId];
-  const cash = fmt.money(life.start.cash);
-  return (
-    <View style={{ gap: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <LifeFace lifeId={id} size="lg" px={SHEET_PORTRAIT} />
-        <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 }}>
-          <SrOnly>{t('startsIn', { city, cash })}</SrOnly>
-          {/* What the sentence above says, for the eyes. */}
-          <View aria-hidden style={{ gap: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Sprite id={cityIcon(life.start.cityId)} size={{ w: 20, h: 20 }} />
-              <ReadText size={14} tone="ink-200">{city}</ReadText>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Sprite id="icon.cash" size={{ w: 20, h: 20 }} />
-              <PixelText size={15} tone="ink-200">{cash}</PixelText>
-            </View>
-          </View>
-          <Difficulty lifeId={id} word />
-        </View>
-      </View>
-      <ReadText size={14} lineHeight={14 * SNUG} tone="teal-300">{`＋ ${written.perk}`}</ReadText>
-      <ReadText size={14} lineHeight={14 * SNUG} tone="wine-300">{`− ${written.handicap}`}</ReadText>
     </View>
   );
 }
@@ -382,7 +347,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
       >
         {chosenOpen ? (
           <>
-            <LifeDetails id={chosen} />
+            <LifeDetails id={chosen} px={SHEET_PORTRAIT} />
             <View style={{ marginTop: 16, gap: 8 }}>
               {inProgress && !starting && !begun ? (
                 <ReadText size={13} tone="wine-300" style={{ textAlign: 'center' }}>
