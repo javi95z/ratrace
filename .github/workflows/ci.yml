@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   checks:
-    name: types, lint, web size
+    name: types and lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -34,7 +34,23 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -s typecheck
       - run: pnpm -s lint
-      # The guard on the web's first page: the export built offline, weighed and searched for what only the phone needs.
+
+  web-size:
+    name: web size
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The guard on the web's first page: the export built offline with a cold Metro cache, as Vercel builds it, weighed and searched for what
+      # only the phone needs. The same check fails Vercel's build of main (web:build), so a red here is a site that would not deploy.
       - run: pnpm --filter @ratrace/mobile web:size
 
   test:
@@ -77,12 +93,13 @@ jobs:
   ci:
     name: ci
     if: always()
-    needs: [checks, test, balance]
+    needs: [checks, web-size, test, balance]
     runs-on: ubuntu-latest
     steps:
       - name: Every job passed
         run: |
           echo '${{ toJSON(needs) }}'
           test '${{ needs.checks.result }}' = success
+          test '${{ needs['web-size'].result }}' = success
           test '${{ needs.test.result }}' = success
           test '${{ needs.balance.result }}' = success
