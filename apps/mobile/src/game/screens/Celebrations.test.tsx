@@ -190,6 +190,26 @@ describe('a reward', () => {
     expect(screen.getAllByText((_, element) => element?.textContent === 'Принять').length).toBeGreaterThan(0);
   });
 
+  it('cuts no line of its heading: the line as tall as its letters, nothing pulled up out of its box, room at the top of what scrolls, in every language', () => {
+    for (const [locale, words] of [['en', 'Uncommon badge'], ['es', 'Insignia poco común'], ['ru', 'Необычный значок']] as const) {
+      shown.earned = [idOf('uncommon')];
+      renderGame(<Celebrations />, memoryServices(), locale);
+      const sheet = screen.getByRole('dialog');
+      const heading = within(sheet).getAllByText((_, el) => el?.textContent === words).at(-1) as HTMLElement;
+      const px = (value: string) => Number.parseFloat(value || '0');
+      // Every run of its letters, on a line at least as tall as the 13 it is set at (the pixel face draws its letters inside that).
+      const runs = [heading, ...heading.querySelectorAll<HTMLElement>('*')].filter((el) => el.style.fontSize !== '');
+      expect(runs.length, locale).toBeGreaterThan(0);
+      for (const run of runs) expect(px(getComputedStyle(run).lineHeight), locale).toBeGreaterThanOrEqual(13);
+      // Nothing between it and the sheet is pulled up by a margin of its own, which the scroll's top edge would cut.
+      for (let box: HTMLElement | null = heading; box && box !== sheet; box = box.parentElement) expect(px(box.style.marginTop), locale).toBeGreaterThanOrEqual(0);
+      // What scrolls starts with room above its first line.
+      const scrolled = [...sheet.querySelectorAll<HTMLElement>('div')].find((box) => box.contains(heading) && px(box.style.paddingTop) >= 8 && box.style.paddingLeft === '16px');
+      expect(scrolled, locale).toBeTruthy();
+      cleanup();
+    }
+  });
+
   it('is nothing at all when the step earned nothing', () => {
     shown.earned = [];
     const { container } = renderGame(<Celebrations />, memoryServices());

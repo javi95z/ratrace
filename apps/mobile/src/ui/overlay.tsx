@@ -112,6 +112,9 @@ function endTurnOnceGone(id: number): void {
   const stop = holdingTurn(letGo);
 }
 
+/** The room at the top of what a sheet scrolls: nothing in it is cut by the scroll's top edge. */
+export const SCROLL_TOP = 8;
+
 /** What a sheet gives the focus to as it opens, on the web (the Next web's `initialFocus`): its panel, its Close, or what it holds (a slider). */
 export type InitialFocus = 'panel' | 'close' | { readonly current: unknown };
 
@@ -420,7 +423,9 @@ function SheetPanel({
                     <SheetGrip drag={pull.drag} enabled={draggable}>
                       <View style={{ paddingTop: 16, paddingHorizontal: 16 }}>
                         {draggable && !locked ? <Grabber /> : null}
-                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                        {/* 4 under the title and 8 at the top of what scrolls: the same 12, and room for a line pulled up by its own margin, which the
+                            scroll would otherwise cut in half (the escape's kicker was). */}
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
                           <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ flexShrink: 1, paddingTop: 4 }}>
                             <PixelText size={19}>{title}</PixelText>
                           </View>
@@ -445,7 +450,7 @@ function SheetPanel({
                       bounces={false}
                       style={{ flexGrow: 0, flexShrink: 1 }}
                       // Its foot clears the home indicator, but not over the keyboard, which stands over the indicator.
-                      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
+                      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: SCROLL_TOP, paddingBottom: typing ? 12 : Math.max(12, inset.bottom) }}
                     >
                       <SheetHoldProvider value={pull.hold}>{children}</SheetHoldProvider>
                     </SheetScroll>
