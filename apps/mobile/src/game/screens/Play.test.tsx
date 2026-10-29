@@ -181,20 +181,25 @@ describe('the play screen', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  it('announces a life unlocked by a step that earned no badge', async () => {
+  it('shows a life unlocked by a step that earned no badge in the reward sheet over its result, with no way to begin it in the middle of a life', async () => {
     const services = memoryServices();
     const real = await services.sessions.start('nurse');
     services.sessions.resume = async () => ({ lost: null, session: realSession(real, { answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: [], unlocked: ['heir'] }) }) });
     renderGame(<Play />, services);
     fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
     fireEvent.click(choices()[0]);
-    await screen.findByRole('heading', { name: 'What happened' });
-    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
-    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
-    expect(news.some((text) => text.includes('Badge earned'))).toBe(false);
+    const sheet = (await screen.findByRole('heading', { name: 'Max' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getByText('New life unlocked')).toBeTruthy();
+    expect(within(sheet).getByText('Heir')).toBeTruthy();
+    expect(within(sheet).queryByText('Badge earned')).toBeNull();
+    expect(within(sheet).queryByRole('button', { name: 'Try it now' })).toBeNull();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByRole('heading', { name: 'What happened' })).toBeTruthy();
+    expect(screen.queryByText('New life unlocked')).toBeNull();
   });
 
-  it('celebrates a badge on the ledger of the round that earned it, and the life a round unlocked', async () => {
+  it('celebrates a badge of the round that earned it, and the life it unlocked, in turn in the reward sheet over its ledger, never again once accepted', async () => {
     const services = memoryServices();
     const real = await services.sessions.start('nurse');
     // A round that earns a badge and unlocks a life, whatever is played.
@@ -207,11 +212,20 @@ describe('the play screen', () => {
     await answerHand();
     await stageIs('Your finances');
     fireEvent.click(button('Play the round'));
-    await screen.findByRole('heading', { name: 'Two years later' });
-    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
-    expect(news.some((text) => text.includes('Badge earned') && text.includes('Millionaire') && text.includes('Be worth a million'))).toBe(true);
-    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
-    // Gone with the ledger: the next round opens without them.
+    const badge = (await screen.findByRole('heading', { name: 'Millionaire' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(badge.textContent).toContain('Badge earned');
+    expect(badge.textContent).toContain('1 of 2');
+    expect(badge.textContent).toContain('Be worth a million');
+    fireEvent.click(within(badge).getByRole('button', { name: 'Accept' }));
+    const life = screen.getByRole('heading', { name: 'Max' }).closest('[aria-modal="true"]') as HTMLElement;
+    expect(life.textContent).toContain('2 of 2');
+    expect(life.textContent).toContain('New life unlocked');
+    fireEvent.click(within(life).getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    // Nothing of them is left inline with the ledger.
+    expect(screen.getByRole('heading', { name: 'Two years later' })).toBeTruthy();
+    expect(screen.queryByText('Badge earned')).toBeNull();
+    expect(screen.queryAllByRole('status').filter((note) => /Millionaire|Heir/.test(note.textContent ?? ''))).toEqual([]);
     fireEvent.click(button('Next round'));
     await screen.findByRole('button', { name: 'See what life brings' });
     expect(screen.queryByText('Badge earned')).toBeNull();

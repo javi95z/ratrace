@@ -68,6 +68,9 @@ resetAlso(openSheetsAgain);
 // And no turn held by a sheet a test took away while it was shown (on iOS or Android, `endTurnOnceGone`): the next test's sheets wait for none.
 const { letHeldTurnsGo } = await import('../ui/back');
 resetAlso(letHeldTurnsGo);
+// And no reward taken as accepted already by a test before.
+const { forgetAcceptedRewards } = await import('../game/rewardsAccepted');
+resetAlso(forgetAcceptedRewards);
 
 // Every language's words in before a test speaks one, and their cards: the web loads each when its page first speaks it, and the cards where a life
 // is played (game/languageWords.web.ts), which a test does not wait for; the phone has them all already.

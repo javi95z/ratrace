@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { badges, BADGE_RARITY, rarityOf, RIM_ART, textFor } from '@ratrace/content';
+import { badges, rarityOf, RIM_ART, textFor } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { newProfile } from '@ratrace/core/session/types';
@@ -10,18 +10,16 @@ import { memoryServices, renderGame } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { COLORS, EXTRA } from '../../ui/theme';
-import { paintOf } from '../../ui/testing/paint';
-import { drawn } from '../../ui/testing/skia';
 
 // As the web's test: what the step on screen earned is the game's to say, so the test says it. `shown.earned` null is the real game.
-const shown = vi.hoisted(() => ({ earned: null as string[] | null, unlocked: [] as string[] }));
+const shown = vi.hoisted(() => ({ earned: null as string[] | null, unlocked: [] as string[], over: false }));
 vi.mock('../context', async (original) => {
   const real = await original<typeof import('../context')>();
   return {
     ...real,
     // One or the other for the whole of a test.
     useGame: <T,>(select: (state: RoundState & RoundActions) => T): T =>
-      shown.earned === null ? real.useGame(select) : select({ earned: shown.earned, unlocked: shown.unlocked, reached: [], lifeId: null } as unknown as RoundState & RoundActions),
+      shown.earned === null ? real.useGame(select) : select({ earned: shown.earned, unlocked: shown.unlocked, reached: [], lifeId: null, gameId: 'g', view: { finished: shown.over } } as unknown as RoundState & RoundActions),
   };
 });
 
@@ -52,6 +50,8 @@ afterEach(() => {
   cleanup();
   shown.earned = null;
   shown.unlocked = [];
+  shown.over = false;
+  statuses.length = 0;
   glowBoxes.length = 0;
 });
 
@@ -62,95 +62,124 @@ const rgb = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
   return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
 };
-/** The strips a frame is drawn with, by colour: the outline of a box is four of one colour. */
-const strips = (box: Element, colour: string) => [...box.querySelectorAll<HTMLElement>(':scope > div')].filter((d) => d.style.position === 'absolute' && paintOf(d) === rgb(colour));
 
-describe('a badge earned', () => {
-  it('shows its rarity, in its rim and its colour', () => {
-    shown.earned = [idOf('rare'), idOf('common')];
+/** The reward sheet on screen: the dialog named by what it gives. */
+const rewardSheet = (name: string) => screen.getByRole('heading', { name }).closest('[aria-modal="true"]') as HTMLElement;
+const lifeName = (id: string) => textFor('en').text.lives[id].name;
+
+describe('a reward', () => {
+  it('shows a badge earned by a round in a sheet over its result: the medal large, its name, its rarity in the colour of its rim and how it was earned', () => {
+    const id = idOf('rare');
+    shown.earned = [id];
     renderGame(<Celebrations />, memoryServices());
-    const [rare, common] = screen.getAllByRole('status');
-    expect(within(rare).getByText('Rare')).toBeTruthy();
-    expect(within(common).getByText('Common')).toBeTruthy();
-    expect(rare.querySelector('[data-rarity="rare"]')).toBeTruthy();
-    expect(common.querySelector('[data-rarity="common"]')).toBeTruthy();
-    // The rim of its rarity, round the badge itself.
-    expect(rare.querySelector(`[data-sprite="${RIM_ART.rare}"]`)).toBeTruthy();
-    expect(rare.querySelector(`[data-sprite="badge.${idOf('rare')}"]`)).toBeTruthy();
-    // Its rarity is named in the colour of its rim.
-    expect(within(rare).getByText('Rare').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
-    expect(within(common).getByText('Common').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(EXTRA.bronze));
+    const sheet = rewardSheet(badgeName(id));
+    expect(within(sheet).getByText('Badge earned')).toBeTruthy();
+    expect(within(sheet).getByText('Rare').closest('[style*="color"]')?.getAttribute('style')).toContain(rgb(COLORS['gold-500']));
+    expect(within(sheet).getByText(textFor('en').text.badges[id].how)).toBeTruthy();
+    // The medal at its large size, in the rim of its rarity.
+    const medal = sheet.querySelector('[data-rarity="rare"]') as HTMLElement;
+    expect([medal.style.width, medal.style.height]).toEqual(['96px', '96px']);
+    expect(medal.querySelector(`[data-sprite="${RIM_ART.rare}"]`)).toBeTruthy();
+    // One reward: no count, and no Try it now in the middle of a life.
+    expect(within(sheet).queryByText(/of 1/)).toBeNull();
+    expect(within(sheet).queryByRole('button', { name: 'Try it now' })).toBeNull();
+  });
+
+  it('leaves no framed box of a badge or a life inline with the result', () => {
+    shown.earned = [idOf('common')];
+    shown.unlocked = ['rider'];
+    renderGame(<Celebrations />, memoryServices());
+    expect(screen.queryAllByRole('status')).toEqual([]);
+    expect(statuses).toEqual([]);
+  });
+
+  it('closes on Accept', async () => {
+    shown.earned = [idOf('common')];
+    renderGame(<Celebrations />, memoryServices());
+    fireEvent.click(within(rewardSheet(badgeName(idOf('common')))).getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('shows several in turn in the same sheet, each with its Accept, counted, then closes', async () => {
+    const [rare, common] = [idOf('rare'), idOf('common')];
+    shown.earned = [rare, common];
+    shown.unlocked = ['rider'];
+    renderGame(<Celebrations />, memoryServices());
+    expect(within(rewardSheet(badgeName(rare))).getByText('1 of 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    expect(within(rewardSheet(badgeName(common))).getByText('2 of 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    // A life: who lives it, the job, its face, how hard it is in dots.
+    const life = screen.getByRole('dialog');
+    expect(within(life).getByText('3 of 3')).toBeTruthy();
+    expect(within(life).getByText('New life unlocked')).toBeTruthy();
+    expect(within(life).getByText(lifeName('rider'))).toBeTruthy();
+    expect(life.querySelector('[data-sprite="portrait.rider.22"]')).toBeTruthy();
+    expect(within(life).getByLabelText(/^Difficulty: /)).toBeTruthy();
+    fireEvent.click(within(life).getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('takes a legendary badge in the same sheet, under its own kicker', () => {
+    shown.earned = [idOf('legendary')];
+    renderGame(<Celebrations />, memoryServices());
+    const sheet = rewardSheet(badgeName(idOf('legendary')));
+    expect(within(sheet).getByText('Legendary badge')).toBeTruthy();
+    expect(sheet.querySelector(`[data-sprite="${RIM_ART.legendary}"]`)).toBeTruthy();
+  });
+
+  it('is shown once: the result drawn again after Accept shows none, and one not accepted yet is shown again', async () => {
+    shown.earned = [idOf('common'), idOf('rare')];
+    renderGame(<Celebrations />, memoryServices());
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    cleanup();
+    // Left and come back to mid-summary: only the one not accepted yet.
+    renderGame(<Celebrations />, memoryServices());
+    // The rarest came first and was accepted: the other is left.
+    expect(rewardSheet(badgeName(idOf('common')))).toBeTruthy();
+    expect(screen.queryByText('1 of 2')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    cleanup();
+    renderGame(<Celebrations />, memoryServices());
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('stands in a glow that grows with the rarity, under its gold frame, as the web draws it', () => {
-    // What the web draws: none for bronze, then a rim of light that grows (rarityStyle.ts), under the frame's strips (globals.css's `--glow`).
-    expect(RARITY_GLOW).toEqual({ common: '', uncommon: EXTRA.glow.uncommon, rare: EXTRA.glow.rare, legendary: EXTRA.glow.legendary });
-    const blur = (rarity: BadgeRarity) => Number(/0 0 (\d+)px/.exec(RARITY_GLOW[rarity])?.[1] ?? 0);
-    expect([blur('common'), blur('uncommon'), blur('rare'), blur('legendary')]).toEqual([0, 6, 12, 20]);
-    shown.earned = [idOf('legendary'), idOf('common'), idOf('rare'), idOf('uncommon')];
-    renderGame(<Celebrations seen={[idOf('legendary')]} />, memoryServices());
-    const [legendary, common, rare, uncommon] = screen.getAllByRole('status').map((status) => status.firstElementChild as HTMLElement);
-    // Each card is its frame, four gold-900 strips round night-700, with the glow of its rarity laid under it: first, so the card is drawn over it.
-    for (const [card, rarity] of [[legendary, 'legendary'], [rare, 'rare'], [uncommon, 'uncommon']] as const) {
-      const [glow, frame] = Array.from(card.children) as HTMLElement[];
-      expect(glow.getAttribute('data-glow'), rarity).toBe(EXTRA.glow[rarity]);
-      expect(frame.style.backgroundColor).toBe(rgb(COLORS['night-700']));
-      expect(strips(frame, COLORS['gold-900'])).toHaveLength(4);
-    }
-    // A bronze badge's card stands in none.
-    expect(common.querySelector('[data-glow]')).toBeNull();
-    expect(common.children).toHaveLength(1);
-    // Laid out, the legendary one is drawn: the card blurred by half its 20, outside it only.
-    act(() => glowBoxes[0]({ nativeEvent: { layout: { x: 0, y: 0, width: 360, height: 90 } } }));
-    expect(drawn(legendary, 'BlurMask')).toEqual([{ blur: 10, style: 'normal' }]);
-    expect(drawn(legendary, 'Rect')).toEqual([{ x: 30, y: 30, width: 360, height: 90, color: 'rgba(94,224,200,0.7)' }]);
-  });
-
-  it('names each rarity in the colour of its rim: bronze, the line\'s own (the web\'s ink-100 is no colour of its palette), gold and the gem\'s green', () => {
-    expect(RARITY_TONE).toEqual({ common: EXTRA.bronze, uncommon: null, rare: COLORS['gold-500'], legendary: COLORS['teal-300'] });
-  });
-
-  it('takes the whole screen for a legendary one, until the player moves on, in any language', async () => {
-    shown.earned = [idOf('legendary')];
+  it('closed any other way, accepts them all', async () => {
+    shown.earned = [idOf('common'), idOf('rare')];
     renderGame(<Celebrations />, memoryServices());
-    const card = screen.getByRole('heading', { name: badgeName(idOf('legendary')) }).closest('[aria-modal="true"]') as HTMLElement;
-    expect(within(card).getByText('Legendary badge')).toBeTruthy();
-    expect(card.querySelector(`[data-sprite="${RIM_ART.legendary}"]`)).toBeTruthy();
-    fireEvent.click(within(card).getByRole('button', { name: 'Continue' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.queryByText('Legendary badge')).toBeNull();
-    // The small card stays with the step's result.
-    expect(screen.getAllByRole('status')).toHaveLength(1);
-  });
-
-  it('shows each legendary one in turn, and none again once it has been seen', async () => {
-    const [first, second] = Object.keys(BADGE_RARITY).filter((id) => rarityOf(id) === 'legendary');
-    shown.earned = [first, second];
+    cleanup();
     renderGame(<Celebrations />, memoryServices());
-    expect(screen.getByRole('heading', { name: badgeName(first) })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await waitFor(() => expect(screen.getByRole('heading', { name: badgeName(second) })).toBeTruthy());
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await waitFor(() => expect(screen.queryByText('Legendary badge')).toBeNull());
-    expect(screen.getAllByRole('status')).toHaveLength(2);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('can be told a legendary one was taken in already (a scene of the step after its sheet): no sheet for it, its small card all the same', () => {
+  it('can be told a reward was accepted already (a scene of the step after its sheet)', () => {
     shown.earned = [idOf('common'), idOf('legendary')];
-    renderGame(<Celebrations seen={[idOf('legendary')]} />, memoryServices());
-    expect(screen.queryByText('Legendary badge')).toBeNull();
-    expect(screen.getAllByRole('status')).toHaveLength(2);
+    renderGame(<Celebrations seen={[idOf('legendary'), idOf('common')]} />, memoryServices());
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('keeps the lives a life\'s last step opened for its end, where one can begin at once', () => {
+    shown.earned = [];
+    shown.unlocked = ['rider'];
+    shown.over = true;
+    renderGame(<Celebrations />, memoryServices());
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('speaks Spanish and Russian', () => {
-    shown.earned = [idOf('legendary')];
+    shown.earned = [idOf('legendary'), idOf('common')];
     renderGame(<Celebrations />, memoryServices(), 'es');
     expect(screen.getByText('Insignia legendaria')).toBeTruthy();
+    expect(screen.getByText('1 de 2')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Aceptar' })).toBeTruthy();
     cleanup();
     renderGame(<Celebrations />, memoryServices(), 'ru');
     // A Russian title is set in runs of its fonts, a space apart: the line is whole in the element that holds them all.
     expect(screen.getAllByText((_, element) => element?.textContent === 'Легендарный значок').length).toBeGreaterThan(0);
+    expect(screen.getAllByText((_, element) => element?.textContent === 'Принять').length).toBeGreaterThan(0);
   });
 
   it('is nothing at all when the step earned nothing', () => {
@@ -158,75 +187,30 @@ describe('a badge earned', () => {
     const { container } = renderGame(<Celebrations />, memoryServices());
     expect(container.textContent).toBe('');
   });
-});
 
-describe('lives unlocked', () => {
-  it('are told together, each with its face and what it is good at', () => {
-    shown.earned = [];
-    shown.unlocked = ['rider'];
-    renderGame(<Celebrations />, memoryServices());
-    const card = screen.getByRole('status');
-    expect(within(card).getByText('New life unlocked')).toBeTruthy();
-    expect(card.querySelector('[data-sprite="icon.star"]')).toBeTruthy();
-    expect(card.querySelector('[data-sprite="portrait.rider.22"]')).toBeTruthy();
-    cleanup();
-    shown.unlocked = ['rider', 'heir'];
-    renderGame(<Celebrations />, memoryServices());
-    const both = screen.getByRole('status');
-    expect(within(both).getByText('2 new lives unlocked')).toBeTruthy();
-    expect(both.querySelectorAll('[data-sprite^="portrait."]')).toHaveLength(2);
+  it('names each rarity in the colour of its rim, and the glows the milestones stand in grow with it', () => {
+    expect(RARITY_TONE).toEqual({ common: EXTRA.bronze, uncommon: null, rare: COLORS['gold-500'], legendary: COLORS['teal-300'] });
+    expect(RARITY_GLOW).toEqual({ common: '', uncommon: EXTRA.glow.uncommon, rare: EXTRA.glow.rare, legendary: EXTRA.glow.legendary });
   });
 });
 
 describe('a screen reader', () => {
-  /** What was announced, and how: queued after what is being said (the stage that opened), where the phone can queue. */
-  function listening() {
-    const queued = vi.fn();
-    const said = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    Object.assign(AccessibilityInfo, { announceForAccessibilityWithOptions: queued });
-    return {
-      queued,
-      said,
-      restore: () => {
-        said.mockRestore();
-        delete (AccessibilityInfo as { announceForAccessibilityWithOptions?: unknown }).announceForAccessibilityWithOptions;
-      },
-    };
-  }
-
-  it('reads each card as one thing, and on iOS, where a live region says nothing, is told what the step earned once it is on screen, after the stage it rose in', async () => {
+  it('on iOS, where a sheet\'s content changing says nothing, is told each reward after the first as it comes', async () => {
     const was = Platform.OS;
-    const ears = listening();
-    statuses.length = 0;
+    const said = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     try {
       Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
-      const id = idOf('common');
-      shown.earned = [id];
+      shown.earned = [idOf('common')];
       shown.unlocked = ['rider'];
       renderGame(<Celebrations />, memoryServices());
-      // Each card is one element to VoiceOver, the lives as the badge, and a polite live region to TalkBack.
-      expect(statuses.length).toBeGreaterThanOrEqual(2);
-      for (const status of statuses) expect(status).toMatchObject({ accessible: true, accessibilityLiveRegion: 'polite' });
-      // Not at once: what the stage says as it opens comes first, and these wait behind it.
-      expect(ears.queued).not.toHaveBeenCalled();
-      await waitFor(() => expect(ears.queued).toHaveBeenCalledTimes(2));
-      const [badge, lives] = ears.queued.mock.calls;
-      expect(badge[0]).toContain(badgeName(id));
-      expect(badge[0]).toContain('Badge earned');
-      expect(badge[1]).toEqual({ queue: true });
-      expect(lives[0]).toContain('New life unlocked');
-      expect(lives[0]).toContain(textFor('en').text.lives.rider.name);
-      expect(lives[1]).toEqual({ queue: true });
-      cleanup();
-      // TalkBack hears the live regions: nothing is said over them.
-      ears.queued.mockClear();
-      Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
-      renderGame(<Celebrations />, memoryServices());
-      await act(async () => new Promise((done) => setTimeout(done, 20)));
-      expect(ears.queued).not.toHaveBeenCalled();
-      expect(ears.said).not.toHaveBeenCalled();
+      // The first is the sheet's title, which VoiceOver reads as it opens.
+      expect(said).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+      await waitFor(() => expect(said).toHaveBeenCalledTimes(1));
+      expect(said.mock.calls[0][0]).toContain('New life unlocked');
+      expect(said.mock.calls[0][0]).toContain(lifeName('rider'));
     } finally {
-      ears.restore();
+      said.mockRestore();
       Object.defineProperty(Platform, 'OS', { value: was, configurable: true });
     }
   });
