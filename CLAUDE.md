@@ -38,6 +38,8 @@ pnpm online:stats [days]   # usage numbers from the live project, read-only (day
 pnpm online:health         # is the live game up: site, guest, engine, a game with friends (hourly on GitHub, docs/backups.md)
 ```
 
+CI: `.github/workflows/ci.yml` runs typecheck, lint, `web:size` (a cold Metro cache, as Vercel builds: a warm one here can weigh the first page ~8 KiB lighter), the tests in four shards and `tools/balance` alone (`slow()` triples its timeouts where `CI` is set) on each push to `dev`, `main` and `ci` and on pull requests, with no secret; the check to require on `main` is `ci`.
+
 The app (`apps/mobile`): its tests run inside `pnpm -s test`: the vitest `phone` project (`src/{game,app,testing,online}`, on the native modules' stand-ins in `src/testing/setup.ts`) and the rest in `repo`; `pnpm install` runs its `postinstall` (`pnpm sprites && pnpm rules`: the sprites and the older rules it carries).
 ```
 cd apps/mobile && npx expo start --port 8090          # Metro, for Expo Go on the booted iOS simulator
