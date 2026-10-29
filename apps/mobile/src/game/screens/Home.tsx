@@ -97,15 +97,16 @@ export function Home() {
 
   return (
     // The door is never scrolled on a phone: the picture on top takes the room the rest leaves (`DoorPicture`), and the page scrolls only where even
-    // its smallest picture leaves too little. Its foot clears the home indicator.
-    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 32, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
+    // its smallest picture leaves too little. Past its largest, the whole door stands in the middle of the screen, with no empty band inside it. Its
+    // foot clears the home indicator.
+    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: returning ? 16 : 20, paddingTop: UNDER_CORNER, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
       <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
-      <View style={{ position: 'absolute', top: 16, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
+      <View style={{ position: 'absolute', top: CORNER_TOP, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
         {LANGUAGE_IN_CORNER ? <LanguageMenu /> : null}
         <HomePreferences />
       </View>
       {/* A first visit meets the mascot; someone coming back is waved at. */}
-      {returning ? <DoorPicture id={ratArt('wave')} most={128} least={64} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={256} least={96} below={-8} />}
+      {returning ? <DoorPicture id={ratArt('wave')} most={256} least={64} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={256} least={72} below={-8} />}
       <View style={{ alignItems: 'center' }}>
         <View accessibilityRole="header">
           <PixelText size={returning ? 28 : 34} tone="gold-500" lineHeight={returning ? 28 : 34}>{meta('title')}</PixelText>
@@ -176,8 +177,8 @@ export function Home() {
         )}
       </View>
 
-      {/* At the foot, with no frame round it, one place for the account: the way into Google for a guest, the way to their profile for a member. */}
-      <View style={{ width: '100%', marginTop: 'auto' }}>
+      {/* Under the tiles, with no frame round it, one place for the account: the way into Google for a guest, the way to their profile for a member. */}
+      <View style={{ width: '100%' }}>
         <HomeAccount profile={<ProfileLink />} />
       </View>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
@@ -385,6 +386,11 @@ function ProfileLink() {
     </Raised>
   );
 }
+
+/** Where the corner's buttons (the settings' gear, on the web the language's square too) stand, from the top of the page. */
+const CORNER_TOP = 16;
+/** The door starts under the corner's 44 buttons and a gap: a picture grown large never runs under them. */
+const UNDER_CORNER = CORNER_TOP + 44 + 8;
 
 /** The room under the last thing of the page (the web's `pb-8`). */
 const FOOT = 32;
