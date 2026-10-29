@@ -232,7 +232,7 @@ describe('the front door', () => {
 
 describe('the picture on top of the door', () => {
   it('takes the room the rest of the door leaves it, in whole points, no larger than its art and no smaller than its least', () => {
-    expect(pictureSide(400, 256, 96)).toBe(256);
+    expect(pictureSide(400, 176, 56)).toBe(176);
     expect(pictureSide(180.7, 256, 96)).toBe(180);
     expect(pictureSide(40, 256, 96)).toBe(96);
     expect(pictureSide(0, 128, 64)).toBe(64);
@@ -724,11 +724,12 @@ describe('the front door of a player with an account', () => {
     fireEvent.click(rankings);
     expect(router.push).toHaveBeenLastCalledWith('/en/rankings');
     expect(rankings.querySelector('[data-sprite="icon.status"]')).not.toBeNull();
-    // A third tile in the row of the collection and the records: the smallest box that holds the three holds no other link.
+    // On a row of its own, under the collection and the records side by side: the smallest box that holds those two holds no rankings.
     const collection = screen.getByRole('link', { name: 'Collection' });
     let row = collection.parentElement as HTMLElement;
-    while (!row.contains(rankings)) row = row.parentElement as HTMLElement;
-    expect(within(row).getAllByRole('link').map((link) => link.textContent)).toEqual(['Collection', 'History', 'Rankings']);
+    while (!row.contains(screen.getByRole('link', { name: 'History' }))) row = row.parentElement as HTMLElement;
+    expect(within(row).getAllByRole('link').map((link) => link.textContent)).toEqual(['Collection', 'History']);
+    expect(row.compareDocumentPosition(rankings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // A guest has no profile on the door: the way into Google stands where it would be.
     expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['New life', expect.stringMatching(/^Weekly challenge/), 'Collection', 'History', 'Rankings']);
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();

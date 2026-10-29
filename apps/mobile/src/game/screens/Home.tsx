@@ -99,14 +99,14 @@ export function Home() {
     // The door is never scrolled on a phone: the picture on top takes the room the rest leaves (`DoorPicture`), and the page scrolls only where even
     // its smallest picture leaves too little. Past its largest, the whole door stands in the middle of the screen, with no empty band inside it. Its
     // foot clears the home indicator.
-    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: returning ? 16 : 20, paddingTop: UNDER_CORNER, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
+    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 32, paddingBottom: Math.max(FOOT, 16 + inset.bottom) }}>
       <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
       <View style={{ position: 'absolute', top: CORNER_TOP, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
         {LANGUAGE_IN_CORNER ? <LanguageMenu /> : null}
         <HomePreferences />
       </View>
       {/* A first visit meets the mascot; someone coming back is waved at. */}
-      {returning ? <DoorPicture id={ratArt('wave')} most={256} least={64} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={256} least={72} below={-8} />}
+      {returning ? <DoorPicture id={ratArt('wave')} most={176} least={56} below={-4} /> : <DoorPicture id={FRONT_PICTURE} most={176} least={56} below={-8} />}
       <View style={{ alignItems: 'center' }}>
         <View accessibilityRole="header">
           <PixelText size={returning ? 28 : 34} tone="gold-500" lineHeight={returning ? 28 : 34}>{meta('title')}</PixelText>
@@ -160,12 +160,12 @@ export function Home() {
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             <FriendRequests />
-            {/* One row of tiles, an icon over a word: the collection, the records and, where someone is signed in to ask the others, the rankings. */}
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            {/* The collection and the records side by side; under them, across the row, the rankings, where someone is signed in to ask the others. */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
               <Tile icon="icon.star" label={t('collection')} onPress={() => go.push('collection')} />
               <Tile icon="icon.trophy" label={t('records')} onPress={() => go.push('records')} />
-              <RankingsLink />
             </View>
+            <RankingsLink />
             {/* The web's words for a life that is newer, or waiting, or gone from another tab, tell of a page and a connection: the phone's own say update the app. */}
             {lost ? <Notice role="status">{lost === 'newer' ? phone('lostNewer') : lost === 'waiting' ? phone('lostWaiting') : t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</Notice> : null}
             {moved && status === 'none' ? (
@@ -284,14 +284,15 @@ function AccountLifeOffer({ endsLife, endsRound }: { endsLife: string | null; en
 /**
  * The front door's picture, as large as the room the rest of the door leaves it, `most` at most and `least` at least: its box takes what is left of
  * the screen's height (it grows from nothing, the others keeping their own), and the picture is drawn into a square of that box's height, nearest
- * neighbour. Until the box is measured (and in the web's HTML) it is drawn at `most`, cut by the box. `below` is the room it gives back underneath.
+ * neighbour, never so wide that it runs under the corner's buttons (`CORNER_REACH` on either side of it). Until the box is measured (and in the web's
+ * HTML) it is drawn at `most`, cut by the box. `below` is the room it gives back underneath.
  */
 function DoorPicture({ id, most, least, below }: { id: string; most: number; least: number; below: number }) {
   const [side, setSide] = useState(most);
   return (
     <View
       style={{ alignSelf: 'stretch', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: least, maxHeight: most, marginBottom: below, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-      onLayout={(event) => setSide(pictureSide(event.nativeEvent.layout.height, most, least))}
+      onLayout={(event) => setSide(pictureSide(Math.min(event.nativeEvent.layout.height, event.nativeEvent.layout.width - 2 * CORNER_REACH), most, least))}
     >
       <Sprite id={id} size={{ w: side, h: side }} />
     </View>
@@ -303,17 +304,14 @@ export function pictureSide(room: number, most: number, least: number): number {
   return Math.max(least, Math.min(most, Math.floor(room)));
 }
 
-/**
- * One of the door's row of tiles: an icon over its word. Each starts as wide as its word and the row's room left is shared among them alike, so that a
- * longer word (the Spanish rankings', "Clasificaciones") keeps its whole width on a phone 375 wide.
- */
-function Tile({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+/** One of the door's smaller ways, an icon beside its word: half a row (the collection, the records), or the whole of one (the rankings). */
+function Tile({ icon, label, onPress, whole = false }: { icon: string; label: string; onPress: () => void; whole?: boolean }) {
   return (
     <Raised
       role="link"
       bg="night-700"
-      place={{ flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 0 }}
-      style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 8 }}
+      place={whole ? undefined : { flex: 1, minWidth: 0 }}
+      style={{ flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8 }}
       onPress={onPress}
     >
       <Sprite id={icon} />
@@ -328,7 +326,7 @@ function RankingsLink() {
   const go = useGo();
   const signedIn = useSignedIn();
   if (!signedIn) return null;
-  return <Tile icon="icon.status" label={t('rankings')} onPress={() => go.push('rankings')} />;
+  return <Tile whole icon="icon.status" label={t('rankings')} onPress={() => go.push('rankings')} />;
 }
 
 /**
@@ -389,8 +387,8 @@ function ProfileLink() {
 
 /** Where the corner's buttons (the settings' gear, on the web the language's square too) stand, from the top of the page. */
 const CORNER_TOP = 16;
-/** The door starts under the corner's 44 buttons and a gap: a picture grown large never runs under them. */
-const UNDER_CORNER = CORNER_TOP + 44 + 8;
+/** How far the corner's buttons reach into the column, with a gap: the gear's 44 on the phone, the language's square and the gear on the web. */
+const CORNER_REACH = (LANGUAGE_IN_CORNER ? 44 + 8 + 44 : 44) + 8;
 
 /** The room under the last thing of the page (the web's `pb-8`). */
 const FOOT = 32;
