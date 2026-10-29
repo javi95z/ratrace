@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
+import { GUIDE_ART } from '@ratrace/content';
 import type { Term } from '@ratrace/core/game/glossary';
+import { messagesFor } from '@ratrace/i18n';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
 import { HowToPlay, MarkedText, TermSheet } from './GuideWords';
+
+const en = messagesFor('en');
 
 afterEach(cleanup);
 
@@ -55,6 +59,14 @@ describe('a word of the glossary in a tip', () => {
 });
 
 describe('how to play', () => {
+  it('carries its open book inside its button, beside its word, as the other buttons with an icon do, and says what it holds under it', () => {
+    renderGame(<HowToPlay />, memoryServices());
+    const button = screen.getByRole('button', { name: 'How to play' });
+    expect(button.querySelector(`[data-sprite="${GUIDE_ART.howTo}"]`)).not.toBeNull();
+    expect(document.querySelectorAll(`[data-sprite="${GUIDE_ART.howTo}"]`)).toHaveLength(1);
+    expect(screen.getByText(en.guide.howTo.openHint)).toBeTruthy();
+  });
+
   it('opens from its button and holds the goal, a round, the score, every tip, the first times and every word, none of them marked', async () => {
     renderGame(<HowToPlay />, memoryServices());
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }));

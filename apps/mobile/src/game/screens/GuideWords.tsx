@@ -190,15 +190,11 @@ export function HowToPlay() {
   const [open, setOpen] = useState(false);
   return (
     <View style={{ gap: 4 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {/* The open book of How to play. */}
+      {/* The open book of How to play, inside the button beside its word, as every button with an icon carries it. */}
+      <Button variant="secondary" wide onPress={() => setOpen(true)}>
         <Sprite id={GUIDE_ART.howTo} />
-        <View style={{ flex: 1 }}>
-          <Button variant="secondary" wide onPress={() => setOpen(true)}>
-            {t('howTo.open')}
-          </Button>
-        </View>
-      </View>
+        {t('howTo.open')}
+      </Button>
       <ReadText size={12} tone="ink-300" lineHeight={12 * SNUG}>
         {t('howTo.openHint')}
       </ReadText>
