@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.53.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.54.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 27 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 342 |
+| [Cartas](#cartas) | 348 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 63 |
 
@@ -1241,7 +1241,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rich_hostile_bid.png" alt="Una oferta por tu negocio"> | **Una oferta por tu negocio**<br>Un rival diez veces mayor quiere tu negocio, y avisa de que puede ponértelo difícil si dices que no. | 1. Rechazarla<br>2. Vender a su precio<br>3. Plantarles cara |
 | <img src="../art/clean/cards/card.hospitality_next_door.png" alt="El bar de al lado"> | **El bar de al lado**<br>Se traspasa el bar de al lado, con todo dentro. Conoces a cada cliente, y cada error de su dueño. | 1. Dejarlo pasar<br>2. Quedarte el traspaso |
 
-### Inversión (32)
+### Inversión (33)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1277,8 +1277,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.realestate_off_market.png" alt="Fuera de mercado"> | **Fuera de mercado**<br>Un casero quiere vender en silencio un piso alquilado, antes de anunciarlo. Eres el primero en saberlo. | 1. Pasárselo a un cliente<br>2. Comprarlo tú |
 | <img src="../art/clean/cards/card.network_investors.png" alt="Cena con inversores"> | **Cena con inversores**<br>Una mesa de gente que financia empresas. En el postre, uno te ofrece entrar en su próxima ronda privada. | 1. Solo escuchar<br>2. Entrar en la ronda |
 | <img src="../art/clean/cards/card.network_listing.png" alt="Acciones por debajo del mercado"> | **Acciones por debajo del mercado**<br>Nvidia vende acciones nuevas a unos pocos compradores elegidos, por debajo del precio de mercado. Un banquero que conoces puede meterte. | 1. Pasar<br>2. Pedir un paquete pequeño<br>3. Pedir un paquete grande |
+| <img src="../art/clean/cards/card.legend_airdrop.png" alt="El airdrop"> | **El airdrop**<br>La moneda que compraste de broma ha regalado tokens nuevos a quien la tenía. Los tuyos valen una fortuna hoy. Mañana, quién sabe. | 1. Venderlo todo hoy<br>2. Vender la mitad y aguantar la otra<br>3. Aguantarlo todo |
 
-### Vivienda (36)
+### Vivienda (37)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1318,8 +1319,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.construction_own_house.png" alt="Una casa diseñada por ti"> | **Una casa diseñada por ti**<br>Llevas años dibujando casas para otros. Sale un solar, y el constructor de confianza te hace precio de gremio. | 1. Seguir dibujando para otros<br>2. Construir tu propia casa |
 | <img src="../art/clean/cards/card.realestate_hurried_seller.png" alt="Un vendedor con prisa"> | **Un vendedor con prisa**<br>Un vendedor tiene que irse antes de fin de mes y acepta cualquier oferta razonable. | 1. Que lo lleve un compañero<br>2. Avisar a tu cliente inversor<br>3. Comprarlo para vivir en él |
 | <img src="../art/clean/cards/card.realestate_bubble.png" alt="Se habla de burbuja"> | **Se habla de burbuja**<br>Los precios nunca han estado tan altos, y en la agencia todos dicen que el techo está cerca. | 1. Aguantar<br>2. Vender tu casa en lo más alto |
+| <img src="../art/clean/cards/card.legend_star_neighbour.png" alt="Una estrella en la casa de al lado"> | **Una estrella en la casa de al lado**<br>Una actriz famosa ha comprado la casa de al lado. Sus fiestas son ruidosas, y a una revista le interesan mucho. | 1. Saludarla por encima de la valla<br>2. Vender sus historias a la revista<br>3. Hacer amistad con ella |
 
-### Estilo de vida (46)
+### Estilo de vida (47)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1369,8 +1371,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rich_fake_art.png" alt="Una obra maestra, más o menos"> | **Una obra maestra, más o menos**<br>Un experto mira tu cuadro con una lupa un buen rato. Luego pregunta dónde lo compraste. | 1. Callar, y dejarlo en la pared<br>2. Demandar a la galería<br>3. Donarlo a un museo, como falso |
 | <img src="../art/clean/cards/card.ex_new_car.png" alt="Tu ex en un descapotable"> | **Tu ex en un descapotable**<br>Un descapotable para junto a tu parada de autobús. Al volante, saludando: tu ex. | 1. Saludar y esperar al autobús<br>2. Comprarte un coche a la altura<br>3. Alquilar uno un fin de semana y subirlo |
 | <img src="../art/clean/cards/card.cousin_yacht.png" alt="Un fin de semana en yate"> | **Un fin de semana en yate**<br>De parte de tu prima: su novio nuevo ha alquilado un yate y ya brinda por todos. La cuenta, dice la letra pequeña, se divide. | 1. Poner una excusa a tiempo<br>2. Ir y pagar tu parte<br>3. Ir, pagar y subir las fotos |
+| <img src="../art/clean/cards/card.legend_viral.png" alt="Ochenta millones de visitas"> | **Ochenta millones de visitas**<br>Alguien te grabó bailando en una boda. Ahora lo ha visto el mundo entero, y algunos dos veces. | 1. Disfrutar de la fama<br>2. Vender los derechos del vídeo<br>3. Sacar merchandising |
 
-### Suerte (23)
+### Suerte (25)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1397,8 +1400,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.drone_crash.png" alt="Un dron en tu terraza"> | **Un dron en tu terraza**<br>Un dron se estrella en tu terraza. Su dueño llama al timbre y ofrece pagarte para que no lo denuncies. | 1. Devolverle el dron sin más<br>2. Aceptar el dinero<br>3. Denunciarlo |
 | <img src="../art/clean/cards/card.police_auction.png" alt="La subasta de la policía"> | **La subasta de la policía**<br>La policía subasta lo que ha requisado: coches, relojes, hasta un jet ski. | 1. Mirar y no pujar<br>2. Pujar por un coche<br>3. Pujar por un reloj de lujo |
 | <img src="../art/clean/cards/card.rich_lawsuit.png" alt="Una demanda"> | **Una demanda**<br>Un hombre al que no conoces dice que parte de tu fortuna es suya. Sus abogados tienen gabinete de prensa. | 1. Llegar a un acuerdo<br>2. Pelearlo en los tribunales<br>3. Negociarlo tú en persona<br>4. Defenderte tú en el juicio |
+| <img src="../art/clean/cards/card.legend_coat_ticket.png" alt="El décimo del abrigo viejo"> | **El décimo del abrigo viejo**<br>En el bolsillo de un abrigo que no te pones desde hace años: un décimo de lotería. Lo compruebas tres veces. Ha tocado. | 1. Cobrarlo entero<br>2. Cobrar la mitad y donar la otra<br>3. Donarlo entero al hospital infantil |
+| <img src="../art/clean/cards/card.legend_attic_painting.png" alt="El cuadro del desván"> | **El cuadro del desván**<br>Detrás de un espejo viejo del desván: un cuadro. Un marchante dice que podría ser un maestro perdido. O una falsificación muy buena. | 1. Vendérselo al marchante<br>2. Hacerlo autentificar<br>3. Prestarlo al museo de la ciudad |
 
-### Familia (28)
+### Familia (29)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1430,6 +1435,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.parents_care.png" alt="Tus padres necesitan ayuda"> | **Tus padres necesitan ayuda**<br>Tu padre se ha caído por la escalera y tu madre no puede levantarlo. Ahora necesitan ayuda cada día. | 1. Pagar una residencia<br>2. Cuidarlos tú |
 | <img src="../art/clean/cards/card.cousin_wedding.png" alt="Una invitación de boda"> | **Una invitación de boda**<br>Una invitación con el borde dorado, de tu prima. Una boda, y una lista de regalos. | 1. Algo pequeño<br>2. Un regalo correcto<br>3. Algo espléndido |
 | <img src="../art/clean/cards/card.parents_visit.png" alt="Visita de casa"> | **Visita de casa**<br>Mamá y papá vienen el fin de semana y miran tu casa de arriba abajo. Tu madre pasa el dedo por una estantería. | 1. Invitarlos a cenar fuera<br>2. Dejar que arreglen cosas, que insisten<br>3. Pedirles que se queden la semana |
+| <img src="../art/clean/cards/card.legend_stranger_will.png" alt="El testamento de un desconocido"> | **El testamento de un desconocido**<br>Hace años ayudaste a un señor mayor a cambiar una rueda bajo la lluvia. Ahora llama su notario: te lo ha dejado todo. | 1. Quedarte sus ahorros<br>2. Quedarte su hostal junto al mar |
 
 ### Salud (6)
 
