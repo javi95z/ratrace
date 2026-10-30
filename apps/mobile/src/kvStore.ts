@@ -6,6 +6,7 @@ import { isLocale } from '@ratrace/i18n/locales';
 import { systemLanguage } from './appLanguage';
 import type { LanguageKeep } from './game/locale';
 import type { BasketText } from './game/phoneBasket';
+import type { ReviewMemory } from './game/reviewTimes';
 
 const GAME = 'ratrace:game';
 /** Every finished life in one value, by id: how the phone kept them before each had a key of its own. Moved on the first read, then gone. */
@@ -340,6 +341,30 @@ export const kvPush = {
       Storage.setItemSync(PUSH, JSON.stringify({ state: noted.state, token: noted.token }));
     } catch {
       // A phone that keeps nothing: the notices are not kept on, and a refusal is the phone's own to remember (it does not ask again).
+    }
+  },
+};
+
+/** What the phone remembers of asking the player to rate the game (`game/reviewTimes.ts`): how many times, and when last. Anything else is nothing asked. */
+const REVIEW = 'ratrace:review';
+
+export const kvReview: ReviewMemory = {
+  read: () => {
+    try {
+      const text = Storage.getItemSync(REVIEW);
+      const noted: unknown = text === null ? null : JSON.parse(text);
+      if (typeof noted !== 'object' || noted === null) return null;
+      const { times, last } = noted as { times?: unknown; last?: unknown };
+      return typeof times === 'number' && typeof last === 'number' ? { times, last } : null;
+    } catch {
+      return null;
+    }
+  },
+  write: (asked) => {
+    try {
+      Storage.setItemSync(REVIEW, JSON.stringify({ times: asked.times, last: asked.last }));
+    } catch {
+      // A phone that keeps nothing never asks: `askForReview` reads nothing asked, but the store's own limits hold all the same.
     }
   },
 };

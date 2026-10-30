@@ -102,6 +102,8 @@ describe('judgeWebExport', () => {
     'expo-haptics',
     // The shortcuts on the phone's icon: a page has none.
     'expo-quick-actions',
+    // The store's prompt to rate the game: a page is in no store.
+    'expo-store-review',
     // Google's own sign-in on the phone: the web goes to Google by redirect.
     '@react-native-google-signin/google-signin',
     'apps/mobile/src/rules/v0.40.0-1.41.0.js',

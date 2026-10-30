@@ -44,8 +44,14 @@ vi.mock('../../ui/drawnFirst', async (original) => {
   };
 });
 
+// The store's prompt to rate the game, as the game asks for it (its own rules of when are game/reviewTimes.ts's, tested there).
+const reviews = vi.hoisted(() => ({ asked: 0 }));
+vi.mock('../askReview', () => ({ askReview: () => void (reviews.asked += 1) }));
+
 afterEach(() => {
   drawn.hold = false;
+  reviews.asked = 0;
+  vi.restoreAllMocks();
   cleanup();
 });
 
@@ -171,6 +177,29 @@ describe('the end of a life, as it is left', () => {
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     await settled();
     expect(((await services.store.loadGame()) as SavedGame | null)?.lifeId).toBe('engineer');
+  });
+});
+
+describe('the end of a life among the player\'s best', () => {
+  it('asks for a rating in the store once the end has been on screen a moment: a first life is among the best three', async () => {
+    const { services } = await aWholeLife();
+    // The memory store's clock is a count from 1,000: a minute after it, the life has just ended.
+    vi.spyOn(Date, 'now').mockReturnValue(60_000);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(reviews.asked).toBe(0);
+    await waitFor(() => expect(reviews.asked).toBe(1), { timeout: 4_000 });
+    await settled();
+    expect(reviews.asked).toBe(1);
+  });
+
+  it('asks nothing of a life looked back on long after it ended', async () => {
+    const { services } = await aWholeLife();
+    vi.spyOn(Date, 'now').mockReturnValue(24 * 60 * 60 * 1000);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    expect(reviews.asked).toBe(0);
   });
 });
 

@@ -8,7 +8,7 @@ import { obituary } from '@ratrace/core/game/quips';
 import { bestsOf } from '@ratrace/core/game/records';
 import type { Best } from '@ratrace/core/game/records';
 import { shareCard } from '@ratrace/core/game/share';
-import { createContext, memo, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, memo, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useCountUp } from '../../ui/animations';
 import { useDrawnFirst } from '../../ui/drawnFirst';
@@ -17,7 +17,7 @@ import { GOLD } from '../../ui/frames';
 import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '../../ui/kit';
 import { sheetsGone } from '../../ui/back';
 import { useHaptic } from '../../ui/haptic';
-import { Sheet } from '../../ui/overlay';
+import { Sheet, useSheetsShowing } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
 import { Rising } from '../../ui/Rising';
 import { useIsDesk } from '../../ui/desk';
@@ -25,7 +25,8 @@ import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useTrack, useWords } from '../context';
+import { useAskReview, useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useTrack, useWords } from '../context';
+import { amongBestThree } from '../reviewTimes';
 import { BackLink } from './BackLink';
 import { ChallengeResult } from './Challenge';
 import { LifeLine } from './LifeLine';
@@ -164,6 +165,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const unlocked = Object.keys(profile.unlocked).filter((id) => profile.unlocked[id].gameId === gameId);
   const run = runs?.find((candidate) => candidate.runId === gameId);
   const bests = run && runs ? bestsOf(run, runs) : [];
+  useAskAfterBest(run && runs ? amongBestThree(run.score, runs.filter((other) => other.runId !== run.runId).map((other) => other.score)) && Date.now() - run.finishedAt < JUST_FINISHED_MS : false);
 
   const p = view.player;
   // The engine's own breakdown: nothing about the score is worked out here.
@@ -480,6 +482,29 @@ const EarnedBadge = memo(function EarnedBadge({ id, name, fresh, onOpen }: { id:
     </Pressable>
   );
 });
+
+/** How long after a life ended its end is still the one just lived, not a life looked back on. */
+const JUST_FINISHED_MS = 10 * 60 * 1000;
+/** How long the end is on screen, with no sheet over it, before the store's prompt is asked for. */
+const ASK_AFTER_MS = 1500;
+
+/**
+ * A life just ended among the player's three best: the store's prompt to rate the game, once the end has been on screen a moment with no sheet over
+ * it (a life unlocked is shown first), once for this end. The phone's rules of when decide the rest (game/reviewTimes.ts).
+ */
+function useAskAfterBest(best: boolean) {
+  const askReview = useAskReview();
+  const covered = useSheetsShowing();
+  const asked = useRef(false);
+  useEffect(() => {
+    if (!best || covered || asked.current) return;
+    const later = setTimeout(() => {
+      asked.current = true;
+      askReview();
+    }, ASK_AFTER_MS);
+    return () => clearTimeout(later);
+  }, [best, covered, askReview]);
+}
 
 /**
  * The lives the one just finished opened that have not been shown yet, in the standard reward sheet (Rewards.tsx), each with a way to begin it at

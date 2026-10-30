@@ -27,7 +27,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { useStore } from 'zustand';
-import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvTapSound, kvText } from '../kvStore';
+import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, kvReview, KvStore, kvTapSound, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { backFromGoogle, openForGoogle } from '../online/browser';
@@ -49,6 +49,7 @@ import { feel } from '../ui/haptics';
 import { SoundProvider, useSound } from '../ui/sound';
 import { stepCues } from './cues';
 import { feltOf } from './feel';
+import { askReview } from './askReview';
 import { setShortcuts, shortcutTaps } from './shortcuts';
 import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
 import type { Track } from './events';
@@ -873,6 +874,14 @@ export function useCardsAhead(): void {
  * drawn at all, and what counts shows where it ends at once. (The web's `useStill`.)
  */
 export const useStill = (): boolean => useReducedMotion();
+
+/**
+ * Asks the player to rate the game in their phone's store where the game may (./askReview.ts, remembered on the phone): after the life's first way
+ * out of the rat race, or a life ended among the player's best. Nothing on the web. Never asked in the middle of a round.
+ */
+export function useAskReview(): () => void {
+  return useCallback(() => askReview(kvReview), []);
+}
 
 /** The player's settings, and the language, which the phone keeps beside them. */
 export const useSettings = () => {

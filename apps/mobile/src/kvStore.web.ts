@@ -6,6 +6,7 @@ import { readRuns } from '@ratrace/core/session/runs';
 import type { FinishedRun, PlayerStore, Profile, StoredGame } from '@ratrace/core/session/types';
 import type { LanguageKeep } from './game/locale';
 import type { BasketText } from './game/phoneBasket';
+import type { ReviewMemory } from './game/reviewTimes';
 
 /*
  * The web export's twin of `kvStore.ts` (Metro picks it for the web). The app on the web keeps the player's things where the Next web keeps them,
@@ -100,6 +101,12 @@ const LOCALE_COOKIE_AGE = 60 * 60 * 24 * 365;
 /** No choice of the press's click on the web: a page clicks with the game's sound, as the Next web's (the phone's is off until turned on). */
 export const kvTapSound = {
   read: (): boolean | null => null,
+  write: (): void => undefined,
+};
+
+/** Nothing asked on the web, where the game is never rated in a store (`game/askReview.web.ts`). */
+export const kvReview: ReviewMemory = {
+  read: () => null,
   write: (): void => undefined,
 };
 
