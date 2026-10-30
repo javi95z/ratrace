@@ -525,6 +525,32 @@ describe('the look of a rare card', () => {
     expect(frameColour()).toBe(rgb(COLORS['gold-900']));
   });
 
+  it('is one of the legendary cards turning over in two golds, dark outside and bright inside, a sheen sweeping its picture: no rainbow, no sparks, no word on it', async () => {
+    const def = content.cards.find((card) => card.id === 'legend_attic_painting')!;
+    expect(def.legendary).toBe(true);
+    expect(cardRarity(def)).toBe('legendary');
+    await onTheCards(await dealt('nurse', 'legend_attic_painting'));
+    const card = screen.getByRole('article');
+    expect(frameColour()).toBe(rgb(COLORS['gold-900']));
+    expect((within(card).getByTestId('legend-ring') as HTMLElement).style.borderTopColor).toBe(rgb(COLORS['gold-500']));
+    expect(within(card).getByTestId('sheen')).toBeTruthy();
+    expect(shine()).toMatchObject({ rainbow: false, sparks: 0 });
+    // Its sheen runs for as long as it is on screen, every 2.6 seconds.
+    expect(rea.assigned.filter((one) => one.kind === 'repeat')).toHaveLength(1);
+    // Nothing on it says it is rare, to the eye: only its title, to a screen reader.
+    expect(card.textContent).not.toMatch(/legendary|rare/i);
+    expect(screen.getByRole('heading', { name: 'A rare card: The painting in the attic' })).toBeTruthy();
+  });
+
+  it('says a legendary card is rare in Spanish and Russian too, and has no sheen where motion is left out', async () => {
+    await onTheCards(await dealt('nurse', 'legend_viral', undefined, await stillStore()), <CardStage />, 'es');
+    expect(screen.getByRole('heading', { name: 'Una carta rara: Ochenta millones de visitas' })).toBeTruthy();
+    expect(screen.queryByTestId('sheen')).toBeNull();
+    cleanup();
+    await onTheCards(await dealt('nurse', 'legend_viral'), <CardStage />, 'ru');
+    expect(screen.getByRole('heading', { name: 'Редкая карта: Восемьдесят миллионов просмотров' })).toBeTruthy();
+  });
+
   it('is a card like any other in a dark frame, and shines with nothing; nor does a rare one where motion is left out', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');

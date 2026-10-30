@@ -450,6 +450,7 @@
   },
   "cards": {
     "progress": "Card {n} of {total}",
+    "rare": "A rare card: {title}",
     "world": "World event",
     "locked": "Locked",
     "nothing": "Nothing changes",

@@ -1,8 +1,10 @@
 import { Group, LinearGradient, Rect, vec } from '@shopify/react-native-skia';
-import Animated, { useDerivedValue } from 'react-native-reanimated';
+import { useEffect } from 'react';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useGlint, useHolo, useReducedMotion, type KeyframeOptions } from './animations';
 import { HOLO_COLORS, holoGradient } from './lights';
 import { frameAt, holoShift, styleOf } from './motion';
+import { SHEEN_MS, SHEEN_SHARE, SHEEN_SKEW, sheenX } from './sheen';
 import { EXTRA } from './theme';
 
 /** `held`: stand still at this progress (0 to 1) of the effect and play nothing, for a page that compares one frame with the web's. */
@@ -56,6 +58,36 @@ export function Glint({ share = 0.2, held, ...opts }: { share?: number } & Held 
         { position: 'absolute', top: 0, bottom: 0, left: 0, width: `${share * 100}%`, backgroundColor: EXTRA.glint, pointerEvents: 'none' },
         held === undefined ? move : (styleOf('glint', frameAt('glint', held)) as object),
       ]}
+    />
+  );
+}
+
+/**
+ * The sheen of a legendary card: a band of light that sweeps across its picture every `SHEEN_MS` (./sheen.ts), on the phone's animation thread. Put
+ * it in the box that clips the picture; `width` and `height` are the picture's, in points. Nothing where motion is left out.
+ */
+export function Sheen({ width, height, held, reduced }: { width: number; height: number; reduced?: boolean } & Held) {
+  const still = useReducedMotion(reduced);
+  const run = useSharedValue(held ?? 0);
+  useEffect(() => {
+    cancelAnimation(run);
+    if (still || held !== undefined) {
+      run.value = held ?? 0;
+      return;
+    }
+    run.value = 0;
+    run.value = withRepeat(withTiming(1, { duration: SHEEN_MS, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(run);
+  }, [run, still, held]);
+  const moved = useAnimatedStyle(() => ({ transform: [{ translateX: sheenX(run.value, width) }, { skewX: `${SHEEN_SKEW}deg` }] }));
+  if (still) return null;
+  return (
+    <Animated.View
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="sheen"
+      style={[{ position: 'absolute', top: 0, left: 0, width: width * SHEEN_SHARE, height, backgroundColor: EXTRA.glint, pointerEvents: 'none' }, moved]}
     />
   );
 }

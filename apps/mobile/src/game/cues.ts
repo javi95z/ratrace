@@ -1,4 +1,4 @@
-import { rarityOf } from '@ratrace/content';
+import { content, rarityOf } from '@ratrace/content';
 import { FLAG_IN_ROOM } from '@ratrace/engine';
 import { momentsOf } from '@ratrace/core/game/moments';
 import type { Moment } from '@ratrace/core/game/moments';
@@ -89,6 +89,16 @@ export function cuesFor(state: Heard, before: Heard): Cue[] {
   return cues;
 }
 
+/** The card waiting on screen, if the round is at its cards. */
+const waitingOf = (state: Heard): string | null => (state.stage === 'cards' && state.view?.phase === 'cards' ? (state.view.hand[state.view.answered] ?? null) : null);
+
+/** True where the change puts a legendary card (`CardDef.legendary`) on screen: the phone's own, the web never met one. */
+export function legendaryComing(state: Heard, before: Heard): boolean {
+  const waiting = waitingOf(state);
+  if (waiting === null || waiting === waitingOf(before)) return false;
+  return content.cards.some((card) => card.id === waiting && card.legendary === true);
+}
+
 /** The badges' rings, which a milestone reached in the same step speaks for. */
 const RINGS: readonly Cue[] = ['badge', 'badgeUncommon', 'badgeRare', 'badgeLegendary'];
 
@@ -102,7 +112,9 @@ export type HeardMilestones = Heard & Pick<RoundState, 'reached'>;
  * million, a bankruptcy) keeps it. `milestone` says the step reached one, to be felt as a success.
  */
 export function stepCues(state: HeardMilestones, before: HeardMilestones): { cues: Cue[]; milestone: boolean } {
-  const cues = cuesFor(state, before);
+  const heard = cuesFor(state, before);
+  // A legendary card coming up rings as a legendary badge does, in place of the card's own sound, and is felt as one (feel.ts).
+  const cues = legendaryComing(state, before) ? [...heard.filter((cue) => cue !== 'card'), 'badgeLegendary' as const] : heard;
   if (!state.view || state.reached.length === 0 || state.reached === before.reached || cues.some((cue) => LONG.includes(cue))) return { cues, milestone: false };
   const inRoom = Object.hasOwn(state.view.player.life.flags, FLAG_IN_ROOM);
   const legendary = state.earned.some((id) => rarityOf(id) === 'legendary');

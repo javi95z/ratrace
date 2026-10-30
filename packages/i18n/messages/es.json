@@ -450,6 +450,7 @@
   },
   "cards": {
     "progress": "Carta {n} de {total}",
+    "rare": "Una carta rara: {title}",
     "world": "Suceso mundial",
     "locked": "Bloqueada",
     "nothing": "No cambia nada",

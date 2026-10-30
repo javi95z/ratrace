@@ -646,8 +646,10 @@ export function loanPlan(amount: number, rateBp: number, termRounds: number, yea
  * How rare a card is to be dealt, for how it is shown: one that comes up in one life out of many
  * shines. World cards are the same for everyone and are never rare.
  */
-export function cardRarity(def: Pick<CardDef, 'category' | 'weight'>): 'legendary' | 'rare' | null {
+export function cardRarity(def: Pick<CardDef, 'category' | 'weight' | 'legendary'>): 'legendary' | 'rare' | null {
   if (def.category === 'world') return null;
+  // A legendary card is met in a life out of fifty, whatever its weight (which only weighs it against the others of its kind).
+  if (def.legendary === true) return 'legendary';
   if (def.weight <= 2) return 'legendary';
   if (def.weight <= 3) return 'rare';
   return null;

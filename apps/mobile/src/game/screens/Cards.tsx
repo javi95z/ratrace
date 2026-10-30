@@ -11,11 +11,12 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
+import type { FrameTone } from '../../ui/frames';
 import { Panel, reach, Tag, useInlineRow, usePress } from '../../ui/kit';
 import { dialogOpen, focusedMark, focusMarked, KeyboardHint, pressMarked, useKeyboardMode, useKeyboardScope } from '../../ui/keyboard';
 import { perfStart } from '../../ui/perf';
 import { LinkText } from '../../ui/LinkText';
-import { Glint, Holo } from '../../ui/Shine';
+import { Glint, Holo, Sheen } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
 import { LEVEL_2, LEVEL_3 } from '../../ui/headingLevel';
@@ -345,15 +346,35 @@ function useNamed(): (sentence: string) => string {
         });
 }
 
+/** A legendary card's frame: dark gold outside, and the bright gold ring inside it (`LegendRing`). */
+const LEGEND_FRAME: FrameTone = { frame: 'gold-900' };
+
+/** The bright gold ring inside a legendary card's dark gold outline, over its edge: the double frame, with no word to say what it is. */
+function LegendRing() {
+  return (
+    <View
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="legend-ring"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderWidth: 2, borderColor: COLORS['gold-500'], pointerEvents: 'none' }}
+    />
+  );
+}
+
 /**
  * The card itself, as wide as its picture (the web's `calc(288px * var(--art) + 4px)`): its picture in a cream mat, its title and its words. A
- * rare one is framed in gold and catches the light now and then; a legendary one shimmers all over and throws sparks.
+ * rare one is framed in gold and catches the light now and then; a legendary one shimmers all over and throws sparks. One of the legendary
+ * cards met once in many lives (`CardDef.legendary`) is framed twice in gold, a sheen sweeping its picture, and its title tells a screen
+ * reader it is rare: nothing on it says so to the eye.
  */
 function Card({ def }: { def: CardDef }) {
+  const t = useT('cards');
   const cards = useCards();
   const art = useContext(ArtScale);
   const held = useContext(HeldShine);
   const rarity = cardRarity(def);
+  const legend = def.legendary === true;
   const written = cards[def.id];
   const named = useNamed();
   // The ex, where the card draws one, of the other sex to the player.
@@ -361,25 +382,26 @@ function Card({ def }: { def: CardDef }) {
   const picture = { w: 288 * art, h: 120 * art };
   return (
     <View role="article" style={{ width: picture.w + 4 }}>
-      <Framed kind="frame" tone={rarity ? GOLD : CREAM} style={{ backgroundColor: COLORS.cream }}>
+      <Framed kind="frame" tone={legend ? LEGEND_FRAME : rarity ? GOLD : CREAM} style={{ backgroundColor: COLORS.cream }}>
         {/* The web's `border-2 border-cream`, and inside it the box the light is clipped to. */}
         <View style={{ padding: 2 }}>
           <View style={{ overflow: 'hidden' }}>
             <Sprite id={cardArtOf(def.id, lifeId) ?? ''} scale="art" fallback={{ w: 288, h: 120 }}>
               {/* A rare card catches the light now and then; a legendary one shimmers all over. */}
-              {rarity === 'legendary' ? <Holo width={picture.w} height={picture.h} held={held?.holo} /> : null}
+              {rarity === 'legendary' && !legend ? <Holo width={picture.w} height={picture.h} held={held?.holo} /> : null}
             </Sprite>
-            {rarity ? <Glint held={held?.glint} /> : null}
+            {legend ? <Sheen width={picture.w} height={picture.h} held={held?.glint} /> : rarity ? <Glint held={held?.glint} /> : null}
           </View>
         </View>
-        {rarity === 'legendary' ? <Sparks colours={['gold-500', 'teal-300', 'cream', 'wine-300']} count={16} reach={150} size={4} delayMs={450} held={held?.spark} /> : null}
+        {rarity === 'legendary' && !legend ? <Sparks colours={['gold-500', 'teal-300', 'cream', 'wine-300']} count={16} reach={150} size={4} delayMs={450} held={held?.spark} /> : null}
         <View style={{ paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8 }}>
           <PersonLine cardId={def.id} />
-          <View accessibilityRole="header" {...LEVEL_2}>
+          <View accessibilityRole="header" {...LEVEL_2} accessible={legend ? true : undefined} aria-label={legend ? t('rare', { title: written.title }) : undefined}>
             <PixelText size={19} tone="ink-900">{written.title}</PixelText>
           </View>
           <ReadText size={14} lineHeight={14 * SNUG} tone="ink-700" style={{ marginTop: 4 }}>{named(written.body)}</ReadText>
         </View>
+        {legend ? <LegendRing /> : null}
       </Framed>
     </View>
   );

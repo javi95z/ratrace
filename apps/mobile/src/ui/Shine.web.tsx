@@ -2,6 +2,8 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useGlint, useHolo, useReducedMotion, type KeyframeOptions } from './animations';
 import { HOLO_COLORS, holoGradient } from './lights';
 import { frameAt, holoShift, styleOf } from './motion';
+import type { CSSProperties } from 'react';
+import { SHEEN_CROSS, SHEEN_MS, SHEEN_SHARE, SHEEN_SKEW, sheenX } from './sheen';
 import { EXTRA } from './theme';
 
 /*
@@ -64,5 +66,36 @@ export function Glint({ share = 0.2, held, ...opts }: { share?: number } & Held 
         held === undefined ? move : (styleOf('glint', frameAt('glint', held)) as object),
       ]}
     />
+  );
+}
+
+/** The sheen's keyframes: from and to are the box's own `--from` and `--to`, so one rule serves every width. Still where the browser asks for less motion. */
+const SHEEN_CSS =
+  `@keyframes rr-sheen{0%{transform:translateX(var(--from)) skewX(${SHEEN_SKEW}deg)}${SHEEN_CROSS * 100}%,100%{transform:translateX(var(--to)) skewX(${SHEEN_SKEW}deg)}}` +
+  '@media (prefers-reduced-motion:reduce){[data-sheen]{animation:none!important;visibility:hidden}}';
+
+/**
+ * The sheen of a legendary card, as the web draws it: a soft band of light that sweeps across its picture every `SHEEN_MS` (./sheen.ts), a CSS
+ * animation, so nothing of it runs on the page's thread. Put it in the box that clips the picture; `width` and `height` are the picture's.
+ * Nothing where motion is left out (the game's setting, or the browser's).
+ */
+export function Sheen({ width, height, held, reduced }: { width: number; height: number; reduced?: boolean } & Held) {
+  const still = useReducedMotion(reduced);
+  if (still) return null;
+  const band = width * SHEEN_SHARE;
+  const moving: CSSProperties =
+    held === undefined
+      ? ({ '--from': `${sheenX(0, width)}px`, '--to': `${sheenX(1, width)}px`, transform: `translateX(${sheenX(0, width)}px) skewX(${SHEEN_SKEW}deg)`, animation: `rr-sheen ${SHEEN_MS}ms linear infinite` } as CSSProperties)
+      : { transform: `translateX(${sheenX(held, width)}px) skewX(${SHEEN_SKEW}deg)` };
+  return (
+    <>
+      <style>{SHEEN_CSS}</style>
+      <div
+        aria-hidden
+        data-sheen
+        data-testid="sheen"
+        style={{ position: 'absolute', top: 0, left: 0, width: band, height, pointerEvents: 'none', background: `linear-gradient(90deg, transparent, ${EXTRA.glint}, transparent)`, ...moving }}
+      />
+    </>
   );
 }
