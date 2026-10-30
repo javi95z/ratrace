@@ -11,7 +11,7 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { roomServer } from '../../../../web/src/testing/roomServer';
 import { appState, clipboard } from '../../testing/fakes';
-import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
+import { memoryServices, playTheRound, renderGame, router, spriteRenders } from '../../testing/render';
 import { Counted, settled, steady } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { COLORS } from '../../ui/theme';
@@ -426,7 +426,7 @@ describe('a round in a room', () => {
     expect(await screen.findByRole('button', { name: /^The game: \d:\d\d left, 0 of 2 have played$/ }, { timeout: 10_000 })).toBeTruthy();
 
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     expect(await screen.findByText('Waiting for the others')).toBeTruthy();
     const waiting = screen.getByText('1 of 2 have played').closest('[role="status"]') as HTMLElement;
     expect(waiting.textContent).toContain('Still playing: Rat BBBB');
@@ -448,7 +448,7 @@ describe('a round in a room', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     expect(await screen.findByText('Waiting for the others')).toBeTruthy();
     // Waiting, the focus of the round is spent: a finance course, from the figure's sheet.
     press(screen.getByRole('button', { name: /Focus/ }));
@@ -492,7 +492,7 @@ describe('a round in a room', () => {
     await waitFor(() => expect(within(sheet).getByRole('radio', { name: 'Rat BBBB' }).getAttribute('aria-checked')).toBe('true'));
     press(within(sheet).getByRole('button', { name: 'Close' }));
     await settled();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await screen.findByText('Waiting for the others');
     await bPlays(server, room.id);
     const b = (await server.ask(B, { action: 'view', roomId: room.id })).body as { events: unknown[] };
@@ -507,7 +507,7 @@ describe('a round in a room', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await screen.findByText('Waiting for the others');
     // B teases the player with the round's focus.
     for (;;) {
@@ -674,7 +674,7 @@ describe('a round in a room', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await screen.findByText('Waiting for the others');
     const waiting = screen.getByText('1 of 2 have played').closest('[role="status"]') as HTMLElement;
     expect(waiting.textContent).not.toMatch(/\d:\d\d/);
@@ -688,7 +688,7 @@ describe('a round in a room', () => {
     renderGame(<Room />, { ...services, rooms: () => ({ ...server.link(HOST), watch: () => () => {} }) });
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await screen.findByText('Waiting for the others');
     for (let round = 0; round < 3; round++) {
       server.wait(90_000 + 5_000);
@@ -713,7 +713,7 @@ describe('a round in a room', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await bPlays(server, room.id);
     await screen.findByRole('region', { name: 'After round 1' }, { timeout: 5_000 });
     const after = (await services.store.loadGame()) as SavedGame;
@@ -765,7 +765,7 @@ describe('a round in a room', () => {
     const { services } = inRooms(server);
     renderGame(<Room />, services);
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await bPlays(server, room.id);
     press(await screen.findByRole('button', { name: /See how it ended/ }, { timeout: 5_000 }));
     const final = await screen.findByRole('region', { name: 'How the game ended' }, { timeout: 5_000 });
@@ -859,7 +859,7 @@ describe('the room\'s bar through a round turning', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await screen.findByText('Waiting for the others');
     press(screen.getByRole('button', { name: /^The game: / }));
     press(within(await sheetOf(/^Round 1 of/)).getByRole('button', { name: /Rat BBBB/ }));
@@ -1047,7 +1047,7 @@ describe('what a room in play draws again', () => {
     renderGame(<Room />, services);
     press(await screen.findByRole('button', { name: 'Start' }));
     await toFinance();
-    press(button(/Play the round/));
+    await playTheRound(button(/Play the round/));
     await bPlays(server, room.id);
     const order = await screen.findByRole('region', { name: 'After round 1' }, { timeout: 5_000 });
     const lineRat = (name: string) => within(order).getByText(name).closest('[role="listitem"]')!.querySelector('[data-rat]')!.getAttribute('data-rat')!;

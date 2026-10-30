@@ -1031,6 +1031,12 @@
       "review": "Revisar",
       "playAnyway": "Jugar igualmente"
     },
+    "untouched": {
+      "title": "¿Jugar la ronda sin cambios?",
+      "body": "No has comprado, vendido ni cambiado nada esta ronda.",
+      "playAnyway": "Jugar igual",
+      "back": "Volver"
+    },
     "basketCount": "{count, plural, one {# orden} other {# órdenes}}",
     "escapeAfter": {
       "buy": "Tras comprarlo: ingresos pasivos {passive} / gastos {outgoings}",

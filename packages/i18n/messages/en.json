@@ -1031,6 +1031,12 @@
       "review": "Review",
       "playAnyway": "Play anyway"
     },
+    "untouched": {
+      "title": "Play the round without changes?",
+      "body": "You haven't bought, sold or changed anything this round.",
+      "playAnyway": "Play anyway",
+      "back": "Go back"
+    },
     "basketCount": "{count, plural, one {# order} other {# orders}}",
     "escapeAfter": {
       "buy": "After buying: passive {passive} / outgoings {outgoings}",

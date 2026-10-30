@@ -115,6 +115,23 @@ describe('a life played with the keyboard', () => {
     expect(screen.queryByText(words('Ctrl/⌘ ↵'))).toBeNull();
   });
 
+  it('asks before playing a round with no move of the player\'s own from Ctrl/⌘ + Enter too, and presses nothing more under the question', async () => {
+    await playing();
+    for (let step = 0; step < 20 && stageName() !== 'Your finances'; step++) {
+      const name = stageName() ?? '';
+      if (/^Card/.test(name)) await key({ key: '1' }, document.body);
+      else await key({ key: 'Enter', ctrlKey: true }, document.body);
+      await waitFor(() => expect(stageName()).not.toBe(name));
+    }
+    expect(stageName()).toBe('Your finances');
+    await key({ key: 'Enter', ctrlKey: true }, document.body);
+    const sheet = await screen.findByRole('dialog', { name: 'Play the round without changes?' });
+    await key({ key: 'Enter', metaKey: true }, document.body);
+    expect(stageName()).toBe('Your finances');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Play anyway' }));
+    await waitFor(() => expect(stageName()).toBe('Two years later'));
+  });
+
   it('in the finances, [ and ] move between the tabs from anywhere, and ↓ ↑ among a panel\'s rows, Escape going back to its tab', async () => {
     await playing();
     // Through the round with the keyboard alone: the news, each card by its first choice, what it did, to the finances.

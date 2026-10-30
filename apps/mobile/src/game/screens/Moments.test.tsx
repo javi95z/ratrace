@@ -6,7 +6,7 @@ import type { GameSession } from '@ratrace/core/session/types';
 import type { GameEvent, GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { heard, memoryServices, renderGame } from '../../testing/render';
+import { heard, memoryServices, playTheRound, renderGame } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { COLORS } from '../../ui/theme';
 import { Play } from './Play';
@@ -73,7 +73,7 @@ async function playRound() {
     fireEvent.click(within(choices).getAllByRole('button')[0]);
     fireEvent.click(await screen.findByRole('button', { name: /^(Next card|To your finances)$/ }));
   }
-  fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+  await playTheRound(await screen.findByRole('button', { name: 'Play the round' }));
 }
 
 /** The sheet of a moment, by its title. */
@@ -212,7 +212,7 @@ describe('the way out and a legendary badge of the same round', () => {
     // The influencer of the early escape, at the finances of the round that takes her out of the rat race at 36 and earns `escaped_before_40`.
     const { store } = await earlyEscape();
     renderGame(<Play />, memoryServices(store));
-    fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    await playTheRound(await screen.findByRole('button', { name: 'Play the round' }));
     const moment = await sheet(HEADLINE);
     expect(within(moment).getByText('First time ever!')).toBeTruthy();
     expect(within(moment).queryByText('Out before 40')).toBeNull();

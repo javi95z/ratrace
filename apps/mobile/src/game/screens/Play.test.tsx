@@ -10,12 +10,14 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { AccessibilityInfo, Platform } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KvStore } from '../../kvStore';
-import { memoryServices, pressBack, renderGame, router, spriteRenders } from '../../testing/render';
+import { memoryServices, playAnyway, pressBack, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
 import { painted } from '../../ui/testing/skia';
 import { ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
+import { HapticProvider } from '../../ui/haptic';
+import type { Haptic } from '../../ui/haptic';
 import { GameProvider, TAP_GUARD_MS, useGame } from '../context';
 import type { Services } from '../context';
 import { phoneBasket } from '../phoneBasket';
@@ -83,6 +85,7 @@ describe('the play screen in a room', () => {
     await stageIs('Your finances');
     expect(screen.getByText('the room bar')).toBeTruthy();
     fireEvent.click(button('Play the round'));
+    await playAnyway();
     await stageIs('Two years later');
     expect(within(stage()).getByText('the room order')).toBeTruthy();
     expect(screen.getByText('the room bar')).toBeTruthy();
@@ -161,6 +164,7 @@ describe('the play screen', () => {
     expect(screen.getByText('Cash after the round')).toBeTruthy();
     expect(button('No orders')).toBeTruthy();
     fireEvent.click(button('Play the round'));
+    await playAnyway();
 
     await stageIs('Two years later');
     expect(await screen.findByRole('heading', { name: 'Two years later' })).toBeTruthy();
@@ -211,6 +215,7 @@ describe('the play screen', () => {
     await answerHand();
     await stageIs('Your finances');
     fireEvent.click(button('Play the round'));
+    await playAnyway();
     const badge = (await screen.findByRole('heading', { name: 'Millionaire' })).closest('[aria-modal="true"]') as HTMLElement;
     expect(badge.textContent).toContain('Badge earned');
     expect(badge.textContent).toContain('1 of 2');
@@ -369,6 +374,68 @@ describe('the play screen', () => {
   });
 });
 
+describe('a round played with no move of the player\'s own', () => {
+  const ASK = 'Play the round without changes?';
+  const asked = async () => (await screen.findByRole('heading', { name: ASK })).closest('[aria-modal="true"]') as HTMLElement;
+
+  /** A life at its finances, its basket as the test leaves it. */
+  async function atFinance(life: string, planned?: Order[], played = 0) {
+    const basket = memoryBasket();
+    const services = { ...memoryServices(), basket };
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { founder: { at: 1, gameId: 'earlier' } } });
+    const session = await services.sessions.start(life);
+    if (played > 0) await playRounds(session, played);
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    if (planned) basket.save(session.gameId, played, planned);
+    const felt: Haptic[] = [];
+    renderGame(
+      <HapticProvider value={(kind) => void felt.push(kind)}>
+        <Play />
+      </HapticProvider>,
+      services,
+    );
+    await stageIs('Your finances');
+    return { services, felt };
+  }
+
+  it('asks first, with a warning to the touch, plays nothing on Go back, and plays on Play anyway', async () => {
+    const { services, felt } = await atFinance('nurse');
+    expect(button('No orders')).toBeTruthy();
+    fireEvent.click(button('Play the round'));
+    const sheet = await asked();
+    expect(within(sheet).getByText("You haven't bought, sold or changed anything this round.")).toBeTruthy();
+    expect(felt).toContain('warning');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Go back' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: ASK })).toBeNull());
+    await settled();
+    expect(stage().getAttribute('aria-label')).toBe('Your finances');
+    expect((await saved(services.store)).state.round).toBe(0);
+
+    fireEvent.click(button('Play the round'));
+    fireEvent.click(within(await asked()).getByRole('button', { name: 'Play anyway' }));
+    await stageIs('Two years later');
+    expect((await saved(services.store)).state.round).toBe(1);
+  });
+
+  it('plays at once with an order the player put in', async () => {
+    const { services } = await atFinance('nurse', [{ type: 'depositIn', amount: 100 } as Order]);
+    expect(button('1 order')).toBeTruthy();
+    fireEvent.click(button('Play the round'));
+    await stageIs('Two years later');
+    expect(screen.queryByRole('heading', { name: ASK })).toBeNull();
+    expect((await saved(services.store)).state.round).toBe(1);
+  });
+
+  it('still asks when the basket holds only what the round put in it: a business run by its owner', async () => {
+    const { services } = await atFinance('founder', undefined, 1);
+    expect(button('1 order')).toBeTruthy();
+    fireEvent.click(button('Play the round'));
+    await asked();
+    await settled();
+    expect((await saved(services.store)).state.round).toBe(1);
+  });
+});
+
 describe('the guide of a first life', () => {
   it('has its two buttons at the sizes the web\'s screen gives them: 15 to read on (`text-[15px]`), 14 to skip (`text-[14px]`), 16 in', async () => {
     const services = memoryServices();
@@ -523,9 +590,12 @@ describe('a tap too many', () => {
       renderGame(<Play />, services);
       await stageIs('Your finances');
       clock.later(TAP_GUARD_MS + 50);
-      const play = button('Play the round');
-      fireEvent.click(play);
-      fireEvent.click(play);
+      // A round with no move of the player's asks first: the double tap is on its Play anyway.
+      fireEvent.click(button('Play the round'));
+      await playAnyway(undefined, (play) => {
+        fireEvent.click(play);
+        fireEvent.click(play);
+      });
       await stageIs('Two years later');
       // The button that took its place is not pressed by the tail of the same tap.
       clock.later(50);
@@ -670,6 +740,7 @@ describe('the calendar between rounds', () => {
     // Not on opening a life already under way.
     expect(document.querySelector('[data-motion-only]')).toBeNull();
     fireEvent.click(button('Play the round'));
+    await playAnyway();
     await stageIs('Two years later');
     const calendar = document.querySelector('[data-motion-only]') as HTMLElement;
     expect(calendar.querySelector('[data-page="torn"]')?.textContent).toContain('22');
@@ -685,6 +756,7 @@ describe('the calendar between rounds', () => {
     await stageIs('Your finances');
     await settled();
     fireEvent.click(button('Play the round'));
+    await playAnyway();
     await stageIs('Two years later');
     expect(document.querySelector('[data-motion-only]')).toBeNull();
   });
@@ -758,6 +830,7 @@ describe('the end of a life', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
     await answerHand();
     fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    await playAnyway();
     fireEvent.click(await screen.findByRole('button', { name: 'See how it ended' }));
 
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();

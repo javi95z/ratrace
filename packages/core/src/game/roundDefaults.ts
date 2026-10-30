@@ -23,3 +23,14 @@ export function roundDefaults(content: Content, view: GameView, rules: string): 
   }
   return orders;
 }
+
+/**
+ * Whether the player has made no move of their own in the round's finances: the basket holds what the round began with (`roundDefaults`), in
+ * any order, and nothing else. A default taken out is a move; an order put in and taken out again is none.
+ */
+export function untouchedRound(content: Content, view: GameView, rules: string, orders: readonly Order[]): boolean {
+  const key = (list: readonly Order[]) => list.map((order) => JSON.stringify(order)).sort();
+  const begun = key(roundDefaults(content, view, rules));
+  const now = key(orders);
+  return begun.length === now.length && begun.every((order, i) => order === now[i]);
+}

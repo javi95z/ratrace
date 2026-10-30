@@ -2,7 +2,7 @@ import { content, lives } from '@ratrace/content';
 import { applyCard, createGame, ENGINE_VERSION, focusLeft, viewOf } from '@ratrace/engine';
 import type { Business, GameState, GameView } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { roundDefaults } from './roundDefaults';
+import { roundDefaults, untouchedRound } from './roundDefaults';
 
 const founder = lives.find((life) => life.id === 'founder');
 if (!founder) throw new Error('no founder life');
@@ -64,5 +64,30 @@ describe('the orders a round begins with', () => {
     const state = createGame({ content, start: founder!.start }, 'defaults');
     expect(state.phase).toBe('cards');
     expect(tends(viewOf(state))).toEqual([]);
+  });
+});
+
+describe('a round the player has not touched', () => {
+  const idle = () =>
+    atFinance((state) => {
+      shop(state).tended = false;
+      state.player.life.focusUsed = 0;
+    });
+
+  it('is one whose basket holds nothing, or only what the round put in it', () => {
+    const view = idle();
+    expect(tends(view).length).toBe(1);
+    expect(untouchedRound(content, view, ENGINE_VERSION, tends(view))).toBe(true);
+    const plain = atFinance((state) => {
+      shop(state).tended = true;
+    });
+    expect(untouchedRound(content, plain, ENGINE_VERSION, [])).toBe(true);
+  });
+
+  it('is not one the player added to, or took the round\'s own orders out of', () => {
+    const view = idle();
+    const deposit = { type: 'depositIn', amount: 100 } as const;
+    expect(untouchedRound(content, view, ENGINE_VERSION, [...tends(view), deposit])).toBe(false);
+    expect(untouchedRound(content, view, ENGINE_VERSION, [])).toBe(false);
   });
 });

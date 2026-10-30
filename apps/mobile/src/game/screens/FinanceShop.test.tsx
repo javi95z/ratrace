@@ -11,7 +11,7 @@ import { Dimensions } from 'react-native';
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { memoryServices, renderGame, spriteRenders } from '../../testing/render';
+import { memoryServices, playTheRound, renderGame, spriteRenders } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { useGame } from '../context';
 import { FinanceOpened } from './Finance';
@@ -399,7 +399,7 @@ describe('buying on instalments', () => {
     expect(within(basket).getByRole('button', { name: 'Remove: Buy SEAT Ibiza on instalments' })).toBeTruthy();
     fireEvent.click(within(basket).getByRole('button', { name: 'Close' }));
     await sheetGone("This round's orders");
-    fireEvent.click(button('Play the round'));
+    await playTheRound();
     await screen.findByRole('heading', { name: 'Two years later' });
     await waitFor(async () => expect((await stateOf(services)).round).toBe(before.round + 1));
     const after = await stateOf(services);

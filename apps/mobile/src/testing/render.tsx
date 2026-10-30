@@ -1,5 +1,5 @@
 import type { Locale } from '@ratrace/i18n';
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { GameProvider } from '../game/context';
 import type { Services } from '../game/context';
@@ -17,4 +17,26 @@ export { memoryServices } from './memoryServices';
  */
 export function renderGame(ui: ReactElement, services: Services, locale: Locale = 'en') {
   return render(<GameProvider services={speaking(services, locale)}>{ui}</GameProvider>);
+}
+
+/**
+ * Says yes to the question a round with no move of the player's own asks once its button is pressed ("Play the round without changes?"): its
+ * Play anyway, in the sheet's own words (English unless given), pressed with `press` (a click unless given).
+ */
+export async function playAnyway(
+  words: { title: string | RegExp; playAnyway: string | RegExp } = { title: 'Play the round without changes?', playAnyway: 'Play anyway' },
+  press: (button: HTMLElement) => void = (button) => void fireEvent.click(button),
+): Promise<void> {
+  const title = await screen.findByRole('heading', { name: words.title });
+  const sheet = title.closest('[aria-modal="true"]') as HTMLElement;
+  press(within(sheet).getByRole('button', { name: words.playAnyway }));
+}
+
+/**
+ * Presses the round's button (`button`, the English one unless given) as a test that is about something else plays a round: where the round
+ * asks first, having no move of the player's own, its Play anyway too. The question is the tests' of Play.test.tsx.
+ */
+export async function playTheRound(button: HTMLElement = screen.getByRole('button', { name: 'Play the round' })): Promise<void> {
+  fireEvent.click(button);
+  if (screen.queryByRole('heading', { name: 'Play the round without changes?' })) await playAnyway();
 }

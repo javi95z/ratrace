@@ -10,9 +10,9 @@ import { newProfile } from '@ratrace/core/session/types';
 import type { GameSession } from '@ratrace/core/session/types';
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent, GameView } from '@ratrace/engine';
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { heard, memoryServices, renderGame } from '../../testing/render';
+import { heard, memoryServices, playTheRound, renderGame } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { rea } from '../../ui/testing/reanimated';
@@ -139,7 +139,7 @@ async function inPlay(life: Life = {}) {
     </>,
     services,
   );
-  fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+  await playTheRound(await screen.findByRole('button', { name: 'Play the round' }));
   await screen.findByRole('heading', { name: 'Two years later' });
   // The panels under the ledger come once the top of the page is on screen (ui/drawnFirst.ts).
   await screen.findByText('Cash now');
@@ -258,7 +258,7 @@ describe('the panels under the ledger', () => {
       </>,
       services,
     );
-    fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    await playTheRound(await screen.findByRole('button', { name: 'Play the round' }));
     await screen.findByRole('heading', { name: 'Two years later' });
     return services;
   }

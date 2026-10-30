@@ -1,4 +1,5 @@
 import { ageAt } from '@ratrace/core/game/present';
+import { untouchedRound } from '@ratrace/core/game/roundDefaults';
 import { roundWarnings } from '@ratrace/core/game/roundWarnings';
 import type { Stage } from '@ratrace/core/game/store';
 import { useFocusEffect } from 'expo-router';
@@ -7,6 +8,7 @@ import { AccessibilityInfo, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useBlink } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
+import { useHaptic } from '../../ui/haptic';
 import { GOLD } from '../../ui/frames';
 import { webBaseline } from '../../ui/fonts';
 import { Button, Raised, SrOnly } from '../../ui/kit';
@@ -47,6 +49,9 @@ import { useGo } from '../pages';
 /**
  * Plays the round. When the orders would make a costly mistake (cash running out onto the credit
  * card, a margin loan a small fall from its forced sale) it says so first, and plays only if asked again.
+ * With no move of the player's own in the basket (nothing in it, or only what the round put there: `untouchedRound`) it asks too, a press
+ * by mistake being the likelier: on the phone, at desk width and from the keyboard alike, all of which press this button. In a room the clock
+ * runs on meanwhile, and plays the round as it stands when it runs out.
  */
 function PlayRound() {
   const t = useT('finance');
@@ -54,19 +59,44 @@ function PlayRound() {
   const { content, names, fmt } = useWords();
   const view = useGame((s) => s.view);
   const preview = useGame((s) => s.preview);
+  const orders = useGame((s) => s.orders);
+  const rules = useGame((s) => s.rules);
   const busy = useGame((s) => s.busy);
   const play = useGame((s) => s.play);
+  const haptic = useHaptic();
   const [asking, setAsking] = useState(false);
+  const [unchanged, setUnchanged] = useState(false);
   const warnings = view && preview ? roundWarnings(content, view, preview) : [];
   const go = () => {
     setAsking(false);
+    setUnchanged(false);
     void play();
+  };
+  const press = () => {
+    if (warnings.length > 0) setAsking(true);
+    else if (view && untouchedRound(content, view, rules, orders)) {
+      haptic('warning');
+      setUnchanged(true);
+    } else go();
   };
   return (
     <>
-      <Button variant="primary" wide primary disabled={busy} onPress={() => (warnings.length > 0 ? setAsking(true) : go())}>
+      <Button variant="primary" wide primary disabled={busy} onPress={press}>
         {t('play')}
       </Button>
+      <Sheet open={unchanged} onClose={() => setUnchanged(false)} title={t('untouched.title')} closeLabel={common('close')}>
+        <ReadText size={14} lineHeight={14 * SNUG}>
+          {t('untouched.body')}
+        </ReadText>
+        <View style={{ marginTop: 16, gap: 8 }}>
+          <Button variant="secondary" wide onPress={() => setUnchanged(false)}>
+            {t('untouched.back')}
+          </Button>
+          <Button variant="primary" wide disabled={busy} onPress={go}>
+            {t('untouched.playAnyway')}
+          </Button>
+        </View>
+      </Sheet>
       <Sheet open={asking} onClose={() => setAsking(false)} title={t('warn.title')} tone="wine" closeLabel={common('close')}>
         <View role="list" style={{ gap: 8 }}>
           {warnings.map((warning) => (

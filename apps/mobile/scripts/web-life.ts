@@ -139,6 +139,7 @@ const WORDS = {
   nextCard: 'Next card',
   toFinance: en.cards.toFinance,
   play: 'Play the round',
+  playAnyway: en.finance.untouched.playAnyway,
   nextRound: 'Next round',
   finish: en.resolve.finish,
   theEnd: 'The end',
@@ -207,7 +208,8 @@ async function pressUntil(page: LifePage, done: () => Promise<boolean>, limit: n
     // A moment has the screen to itself until its own button is pressed; any other sheet over the game (a badge earned, a word of the guide's) is
     // closed as a player closes it.
     const moment = await firstShown(WORDS.moments.map((name) => page.getByRole('button', { name, exact: true })));
-    const sheet = moment === null ? await firstShown([page.getByRole('dialog').getByRole('button', { name: WORDS.close, exact: true })]) : null;
+    // A round with no move of the player's own asks first (`PlayRound`): it is played as it stands, as this script plays every round.
+    const sheet = moment === null ? await firstShown([page.getByRole('dialog').getByRole('button', { name: WORDS.playAnyway, exact: true }), page.getByRole('dialog').getByRole('button', { name: WORDS.close, exact: true })]) : null;
     if (moment !== null || sheet !== null) {
       await (moment ?? (sheet as Locator)).click();
       idle = 0;
