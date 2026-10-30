@@ -155,7 +155,8 @@ export function executeBusinessOrder(p: PlayerState, order: BusinessOrder, ctx: 
       if (order.manager !== undefined) business.manager = order.manager;
       return null;
     case 'tendBusiness':
-      if (business.tended) return 'already-done';
+      // One run full time is its owner's whole job: there is nothing more to give it in spare time.
+      if (business.tended || business.fullTime === true) return 'already-done';
       if (focusLeft(p) < 1) return 'no-focus';
       p.life.focusUsed += 1;
       business.tended = true;

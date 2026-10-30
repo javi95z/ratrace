@@ -71,6 +71,25 @@ describe('living from a business', () => {
     expect(player.businesses[0].fullTime).toBe(false);
     expect(previewRound(c, start(c), { orders: [{ type: 'backToWork' }] }).rejected.map((r) => r.reason)).toEqual(['no-former-job']);
   });
+
+  it('is run full time with no point of focus: an order to run it as well is refused, and spends nothing', () => {
+    const c = fixtureContent();
+    const state = strong(c);
+    const { state: own } = applyRound(c, state, { orders: [{ type: 'goFullTime', businessId: state.player.businesses[0].id }] });
+    const run = own.player.businesses[0];
+    expect(run.fullTime).toBe(true);
+    expect(run.tended).toBe(false);
+    // What is left in a basket when the move back to work was taken out again.
+    const tend = { type: 'tendBusiness' as const, businessId: run.id };
+    const { player, rejected } = previewRound(c, own, { orders: [tend] });
+    expect(rejected.map((r) => r.reason)).toEqual(['already-done']);
+    expect(player.life.focusUsed).toBe(0);
+    expect(player.businesses[0].tended).toBe(false);
+    // Back at work in the same round, it is the owner's to run again in spare time.
+    const back = previewRound(c, own, { orders: [{ type: 'backToWork' }, tend] });
+    expect(back.rejected).toEqual([]);
+    expect(back.player.life.focusUsed).toBe(1);
+  });
 });
 
 describe('a lodger', () => {
