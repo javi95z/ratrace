@@ -449,6 +449,11 @@ export const SHEETS: SheetSpec[] = [
   })),
   // Content 1.53: four cards for the well connected (v26), and two scenes kept for the languages' and negotiation's cards to come.
   { file: 'cards/cards-64', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: [...['network_investors', 'network_board_seat', 'network_listing', 'network_referral'].map((id) => `card.${id}`), '', ''] },
+  // Content 1.54: the six legendary cards (v27). Stand-ins cut from older scenes until the sheet is drawn.
+  {
+    file: 'cards/cards-65', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['coat_ticket', 'stranger_will', 'airdrop', 'viral', 'star_neighbour', 'attic_painting'].map((id) => `card.legend_${id}`),
+  },
   // Their workplaces at three stages, and the faces of the lives that start in them (v24).
   ...[['aviation', 'construction'], ['realestate', 'military']].map((careers, i): SheetSpec => ({
     file: `cards/work-${String(i + 7).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,

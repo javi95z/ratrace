@@ -4921,6 +4921,36 @@
       "width": 288,
       "height": 120
     },
+    "card.legend_coat_ticket": {
+      "file": "cards/card.legend_coat_ticket.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.legend_stranger_will": {
+      "file": "cards/card.legend_stranger_will.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.legend_airdrop": {
+      "file": "cards/card.legend_airdrop.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.legend_viral": {
+      "file": "cards/card.legend_viral.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.legend_star_neighbour": {
+      "file": "cards/card.legend_star_neighbour.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.legend_attic_painting": {
+      "file": "cards/card.legend_attic_painting.png",
+      "width": 288,
+      "height": 120
+    },
     "work.aviation.0": {
       "file": "cards/work.aviation.0.png",
       "width": 288,

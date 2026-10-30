@@ -1624,6 +1624,36 @@
     "w": 288,
     "h": 120
   },
+  "card.legend_airdrop": {
+    "src": "cards/card.legend_airdrop.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.legend_attic_painting": {
+    "src": "cards/card.legend_attic_painting.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.legend_coat_ticket": {
+    "src": "cards/card.legend_coat_ticket.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.legend_star_neighbour": {
+    "src": "cards/card.legend_star_neighbour.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.legend_stranger_will": {
+    "src": "cards/card.legend_stranger_will.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.legend_viral": {
+    "src": "cards/card.legend_viral.png",
+    "w": 288,
+    "h": 120
+  },
   "card.leveraged_chart": {
     "src": "cards/card.leveraged_chart.png",
     "w": 288,
