@@ -1,17 +1,15 @@
 import { progressOf } from '@ratrace/content';
 import { avatarOf, ratLookOf } from '@ratrace/core/game/avatar';
 import type { RatLook } from '@ratrace/core/game/avatar';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, { useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 import { Framed } from '../../ui/Frame';
-import { Button, Panel, pressDown, Raised, usePress } from '../../ui/kit';
+import { Button, pressDown, Raised, usePress } from '../../ui/kit';
 import { Toast } from '../../ui/overlay';
-import { SCREEN_TOP, Screen } from '../../ui/Page';
+import { Screen } from '../../ui/Page';
 import { RAT_GROUND } from '../../ui/rat';
 import { RatLayers } from '../../ui/RatAvatar';
-import { PageScroll } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { TextField } from '../../ui/TextField';
 import { COLORS } from '../../ui/theme';
@@ -80,12 +78,8 @@ export function PlayerProfile() {
   const profile = useProfile();
   const { fmt, text } = useWords();
   const rankName = useRankName();
-  // How far the page has scrolled, on the UI thread, and its column: the rat's editor keeps its rat and tabs at the top while its choices scroll.
-  const scrollY = useSharedValue(0);
-  const column = useAnimatedRef<View>();
-  // Moved on each time the column is laid out again (anything in it grew or shrank): the editor's stuck row is measured again then.
-  const laid = useSharedValue(0);
-  const scrolling = useMemo(() => ({ scrollY, column, top: SCREEN_TOP, laid }), [scrollY, column, laid]);
+  // The rat's editor open: a screen of its own in place of the profile, until it is saved or left.
+  const [dressing, setDressing] = useState(false);
 
   useEffect(() => {
     if (community === null) return;
@@ -102,14 +96,12 @@ export function PlayerProfile() {
 
   const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
   const page = (children: ReactNode) => (
-    <PageScroll.Provider value={scrolling}>
-      <Screen scrollY={scrollY} contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => setTold(null)} />}>
-        <Animated.View ref={column} collapsable={false} onLayout={() => void (laid.value = laid.value + 1)} style={{ gap: 16 }}>
-          <Head title={t('title')} />
-          {children}
-        </Animated.View>
-      </Screen>
-    </PageScroll.Provider>
+    <Screen contentStyle={{ paddingBottom: 40 }} fixed={<Toast message={told} onDone={() => setTold(null)} />}>
+      <View style={{ gap: 16 }}>
+        <Head title={t('title')} />
+        {children}
+      </View>
+    </Screen>
   );
   if (userId === null || community === null) {
     // Until the account has tried to sign in, nobody being signed in is no reason to ask for it.
@@ -148,6 +140,19 @@ export function PlayerProfile() {
     setMe((was) => (was ? { ...was, nickname: asked } : was));
     setTold(t('saved'));
   };
+  if (dressing && me !== undefined) {
+    return (
+      <RatEditor
+        look={look}
+        earned={profile.badges}
+        rank={progressOf(profile.rank.points).rank}
+        badgeName={(id) => text.badges[id]?.name ?? id}
+        rankName={rankName}
+        onSave={(next) => void pick(next)}
+        onClose={() => setDressing(false)}
+      />
+    );
+  }
   const lives = runs ?? [];
   const best = lives.reduce<number | null>((top, run) => (top === null || run.score > top ? run.score : top), null);
   const together = lives.filter((run) => run.room).length;
@@ -229,18 +234,12 @@ export function PlayerProfile() {
         ))}
       </View>
 
-      {/* The rat, a part at a time; the one above shows each choice at once. */}
-      <Panel title={t('rat')} label={t('rat')}>
-        <RatEditor
-          look={look}
-          earned={profile.badges}
-          rank={progressOf(profile.rank.points).rank}
-          badgeName={(id) => text.badges[id]?.name ?? id}
-          rankName={rankName}
-          onPick={(next) => void pick(next)}
-          onLocked={setTold}
-        />
-      </Panel>
+      {/* The rat, changed a part at a time on a screen of its own. */}
+      {me === undefined ? null : (
+        <Button variant="secondary" wide onPress={() => setDressing(true)}>
+          {t('editRat')}
+        </Button>
+      )}
 
       {/* Where the rest of the player's game is. */}
       <View role="navigation" aria-label={t('more')} style={{ flexDirection: 'row', gap: 8 }}>

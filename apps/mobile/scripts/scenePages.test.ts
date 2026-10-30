@@ -343,7 +343,7 @@ test('the records and the collection are drawn by their own screens on both side
   expect(SCENES.filter((scene) => scene.name.startsWith('records-') && scene.sheet !== undefined).map((scene) => [scene.name, scene.sheet])).toEqual([['records-detail', 'id-3']]);
 });
 
-test('the player\'s own profile is drawn signed in on both sides, with the same cloud: its rat a tab at a time on a page of its own, its code copied', () => {
+test('the player\'s own profile is drawn signed in on both sides, with the same cloud: its rat on its editor\'s screen', () => {
   // The cloud is the core's, in memory, the same on both: never the project's.
   expect(web).toContain("...(community ? { community: () => community } : {}), ...cloudOf(scene.name) } }");
   expect(app).toContain('...cloudOf(scene),\n  };');
@@ -354,11 +354,11 @@ test('the player\'s own profile is drawn signed in on both sides, with the same 
     expect(source).toContain("player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : ");
     expect(source).toContain("const used: Pick<Community, 'me' | 'rename' | 'setAvatar'> = cloud.community;\n  const community = used as Community;\n  return { account: cloud.account, community: () => community };");
   }
-  // The web's page presses the tab and the code, which its screens have no initial state for; the phone's screens are given the tab (the friend code
-  // is on the games with others' page now: its scene is the profile as it is).
+  // The web's page presses the tab and the code, which its screens have no initial state for; the phone's editor is its own screen now, given the
+  // part the scene's tab opened on (the friend code is on the games with others' page now: its scene is the profile as it is).
   expect(web).toContain('<PressedInTurn selectors={tab === \'body\' ? [] : [`main [data-tab="${tab}"]`]}>');
   expect(web).toContain('<PressedInTurn selectors={find}>\n      <PlayerProfile />');
-  expect(app).toContain('tab={ratTabOf(scene)}');
+  expect(app).toContain('part={ratPartOf(scene)}');
   expect(app).toContain(": <PlayerProfile />),");
 });
 

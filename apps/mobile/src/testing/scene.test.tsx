@@ -709,7 +709,7 @@ test('the scenes of the rankings are the rankings themselves, told of the scene\
   expect(screen.queryByRole('textbox', { name: 'Name' })).toBeNull();
 });
 
-test('the scenes of the player\'s own profile are drawn signed in: the profile itself, and its rat a tab at a time on a page of its own', async () => {
+test('the scenes of the player\'s own profile are drawn signed in: the profile itself, and its rat on its editor\'s screen', async () => {
   render(<SceneView name="player-member" />);
   expect(await screen.findByText('Rata_Uno', {}, WAIT)).toBeTruthy();
   // The friend code is with the friends: none here.
@@ -718,15 +718,15 @@ test('the scenes of the player\'s own profile are drawn signed in: the profile i
   expect(screen.getByLabelText('Your figures').textContent).toMatch(/^3Lives/);
   expect(screen.queryByText('Code copied')).toBeNull();
   cleanup();
-  for (const [name, tab, groups] of [
-    ['player-editor-body', 'Body', ['Fur', 'Face']],
-    ['player-editor-wear', 'Clothes', ['Clothes', 'Headwear', 'Eyes']],
-    ['player-editor-scene', 'Backdrop', ['Backdrop', 'Colour']],
+  for (const [name, part] of [
+    ['player-editor-body', 'Fur'],
+    ['player-editor-wear', 'Clothes'],
+    ['player-editor-scene', 'Backdrop'],
   ] as const) {
     render(<SceneView name={name} />);
-    expect((await screen.findByRole('tab', { name: tab }, WAIT)).getAttribute('aria-selected')).toBe('true');
-    expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(groups);
-    // The panel alone: none of the rest of the profile.
+    expect((await screen.findByRole('tab', { name: part }, WAIT)).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('radiogroup').getAttribute('aria-label')).toBe(part);
+    // The editor's screen alone: none of the rest of the profile.
     expect(screen.queryByText('Rata_Uno')).toBeNull();
     cleanup();
   }

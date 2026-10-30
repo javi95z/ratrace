@@ -33,6 +33,7 @@ and a stage over a global command.
 | Shop view | Left, Right, Home, End | Recommended, in reach or all: a segmented radio group. |
 | Finance lists | Up, Down, Home, End, Escape | Move among actionable rows; Escape returns to the selected finance tab. |
 | Amount slider | arrows, Shift + arrows, Page Up/Down, Home, End | Move one step, ten steps, roughly 10%, or to either limit. |
+| Rat editor (app's web) | Left, Right; arrows, Home, End | Three Tab stops. The rat (a slider of the part's choices): Left and Right wear the choice before or after. The row of parts (tabs): Left, Right, Home, End pick a part. The choices (radio group): Left and Right move to the choice before or after, Up and Down a row, Home and End to the ends, each wearing it at once; prizes not won are skipped, and the page of the one chosen scrolls into sight. |
 
 ## Focus and dialogs
 

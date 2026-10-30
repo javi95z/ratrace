@@ -51,7 +51,12 @@ const show = (state: AccountState, community: Community | null, services = memor
 
 /** What react-native-web keeps of a view's onLayout: calling it is what its observer does once the view is laid out. */
 type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
-const layout = (node: Element, width: number) => (node as Laid).__reactLayoutHandler?.({ nativeEvent: { layout: { x: 0, y: 0, width, height: 300 } } });
+/** The rat's editor opened from the profile, and laid out as a phone of 393 by 852 lays it. */
+async function dress() {
+  fireEvent.click(await screen.findByRole('button', { name: 'Change your rat' }));
+  await act(async () => (screen.getByTestId('rat-editor') as Laid).__reactLayoutHandler?.({ nativeEvent: { layout: { x: 0, y: 0, width: 369, height: 640 } } }));
+  await settled();
+}
 
 /** A radio's state, as react-native-web writes it. */
 const checked = (radio: HTMLElement) => radio.getAttribute('aria-checked');
@@ -83,69 +88,59 @@ describe('the player\'s profile', () => {
 
   it('is a guest\'s too: the rat and the name the others see are theirs to change before any Google account', async () => {
     show({ kind: 'guest', userId: 'g', notice: null }, profile().community);
-    expect(await screen.findByRole('radiogroup', { name: 'Fur' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Change your rat' })).toBeTruthy();
     expect(screen.queryByText('Sign in with Google to have a profile others can see.')).toBeNull();
   });
 
   it('keeps the friend code with the friends, on the games with others\' page: none here', async () => {
     show(member, profile().community);
-    await screen.findByRole('radiogroup', { name: 'Fur' });
+    await screen.findByRole('button', { name: 'Change your rat' });
     expect(screen.queryByText('ABCD2345')).toBeNull();
   });
 
-  it('keeps the rat the player dresses, a part at a time, and shows each part chosen', async () => {
+  it('keeps the rat the player dresses on its own screen, a part at a time, once saved', async () => {
     const { community, asked } = profile();
     show(member, community);
+    await dress();
     // One is theirs before they choose, the same every time: a fur, a colour, and nothing on.
     const given = ratLookOf(null, 'u-1');
-    const furs = await screen.findByRole('radiogroup', { name: 'Fur' });
-    expect(within(furs).getAllByRole('radio').filter((radio) => checked(radio) === 'true')).toHaveLength(1);
-    // Three tabs: the rat itself, what it wears, what is behind it.
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Body', 'Clothes', 'Backdrop']);
-    // A hat, kept at once and shown chosen.
-    fireEvent.click(screen.getByRole('tab', { name: 'Clothes' }));
-    expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(['Clothes', 'Headwear', 'Eyes']);
-    const hats = () => screen.getByRole('radiogroup', { name: 'Headwear' });
-    expect(checked(within(hats()).getByRole('radio', { name: 'None' }))).toBe('true');
-    // Each choice shows what it offers, on a plain rat: it does not change with the rest of the player's rat.
-    const suit = () => within(screen.getByRole('radiogroup', { name: 'Clothes' })).getByRole('radio', { name: 'Suit' }).innerHTML;
-    const suitBefore = suit();
-    fireEvent.click(within(hats()).getByRole('radio', { name: 'Beanie' }));
-    const capped = { ...given, hat: 'beanie' as const };
-    await waitFor(() => expect(asked).toEqual([`avatar ${avatarOf(capped)}`]));
-    expect(checked(within(hats()).getByRole('radio', { name: 'Beanie' }))).toBe('true');
-    expect(checked(within(hats()).getByRole('radio', { name: 'None' }))).toBe('false');
-    expect(suit()).toBe(suitBefore);
-    // A crown is for the highest rank of rat: until then it says how it is won, and nothing is kept.
-    const crown = within(hats()).getByRole('radio', { name: 'Crown' });
+    const group = () => screen.getByRole('radiogroup');
+    expect(group().getAttribute('aria-label')).toBe('Fur');
+    expect(within(group()).getAllByRole('radio').filter((radio) => checked(radio) === 'true')).toHaveLength(1);
+    // Every part in one row.
+    expect(screen.getAllByRole('tab').map((tab) => tab.getAttribute('aria-label'))).toEqual(['Fur', 'Face', 'Clothes', 'Headwear', 'Eyes', 'Backdrop', 'Colour']);
+    fireEvent.click(screen.getByRole('tab', { name: 'Headwear' }));
+    expect(checked(within(group()).getByRole('radio', { name: 'None' }))).toBe('true');
+    fireEvent.click(within(group()).getByRole('radio', { name: 'Beanie' }));
+    expect(checked(within(group()).getByRole('radio', { name: 'Beanie' }))).toBe('true');
+    expect(checked(within(group()).getByRole('radio', { name: 'None' }))).toBe('false');
+    // A crown is for the highest rank of rat: until then it says how it is won.
+    const crown = within(group()).getByRole('radio', { name: 'Crown' });
     expect(crown.getAttribute('data-locked')).toBe('true');
     fireEvent.click(crown);
     expect(await screen.findByText(/^Unlocked on reaching /)).toBeTruthy();
-    expect(asked).toHaveLength(1);
-    // Nothing worn is marked as such, over its picture, once the tab is laid out: a cross for each part that may be left off.
-    expect(screen.queryByText('✕')).toBeNull();
-    await act(async () => {
-      layout(screen.getByRole('tabpanel'), 380);
-      screen.getAllByRole('radiogroup').forEach((grid) => layout(grid, 380));
-    });
-    expect(screen.getAllByText('✕')).toHaveLength(3);
-    // And the colour of the ground, kept with the hat.
-    fireEvent.click(screen.getByRole('tab', { name: 'Backdrop' }));
+    // And the colour of the ground. Nothing is kept until Save, then all at once.
+    fireEvent.click(screen.getByRole('tab', { name: 'Colour' }));
     const other = given.colour === 'teal' ? 'gold' : 'teal';
-    fireEvent.click(within(screen.getByRole('radiogroup', { name: 'Colour' })).getByRole('radio', { name: other === 'gold' ? 'Gold' : 'Teal' }));
-    await waitFor(() => expect(asked.at(-1)).toBe(`avatar ${avatarOf({ ...capped, colour: other })}`));
+    fireEvent.click(within(group()).getByRole('radio', { name: other === 'gold' ? 'Gold' : 'Teal' }));
+    expect(asked).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(asked).toEqual([`avatar ${avatarOf({ ...given, hat: 'beanie', colour: other })}`]));
+    expect(await screen.findByText('Rata_Uno')).toBeTruthy();
   });
 
   it('puts a rat together at random, from what the player may wear', async () => {
     const { community, asked } = profile();
     show(member, community);
+    await dress();
     // The last of every list: past what a new player has opened, were the locked ones not left out.
     const dice = vi.spyOn(Math, 'random').mockReturnValue(0.999);
     try {
-      fireEvent.click(await screen.findByRole('button', { name: '🎲 At random' }));
+      fireEvent.click(screen.getByRole('button', { name: '🎲 At random' }));
     } finally {
       dice.mockRestore();
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(asked).toHaveLength(1));
     const look = ratLookOf(asked[0].replace('avatar ', ''), 'u-1');
     for (const layer of ['body', 'face', 'outfit', 'hat', 'eyes', 'backdrop'] as const) {
@@ -158,14 +153,17 @@ describe('the player\'s profile', () => {
   it('puts the rat back, and says so, when the server would not keep it', async () => {
     const { community, asked } = profile({ refuses: true });
     show(member, community);
-    const furs = await screen.findByRole('radiogroup', { name: 'Fur' });
-    const before = within(furs).getAllByRole('radio').find((radio) => checked(radio) === 'true')!;
-    const other = within(furs).getAllByRole('radio').find((radio) => checked(radio) === 'false')!;
-    fireEvent.click(other);
+    await dress();
+    const furs = () => within(screen.getByRole('radiogroup')).getAllByRole('radio');
+    const before = furs().find((radio) => checked(radio) === 'true')!.getAttribute('aria-label');
+    const other = furs().find((radio) => checked(radio) === 'false')!.getAttribute('aria-label');
+    fireEvent.click(screen.getByRole('radio', { name: other! }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('It could not be saved. Try again.')).toBeTruthy();
     expect(asked).toHaveLength(1);
-    expect(checked(before)).toBe('true');
-    expect(checked(other)).toBe('false');
+    await dress();
+    expect(checked(screen.getByRole('radio', { name: before! }))).toBe('true');
+    expect(checked(screen.getByRole('radio', { name: other! }))).toBe('false');
   });
 
   it('changes the name, and says why one is not taken', async () => {

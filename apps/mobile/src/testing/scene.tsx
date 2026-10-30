@@ -39,8 +39,7 @@ import { PlayerProfile } from '../game/screens/PlayerProfile';
 import { useRankName } from '../game/screens/RankCard';
 import { RatEditor } from '../game/screens/RatEditor';
 import { Room } from '../game/screens/Room';
-import type { RatGroup } from '../game/screens/RatEditor';
-import { Panel } from '../ui/kit';
+import type { RatPart } from '../game/screens/RatEditor';
 import { KEYFRAMES } from '../ui/motion';
 import { Screen } from '../ui/Page';
 import { useSpritesLoading } from '../ui/spriteImages';
@@ -230,36 +229,30 @@ function RankingsScene({ scene }: { scene: Scene }) {
   return <Rankings tab={rankingsOpening(scene.name)?.tab} />;
 }
 
-/** The tab of the rat a scene of it has open (`player-editor-wear`: what it wears). */
-const ratTabOf = (scene: Scene): RatGroup => scene.name.slice('player-editor-'.length) as RatGroup;
+/** The part of the rat a scene of it has picked (`player-editor-wear`: what it wears), by the scene's old name for the tab it showed. */
+const ratPartOf = (scene: Scene): RatPart => ({ body: 'body', wear: 'outfit', scene: 'backdrop' } as const)[scene.name.slice('player-editor-'.length) as 'body' | 'wear' | 'scene'] ?? 'body';
 
 /**
- * The rat of the player of a scene, a tab of it at a time (`player-editor-*`): the profile's panel alone on a page, as the profile draws it, the tab
- * given as its initial state. Far down the profile, no shot could see it there; the web's page draws the same panel on the same page and presses
- * the tab. A choice pressed does nothing: a scene is a picture.
+ * The rat of the player of a scene on its editor's screen, a part of it picked (`player-editor-*`), as the profile opens it. A choice pressed changes
+ * the rat on the screen; Save and the way back do nothing: a scene is a picture.
  */
 function RatScene({ scene }: { scene: Scene }) {
-  const t = useT('player');
   const profile = useProfile();
   const { text } = useWords();
   const rankName = useRankName();
   const member = sceneMember(scene.name);
   if (member === null) return null;
   return (
-    <Screen>
-      <Panel title={t('rat')} label={t('rat')}>
-        <RatEditor
-          look={ratLookOf(member.avatar, member.userId)}
-          earned={profile.badges}
-          rank={progressOf(profile.rank.points).rank}
-          badgeName={(id) => text.badges[id]?.name ?? id}
-          rankName={rankName}
-          onPick={nothing}
-          onLocked={nothing}
-          tab={ratTabOf(scene)}
-        />
-      </Panel>
-    </Screen>
+    <RatEditor
+      look={ratLookOf(member.avatar, member.userId)}
+      earned={profile.badges}
+      rank={progressOf(profile.rank.points).rank}
+      badgeName={(id) => text.badges[id]?.name ?? id}
+      rankName={rankName}
+      onSave={nothing}
+      onClose={nothing}
+      part={ratPartOf(scene)}
+    />
   );
 }
 
