@@ -243,6 +243,7 @@ export function validateCards(c: Content): string[] {
     if (!(typeof card.weight === 'number' && Number.isFinite(card.weight) && card.weight > 0)) errors.push(`${name} needs a positive weight`);
     if (!isCount(card.cooldown)) errors.push(`${name} needs a whole, non-negative cooldown`);
     if (card.risk !== undefined && card.risk !== 'health' && card.risk !== 'job' && card.risk !== 'scam') errors.push(`${name} has an unknown risk: ${String(card.risk)}`);
+    if (card.legendary !== undefined && (card.legendary !== true || card.category === 'world')) errors.push(`${name} may only be legendary as a personal card, with legendary: true`);
 
     if (card.category === 'world') {
       if (!isRecord(card.trigger)) errors.push(`${name} is a world card and needs a trigger`);

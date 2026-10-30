@@ -552,6 +552,11 @@ export interface LifeRules {
   restHealthPoints: number;
   /** Personal cards drawn each round. */
   cardsPerRound: number;
+  /**
+   * The chance, in bp, that a round opens with a legendary card (`CardDef.legendary`) while the life has met none: rolled
+   * from the seed apart from the player's card stream, so it shifts no other draw. Absent: never.
+   */
+  legendaryBp?: Bp;
   skills: SkillRules;
   /** The ladders whose things are also sold second hand, and on what terms. Paid in cash only. */
   used: Partial<Record<string, UsedRule>>;
@@ -868,6 +873,12 @@ export interface CardDef {
   cooldown: number;
   /** Drawn at most once in a life. */
   once?: boolean;
+  /**
+   * A legendary card: never in the ordinary draw by weight, but the round's first personal card on the rare round the
+   * dice allow it (`LifeRules.legendaryBp`), and at most one of them in a life. Its weight is only its chance among the
+   * legendary cards open to the player. Clients draw it apart.
+   */
+  legendary?: true;
   /** A misfortune whose weight grows with age and shrinks with the skill that guards against it. */
   risk?: CardRisk;
   when?: Condition;

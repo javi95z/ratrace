@@ -2,7 +2,7 @@ import { coverShortfall } from '../debt';
 import { optionBreaks } from '../limits';
 import { cardOf } from '../lookup';
 import type { Cents } from '../money';
-import type { Rng } from '../rng';
+import { Rng, seedRng } from '../rng';
 import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, OptionLock, PlayerState } from '../types';
 import { conditionHolds } from './conditions';
 import type { Situation } from './conditions';
@@ -73,7 +73,9 @@ export function drawHand(state: GameState, content: Content, rng: Rng): string[]
   if (event && conditionHolds(event.when, p, at) && hasChoice(event, p, at)) hand.push(event.id);
 
   const pool = openCards(state, content, at);
-  for (let i = 0; i < content.life.cardsPerRound && pool.length > 0; i++) {
+  const legend = legendaryOf(state, content, at, rng);
+  if (legend !== null) hand.push(legend);
+  for (let i = legend === null ? 0 : 1; i < content.life.cardsPerRound && pool.length > 0; i++) {
     const id = rng.pickWeighted(pool);
     hand.push(id);
     pool.splice(pool.findIndex(([candidate]) => candidate === id), 1);
@@ -81,6 +83,23 @@ export function drawHand(state: GameState, content: Content, rng: Rng): string[]
 
   for (const id of hand) p.life.seen[id] = state.round;
   return hand;
+}
+
+/**
+ * The legendary card the round opens with, or null, most rounds. Only while the life has met none: on a round the dice allow it
+ * (`legendaryBp`), one of the legendary cards open to the player, by weight. The dice are the seed's, hashed with where the player's own
+ * card stream stands, so they draw nothing from it: every other card, outcome and repair comes out as it would have without them.
+ */
+function legendaryOf(state: GameState, content: Content, at: Situation, rng: Rng): string | null {
+  const chanceBp = content.life.legendaryBp ?? 0;
+  if (chanceBp <= 0) return null;
+  const p = state.player;
+  const legends = content.cards.filter((card) => card.legendary === true && card.category !== 'world');
+  if (legends.length === 0 || legends.some((card) => Object.hasOwn(p.life.seen, card.id))) return null;
+  const dice = new Rng(seedRng(state.seed, `legendary:${state.round}:${rng.snapshot().join('.')}`));
+  if (dice.int(10_000) >= chanceBp) return null;
+  const open = legends.filter((card) => belongs(card, p) && conditionHolds(card.when, p, at) && hasChoice(card, p, at)).map((card): [string, number] => [card.id, card.weight]);
+  return open.length === 0 ? null : dice.pickWeighted(open);
 }
 
 /**
@@ -128,7 +147,8 @@ function openCards(state: GameState, content: Content, at: Situation, rested = f
   const seen = p.life.seen;
   const pool: Array<[string, number]> = [];
   for (const card of content.cards) {
-    if (card.category === 'world') continue;
+    // A legendary card is never drawn by weight among the rest: it comes only on its own rare round (`legendaryOf`).
+    if (card.category === 'world' || card.legendary === true) continue;
     if (Object.hasOwn(seen, card.id)) {
       const since = state.round - seen[card.id];
       // With `rested`, a card still resting may come back early, but never one of this very round, nor one that comes once in a life.

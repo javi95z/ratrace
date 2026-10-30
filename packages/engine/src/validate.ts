@@ -266,6 +266,7 @@ export function validateContent(c: Content): string[] {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
   if (typeof life.dealOnlyChoices !== 'boolean') errors.push('life.dealOnlyChoices must be true or false');
+  if (life.legendaryBp !== undefined && !(isCount(life.legendaryBp) && life.legendaryBp <= 10_000)) errors.push('life.legendaryBp must be a whole number of bp from 0 to 10000');
   const abroad = isRecord(life.remoteAbroad) ? life.remoteAbroad : {};
   if (!(isCount(abroad.payPct) && abroad.payPct <= 100)) errors.push('life.remoteAbroad.payPct must be a whole number from 0 to 100');
   if (!(isCount(abroad.capPct) && abroad.capPct > 0)) errors.push('life.remoteAbroad.capPct must be a positive whole number');
