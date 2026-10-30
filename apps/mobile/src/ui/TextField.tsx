@@ -1,5 +1,6 @@
 import { useContext, useState, type ReactNode } from 'react';
 import { Platform, TextInput, View, type ReturnKeyTypeOptions, type ViewStyle } from 'react-native';
+import { scaleMax } from './fontScale';
 import { Framed } from './Frame';
 import { oneFace } from './fonts';
 import { Language } from './text';
@@ -109,6 +110,8 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
           onSubmitEditing={onSubmitEditing === undefined ? undefined : () => onSubmitEditing()}
           autoFocus={autoFocus}
           editable={editable}
+          // The phone's text size, as far as the field's kind of text follows it (`fontScale.ts`): a room's code as the pixel face, the rest as a sentence.
+          maxFontSizeMultiplier={scaleMax(look.role)}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
           // The caret in the text's colour, as the browser's (`caret-color: auto`). iOS's `selectionColor` is the caret's colour and the selection's

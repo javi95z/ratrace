@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
+import { drawnScale, scaleMax, useFontScale } from './fontScale';
 import { cssLine, RUN_LINE, strut } from './strut';
 import { faceWeight } from './systemFace';
 import { BODY, COLORS, type ColorToken } from './theme';
@@ -130,7 +131,11 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const line = lineHeight ?? standard;
   const ios = Platform.OS === 'ios';
   const density = PixelRatio.get();
-  const drawn = ios ? onGrid(line, density) : cssLine(line);
+  // The phone's text size, held to what this kind of text follows (`fontScale.ts`): the phone multiplies the size, the line and the letter spacing by
+  // it, never a padding or a margin. What is placed by padding and margins (the glyphs' shift, the headroom, the lines held to the web's) is reckoned
+  // at the size drawn; the line is put on the device's grid at the size drawn and given back divided, for the phone to multiply again.
+  const scale = drawnScale(useFontScale(), role);
+  const drawn = ios ? onGrid(line * scale, density) / scale : cssLine(line);
   // What runs on is in the same line: its fonts are among those the line is set from, each at its own size.
   const ran = (after ?? [])
     .filter((aside) => aside.text !== '')
@@ -142,17 +147,17 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       return { ...aside, size: aside.read ?? size, runs, spacing, words: aside.pixel === true ? language === 'ru' : words };
     });
   const lineRuns = ran.length === 0 ? runs : [...runs, ...ran.flatMap((aside) => aside.runs.map((run) => ({ ...run, scale: (run.scale * aside.size) / size })))];
-  const shift = baselineShift(lineRuns, role, weight, size, line, drawn, Platform.OS, language);
+  const shift = baselineShift(lineRuns, role, weight, size * scale, line * scale, drawn * scale, Platform.OS, language);
   // Each line is drawn on the device's grid, so n lines are n × (the grid's line − the exact one) taller than the web's, and that adds up across the
   // paragraphs of a page. The box is held to n × the exact line: the lines of one paragraph are as far off as they are, and the next paragraph is not.
   // Only a text that can wrap and whose line is off the grid is asked how many lines it has. A text starts as one line, which is what nearly every one is (and a
   // text cut to one line always is): it is right in the first frame, and `setLines(1)` after the layout changes nothing, so it is never drawn again for it.
   // Only one that wraps is corrected, once, after its layout.
   const [lines, setLines] = useState(1);
-  const off = ios ? line - Math.round(line * density) / density : 0;
+  const off = ios ? line * scale - Math.round(line * scale * density) / density : 0;
   const asks = numberOfLines !== 1 && Math.abs(off) > 1e-6;
   const hold = (numberOfLines === 1 || asks) && Math.abs(off) > 1e-6 ? lines * off : 0;
-  const room = shift ? headroom(shift, size, flat) : null;
+  const room = shift ? headroom(shift, size * scale, flat) : null;
   // One word (a figure: "$4,489", "3/3") is never wrapped. Android measures a text in letter spacing or in runs of several faces a hair narrower than it
   // draws it, and breaks the word before its last letter where it has just the room it measured; held to one line it is drawn whole there, and where the
   // phone's larger text leaves it truly no room, it is set a little smaller rather than cut.
@@ -162,6 +167,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   return (
     <Text
       selectable={false}
+      maxFontSizeMultiplier={scaleMax(role)}
       numberOfLines={lineCount}
       adjustsFontSizeToFit={oneWord}
       minimumFontScale={oneWord ? 0.7 : undefined}

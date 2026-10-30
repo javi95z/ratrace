@@ -18,16 +18,19 @@ vi.mock('./Sprite', () => ({ Sprite: () => null }));
 // Records the style every Text is given: react-native-web drops what only a phone reads (includeFontPadding). The outer Text of a text (the one that is
 // not selectable) is recorded whole, with what the phone is told of its lines, and the platform is the test's to say.
 const textStyles = vi.hoisted(() => [] as unknown[]);
-const outers = vi.hoisted(() => [] as Array<{ style: Record<string, unknown>; onTextLayout?: (event: { nativeEvent: { lines: unknown[] } }) => void; numberOfLines?: number; adjustsFontSizeToFit?: boolean }>);
+const outers = vi.hoisted(() => [] as Array<{ style: Record<string, unknown>; onTextLayout?: (event: { nativeEvent: { lines: unknown[] } }) => void; numberOfLines?: number; adjustsFontSizeToFit?: boolean; maxFontSizeMultiplier?: number }>);
 const platform = vi.hoisted(() => ({ OS: 'web' }));
+// The phone's text size (Android's font size, iOS's Dynamic Type), the test's to say.
+const font = vi.hoisted(() => ({ scale: 1 }));
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   const Recorded = (props: Record<string, unknown>) => {
     textStyles.push(rn.StyleSheet.flatten(props.style as never));
-    if (props.selectable === false) outers.push({ style: rn.StyleSheet.flatten(props.style as never) as Record<string, unknown>, onTextLayout: props.onTextLayout as never, numberOfLines: props.numberOfLines as never, adjustsFontSizeToFit: props.adjustsFontSizeToFit as never });
+    if (props.selectable === false) outers.push({ style: rn.StyleSheet.flatten(props.style as never) as Record<string, unknown>, onTextLayout: props.onTextLayout as never, numberOfLines: props.numberOfLines as never, adjustsFontSizeToFit: props.adjustsFontSizeToFit as never, maxFontSizeMultiplier: props.maxFontSizeMultiplier as never });
     return <rn.Text {...(props as Record<string, unknown>)} />;
   };
-  return { ...rn, Text: Recorded, Platform: { ...rn.Platform, get OS() { return platform.OS; } }, PixelRatio: { get: () => 3 } };
+  const Dimensions = { get: (dimension: 'window' | 'screen') => ({ ...rn.Dimensions.get(dimension), fontScale: font.scale }), addEventListener: () => ({ remove: () => undefined }) };
+  return { ...rn, Text: Recorded, Platform: { ...rn.Platform, get OS() { return platform.OS; } }, PixelRatio: { get: () => 3 }, Dimensions };
 });
 
 const spans = (container: HTMLElement) => Array.from(container.firstElementChild!.children) as HTMLElement[];
@@ -164,6 +167,7 @@ test('the two leadings of the web\'s small text are written once, here: tight is
 
 afterEach(() => {
   platform.OS = 'web';
+  font.scale = 1;
   outers.length = 0;
 });
 
@@ -440,4 +444,47 @@ test('on Android a word alone, a figure, is never broken over two lines: held to
   } finally {
     platform.OS = 'web';
   }
+});
+
+test('a sentence follows the phone\'s text size to 1.3 times its size, a pixel text to 1.15: the phone is told the most of each, on Android and iOS alike', () => {
+  for (const os of ['android', 'ios']) {
+    platform.OS = os;
+    render(<ReadText>{'Your salary went up.'}</ReadText>);
+    expect(outer().maxFontSizeMultiplier).toBe(1.3);
+    render(<PixelText size={20}>{'$4,489'}</PixelText>);
+    expect(outer().maxFontSizeMultiplier).toBe(1.15);
+  }
+});
+
+test('on iOS a text drawn larger by the phone\'s text size is placed as a text of the size drawn: its line on the grid there, its glyphs moved as far', () => {
+  platform.OS = 'ios';
+  // The phone asks 1.3 of every text: a sentence takes it whole.
+  font.scale = 1.3;
+  render(<ReadText>{'Your salary went up.'}</ReadText>);
+  const scaled = outer().style;
+  // The phone multiplies the line it is given by 1.3: what it then draws is on the device's grid.
+  expect(Number(scaled.lineHeight) * 1.3).toBeCloseTo(onGrid(15 * 1.45 * 1.3, 3), 6);
+  // Padding and margins are not multiplied: they are reckoned at the size drawn, as a text that size at the phone's own size would have them.
+  font.scale = 1;
+  render(<ReadText size={15 * 1.3} lineHeight={15 * 1.45 * 1.3}>{'Your salary went up.'}</ReadText>);
+  const plain = outer().style;
+  for (const side of ['paddingTop', 'paddingBottom', 'marginTop', 'marginBottom'] as const) expect(Number(scaled[side] ?? 0)).toBeCloseTo(Number(plain[side] ?? 0), 6);
+});
+
+test('a pixel text stops at its own most: at 1.3 it is placed as one 1.15 times its size, and below 1 it follows the phone down', () => {
+  platform.OS = 'ios';
+  font.scale = 1.3;
+  render(<PixelText size={20}>{'Round 3'}</PixelText>);
+  expect(Number(outer().style.lineHeight) * 1.15).toBeCloseTo(onGrid(22 * 1.15, 3), 6);
+  font.scale = 0.85;
+  render(<PixelText size={20}>{'Round 3'}</PixelText>);
+  expect(Number(outer().style.lineHeight) * 0.85).toBeCloseTo(onGrid(22 * 0.85, 3), 6);
+});
+
+test('off iOS the line is the text\'s own whatever the phone\'s text size: Android multiplies it as it multiplies the size, and nothing is moved', () => {
+  platform.OS = 'android';
+  font.scale = 1.3;
+  render(<ReadText>{'Your salary went up.'}</ReadText>);
+  expect(Number(outer().style.lineHeight)).toBeCloseTo(15 * 1.45, 6);
+  expect(outer().style.paddingTop).toBeUndefined();
 });
