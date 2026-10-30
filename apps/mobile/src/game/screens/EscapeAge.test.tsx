@@ -17,7 +17,8 @@ const WAIT = { timeout: 15_000 };
 describe('the age a life left the rat race at', () => {
   it('is the same in the HUD and in the moment that tells it', async () => {
     render(<SceneView name="moment-escape" />);
-    const title = await screen.findByRole('heading', { name: 'Out of the rat race!' }, WAIT);
+    // The life's first way out: on the whole screen.
+    const title = await screen.findByRole('heading', { name: "You're out of the rat race!" }, WAIT);
     const moment = title.closest('[aria-modal="true"]') as HTMLElement;
     expect(within(moment).getByText(/^At 54, your income pays for your whole life/)).toBeTruthy();
     expect(screen.getAllByText('Escaped at 54').length).toBeGreaterThan(0);

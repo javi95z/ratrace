@@ -629,7 +629,8 @@ test('the scene of the ledger is drawn by the ledger itself, every line risen an
 
 test('the scenes of the moments of a life are their sheets over Play, open without a tap: the escape and the bankruptcy over the ledger, the crash over the news', async () => {
   const moments = [
-    { name: 'moment-escape', title: 'Out of the rat race!', under: 'Two years later' },
+    // The life's first way out has the whole screen.
+    { name: 'moment-escape', title: "You're out of the rat race!", under: 'Two years later' },
     { name: 'moment-bankrupt', title: 'Bankrupt', under: 'Two years later' },
     { name: 'moment-crisis', title: 'The Great Crash', under: 'News' },
   ];

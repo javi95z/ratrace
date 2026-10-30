@@ -389,7 +389,10 @@
       "passive": "Tus rentas, tras impuestos",
       "costs": "Lo que cuesta tu vida",
       "hint": "Cuanto antes se sale, mayor es el bonus de la puntuación. Si tus rentas dejan de cubrir tu vida, la rueda vuelve a girar.",
-      "go": "Seguir, por gusto"
+      "go": "Seguir, por gusto",
+      "headline": "¡Has escapado de la carrera de ratas!",
+      "covers": "Tu dinero ya gana {passive} al año. Tu vida cuesta {costs}.",
+      "continue": "Continuar"
     },
     "million": {
       "title": "Tu primer millón",

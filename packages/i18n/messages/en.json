@@ -389,7 +389,10 @@
       "passive": "Your passive income, after tax",
       "costs": "What your life costs",
       "hint": "The earlier you get out, the bigger the bonus on your score. If your income stops covering your life, the wheel turns again.",
-      "go": "Carry on, for the fun of it"
+      "go": "Carry on, for the fun of it",
+      "headline": "You're out of the rat race!",
+      "covers": "Your money now earns {passive} a year. Your life costs {costs}.",
+      "continue": "Continue"
     },
     "million": {
       "title": "Your first million",

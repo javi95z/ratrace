@@ -131,6 +131,10 @@ export type InitialFocus = 'panel' | 'close' | { readonly current: unknown };
  * so its rise plays from its first frame. `onGone` is told when a sheet that closed has gone, its Modal dismissed: a sheet
  * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
  * a Modal presented while another dismisses can fail, or leave that one half gone).
+ *
+ * `full`: the game's biggest moments have the whole screen, not a panel over the page (the way out of the rat race): no frame, no grabber, no Close
+ * and no backdrop to tap away, never dragged; the title its headline, large and in the middle, under `above` (a picture), what it holds under it, and
+ * `over` drawn over all of it, touching nothing (confetti). Back and Escape still close it, as its own button does. It takes its turn as a sheet does.
  */
 export function Sheet({
   open: asked,
@@ -143,6 +147,7 @@ export function Sheet({
   initialFocus = 'panel',
   locked = false,
   half = false,
+  full,
   children,
 }: {
   open: boolean;
@@ -156,6 +161,8 @@ export function Sheet({
   locked?: boolean;
   /** A long sheet to read or browse: on the phone it opens at half the screen and is pulled up to its whole (`sheetPull.ts`'s `HALF`). */
   half?: boolean;
+  /** The whole screen (see above). */
+  full?: Full;
   children: ReactNode;
 }) {
   // Open as its screen asks, unless every sheet is being shut (`closeEverySheet`).
@@ -214,7 +221,7 @@ export function Sheet({
   }, [open, waiting, id]);
   return now.mounted && turn ? (
     <SheetParent.Provider value={id}>
-      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus} locked={locked} half={half}>
+      <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} onShown={() => turnShown(id)} title={title} closeLabel={closeLabel} tone={tone} initialFocus={initialFocus} locked={locked} half={half} full={full}>
         {children}
       </SheetPanel>
     </SheetParent.Provider>
@@ -247,6 +254,12 @@ function useKeyboardUp(): boolean {
 const NEVER_SHOWN_MS = 150;
 const DISMISS_BACKSTOP_MS = 1000;
 
+/** What a sheet that has the whole screen draws besides its title and what it holds: a picture above the title, and what falls over everything. */
+export interface Full {
+  above?: ReactNode;
+  over?: ReactNode;
+}
+
 function SheetPanel({
   open,
   onClose,
@@ -258,6 +271,7 @@ function SheetPanel({
   initialFocus,
   locked,
   half,
+  full,
   children,
 }: {
   open: boolean;
@@ -270,6 +284,7 @@ function SheetPanel({
   initialFocus: InitialFocus;
   locked: boolean;
   half: boolean;
+  full?: Full;
   children: ReactNode;
 }) {
   // The dialog on the web (`sheetDialog.web.tsx`): the Modal's own, named by the title; the panel takes the focus as it is shown (or its Close, or
@@ -299,10 +314,11 @@ function SheetPanel({
   const rise = useRise();
   // Dragged down, it closes as its Close does (`onClose`, which its owner may refuse: then it comes back). A sheet in the middle of a wide screen is a
   // dialog, not a sheet risen from the foot: it is not dragged, and has no grabber.
-  const draggable = !desk;
+  // Nor is the whole screen: it rises in place, as a dialog does, and goes at once.
+  const draggable = !desk && !full;
   // A sheet comes up from the foot of the screen and slides back down to it, however it is closed; a dialog in the middle of a wide screen rises.
   // Two heights on the phone only: the web's sheets are the Next web's, of one.
-  const pull = useSheetPull({ open, onClose, locked, enters: !desk, screen: height, half: half && !desk && Platform.OS !== 'web' });
+  const pull = useSheetPull({ open, onClose, locked, enters: draggable, screen: height, half: half && draggable && Platform.OS !== 'web' });
   // A field's keyboard up, a sheet at its half is raised whole: the field and what it asks are above the keyboard.
   const expand = pull.expand;
   useEffect(() => {
@@ -314,7 +330,7 @@ function SheetPanel({
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
-    setSliding(!open && !desk && pull.canSlideAway());
+    setSliding(!open && draggable && pull.canSlideAway());
   }
   const visible = open || sliding;
   const slideAway = pull.slideAway;
@@ -387,7 +403,42 @@ function SheetPanel({
 
   return (
     <Modal {...sheetModalProps(titleId)} transparent animationType="none" visible={visible} statusBarTranslucent navigationBarTranslucent onRequestClose={pressedClose} onDismiss={visible ? undefined : dismissed}>
-      {/* A Modal is a window of its own, outside the screens' gesture root: the sheet's drags need one in it (Android's above all). */}
+      {full ? (
+        <View {...sheetRootProps()} onTouchEnd={perfTouched} style={{ flex: 1, backgroundColor: COLORS['night-900'] }}>
+          <PerfDrawn name={`sheet: ${title}`} />
+          <Animated.View style={[{ flex: 1 }, rise]}>
+            <View ref={panel} {...sheetPanelProps()} style={{ flex: 1 }}>
+              <ScrollView
+                bounces={false}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingTop: inset.top + 24,
+                  paddingBottom: Math.max(24, inset.bottom + 16),
+                  paddingLeft: inset.left + 16,
+                  paddingRight: inset.right + 16,
+                }}
+              >
+                <View style={{ width: '100%', maxWidth: SHELL_WIDTH, alignItems: 'center', gap: 16 }}>
+                  {full.above}
+                  <View nativeID={titleId} accessibilityRole="header" {...LEVEL_2} style={{ alignSelf: 'stretch' }}>
+                    <PixelText size={28} tone="gold-500" lineHeight={34} style={{ textAlign: 'center' }}>{title}</PixelText>
+                  </View>
+                  {children}
+                </View>
+              </ScrollView>
+            </View>
+          </Animated.View>
+          {full.over ? (
+            <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+              {full.over}
+            </View>
+          ) : null}
+          {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
+        </View>
+      ) : (
+      /* A Modal is a window of its own, outside the screens' gesture root: the sheet's drags need one in it (Android's above all). */
       <GestureRoot style={{ flex: 1 }}>
         {/*
          * A sheet with a field (a name, in a room's lobby) rises over the keyboard, on both platforms: a Modal is a window of its own, which neither
@@ -462,6 +513,7 @@ function SheetPanel({
           </View>
         </KeyboardAvoidingView>
       </GestureRoot>
+      )}
     </Modal>
   );
 }

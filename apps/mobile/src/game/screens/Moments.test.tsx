@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import type { Milestone } from '@ratrace/content';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { newProfile } from '@ratrace/core/session/types';
 import type { GameSession } from '@ratrace/core/session/types';
 import type { GameEvent, GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -8,6 +10,10 @@ import { heard, memoryServices, renderGame } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { COLORS } from '../../ui/theme';
 import { Play } from './Play';
+
+// The store's prompt to rate the game, as the game asks for it (its own rules of when are game/reviewTimes.ts's, tested there).
+const reviews = vi.hoisted(() => ({ asked: 0 }));
+vi.mock('../askReview', () => ({ askReview: () => void (reviews.asked += 1) }));
 
 // The early escape's module also writes a life where the phone keeps it (the device's database): only its life is played here.
 vi.mock('../../kvStore', async (original) => ({ ...(await original<typeof import('../../kvStore')>()), KvStore: class {} }));
@@ -18,15 +24,20 @@ const { earlyEscape } = await import('../../testing/perfLife');
  * a crisis opens with one and keeps its bar. The sounds are the phone's own player's, as the test double of `useSound` hears them (`heard`).
  */
 
-afterEach(cleanup);
+afterEach(() => {
+  reviews.asked = 0;
+  cleanup();
+});
 
 const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 
 /**
  * A nurse's life in which the next round, whatever is played, ends with the events given; and in which the world is as `world` leaves it.
  */
-async function life(options: { events?: GameEvent[]; story?: Milestone[]; world?: (view: GameView) => void } = {}) {
-  const services = memoryServices();
+async function life(options: { events?: GameEvent[]; story?: Milestone[]; world?: (view: GameView) => void; still?: boolean } = {}) {
+  const store = new MemoryStore();
+  if (options.still) await store.saveProfile({ ...newProfile(), settings: { ...newProfile().settings, reducedMotion: true } });
+  const services = memoryServices(store);
   const real = await services.sessions.start('nurse');
   const seen = (): GameView => {
     const view = structuredClone(real.view());
@@ -81,10 +92,61 @@ function toneOf(open: HTMLElement): 'gold' | 'wine' | 'plain' {
   throw new Error('no frame round the sheet');
 }
 
-describe('a moment of a life', () => {
-  it('takes the screen when the player leaves the rat race, with what made it so, and is heard', async () => {
-    // Out in the round played, the first (round 0, lived at 22): the moment tells the age of that round.
+/** The way out on the whole screen, by its headline. */
+const HEADLINE = "You're out of the rat race!";
+
+describe('the life\'s first way out of the rat race', () => {
+  it('has the whole screen at the round it happens: the rat leaving its wheel, confetti, the headline, the money against the life, one Continue; heard', async () => {
     await life({ events: [{ kind: 'escaped', round: 0 }] });
+    expect(sheetOpen()).toBeNull();
+    await playRound();
+
+    const moment = await sheet(HEADLINE);
+    expect(moment.querySelector('[data-moment="escape-full"]')).not.toBeNull();
+    // No frame, no grabber, no Close: the one button goes on.
+    expect(within(moment).queryByTestId('sheet-grabber')).toBeNull();
+    expect(within(moment).queryByRole('button', { name: 'Close' })).toBeNull();
+    expect(within(moment).getAllByRole('button').map((button) => button.textContent)).toEqual(['Continue']);
+    expect(within(moment).getByText(/^At 22, your income pays for your whole life/)).toBeTruthy();
+    expect(within(moment).getByText(/^Your money now earns \$[\d,]+ a year\. Your life costs \$[\d,]+\.$/)).toBeTruthy();
+    expect(moment.querySelector('[data-leap="leaping"] [data-sprite="rat.cheer"]')).not.toBeNull();
+    expect(moment.querySelector('[data-confetti]')).not.toBeNull();
+    expect(heard).toContain('escape');
+    expect(heard).not.toContain('round');
+    // The rating is asked for once it has been taken in, never over it.
+    expect(reviews.asked).toBe(0);
+
+    fireEvent.click(within(moment).getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(sheetOpen()).toBeNull());
+    expect(reviews.asked).toBe(1);
+    expect(screen.getByRole('heading', { name: 'Two years later' })).toBeTruthy();
+    // Once: the result drawn again does not bring it back.
+    await settled();
+    expect(sheetOpen()).toBeNull();
+  });
+
+  it('is one still picture where motion is left out: the rat cheering, nothing falling', async () => {
+    await life({ events: [{ kind: 'escaped', round: 0 }], still: true });
+    await playRound();
+    const moment = await sheet(HEADLINE);
+    expect(moment.querySelector('[data-leap="still"] [data-sprite="rat.cheer"]')).not.toBeNull();
+    expect(moment.querySelector('[data-sprite^="anim.wheel"]')).toBeNull();
+    expect(moment.querySelector('[data-confetti]')).toBeNull();
+  });
+
+  it('is not had again by a way out won back after one lost: that one is a step of the round\'s sheet', async () => {
+    await life({ events: [{ kind: 'escaped', round: 0 }], story: [{ round: 0, kind: 'escaped' }, { round: 0, kind: 'escapeLost' }, { round: 1, kind: 'escaped' }] });
+    await playRound();
+    const moment = await sheet('Out of the rat race!');
+    expect(moment.querySelector('[data-reward="moment.escape"]')).not.toBeNull();
+    expect(screen.queryByRole('heading', { name: HEADLINE })).toBeNull();
+  });
+});
+
+describe('a moment of a life', () => {
+  it('takes the screen when the player leaves the rat race again, with what made it so, and is heard', async () => {
+    // Out in the round played, the first (round 0, lived at 22), a second time: the moment tells the age of that round.
+    await life({ events: [{ kind: 'escaped', round: 0 }], story: [{ round: 0, kind: 'escaped' }, { round: 1, kind: 'escaped' }] });
     expect(sheetOpen()).toBeNull();
     await playRound();
 
@@ -128,12 +190,10 @@ describe('a moment of a life', () => {
     });
     await playRound();
     fireEvent.click(within(await sheet('Bankrupt')).getByRole('button', { name: 'Start again' }));
-    // The way out and the first million: two steps of the round's one sheet.
-    const out = await sheet('Out of the rat race!');
-    expect(out.textContent).toContain('1 of 2');
-    fireEvent.click(within(out).getByRole('button', { name: 'Carry on, for the fun of it' }));
+    // The life's first way out on the whole screen, then the first million in the round's sheet.
+    fireEvent.click(within(await sheet(HEADLINE)).getByRole('button', { name: 'Continue' }));
     const million = await sheet('Your first million');
-    expect(million.textContent).toContain('2 of 2');
+    expect(million.textContent).not.toMatch(/\d of \d/);
     fireEvent.click(within(million).getByRole('button', { name: 'On to the next' }));
     await waitFor(() => expect(sheetOpen()).toBeNull());
   });
@@ -147,18 +207,19 @@ describe('a moment of a life', () => {
   });
 });
 
-describe('a moment and a legendary badge of the same round', () => {
-  it('are steps of the round\'s one sheet: the way out first, then the badge, never a list of badges inside the moment', async () => {
+describe('the way out and a legendary badge of the same round', () => {
+  it('come one after the other: the way out on the whole screen first, then the badge in the round\'s sheet, never a list of badges inside the moment', async () => {
     // The influencer of the early escape, at the finances of the round that takes her out of the rat race at 36 and earns `escaped_before_40`.
     const { store } = await earlyEscape();
     renderGame(<Play />, memoryServices(store));
     fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
-    const moment = await sheet('Out of the rat race!');
+    const moment = await sheet(HEADLINE);
     expect(within(moment).getByText('First time ever!')).toBeTruthy();
     expect(within(moment).queryByText('Out before 40')).toBeNull();
-    expect(moment.textContent).toMatch(/1 of \d/);
-    fireEvent.click(within(moment).getByRole('button', { name: 'Carry on, for the fun of it' }));
-    // The legendary badge of the way out is a step of its own after it, in the same sheet.
+    // The badge's sheet waits for it.
+    expect(screen.queryByRole('heading', { name: 'Out before 40' })).toBeNull();
+    fireEvent.click(within(moment).getByRole('button', { name: 'Continue' }));
+    // The legendary badge of the way out is a step of the round's sheet after it.
     const badge = await sheet('Out before 40');
     expect(within(badge).getByText('Legendary badge')).toBeTruthy();
     fireEvent.click(within(badge).getByRole('button', { name: 'Accept' }));
