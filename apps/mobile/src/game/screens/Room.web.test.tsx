@@ -124,7 +124,7 @@ describe('a game with others on another version, on the web', () => {
     Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
     const { services } = inRooms(server, B);
     renderGame(<Room />, services);
-    fireEvent.click(await screen.findByRole('button', { name: 'Have a game code?' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Join with a code' }));
     fireEvent.change(await screen.findByRole('textbox', { name: 'Game code' }), { target: { value: room.code } });
     fireEvent.click(screen.getByRole('button', { name: 'Join' }));
     expect((await screen.findByRole('alert')).textContent).toBe('That game plays another version. Reload the page and try again.');

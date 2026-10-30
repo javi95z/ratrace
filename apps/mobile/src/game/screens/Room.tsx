@@ -1123,11 +1123,11 @@ function Door({ code: given, friend, friendsTurn, onTold }: { code?: string; fri
         ) : null}
         <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t(pace === 'live' ? 'quickAbout' : 'quickSlowAbout')}</ReadText>
       </View>
-      <View style={{ gap: 4 }}>
-        <Button variant="secondary" wide disabled={busy} onPress={() => setOpening({ inviting: null })}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Button variant="secondary" cell disabled={busy} onPress={() => setOpening({ inviting: null })}>
           {t('open')}
         </Button>
-        <Button variant="quiet" wide onPress={() => setByCode(true)}>
+        <Button variant="secondary" cell onPress={() => setByCode(true)}>
           {t('haveCode')}
         </Button>
       </View>

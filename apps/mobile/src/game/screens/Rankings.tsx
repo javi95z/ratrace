@@ -20,7 +20,7 @@ import { useCommunity, useWords } from '../context';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
 import { ChallengeBoard, ChallengeEntry, topTenth, useChallengeBoard } from './Challenge';
-import { FriendInvite, FriendRequests, useFriendCode, useFriendships } from './Friends';
+import { FriendForm, FriendInvite, FriendRequests, useFriendCode, useFriendships } from './Friends';
 import { LifeFace } from './LifeFace';
 import { Medal } from './Medal';
 import { WorthGraph } from './WorthGraph';
@@ -455,7 +455,19 @@ export function Rankings({ tab: opening }: { tab?: Opening } = {}) {
         <>
           <RunSheet community={community} row={opened} nameOf={nameOf} onClose={() => setOpened(null)} />
           <FriendRequests open={answering && incoming.length > 0} incoming={incoming} busy={friends.busy} onAnswer={answer} onClose={() => setAnswering(false)} />
-          {inviting && code !== null ? <FriendInvite code={code} onClose={() => setInviting(false)} onTold={setTold} /> : null}
+          {inviting && code !== null ? (
+            <FriendInvite code={code} onClose={() => setInviting(false)} onTold={setTold}>
+              <FriendForm
+                busy={friends.busy}
+                said={friends.said}
+                onAsk={async (asked) => {
+                  const done = await friends.ask(asked);
+                  if (done) setMade((n) => n + 1);
+                  return done;
+                }}
+              />
+            </FriendInvite>
+          ) : null}
         </>
       ) : null}
       <Toast message={told} onDone={() => setTold(null)} />

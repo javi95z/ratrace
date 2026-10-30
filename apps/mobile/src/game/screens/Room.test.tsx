@@ -268,7 +268,7 @@ describe('opening and joining a room', () => {
   it('takes no invitation from a code that is not one: the door is the door', async () => {
     const { services } = inRooms();
     renderGame(<Room code="ab-12" />, services);
-    expect(await screen.findByRole('button', { name: 'Have a game code?' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Join with a code' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'You are invited to the game' })).toBeNull();
   });
 
@@ -278,7 +278,7 @@ describe('opening and joining a room', () => {
     const code = (opened.body.room as { code: string }).code;
     const { services, counted } = inRooms(server, B);
     renderGame(<Room />, services);
-    press(await screen.findByRole('button', { name: 'Have a game code?' }));
+    press(await screen.findByRole('button', { name: 'Join with a code' }));
     const field = await screen.findByRole('textbox', { name: 'Game code' });
     type(field, `${code.slice(0, 2).toLowerCase()}-${code.slice(2, 4)} `);
     expect((field as HTMLInputElement).value).toBe(code.slice(0, 4));
@@ -293,7 +293,7 @@ describe('opening and joining a room', () => {
   it('says why a code was turned away', async () => {
     const { services } = inRooms();
     renderGame(<Room />, services);
-    press(await screen.findByRole('button', { name: 'Have a game code?' }));
+    press(await screen.findByRole('button', { name: 'Join with a code' }));
     type(await screen.findByRole('textbox', { name: 'Game code' }), 'zzzzzz');
     press(button('Join'));
     expect((await screen.findByRole('alert')).textContent).toBe('No game has that code.');
@@ -307,7 +307,7 @@ describe('opening and joining a room', () => {
     Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
     const { services } = inRooms(server, B);
     renderGame(<Room />, services);
-    press(await screen.findByRole('button', { name: 'Have a game code?' }));
+    press(await screen.findByRole('button', { name: 'Join with a code' }));
     type(await screen.findByRole('textbox', { name: 'Game code' }), room.code);
     press(button('Join'));
     expect((await screen.findByRole('alert')).textContent).toBe('That game plays another version. Update the app and try again.');

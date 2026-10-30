@@ -771,9 +771,9 @@ test('the scenes of the games with others are drawn signed in, at the scene\'s t
   render(<SceneView name="room-door" />);
   expect(await screen.findByText('2 games are looking for players right now', {}, WAIT)).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Play now' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Have a game code?' })).toBeTruthy();
-  // The player's friends beside the ways to play: their code, and none yet.
-  expect(await screen.findByRole('button', { name: /Your friend code: / }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Join with a code' })).toBeTruthy();
+  // The player's friends beside the ways to play: none yet, and the way to add some.
+  expect(await screen.findByRole('button', { name: 'Add friends' }, WAIT)).toBeTruthy();
   cleanup();
   render(<SceneView name="room-lobby-friends" />);
   const members = await screen.findByRole('region', { name: 'In the game: 3 of 6' }, WAIT);

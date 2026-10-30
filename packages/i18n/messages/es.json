@@ -472,6 +472,7 @@
     "saved": "Tu seguro te ahorró {amount}",
     "asPlanned": "Sale como se espera",
     "lostStake": "Pierdes lo que pusiste",
+    "leadsOn": "Tiene continuación",
     "seeCareer": "Ver la carrera de {career}",
     "seeCity": "Ver {city} al lado de tu ciudad"
   },
@@ -1686,7 +1687,7 @@
     "hint": "La mejor vida clasificatoria de cada jugador. Solo cuentan las vidas jugadas en el servidor.",
     "hintWeek": "La mejor vida clasificatoria de cada jugador esta semana. Solo cuentan las vidas jugadas en el servidor.",
     "following": "Tus amigos",
-    "nobody": "Aún no tienes amigos. Envía una solicitud con su código.",
+    "nobody": "Aún no tienes amigos.",
     "friendCode": "Código de amigo",
     "follow": "Enviar solicitud",
     "followUnknown": "Ningún jugador tiene ese código.",
@@ -2105,7 +2106,7 @@
     "worthShort": "Patrimonio",
     "olderRules": "Esta partida empezó con una versión anterior del juego: se juega igual, pero las cifras que se prevén en pantalla pueden variar un poco.",
     "playNow": "Jugar ahora",
-    "haveCode": "¿Tienes un código de partida?"
+    "haveCode": "Unirme con código"
   },
   "player": {
     "title": "Tu perfil",

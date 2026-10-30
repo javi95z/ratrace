@@ -1,7 +1,7 @@
 import { badges, businessArt, headlineVoice, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Milestone, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
-import type { CardDef, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
+import type { CardDef, CardOption, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '../lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -174,6 +174,17 @@ export function onlyCosts(effects: Effects | undefined): boolean {
   const keys = Object.keys(effects).filter((key) => effects[key as keyof Effects] !== undefined);
   const costs = new Set(['cash', 'loan', 'focus']);
   return keys.length > 0 && keys.every((key) => costs.has(key)) && ((effects.cash ?? 0) < 0 || (effects.loan ?? 0) > 0);
+}
+
+/**
+ * Whether an option shows only what it costs, and what it buys is a card to come: a first cheque to a friend, a coin bought on a brother-in-law's word.
+ * Said on the option, or passing would look free and paying a plain loss. What a person's flags say of them (met, warm, cold) opens no story of its own.
+ */
+export function leadsOn(cards: ReadonlyArray<CardDef>, option: CardOption): boolean {
+  if ((option.outcomes ?? []).length > 0 || option.effects === undefined) return false;
+  const shown = Object.fromEntries(Object.entries(option.effects).filter(([key]) => !['setFlags', 'clearFlags', 'onceMore'].includes(key)));
+  if (!onlyCosts(shown)) return false;
+  return (option.effects.setFlags ?? []).some((flag) => !/_(met|warm|cold)$/.test(flag) && cards.some((card) => card.when?.flags?.includes(flag)));
 }
 
 /**

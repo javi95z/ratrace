@@ -570,8 +570,9 @@ describe('the friends among the rankings', () => {
     await linesOf('Friends');
     expect(await screen.findByText('Compare your lives with your friends.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Add friends' }));
-    const sheet = sheetOf('Your friend code');
+    const sheet = sheetOf('Add friends');
     expect(within(sheet).getByText('ABCD2345')).toBeTruthy();
+    expect(within(sheet).getByRole('textbox', { name: 'Friend code' })).toBeTruthy();
     // Not among everyone.
     cleanup();
     show(community().community);

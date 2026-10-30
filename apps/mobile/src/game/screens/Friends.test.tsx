@@ -66,14 +66,22 @@ const show = (with_: Community, initial?: string) =>
   );
 const panel = () => screen.getByRole('region', { name: 'Your friends' });
 const sheetOf = (title: string) => screen.getByRole('heading', { name: title }).closest('[aria-modal="true"]') as HTMLElement;
+/** The sheet that adds a friend, opened from the panel. */
+const adding = async () => {
+  fireEvent.click(await within(panel()).findByRole('button', { name: 'Add friends' }));
+  return sheetOf('Add friends');
+};
 const type = (field: HTMLElement, text: string) => fireEvent.change(field, { target: { value: text } });
 
 describe('the friends\' panel', () => {
-  it('shows the player\'s friend code, which opens their invitation: its QR code, the link to share, the code to copy', async () => {
+  it('adds a friend from a sheet, with no code on the page: the player\'s own there, its QR code, the link to share, the code to copy', async () => {
     const { community: c } = community();
     show(c);
-    fireEvent.click(await screen.findByRole('button', { name: 'Your friend code: ABCD2345' }));
-    const sheet = sheetOf('Your friend code');
+    await waitFor(() => expect(panel().textContent).toContain('No friends yet.'));
+    expect(panel().textContent).not.toContain('ABCD2345');
+    expect(within(panel()).queryByRole('textbox')).toBeNull();
+    const sheet = await adding();
+    await within(sheet).findByText('ABCD2345');
     expect(within(sheet).getByRole('img', { name: /Scan it with another phone's camera/ })).toBeTruthy();
     expect(within(sheet).getByText('ABCD2345')).toBeTruthy();
     expect(within(sheet).getByRole('button', { name: 'Share' })).toBeTruthy();
@@ -86,12 +94,13 @@ describe('the friends\' panel', () => {
     const { community: c, asked } = community();
     show(c);
     await waitFor(() => expect(panel().textContent).toContain('No friends yet.'));
-    type(within(panel()).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-    expect((within(panel()).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
-    fireEvent.click(within(panel()).getByRole('button', { name: 'Send request' }));
-    expect((await within(panel()).findByRole('status')).textContent).toBe('Request sent. Once they accept, you are friends.');
+    const sheet = await adding();
+    type(within(sheet).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
+    expect((within(sheet).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Send request' }));
+    expect((await within(sheet).findByRole('status')).textContent).toBe('Request sent. Once they accept, you are friends.');
     expect(asked).toContain('befriend WXYZ6789');
-    expect((within(panel()).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('');
+    expect((within(sheet).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('');
     expect(await within(panel()).findByRole('heading', { name: 'Requests sent' })).toBeTruthy();
     expect(within(panel()).getByRole('button', { name: 'Otra_Rata, Waiting' })).toBeTruthy();
   });
@@ -99,7 +108,8 @@ describe('the friends\' panel', () => {
   it('writes in a friend\'s code their link brought (their QR code), for the player to send', async () => {
     const { community: c, asked } = community();
     show(c, 'WXYZ6789');
-    expect((await within(panel()).findByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
+    expect((await screen.findByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('WXYZ6789');
+    expect(sheetOf('Add friends')).toBeTruthy();
     expect(asked.some((one) => one.startsWith('befriend'))).toBe(false);
   });
 
@@ -137,13 +147,14 @@ describe('the friends\' panel', () => {
   it('asks nobody for an empty code, and trims a pasted one', async () => {
     const { community: c, asked } = community();
     show(c);
-    const field = await within(panel()).findByRole('textbox', { name: 'Friend code' });
+    const sheet = await adding();
+    const field = within(sheet).getByRole('textbox', { name: 'Friend code' });
     type(field, '   ');
-    fireEvent.click(within(panel()).getByRole('button', { name: 'Send request' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Send request' }));
     await settled();
     expect(asked.filter((line) => line.startsWith('befriend'))).toEqual([]);
     type(field, ' wxyz6789 ');
-    fireEvent.click(within(panel()).getByRole('button', { name: 'Send request' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Send request' }));
     await waitFor(() => expect(asked).toContain('befriend WXYZ6789'));
   });
 
@@ -153,7 +164,7 @@ describe('the friends\' panel', () => {
     await settled();
     expect(within(panel()).queryByRole('alert')).toBeNull();
     expect(panel().textContent).not.toContain('No friends yet.');
-    expect(within(panel()).getByRole('button', { name: 'Send request' })).toBeTruthy();
+    expect(within(await adding()).getByRole('button', { name: 'Send request' })).toBeTruthy();
   });
 
   it('says what a request came to', async () => {
@@ -168,9 +179,10 @@ describe('the friends\' panel', () => {
     ] as const) {
       const { community: c } = community({ befriend: async () => answer });
       show(c);
-      type(await within(panel()).findByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-      fireEvent.click(within(panel()).getByRole('button', { name: 'Send request' }));
-      expect((await within(panel()).findByRole(role)).textContent, answer).toBe(said);
+      const sheet = await adding();
+      type(within(sheet).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Send request' }));
+      expect((await within(sheet).findByRole(role)).textContent, answer).toBe(said);
       cleanup();
     }
   });

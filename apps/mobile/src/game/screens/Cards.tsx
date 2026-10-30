@@ -1,5 +1,5 @@
 import { cardArtOf, cardPeople, metFlag, personArt } from '@ratrace/content';
-import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game/present';
+import { cardRarity, chancePct, effectTags, leadsOn, onlyCosts } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
 import { homeOf, previewCard, quoteItem } from '@ratrace/engine';
 import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
@@ -20,7 +20,7 @@ import { Glint, Holo, Sheen } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
 import { LEVEL_2, LEVEL_3 } from '../../ui/headingLevel';
-import { PixelText, ReadText, SNUG } from '../../ui/text';
+import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useHaptic } from '../../ui/haptic';
 import { useCards, useGame, useStill, useT, useWords } from '../context';
@@ -82,7 +82,7 @@ function useItemStatus(view: GameView | null): ((itemId: string) => number) | un
  * narrow phone, as the web's inline block does, instead of running past the edge. `dim` fades them, on a choice that cannot be taken; `shrink` lets
  * them take what is left of a row (the line of an outcome, beside its chance).
  */
-function Tags({ cash, tags, empty, dim = false, shrink = false }: { cash: number; tags: EffectTag[]; empty?: string; dim?: boolean; shrink?: boolean }) {
+function Tags({ cash, tags, empty, dim = false, shrink = false, more }: { cash: number; tags: EffectTag[]; empty?: string; dim?: boolean; shrink?: boolean; more?: string }) {
   const { fmt } = useWords();
   const box: ViewStyle = { ...(shrink ? { flexShrink: 1, minWidth: 0 } : null), ...(dim ? { opacity: 0.5 } : null) };
   if (cash === 0 && tags.length === 0) {
@@ -101,6 +101,11 @@ function Tags({ cash, tags, empty, dim = false, shrink = false }: { cash: number
     <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }, box]}>
       {cash !== 0 ? tagged(cash > 0 ? 'good' : 'bad', fmt.briefSigned(cash), 'cash') : null}
       {tags.map((tag, i) => tagged(tag.tone, tag.text, i))}
+      {more ? (
+        <View style={{ flexShrink: 1, maxWidth: '100%', backgroundColor: COLORS['night-600'], paddingHorizontal: 6, paddingVertical: 2 }}>
+          <PixelText size={12} tone="gold-500" lineHeight={12 * TIGHT}>{more}</PixelText>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -157,7 +162,7 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
       </View>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <ReadText size={13} lineHeight={13 * SNUG}>{lockWords(preview.lock)}</ReadText> : null}
-      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...covers]} dim={dim} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...covers]} dim={dim} more={leadsOn(words.content.cards, option) ? t('leadsOn') : undefined} />
       {(option.outcomes ?? []).map((outcome, k) => {
         const outcomeTags = (said: typeof outcome.effects) => {
           const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus, livedIn);

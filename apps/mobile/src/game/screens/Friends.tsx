@@ -1,6 +1,6 @@
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import type { Community, Friend, Friends, RankingRow } from '@ratrace/online/types';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { copy } from '../../ui/copy';
 import { Framed } from '../../ui/Frame';
@@ -198,7 +198,7 @@ function GroupHeading({ tone, children }: { tone: ColorToken; children: string }
  * The foot of the friends' panel: a friend code to ask with, and what the panel says of the last thing done. The code is its own while it is typed,
  * and emptied once it is done with. A friend's link (their QR code, `friendLink`) brings it written in (`initial`), for the player to send.
  */
-function FriendForm({ busy, said, onAsk, initial = '' }: { busy: boolean; said: Said | null; onAsk(code: string): Promise<boolean>; initial?: string }) {
+export function FriendForm({ busy, said, onAsk, initial = '' }: { busy: boolean; said: Said | null; onAsk(code: string): Promise<boolean>; initial?: string }) {
   const t = useT('rankings');
   const [code, setCode] = useState(initial);
   const ask = async () => {
@@ -225,10 +225,11 @@ function FriendForm({ busy, said, onAsk, initial = '' }: { busy: boolean; said: 
 }
 
 /**
- * The player's friend code, pressed: as a QR code another phone's camera reads (the games with others' page with the code ready to send,
- * `friendLink`, which Android opens in the app), as words and a link for the phone's share sheet, or copied.
+ * Adding a friend, in a sheet: the player's own friend code (null until it is read), as a QR code another phone's camera reads (the games with others'
+ * page with the code ready to send, `friendLink`, which Android opens in the app), as words and a link for the phone's share sheet, or copied; and
+ * under it, `children`, the way to ask with someone else's (`FriendForm`).
  */
-export function FriendInvite({ code, onClose, onTold }: { code: string; onClose(): void; onTold(message: string): void }) {
+export function FriendInvite({ code, onClose, onTold, children }: { code: string | null; onClose(): void; onTold(message: string): void; children?: ReactNode }) {
   const t = useT('rankings');
   const room = useT('room');
   const player = useT('player');
@@ -236,8 +237,9 @@ export function FriendInvite({ code, onClose, onTold }: { code: string; onClose(
   const { locale } = useSettings();
   const track = useTrack();
   const { width } = useWindowDimensions();
-  const url = friendLink(locale, code);
+  const url = code === null ? '' : friendLink(locale, code);
   const share = async () => {
+    if (code === null) return;
     try {
       if (await shareLink(t('code'), t('inviteText', { code }), url)) track({ name: 'share', what: 'invite' });
     } catch {
@@ -249,21 +251,27 @@ export function FriendInvite({ code, onClose, onTold }: { code: string; onClose(
     onTold(player('copied'));
   };
   return (
-    <Sheet open onClose={onClose} title={t('code')} closeLabel={common('close')}>
-      <View style={{ alignItems: 'center', gap: 12, paddingBottom: 4 }}>
-        <QrCode value={url} width={Math.min(240, width - 96)} label={t('inviteScan')} />
-        <PixelText size={28} tone="gold-500" lineHeight={28} style={{ letterSpacing: 28 * 0.12 }}>{code}</PixelText>
-        <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t('inviteScan')}</ReadText>
-        <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
-          {canShareLink() ? (
-            <Button variant="primary" cell onPress={() => void share()}>
-              {room('share')}
-            </Button>
-          ) : null}
-          <Button variant="secondary" cell onPress={() => void copy(code, copied)}>
-            {player('copy')}
-          </Button>
-        </View>
+    <Sheet open onClose={onClose} title={t('addFriends')} closeLabel={common('close')}>
+      <View style={{ gap: 16, paddingBottom: 4 }}>
+        {code !== null ? (
+          <View style={{ alignItems: 'center', gap: 12 }}>
+            <QrCode value={url} width={Math.min(200, width - 96)} label={t('inviteScan')} />
+            <ReadText size={13} tone="ink-200">{t('code')}</ReadText>
+            <PixelText size={28} tone="gold-500" lineHeight={28} style={{ letterSpacing: 28 * 0.12 }}>{code}</PixelText>
+            <ReadText size={13} tone="ink-300" lineHeight={13 * SNUG} style={{ textAlign: 'center' }}>{t('inviteScan')}</ReadText>
+            <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
+              {canShareLink() ? (
+                <Button variant="primary" cell onPress={() => void share()}>
+                  {room('share')}
+                </Button>
+              ) : null}
+              <Button variant="secondary" cell onPress={() => void copy(code, copied)}>
+                {player('copy')}
+              </Button>
+            </View>
+          </View>
+        ) : null}
+        {children}
       </View>
     </Sheet>
   );
@@ -283,30 +291,6 @@ export function useFriendCode(community: Community | null): string | null {
     };
   }, [community]);
   return code;
-}
-
-/** The player's own friend code, on a line of its own, pressed to share it (`FriendInvite`). Nothing until it is read. */
-function MyCode({ community, onTold }: { community: Community; onTold(message: string): void }) {
-  const t = useT('rankings');
-  const room = useT('room');
-  const code = useFriendCode(community);
-  const [sharing, setSharing] = useState(false);
-  const press = usePress({ onPress: () => setSharing(true) });
-  if (code === null) return null;
-  return (
-    <>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${t('code')}: ${code}`} accessibilityHint={room('invite')} onPress={press} style={({ pressed }) => pressDown(pressed)}>
-        <Framed kind="bevel" style={{ ...LINE, backgroundColor: COLORS['night-600'] }}>
-          <ReadText size={13} tone="ink-200" style={{ flex: 1, minWidth: 0 }}>{t('code')}</ReadText>
-          <PixelText size={15} tone="gold-500" style={{ letterSpacing: 15 * 0.12 }}>{code}</PixelText>
-          <View aria-hidden importantForAccessibility="no-hide-descendants">
-            <PixelText size={14} tone="ink-300">{'›'}</PixelText>
-          </View>
-        </Framed>
-      </Pressable>
-      {sharing ? <FriendInvite code={code} onClose={() => setSharing(false)} onTold={onTold} /> : null}
-    </>
-  );
 }
 
 /**
@@ -435,8 +419,8 @@ function FriendSheet({ community, open, onClose, onJoin, onInvite, onEnd, busy }
 }
 
 /**
- * The friends' panel: the player's own code, the requests waiting on them, their friends (each with the game they are in now) and the requests they
- * sent, a code to ask with; a friend opened in their sheet, joined in the game they wait in (`onJoin`) or asked into one (`onInvite`). `initial` is a
+ * The friends' panel: the way to add one (the player's own code and a code to ask with, in a sheet: `FriendInvite`), the requests waiting on them, their
+ * friends (each with the game they are in now) and the requests they sent; a friend opened in their sheet, joined in the game they wait in (`onJoin`) or asked into one (`onInvite`). `initial` is a
  * friend's code a link brought; `turn` reads the friends again when it moves. Nothing without an account to ask with.
  */
 export function FriendsPanel({ onJoin, onInvite, onTold, initial, turn = 0 }: { onJoin(code: string): void; onInvite?: (friend: Friend) => void; onTold(message: string): void; initial?: string; turn?: number }) {
@@ -444,8 +428,14 @@ export function FriendsPanel({ onJoin, onInvite, onTold, initial, turn = 0 }: { 
   const common = useT('common');
   const community = useCommunity();
   const friends = useFriendships(community, turn);
+  const code = useFriendCode(community);
   const nameOf = useFriendName();
   const [open, setOpen] = useState<{ friend: Friend; bond: Bond } | null>(null);
+  // A friend's link opens the sheet with their code written in, for the player to send.
+  const [adding, setAdding] = useState(Boolean(initial));
+  useEffect(() => {
+    if (initial) setAdding(true);
+  }, [initial]);
   const opening = useCallback((friend: Friend, bond: Bond) => setOpen({ friend, bond }), []);
   if (community === null) return null;
   const list = friends.list;
@@ -456,7 +446,12 @@ export function FriendsPanel({ onJoin, onInvite, onTold, initial, turn = 0 }: { 
     <View role="region" aria-label={t('following')}>
       <Panel title={t('following')} label={t('following')}>
         <View style={{ gap: 8 }}>
-          <MyCode community={community} onTold={onTold} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+            {list && list.friends.length === 0 && list.incoming.length === 0 ? <ReadText size={13} tone="ink-200" style={{ flex: 1, minWidth: 0 }}>{t('nobody')}</ReadText> : null}
+            <Button variant="secondary" size={13} onPress={() => setAdding(true)}>
+              {t('addFriends')}
+            </Button>
+          </View>
           {list === undefined ? <Loading>{common('loading')}</Loading> : null}
           {list && list.incoming.length > 0 ? (
             <View style={{ gap: 6 }}>
@@ -464,7 +459,6 @@ export function FriendsPanel({ onJoin, onInvite, onTold, initial, turn = 0 }: { 
               {list.incoming.map((friend) => line(friend, 'incoming'))}
             </View>
           ) : null}
-          {list && list.friends.length === 0 && list.incoming.length === 0 ? <ReadText size={13} tone="ink-200">{t('nobody')}</ReadText> : null}
           {list && list.friends.length > 0 ? <View style={{ gap: 6 }}>{list.friends.map((friend) => line(friend, 'friend'))}</View> : null}
           {list && list.outgoing.length > 0 ? (
             <View style={{ gap: 6 }}>
@@ -472,8 +466,18 @@ export function FriendsPanel({ onJoin, onInvite, onTold, initial, turn = 0 }: { 
               {list.outgoing.map((friend) => line(friend, 'outgoing'))}
             </View>
           ) : null}
-          <FriendForm key={initial ?? ''} busy={friends.busy} said={friends.said} onAsk={friends.ask} initial={initial} />
+          {/* What was done on the page; what is asked in the sheet is said there. */}
+          {friends.said && !adding ? (
+            <Notice role={friends.said.bad ? 'alert' : 'status'} bg={friends.said.bad ? 'wine-900' : 'teal-800'} size={13}>
+              {t(friends.said.key)}
+            </Notice>
+          ) : null}
         </View>
+        {adding ? (
+          <FriendInvite code={code} onClose={() => setAdding(false)} onTold={onTold}>
+            <FriendForm key={initial ?? ''} busy={friends.busy} said={friends.said} onAsk={friends.ask} initial={initial} />
+          </FriendInvite>
+        ) : null}
         <FriendSheet
           community={community}
           open={open}
