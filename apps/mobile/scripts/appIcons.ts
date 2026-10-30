@@ -10,6 +10,8 @@ import sharp from 'sharp';
  *   assets/icon.png                     the icon iOS and Android before 8 show: the badge on the game's night, filling it
  *   assets/android-icon-foreground.png  the adaptive icon's front: the badge at half the canvas, inside the circle every launcher's mask keeps
  *                                       (66 of its 108 dp); the back is app.json's `backgroundColor`, the same night
+ *   assets/android-icon-monochrome.png  the same front in one colour, for Android 13's themed icons (the launcher tints it): the badge's light
+ *                                       pixels (its gold frame, the rat, his collar) kept, its dark ones (the night, the suit) let through
  *   assets/splash-mascot.png            the splash's picture (expo-splash-screen in app.json): the rat in its wheel, the front door's own
  *                                       first picture (`brand.mascot`), four times over, on the splash's night
  *   assets/shortcuts/<name>.png         the fronts of the Android shortcuts' icons (expo-quick-actions in app.json, game/shortcuts.ts): each a
@@ -33,6 +35,28 @@ const NIGHT = '#141b33';
 
 const png = { compressionLevel: 9 } as const;
 const NONE = { r: 0, g: 0, b: 0, alpha: 0 };
+
+/** How light a pixel of the badge is, at least, to be kept in the themed icon: the frame, the rat's fur and his collar; not the night or his suit. */
+const MONOCHROME_LIGHT = 0.3;
+
+/**
+ * The badge in one colour (Android 13's themed icon): white where a pixel is light, nothing where it is dark or empty. The launcher paints the white
+ * in the phone's own colours, the dark around it the back.
+ */
+async function monochrome(file: string): Promise<void> {
+  const { data, info } = await sharp(ICON).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const out = Buffer.alloc(info.width * info.height * 4);
+  for (let i = 0; i < info.width * info.height; i++) {
+    const [r, g, b, a] = [data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]];
+    const light = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    out.set([255, 255, 255, a > 0 && light > MONOCHROME_LIGHT ? 255 : 0], i * 4);
+  }
+  await sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .resize(512, 512, { kernel: sharp.kernel.nearest })
+    .extend({ top: 256, bottom: 256, left: 256, right: 256, background: NONE })
+    .png(png)
+    .toFile(file);
+}
 
 /** The room a shortcut's sprite is drawn in, in the middle of its 432-pixel canvas (108 dp at four times): inside every launcher's mask, with room round it. */
 const SHORTCUT_ROOM = 192;
@@ -63,7 +87,8 @@ async function main(): Promise<void> {
       .extend({ top: 256, bottom: 256, left: 256, right: 256, background: NONE })
       .png(png)
       .toFile(join(ASSETS, 'android-icon-foreground.png')),
+    monochrome(join(ASSETS, 'android-icon-monochrome.png')),
   ]);
 }
 
-void main().then(() => console.log('app icons: assets/icon.png, assets/android-icon-foreground.png, assets/splash-mascot.png, assets/shortcuts/*.png'));
+void main().then(() => console.log('app icons: assets/icon.png, assets/android-icon-foreground.png, assets/android-icon-monochrome.png, assets/splash-mascot.png, assets/shortcuts/*.png'));

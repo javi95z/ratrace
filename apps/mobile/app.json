@@ -21,9 +21,10 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#141b33",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
+      "predictiveBackGestureEnabled": true,
       "package": "com.hackio.theratrace",
       "intentFilters": [
         {

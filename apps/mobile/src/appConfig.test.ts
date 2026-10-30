@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import type { ExpoConfig } from 'expo/config';
 import { describe, expect, test } from 'vitest';
 import { serverProblem, withGoogleOnDevice, withServerCheck } from '../app.config';
@@ -155,4 +155,24 @@ test('a build that names its iOS Google client gets the library\'s URL scheme fo
     'expo-router',
     ['@react-native-google-signin/google-signin', { iosUrlScheme: 'com.googleusercontent.apps.1234-abcd' }],
   ]);
+});
+
+/*
+ * Android's own Back (Android 13 and later): the predictive gesture, so the system no longer calls the old `onBackPressed` and every Back reaches
+ * the game through the dispatcher React Native listens on. The game's Back stays where it was: a sheet is a Modal that takes it itself
+ * (`onRequestClose`), a life in progress takes it home (`ui/hardwareBack.ts`, the only place that listens to it), the stack pops a screen.
+ */
+test('takes Android\'s predictive Back, and hears the device\'s Back in one place only', () => {
+  expect((config.expo.android as Record<string, unknown>).predictiveBackGestureEnabled).toBe(true);
+  const src = new URL('.', import.meta.url);
+  const listeners = (readdirSync(src, { recursive: true }) as string[])
+    .filter((file) => /\.tsx?$/.test(file) && !/\.test\.|\.web\.|^testing\//.test(file))
+    .filter((file) => readFileSync(new URL(file, src), 'utf8').includes('BackHandler'));
+  expect(listeners).toEqual(['ui/hardwareBack.ts']);
+});
+
+test('gives Android 13\'s themed icons a front of one colour, the same badge as the adaptive icon\'s', () => {
+  const icon = (config.expo.android as unknown as { adaptiveIcon: Record<string, string> }).adaptiveIcon;
+  expect(icon.monochromeImage).toBe('./assets/android-icon-monochrome.png');
+  expect(existsSync(new URL(`../${icon.monochromeImage}`, import.meta.url))).toBe(true);
 });
