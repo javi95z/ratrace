@@ -17,6 +17,8 @@ import { json, readJson } from '../_shared/http.ts';
 import { ranked } from '../_shared/ranked.ts';
 import type { RankedGameRow } from '../_shared/ranked.ts';
 import { allowed } from '../_shared/rate.ts';
+import { tellOvertaken } from '../_shared/overtaken.ts';
+import { deliver, subscriptionsOf } from '../_deno/push.ts';
 
 /** What a ranked life reads of its row. */
 const ROW = 'id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at, challenge';
@@ -83,8 +85,29 @@ export default {
         // Written only if the row is as it was read: of two steps that arrive at once, one finds it changed.
         saveStep: async (id, asRead, log, round) =>
           (must(await db.from('games').update({ log, round }).eq('id', id).eq('updated_at', asRead).eq('status', 'playing').select('id')) as unknown[]).length === 1,
-        saveRun: async (run: RunRow) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
+        // The rows answered are the ones written: none where the run was there already.
+        saveRun: async (run: RunRow) => (must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true }).select('id')) as unknown[]).length === 1,
         closeGame: async (id, round, status) => void must(await db.from('games').update({ status, round }).eq('id', id)),
+        // The friends the run passed are told after the answer, so that nobody waits on push services.
+        written: async (run) => {
+          const telling = tellOvertaken(
+            {
+              friendsOf: async (user) => (must(await db.from('friendships').select('followed').eq('follower', user)) as Array<{ followed: string }>).map((row) => row.followed),
+              bestsSince: async (users, since, except) =>
+                Object.fromEntries((must(await db.rpc('overtaken_bests', { p_users: users, p_since: since, p_except: except })) as Array<{ user_id: string; score: number }>).map((row) => [row.user_id, row.score])),
+              names: async (ids) => Object.fromEntries((must(await db.from('profiles').select('user_id, nickname').in('user_id', ids)) as Array<{ user_id: string; nickname: string | null }>).map((row) => [row.user_id, row.nickname])),
+              claim: async (user, day) => must(await db.rpc('overtaken_claim', { p_user: user, p_day: day })) === true,
+              notify: async (user, about) => {
+                await deliver(db, await subscriptionsOf(db, [user]), () => about, 86_400);
+              },
+            },
+            run,
+            new Date(),
+          ).catch((error: unknown) => console.error('overtaken notice failed:', error instanceof Error ? error.message : error));
+          const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
+          if (runtime) runtime.waitUntil(telling);
+          else await telling;
+        },
       },
       userId,
       read.value,

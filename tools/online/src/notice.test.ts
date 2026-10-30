@@ -58,6 +58,19 @@ describe('what a notice says', () => {
     expect(noticeOf(null, { kind: 'idle' }, 'app').title).toBe('Your life is waiting');
   });
 
+  it('tells of a friend who passed the player this week, with both scores as each language writes numbers, and leads to the ranking among friends', () => {
+    expect(noticeOf('en', { kind: 'overtaken', who: 'Ana', score: 9840, theirs: 9215 })).toEqual({
+      title: 'A friend passed you',
+      body: 'Ana passed you this week: 9,840 to your 9,215. Your move.',
+      url: '/en/rankings?tab=friends',
+      tag: 'overtaken',
+    });
+    expect(noticeOf('es', { kind: 'overtaken', who: 'Ana', score: 12840, theirs: 9215 }).body).toBe('Ana te ha adelantado esta semana: 12.840 contra tus 9.215. Te toca.');
+    expect(noticeOf('ru', { kind: 'overtaken', who: null, score: 12840, theirs: 9215 }).body).toBe('Друг теперь выше тебя на этой неделе: 12 840 против твоих 9 215. Твой ход.');
+    expect(noticeOf('es', { kind: 'overtaken', who: 'Ana', score: 9840, theirs: 9215 }, 'app')).toMatchObject({ url: 'theratrace://rankings?tab=friends', tag: 'overtaken' });
+    expect(noticeOf('es', { kind: 'overtaken', who: 'Ana', score: 9840, theirs: 9215 }, 'app')).not.toHaveProperty('category');
+  });
+
   it('says a shout as the player who sent it, in the words of the page', () => {
     expect(noticeOf('es', { kind: 'shout', who: 'Ana', n: 13 })).toEqual({ title: 'Ana dice:', body: '¡Date prisa!', url: '/es/room', tag: 'room-shout' });
     expect(noticeOf('en', { kind: 'shout', who: null, n: 2 })).toMatchObject({ title: 'A rival says:', body: '🔥' });

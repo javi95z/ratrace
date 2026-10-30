@@ -546,3 +546,85 @@ describe('the weekly challenge, on a device', { timeout: 120_000 }, () => {
     await expect(d.sessions.start(other.id, { challenge: WEEK })).rejects.toThrow(/not the life of the challenge/);
   });
 });
+
+describe('a friend passed: the notice the server sends as a ranked life ends', { timeout: 120_000 }, () => {
+  const ANA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const BEA = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const STRANGER = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  /** A ranked run the server wrote before, of another life: only its player, score and moment count here. */
+  const runOf = (user: string, score: number, finishedAt = '2026-10-13T08:00:00.000Z') => {
+    const id = `ffffffff-ffff-4fff-8fff-${user.slice(0, 12)}`;
+    return {
+      id,
+      user_id: user,
+      game_id: id,
+      mode: 'ranked' as const,
+      life_id: 'nurse',
+      engine_version: ENGINE_VERSION,
+      content_version: CONTENT_VERSION,
+      score,
+      net_worth: 0,
+      status: 0,
+      escaped_at_round: null,
+      bankruptcies: 0,
+      badges: [],
+      cities: [],
+      history: [],
+      verified: true as const,
+      finished_at: finishedAt,
+      challenge: null,
+    };
+  };
+  const LOW = -1e12;
+  const HIGH = 1e12;
+  async function finishLife(server: ReturnType<typeof rankedServer>) {
+    const session = await device(server).sessions.start('nurse', { ranked: true });
+    await play(session);
+    expect(session.view().finished).toBe(true);
+    const run = server.runs.find((one) => one.id === session.gameId);
+    if (!run) throw new Error('no run written');
+    return run;
+  }
+
+  it('tells a friend the life passed, once, by the player\'s name and both scores, and nobody else', async () => {
+    const server = rankedServer();
+    server.names.set(server.user, 'Ana');
+    server.befriend(server.user, ANA);
+    server.befriend(server.user, BEA);
+    server.runs.push(runOf(ANA, LOW), runOf(BEA, HIGH), runOf(STRANGER, LOW));
+    const run = await finishLife(server);
+    expect(server.notices).toEqual([{ user: ANA, about: { kind: 'overtaken', who: 'Ana', score: run.score, theirs: LOW } }]);
+    // The finished life looked at again writes nothing, and tells nobody again.
+    await server.call({ action: 'view', gameId: run.id });
+    expect(server.notices).toHaveLength(1);
+  });
+
+  it('does not tell a friend twice in a day', async () => {
+    const server = rankedServer();
+    server.befriend(server.user, ANA);
+    server.runs.push(runOf(ANA, LOW));
+    server.overtakenDays.set(ANA, '2026-10-13');
+    await finishLife(server);
+    expect(server.notices).toEqual([]);
+  });
+
+  it('tells nobody of a life lower than the player\'s best of the week, nor of a friend with no ranked life this week', async () => {
+    const server = rankedServer();
+    server.befriend(server.user, ANA);
+    server.runs.push(runOf(server.user, HIGH), runOf(ANA, LOW));
+    await finishLife(server);
+    expect(server.notices).toEqual([]);
+    const again = rankedServer();
+    again.befriend(again.user, BEA);
+    again.runs.push(runOf(BEA, LOW, '2026-10-09T08:00:00.000Z'));
+    await finishLife(again);
+    expect(again.notices).toEqual([]);
+  });
+
+  it('tells no player who is not a friend', async () => {
+    const server = rankedServer();
+    server.runs.push(runOf(STRANGER, LOW));
+    await finishLife(server);
+    expect(server.notices).toEqual([]);
+  });
+});

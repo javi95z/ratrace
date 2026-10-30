@@ -446,6 +446,7 @@ const SEEN_ON: Partial<Record<Page, readonly string[]>> = {
   room: ['room', 'room-loan', 'room-shout', 'room-invite', 'friends'],
   challenge: ['weekly-challenge'],
   play: ['idle-life', 'market-moved'],
+  rankings: ['overtaken'],
 };
 
 /**

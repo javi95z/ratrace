@@ -57,9 +57,14 @@ export interface RankedDeps {
   loadSeed(id: string): Promise<string | null>;
   /** Writes the log and the round, if the row is still as it was read. False if someone wrote it first. */
   saveStep(id: string, asRead: string, log: LoggedRound[], round: number): Promise<boolean>;
-  /** Writes the run unless one with its id is already there. */
-  saveRun(run: RunRow): Promise<void>;
+  /** Writes the run unless one with its id is already there: true if this call wrote it. */
+  saveRun(run: RunRow): Promise<boolean | void>;
   closeGame(id: string, round: number, status: 'finished' | 'abandoned'): Promise<void>;
+  /**
+   * Told of a run once, as it is first written and its game closed (the friends it passed are told, `_shared/overtaken.ts`). What goes wrong in it is
+   * its own: the life stands, and its answer is given.
+   */
+  written?(run: RunRow): Promise<void>;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -138,10 +143,17 @@ async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedD
       finished_at: deps.now().toISOString(),
       challenge: row.challenge ?? null,
     };
-    await deps.saveRun(run);
+    const fresh = await deps.saveRun(run);
     // The choices are kept before the game is closed: a settle done again writes the same ones again.
     if (row.challenge) await deps.savePicks(row.id, row.challenge, played.picks);
     await deps.closeGame(row.id, played.state.round, 'finished');
+    if (fresh === true && deps.written) {
+      try {
+        await deps.written(run);
+      } catch (error) {
+        console.error('ranked run told of in vain:', error instanceof Error ? error.message : error);
+      }
+    }
     return run;
   };
   return { game, viewOf, log, play, step, settle };

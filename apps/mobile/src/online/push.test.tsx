@@ -155,6 +155,8 @@ describe('the link a tap opens', () => {
     }
     expect(pageOf(noticeOf('es', { kind: 'friendRequest', who: null }, 'app').url)).toEqual({ page: 'room', query: {} });
     expect(pageOf(noticeOf('es', { kind: 'roomInvite', who: 'Ana', code: 'K7Q2XM' }, 'app').url)).toEqual({ page: 'room', query: { code: 'K7Q2XM' } });
+    // A friend who passed the player: the ranking among friends, this week's.
+    expect(pageOf(noticeOf('ru', { kind: 'overtaken', who: 'Ana', score: 9840, theirs: 9215 }, 'app').url)).toEqual({ page: 'rankings', query: { tab: 'friends' } });
     // A friend request's buttons: the friends, answering whoever asked.
     const from = '6f1c2a4e-1b2c-4d3e-8f90-123456789abc';
     const { actions } = noticeOf('es', { kind: 'friendRequest', who: null, from }, 'app');

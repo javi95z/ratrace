@@ -2,6 +2,8 @@ import type { RunRow } from '../../../../supabase/functions/_shared/finish.ts';
 import { CURRENT, GAMES } from '../../../../supabase/functions/_shared/game/index.ts';
 import { ranked } from '../../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../../supabase/functions/_shared/ranked.ts';
+import type { NoticeAbout } from '../../../../supabase/functions/_shared/notice.ts';
+import { tellOvertaken } from '../../../../supabase/functions/_shared/overtaken.ts';
 import { rankedApi } from '@ratrace/online/ranked';
 import type { RankedCall } from '@ratrace/online/ranked';
 
@@ -18,6 +20,12 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
   const weekSeeds = new Map<string, string>();
   const entries = new Map<string, string>();
   const picks = new Map<string, Array<{ week: string; cardId: string; option: number }>>();
+  // Friends, a row each way, as `friendships` keeps them; the names the players chose; the day each was last told a friend passed them
+  // (`overtaken_days`); and the notices sent, to whom, in order.
+  const friendships: Array<{ follower: string; followed: string }> = [];
+  const names = new Map<string, string>();
+  const overtakenDays = new Map<string, string>();
+  const notices: Array<{ user: string; about: NoticeAbout }> = [];
   const state = { ids: 0, clock: 0, down: false, loseNextAnswer: false, unlocked: [] as string[], calls: [] as string[] };
   const stamp = () => `2026-10-13T12:00:${String((state.clock += 1)).padStart(2, '0')}.000000+00:00`;
   const deps: RankedDeps = {
@@ -54,11 +62,39 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
       return true;
     },
     saveRun: async (run) => {
-      if (!runs.some((one) => one.id === run.id)) runs.push(run);
+      if (runs.some((one) => one.id === run.id)) return false;
+      runs.push(run);
+      return true;
     },
     closeGame: async (id, round, status) => {
       const game = games.get(id);
       if (game) Object.assign(game, { status, round, updated_at: stamp() });
+    },
+    // As the function: the friends the run passed, told by the database's `overtaken_bests` and `overtaken_claim`.
+    written: async (run) => {
+      await tellOvertaken(
+        {
+          friendsOf: async (who) => friendships.filter((one) => one.follower === who).map((one) => one.followed),
+          bestsSince: async (users, since, except) => {
+            const bests: Record<string, number> = {};
+            for (const one of runs) {
+              if (one.mode !== 'ranked' || !users.includes(one.user_id) || Date.parse(one.finished_at) < Date.parse(since) || one.id === except) continue;
+              bests[one.user_id] = Math.max(bests[one.user_id] ?? Number.NEGATIVE_INFINITY, one.score);
+            }
+            return bests;
+          },
+          names: async (ids) => Object.fromEntries(ids.map((id) => [id, names.get(id) ?? null])),
+          claim: async (who, day) => {
+            const last = overtakenDays.get(who);
+            if (last !== undefined && last >= day) return false;
+            overtakenDays.set(who, day);
+            return true;
+          },
+          notify: async (who, about) => void notices.push({ user: who, about: structuredClone(about) }),
+        },
+        run,
+        deps.now(),
+      );
     },
   };
   const call: RankedCall = async (body) => {
@@ -72,5 +108,7 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
     }
     return reply;
   };
-  return { api: rankedApi(call), call, games, seeds, runs, state, user, weekSeeds, entries, picks };
+  /** Two players made friends, both ways. */
+  const befriend = (a: string, b: string) => friendships.push({ follower: a, followed: b }, { follower: b, followed: a });
+  return { api: rankedApi(call), call, games, seeds, runs, state, user, weekSeeds, entries, picks, friendships, names, overtakenDays, notices, befriend };
 }
