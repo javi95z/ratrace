@@ -463,4 +463,11 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   network_board_seat: ['You thank them. Your weeks stay your own.', 'A fee every year, your name in the report, and an evening a month that is no longer yours.'],
   network_listing: ['Someone else gets your shares.', 'Shares at the insiders\' price. Now you watch the chip market.', 'A big slice at the insiders\' price, and a lot riding on one company.'],
   network_referral: ['A thank-you lunch, and a contact kept warm.', null],
+  // Content 1.54: the legendary cards.
+  legend_coat_ticket: ['You sit on the bed and stare at the bank app for a long time.', 'Half for you, half for the hospital. You sleep very well.', 'A new wing gets your name, and your mother tells everyone.'],
+  legend_stranger_will: ['A cheque, a handshake from the notary and a postcard of the old man.', 'Six rooms, a sea view and guests who come back every summer.'],
+  legend_airdrop: ['Sold before lunch. By dinner the price is already falling.', null, null],
+  legend_viral: ['Strangers wave at you in the street. Then most of them forget.', 'An advert buys it. You get a cheque, and your dance gets a TV slot.', null],
+  legend_star_neighbour: ['She waves back. Your friends are very impressed.', 'A big cheque. The whole street knows it was you.', 'Long dinners with famous people. Your evenings are hers now.'],
+  legend_attic_painting: ['Cash in hand, and no questions asked.', null, 'Your name on a small plaque, and free entry for life.'],
 };

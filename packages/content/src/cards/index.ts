@@ -13,6 +13,7 @@ import { peopleCards } from './people';
 import { jobCards } from './jobs';
 import { tradeCards } from './trades';
 import { networkCards } from './network';
+import { legendaryCards } from './legendary';
 
 /** The hundred cards of v1, in the order of spec section 3.11. */
 export const cards: CardDef[] = [
@@ -57,4 +58,6 @@ export const cards: CardDef[] = [
   ...tradeCards,
   // Content 1.53: what knowing the right people brings.
   ...networkCards,
+  // Content 1.54: the legendary cards, met in about one life in fifty, one at most.
+  ...legendaryCards,
 ];

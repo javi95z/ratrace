@@ -1580,4 +1580,34 @@ export const cards: Record<string, CardText> = {
     'Darle las gracias',
     ['Ir a la entrevista', 'Te ofrecen el puesto.', 'Eligen a alguien de dentro. Tu contacto lo siente.'],
   ]),
+  // Content 1.54: the legendary cards.
+  legend_coat_ticket: c('El décimo del abrigo viejo', 'En el bolsillo de un abrigo que no te pones desde hace años: un décimo de lotería. Lo compruebas tres veces. Ha tocado.', [
+    'Cobrarlo entero',
+    'Cobrar la mitad y donar la otra',
+    'Donarlo entero al hospital infantil',
+  ]),
+  legend_stranger_will: c('El testamento de un desconocido', 'Hace años ayudaste a un señor mayor a cambiar una rueda bajo la lluvia. Ahora llama su notario: te lo ha dejado todo.', [
+    'Quedarte sus ahorros',
+    'Quedarte su hostal junto al mar',
+  ]),
+  legend_airdrop: c('El airdrop', 'La moneda que compraste de broma ha regalado tokens nuevos a quien la tenía. Los tuyos valen una fortuna hoy. Mañana, quién sabe.', [
+    'Venderlo todo hoy',
+    ['Vender la mitad y aguantar la otra', 'La otra mitad se duplica. Siempre fuiste un genio.', 'La otra mitad se va a cero. Media fortuna sigue siendo una fortuna.'],
+    ['Aguantarlo todo', 'A la luna. Sales en las noticias.', 'Se va a cero en una noche. Te queda una captura de pantalla.'],
+  ]),
+  legend_viral: c('Ochenta millones de visitas', 'Alguien te grabó bailando en una boda. Ahora lo ha visto el mundo entero, y algunos dos veces.', [
+    'Disfrutar de la fama',
+    'Vender los derechos del vídeo',
+    ['Sacar merchandising', 'Las camisetas se agotan en una semana. Encargas más.', 'Un garaje lleno de camisetas que nadie quiere, y algún chiste a tu costa.'],
+  ]),
+  legend_star_neighbour: c('Una estrella en la casa de al lado', 'Una actriz famosa ha comprado la casa de al lado. Sus fiestas son ruidosas, y a una revista le interesan mucho.', [
+    'Saludarla por encima de la valla',
+    'Vender sus historias a la revista',
+    'Hacer amistad con ella',
+  ]),
+  legend_attic_painting: c('El cuadro del desván', 'Detrás de un espejo viejo del desván: un cuadro. Un marchante dice que podría ser un maestro perdido. O una falsificación muy buena.', [
+    'Vendérselo al marchante',
+    ['Hacerlo autentificar', 'Un maestro perdido. La sala de subastas aplaude.', 'Una falsificación muy buena. Da justo para pagar a los expertos.'],
+    'Prestarlo al museo de la ciudad',
+  ]),
 };

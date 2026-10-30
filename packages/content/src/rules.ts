@@ -238,6 +238,9 @@ export const life: LifeRules = {
   familyTimeStatus: 2,
   restHealthPoints: 1,
   cardsPerRound: 3,
+  // A legendary card opens about one round in eight hundred while the life has met none: from round 2, the eighteen rounds left make it
+  // about one life in fifty (cards/legendary.ts).
+  legendaryBp: 13,
   // A car or a watch second hand: about half or two thirds of the price, a couple of rounds old, and
   // now and then a repair. A car loses status with those rounds; a watch holds it, so a watch is
   // dearer second hand and needs a service more often. Over a life the repairs eat a good part of

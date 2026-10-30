@@ -451,4 +451,11 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   network_board_seat: ['Das las gracias. Tus semanas siguen siendo tuyas.', 'Una retribución cada año, tu nombre en la memoria y una tarde al mes que ya no es tuya.'],
   network_listing: ['Tus acciones se las lleva otro.', 'Acciones al precio de los de dentro. Ahora miras el mercado de chips.', 'Un buen trozo al precio de los de dentro, y mucho en juego en una sola empresa.'],
   network_referral: ['Una comida para darle las gracias, y un contacto que no se enfría.', null],
+  // Content 1.54: the legendary cards.
+  legend_coat_ticket: ['Te sientas en la cama y miras la app del banco un buen rato.', 'Mitad para ti, mitad para el hospital. Duermes de maravilla.', 'Una planta nueva lleva tu nombre, y tu madre se lo cuenta a todo el mundo.'],
+  legend_stranger_will: ['Un cheque, un apretón de manos del notario y una postal del señor.', 'Seis habitaciones, vistas al mar y huéspedes que vuelven cada verano.'],
+  legend_airdrop: ['Vendido antes de comer. A la hora de cenar ya está bajando.', null, null],
+  legend_viral: ['Desconocidos te saludan por la calle. Luego casi todos se olvidan.', 'Lo compra un anuncio. Te llega un cheque y tu baile sale en la tele.', null],
+  legend_star_neighbour: ['Te devuelve el saludo. Tus amigos alucinan.', 'Un buen cheque. Toda la calle sabe que fuiste tú.', 'Cenas largas con gente famosa. Tus noches ahora son suyas.'],
+  legend_attic_painting: ['Dinero en mano, sin preguntas.', null, 'Tu nombre en una placa pequeña y entrada gratis de por vida.'],
 };

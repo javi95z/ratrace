@@ -370,6 +370,13 @@ export const cardArt: Record<string, string> = {
   network_board_seat: scene('network_board_seat'),
   network_listing: scene('network_listing'),
   network_referral: scene('network_referral'),
+  // Content 1.54: the six legendary cards (cards-65, stand-ins until drawn).
+  legend_coat_ticket: scene('legend_coat_ticket'),
+  legend_stranger_will: scene('legend_stranger_will'),
+  legend_airdrop: scene('legend_airdrop'),
+  legend_viral: scene('legend_viral'),
+  legend_star_neighbour: scene('legend_star_neighbour'),
+  legend_attic_painting: scene('legend_attic_painting'),
 };
 
 /**

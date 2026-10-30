@@ -1580,4 +1580,34 @@ export const cards: Record<string, CardText> = {
     'Thank them',
     ['Go to the interview', 'They offer you the post.', 'They pick someone from inside. Your contact is sorry.'],
   ]),
+  // Content 1.54: the legendary cards.
+  legend_coat_ticket: c('The ticket in the old coat', 'In the pocket of a coat you have not worn for years: a lottery ticket. You check it three times. It won.', [
+    'Cash it all',
+    'Cash half, give half away',
+    'Give it all to the children\'s hospital',
+  ]),
+  legend_stranger_will: c('A stranger\'s will', 'Years ago you helped an old man change a tyre in the rain. Now his notary calls: he left you everything.', [
+    'Take his savings',
+    'Keep his guesthouse by the sea',
+  ]),
+  legend_airdrop: c('The airdrop', 'The coin you bought as a joke has handed its holders new tokens. Yours are worth a fortune today. Tomorrow, who knows.', [
+    'Sell it all today',
+    ['Sell half, hold half', 'The other half doubles. You were a genius all along.', 'The other half goes to zero. Half a fortune is still a fortune.'],
+    ['Hold it all', 'To the moon. You are on the news.', 'It goes to zero overnight. You keep a screenshot.'],
+  ]),
+  legend_viral: c('Eighty million views', 'Someone filmed you dancing at a wedding. Now the whole world has seen it, some of them twice.', [
+    'Enjoy the fame',
+    'Sell the rights to the clip',
+    ['Launch the merch', 'The T-shirts sell out in a week. You order more.', 'A garage full of T-shirts nobody wants, and a few jokes about it.'],
+  ]),
+  legend_star_neighbour: c('A star next door', 'A film star has bought the house next to yours. Her parties are loud, and a magazine is very interested in them.', [
+    'Wave over the fence',
+    'Sell her stories to the magazine',
+    'Make friends with her',
+  ]),
+  legend_attic_painting: c('The painting in the attic', 'Behind an old mirror in the attic: a painting. A dealer says it could be a lost master. Or a very good fake.', [
+    'Sell it to the dealer',
+    ['Have it authenticated', 'A lost master. The auction room claps.', 'A very good fake. It just pays the experts\' bill.'],
+    'Lend it to the city museum',
+  ]),
 };
