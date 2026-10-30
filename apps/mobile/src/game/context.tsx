@@ -27,14 +27,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { useStore } from 'zustand';
-import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, kvPush, kvReview, KvStore, kvTapSound, kvText } from '../kvStore';
+import { kvForget, kvForgotten, kvKeeping, kvLanguage, kvLanguageChoice, kvLastAccount, kvPush, kvReview, KvStore, kvTapSound, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { backFromGoogle, openForGoogle } from '../online/browser';
 import { CaptchaHost } from '../online/captcha';
 import { firstScreenDoor } from '../online/held';
 import { usePlace } from '../online/errors';
-import { followAccountLanguage } from '../online/language';
+import { followAccountLanguage, languageChoices, type LanguageChoices } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
 import { phonePush } from '../online/push';
 import type { Push } from '../online/push';
@@ -298,6 +298,8 @@ interface Made {
   canSignIn: boolean;
   introduceTabs: boolean;
   language: LanguageKeep;
+  /** The player's choices of a language, on their way to the account. */
+  choices: LanguageChoices;
   now: () => number;
   track: Track;
   push: Push;
@@ -343,6 +345,7 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     canSignIn: account !== undefined && account !== offlineAccount,
     introduceTabs: introduceTabs === true,
     language: language ?? kvLanguage,
+    choices: languageChoices(account ?? offlineAccount, community ?? NO_COMMUNITY, kvLanguageChoice),
     now: now ?? Date.now,
     track,
     // The phone's notices, over the note the phone's store keeps of them: made with the game, whatever services a test hands it.
@@ -588,7 +591,15 @@ function Landing({ count, landed }: { count: number; landed: () => void }): null
 function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => Promise<void>; children: ReactNode }) {
   const [game] = useState(() => made.game);
   // The phone's choice, else its own; on the web, the page's address (`useLanguage.web.ts`).
-  const { locale, choose: setLocale, follow } = useLanguage(made.language);
+  const { locale, choose, follow } = useLanguage(made.language);
+  // The player's choice is kept with the account, noted before the web leaves for the page in that language. Following the account's writes nothing.
+  const setLocale = useCallback(
+    (next: Locale) => {
+      made.choices.choose(next);
+      choose(next);
+    },
+    [made, choose],
+  );
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
   const [profile, setProfile] = useState<Profile>(() => (startedWith ? { ...newProfile(), settings: startedWith } : newProfile()));
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
@@ -686,8 +697,11 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
   const opened = useSyncExternalStore(game.subscribe, () => game.getState().status !== 'booting', () => false);
   useEffect(() => (opened && made.firstDrawn ? whenShown(made.firstDrawn) : undefined), [opened, made]);
 
-  // Someone signing in on this phone brings the language of their account with them.
-  useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, follow), [made, locale, follow]);
+  // Someone signing in on this phone brings the language of their account with them, unless a choice made here is still on its way to it.
+  useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, follow, made.choices.waiting), [made, locale, follow]);
+
+  // A language the player chose reaches the account, whenever it can: this start, or a later one (on the web, the document its page opens).
+  useEffect(() => made.choices.keepSending(phonePage), [made]);
 
   // The phone's notices, where they are on, follow the account and the language of the game: the next one speaks the language the game does.
   useEffect(() => made.push.follow(made.account, made.community, locale), [made, locale]);

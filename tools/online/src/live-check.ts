@@ -80,7 +80,7 @@ interface GameCloud {
   saveProgress(progress: unknown): Promise<void>;
   listRuns(): Promise<Array<{ id: string; score: number; badges: string[] }>>;
   finishRun(gameId: string): Promise<'done' | 'refused' | 'unknown-version' | 'failed'>;
-  community: { setLanguage?(language: string): Promise<boolean> };
+  community: { setLanguage?(language: string): Promise<boolean>; me(): Promise<{ language?: string | null } | null> };
 }
 
 /** A nurse's life, first choice on every card, and the log of it: the whole of it, or its first rounds. */
@@ -208,14 +208,18 @@ try {
   const [phone, laptop, stranger] = [cloudOf(a), cloudOf(a2), cloudOf(b)];
 
   // The profile, written the way the game writes it on every launch: made in the language of the page, and left as it
-  // is by a launch in another one. A player may write four columns of their profile and no more; this must fit in them.
+  // is by a launch in another one. A player may write five columns of their profile and no more; this must fit in them.
   const written = await phone.ensureProfile(idA, 'en').then(() => stranger.ensureProfile(idB, 'es')).then(() => stranger.ensureProfile(idB, 'en')).then(() => null, (error: unknown) => error);
-  const mine2 = await b.from('profiles').select('language, friend_code').eq('user_id', idB).maybeSingle();
+  const mine2 = await b.from('profiles').select('language, language_chosen_at, friend_code').eq('user_id', idB).maybeSingle();
   check(written === null && mine2.data?.language === 'es', 'the game makes a player\'s profile, and a later launch in another language leaves its language alone');
-  // The language the player chooses is kept with the account.
+  check(mine2.data?.language_chosen_at === null && (await stranger.community.me())?.language === null, 'and the language a profile is made in is nobody\'s choice: signing in follows nothing');
+  // The language the player chooses is kept with the account, and noted as chosen.
   const chose = await stranger.community.setLanguage?.('ru');
-  const mine3 = await b.from('profiles').select('language').eq('user_id', idB).maybeSingle();
-  check(chose === true && mine3.data?.language === 'ru', 'the language a player chooses is kept with their profile');
+  const mine3 = await b.from('profiles').select('language, language_chosen_at').eq('user_id', idB).maybeSingle();
+  check(chose === true && mine3.data?.language === 'ru' && mine3.data?.language_chosen_at !== null && (await stranger.community.me())?.language === 'ru', 'the language a player chooses is kept with their profile, as their choice');
+  const chosenForB = await a.from('profiles').update({ language: 'es', language_chosen_at: new Date().toISOString() }).eq('user_id', idB).select('user_id');
+  const forgedChoice = await a.from('profiles').upsert({ user_id: idB, language: 'es', language_chosen_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  check((chosenForB.data ?? []).length === 0 && forgedChoice.error !== null, 'another player cannot choose a language for them');
   check(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/.test(String(mine2.data?.friend_code)), 'and the server gives the player a friend code');
 
   const early3 = wholeLife('live-check-two-devices', 3);

@@ -391,17 +391,47 @@ const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
  * Takes off the phone what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress, and
  * the profile, which keeps its settings): every finished life by its key and their index, whether or not the list could show it (one that cannot be
  * read is the player's all the same), the lives kept the old way, the account's session, the round being planned, the lists of lives the account was
- * to be told of, whose account it was, and a trip to Google noted. What is the phone's own stays: the language chosen, what the notices were told (a
+ * to be told of, whose account it was, a language not yet told to it, and a trip to Google noted. What is the phone's own stays: the language chosen, what the notices were told (a
  * no is never asked twice; `online/push.ts` turns them off), the install counted once. A key the phone will not take away now is one the next
  * player's game writes over. A store that held the lives reads the phone again (its index is gone).
  */
 export async function kvForget(): Promise<void> {
   const theirs = (key: string) =>
-    key.startsWith(RUN) || key === INDEX || key === RUNS_BEFORE || key.startsWith(SESSION) || key === BASKET || key === KEEPING || key === LAST_ACCOUNT || ACCOUNT_LISTS.includes(key);
+    key.startsWith(RUN) || key === INDEX || key === RUNS_BEFORE || key.startsWith(SESSION) || key === BASKET || key === KEEPING || key === LAST_ACCOUNT || key === LANGUAGE_CHOICE || ACCOUNT_LISTS.includes(key);
   for (const key of await Storage.getAllKeys().catch(() => [] as string[])) {
     if (theirs(key)) await Storage.removeItem(key).catch(() => undefined);
   }
 }
+
+/**
+ * The language the player chose and the account has not said it kept (`languageChoices` of `online/language.ts`): noted so that it survives no network
+ * and the app's closing. Gone once it is sent, and with an account deleted.
+ */
+const LANGUAGE_CHOICE = 'ratrace:language-choice';
+
+export const kvLanguageChoice = {
+  read: (): string | null => {
+    try {
+      return Storage.getItemSync(LANGUAGE_CHOICE);
+    } catch {
+      return null;
+    }
+  },
+  write: (language: string): void => {
+    try {
+      Storage.setItemSync(LANGUAGE_CHOICE, language);
+    } catch {
+      // A phone that keeps nothing: the choice is sent now or not at all.
+    }
+  },
+  clear: (): void => {
+    try {
+      Storage.removeItemSync(LANGUAGE_CHOICE);
+    } catch {
+      // The same: read again, it is sent again, which changes nothing.
+    }
+  },
+};
 
 export const kvLastAccount = {
   read: (): string | null => {

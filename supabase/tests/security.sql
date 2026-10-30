@@ -83,12 +83,12 @@ begin
 
   if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'runs') = array['SELECT']
     then passed := passed + 1; else failed := array_append(failed, ('a player may do more than read runs')::text); end if;
-  -- A player reads profiles, and writes four columns of their own. The friend code is the server's to give.
+  -- A player reads profiles, and writes five columns of their own. The friend code is the server's to give.
   if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'profiles') = array['SELECT']
     then passed := passed + 1; else failed := array_append(failed, ('a player holds more than reading on the whole of profiles')::text); end if;
-  if (select array_agg(column_name::text order by column_name::text) from information_schema.role_column_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'profiles' and privilege_type = 'INSERT') = array['language', 'nickname', 'portrait', 'user_id']
-     and (select array_agg(column_name::text order by column_name::text) from information_schema.role_column_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'profiles' and privilege_type = 'UPDATE') = array['language', 'nickname', 'portrait', 'user_id']
-    then passed := passed + 1; else failed := array_append(failed, ('the columns of profiles a player may write are not their name, portrait and language')::text); end if;
+  if (select array_agg(column_name::text order by column_name::text) from information_schema.role_column_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'profiles' and privilege_type = 'INSERT') = array['language', 'language_chosen_at', 'nickname', 'portrait', 'user_id']
+     and (select array_agg(column_name::text order by column_name::text) from information_schema.role_column_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'profiles' and privilege_type = 'UPDATE') = array['language', 'language_chosen_at', 'nickname', 'portrait', 'user_id']
+    then passed := passed + 1; else failed := array_append(failed, ('the columns of profiles a player may write are not their name, portrait, language and whether they chose it')::text); end if;
   if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'player_progress') = array['INSERT', 'SELECT', 'UPDATE']
     then passed := passed + 1; else failed := array_append(failed, ('the grants on player_progress are not read, create, change')::text); end if;
   if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'games') = array['INSERT', 'SELECT', 'UPDATE']
@@ -144,6 +144,10 @@ begin
     failed := array_append(failed, 'a portrait that is not the name of a life was accepted');
   exception when check_violation then passed := passed + 1;
   end;
+  -- A language a profile is made in is nobody's choice; the player's choice says so.
+  if (select language_chosen_at from public.profiles where user_id = a) is null then passed := passed + 1; else failed := array_append(failed, 'a profile was made with its language noted as chosen'); end if;
+  insert into public.profiles (user_id, language, language_chosen_at) values (a, 'es', now()) on conflict (user_id) do update set user_id = excluded.user_id, language = excluded.language, language_chosen_at = excluded.language_chosen_at;
+  if (select language_chosen_at from public.profiles where user_id = a) is not null then passed := passed + 1; else failed := array_append(failed, 'the game could not note a language as the player''s choice'); end if;
   update public.profiles set portrait = 'civil_servant' where user_id = a;
   if (select portrait from public.profiles where user_id = a) = 'civil_servant' then passed := passed + 1; else failed := array_append(failed, 'the name of a life was refused as a portrait'); end if;
   begin
@@ -423,6 +427,14 @@ begin
   update public.profiles set language = 'en' where user_id = a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B changed A''s profile')::text); end if;
+  update public.profiles set language = 'ru', language_chosen_at = now() where user_id = a;
+  get diagnostics n = row_count;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B chose a language for A')::text); end if;
+  begin
+    insert into public.profiles (user_id, language, language_chosen_at) values (a, 'ru', now()) on conflict (user_id) do update set user_id = excluded.user_id, language = excluded.language, language_chosen_at = excluded.language_chosen_at;
+    failed := array_append(failed, ('B chose a language for A, the way the game writes it')::text);
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
   update public.player_progress set progress = '{}' where user_id = a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B changed A''s progress')::text); end if;
@@ -1332,6 +1344,13 @@ begin
      and (select count(*) from public.notice_market(now() + interval '1 day') m where m.user_id = aw and m.token is null) = 1
      and not exists (select 1 from public.notice_market(now() + interval '1 day') m where m.token = tok_w)
     then passed := passed + 1; else failed := array_append(failed, 'the market notice missed a phone that asked for it, or reached one that did not'); end if;
+  -- The market notice speaks the device's language, unless the player chose one: the language a profile was first opened in is nobody's choice.
+  insert into public.profiles (user_id, language) values (ap, 'es');
+  if exists (select 1 from public.notice_market(now() + interval '1 day') m where m.user_id = ap and m.locale = 'ru')
+    then passed := passed + 1; else failed := array_append(failed, 'the market notice spoke the language a profile was made in, over the phone''s'); end if;
+  update public.profiles set language_chosen_at = now() where user_id = ap;
+  if exists (select 1 from public.notice_market(now() + interval '1 day') m where m.user_id = ap and m.locale = 'es')
+    then passed := passed + 1; else failed := array_append(failed, 'the market notice did not speak the language the player chose'); end if;
   if not has_function_privilege('authenticated', 'public.notice_week(text)', 'execute') and not has_function_privilege('authenticated', 'public.notice_idle(timestamptz)', 'execute')
      and not has_function_privilege('authenticated', 'public.notice_market(timestamptz)', 'execute') and not has_function_privilege('anon', 'public.notice_week(text)', 'execute')
     then passed := passed + 1; else failed := array_append(failed, 'a player can list who is told of the clock''s notices'); end if;

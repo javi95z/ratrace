@@ -353,3 +353,53 @@ test('the account\'s language, answered after the player has moved on, puts the 
   expect(cookie()).toBe('es');
   expect(localStorage.getItem('ratrace.lastAccount')).toBe('member-1');
 });
+
+/** An account signed in from the start, keeping what it is told, its answers given when the test says. */
+function keeping(language: string | null) {
+  const told: string[] = [];
+  const answers: Array<(yes: boolean) => void> = [];
+  const state: AccountState = { kind: 'member', userId: 'member-1', email: null };
+  return {
+    told,
+    answer: (yes: boolean) => answers.shift()?.(yes),
+    account: { state: () => state, subscribe: () => () => undefined, start: async () => undefined } as unknown as Account,
+    community: {
+      me: async () => ({ nickname: null, friendCode: 'X', avatar: null, language }),
+      setLanguage: (next: string) => (told.push(next), new Promise<boolean>((resolve) => answers.push(resolve))),
+    } as unknown as Community,
+  };
+}
+
+test('a language chosen is noted before its page is opened, and the next document sends what the last could not', async () => {
+  params.locale = 'en';
+  pathname.now = '/en/rankings';
+  localStorage.setItem('ratrace.lastAccount', 'member-1');
+  const first = keeping(null);
+  renderGame(<LanguagePick />, { ...memoryServices(), language: kvLanguage, account: first.account, community: () => first.community });
+  act(() => fireEvent.click(screen.getByRole('radio', { name: 'Español' })));
+  expect(localStorage.getItem('ratrace:language-choice')).toBe('es');
+  await waitFor(() => expect(opened).toEqual([{ address: '/es/rankings', how: 'push', sheetOpen: false }]));
+  expect(first.told).toEqual(['es']);
+  // The page goes before the answer comes: the note stays for the page it opened.
+  cleanup();
+  params.locale = 'es';
+  pathname.now = '/es/rankings';
+  const next = keeping(null);
+  renderGame(<Speaks />, { ...memoryServices(), language: kvLanguage, account: next.account, community: () => next.community });
+  await waitFor(() => expect(next.told).toEqual(['es']));
+  await act(async () => next.answer(true));
+  await waitFor(() => expect(localStorage.getItem('ratrace:language-choice')).toBeNull());
+  expect(next.told).toEqual(['es']);
+});
+
+test('following an account\'s language as someone signs in opens its page and writes nothing back', async () => {
+  localStorage.setItem('ratrace.lastAccount', 'guest-1');
+  params.locale = 'en';
+  pathname.now = '/en/records';
+  window.history.replaceState(null, '', '/en/records');
+  const member = keeping('es');
+  renderGame(<Speaks />, { ...memoryServices(), language: kvLanguage, account: member.account, community: () => member.community });
+  await waitFor(() => expect(opened).toEqual([{ address: '/es/records', how: 'replace', sheetOpen: false }]));
+  expect(member.told).toEqual([]);
+  expect(localStorage.getItem('ratrace:language-choice')).toBeNull();
+});

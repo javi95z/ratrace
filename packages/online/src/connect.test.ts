@@ -504,8 +504,8 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     client.answers.getSession = signedIn;
     client.answers.profiles = { data: { nickname: 'Rata_Uno', friend_code: 'ABCD2345' }, error: null };
     const cloud = await connectSupabase('u', 'k');
-    expect(await cloud.community.me()).toEqual({ nickname: 'Rata_Uno', friendCode: 'ABCD2345' });
-    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code, portrait, language'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
+    expect(await cloud.community.me()).toEqual({ nickname: 'Rata_Uno', friendCode: 'ABCD2345', language: null });
+    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code, portrait, language, language_chosen_at'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
     client.answers.profiles = { data: null, error: null };
     expect(await cloud.community.me()).toBeNull();
     client.answers.profiles = { data: null, error: new Error('offline') };
@@ -526,11 +526,21 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     }
   });
 
-  it('keeps the language the player chooses with their account', async () => {
+  it('tells of the language of an account only where the player chose it: the one a profile was made in is nobody\'s choice', async () => {
+    client.answers.getSession = signedIn;
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.profiles = { data: { nickname: null, friend_code: 'ABCD2345', portrait: null, language: 'ru', language_chosen_at: null }, error: null };
+    expect((await cloud.community.me())?.language).toBeNull();
+    client.answers.profiles = { data: { nickname: null, friend_code: 'ABCD2345', portrait: null, language: 'ru', language_chosen_at: '2026-10-30T10:00:00Z' }, error: null };
+    expect((await cloud.community.me())?.language).toBe('ru');
+  });
+
+  it('keeps the language the player chooses with their account, noted as chosen, whether or not the profile is there yet', async () => {
     client.answers.getSession = signedIn;
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.community.setLanguage?.('es')).toBe(true);
-    expect(client.asked).toEqual([['profiles', ['update', { language: 'es' }], ['eq', 'user_id', 'u-1']]]);
+    // An upsert: an update of a profile not made yet (`ensureProfile` is not waited for) would answer yes, having kept nothing.
+    expect(client.asked).toEqual([['profiles', ['upsert', { user_id: 'u-1', language: 'es', language_chosen_at: expect.any(String) }, { onConflict: 'user_id' }]]]);
     client.answers.profiles = { error: { code: '08006', message: 'no' } };
     expect(await cloud.community.setLanguage?.('ru')).toBe(false);
   });

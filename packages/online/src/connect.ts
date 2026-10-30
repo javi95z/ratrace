@@ -327,9 +327,10 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     community: {
       async me() {
         try {
-          const { data, error } = await client.from('profiles').select('nickname, friend_code, portrait, language').eq('user_id', await me()).maybeSingle();
-          const row = data as { nickname: string | null; friend_code: string; portrait: string | null; language: string | null } | null;
-          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code, avatar: row.portrait, language: row.language };
+          const { data, error } = await client.from('profiles').select('nickname, friend_code, portrait, language, language_chosen_at').eq('user_id', await me()).maybeSingle();
+          const row = data as { nickname: string | null; friend_code: string; portrait: string | null; language: string | null; language_chosen_at?: string | null } | null;
+          // A profile always says a language, the one it was first opened in unless the player chose: only a choice is told.
+          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code, avatar: row.portrait, language: row.language_chosen_at ? row.language : null };
         } catch {
           return null;
         }
@@ -347,7 +348,8 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       },
       async setLanguage(language) {
         try {
-          const { error } = await client.from('profiles').update({ language }).eq('user_id', await me());
+          // An upsert: the profile may not be made yet (`ensureProfile` is not waited for), and an update of no row answers yes, having kept nothing.
+          const { error } = await client.from('profiles').upsert({ user_id: await me(), language, language_chosen_at: new Date().toISOString() }, { onConflict: 'user_id' });
           return !error;
         } catch {
           return false;

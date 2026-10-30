@@ -249,9 +249,9 @@ export function fakeCloud(options: FakeCloudOptions = {}) {
 
   const newCode = () => Array.from(randomBytes(8), (byte) => FRIEND_ALPHABET[byte % FRIEND_ALPHABET.length]).join('');
   const profileOf = (user: string) => tables.profiles.find((row) => row.user_id === user) ?? null;
-  const makeProfile = (user: string, nickname: string | null = null, language: string | null = null) => {
+  const makeProfile = (user: string, nickname: string | null = null, language: string | null = null, chosenAt: string | null = null) => {
     if (profileOf(user)) return;
-    tables.profiles.push({ user_id: user, nickname, friend_code: newCode(), portrait: null, language, market_moved: false });
+    tables.profiles.push({ user_id: user, nickname, friend_code: newCode(), portrait: null, language, language_chosen_at: chosenAt, market_moved: false });
     rooms.db.names.set(user, nickname);
   };
   makeProfile(MEMBER.id, 'Ana_G', 'en');
@@ -659,7 +659,7 @@ ${choice('linked', 'Continue as a new Google account')}${choice('taken', 'Contin
             Object.assign(tables[table][at], row);
           } else {
             if (table === 'profiles') {
-              makeProfile(String(row.user_id), (row.nickname as string | null) ?? null, (row.language as string | null) ?? null);
+              makeProfile(String(row.user_id), (row.nickname as string | null) ?? null, (row.language as string | null) ?? null, (row.language_chosen_at as string | null) ?? null);
               continue;
             }
             tables[table].push(row);

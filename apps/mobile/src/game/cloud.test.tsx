@@ -64,7 +64,7 @@ const VERSIONS = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
 function theCloud(signedIn: CloudUser | null = null) {
   const ranked = rankedServer();
   const rooms = roomServer();
-  const state = { user: signedIn, down: false, guests: 0, games: [] as CloudGame[], progress: null as unknown, runs: [] as CloudRun[], language: null as string | null, clock: 0, asked: [] as string[] };
+  const state = { user: signedIn, down: false, guests: 0, games: [] as CloudGame[], progress: null as unknown, runs: [] as CloudRun[], language: null as string | null, written: [] as string[], clock: 0, asked: [] as string[] };
   const listeners = new Set<(user: CloudUser | null) => void>();
   const guard = (what?: string) => {
     if (state.down) throw new TypeError('Failed to fetch');
@@ -83,7 +83,15 @@ function theCloud(signedIn: CloudUser | null = null) {
   const cloud: Cloud = {
     ranked: ranked.api,
     rooms: rooms.link('11111111-1111-4111-8111-111111111111'),
-    community: { me: async () => ({ nickname: null, friendCode: 'RAT-1', avatar: null, language: state.language }) } as unknown as Community,
+    community: {
+      me: async () => ({ nickname: null, friendCode: 'RAT-1', avatar: null, language: state.language }),
+      setLanguage: async (language: string) => {
+        if (state.down) return false;
+        state.written.push(language);
+        state.language = language;
+        return true;
+      },
+    } as unknown as Community,
     currentUser: async () => (guard(), state.user),
     signInAsGuest: async () => {
       guard('guest');
@@ -207,6 +215,12 @@ function mount(services: Services, extra?: ReactNode) {
   return { seen: seen as Seen, view };
 }
 
+/** A phone with its guest, its account at hand for the test to bring Google's answer to. */
+function mountedGuest(cloud: TheCloud) {
+  const phone = phoneOf(cloud);
+  return { ...mount(phone.services), online: phone.online };
+}
+
 describe('the account, on the phone', () => {
   it('is a guest from the first launch: the game does not wait for it, and it is started once', async () => {
     const cloud = theCloud();
@@ -267,6 +281,86 @@ describe('the account, on the phone', () => {
     const { seen } = mount(phoneOf(cloud).services);
     await waitFor(() => expect(seen.locale).toBe('es'));
     expect(kv.get('ratrace.lastAccount')).toBe('member-1');
+    // Following it writes nothing back: only the player's choice does.
+    await settled();
+    expect(cloud.state.written).toEqual([]);
+    expect(kv.get('ratrace:language-choice')).toBeUndefined();
+  });
+
+  it('stays in the language in use when someone signs in to an account whose language nobody chose', async () => {
+    kv.set('ratrace.lastAccount', 'guest-1');
+    const cloud = theCloud(member);
+    const { seen } = mount(phoneOf(cloud).services);
+    await waitFor(() => expect(seen.account.state.kind).toBe('member'));
+    await settled();
+    expect(seen.locale).toBe('en');
+    expect(cloud.state.written).toEqual([]);
+  });
+
+  it('keeps a language chosen in the settings with the account, once', async () => {
+    const cloud = theCloud(member);
+    const { seen } = mount(phoneOf(cloud).services);
+    await waitFor(() => expect(seen.account.state.kind).toBe('member'));
+    act(() => seen.setLocale('es'));
+    expect(seen.locale).toBe('es');
+    await waitFor(() => expect(cloud.state.written).toEqual(['es']));
+    await settled();
+    expect(cloud.state.written).toEqual(['es']);
+    expect(kv.get('ratrace:language-choice')).toBeUndefined();
+  });
+
+  it('keeps a guest\'s choice too, and it stays when the guest is kept with Google under the same id', async () => {
+    const cloud = theCloud();
+    const { seen, online } = mountedGuest(cloud);
+    await waitFor(() => expect(seen.account.state.kind).toBe('guest'));
+    act(() => seen.setLocale('es'));
+    await waitFor(() => expect(cloud.state.written).toEqual(['es']));
+    // Google answers: the same player, a member now.
+    await act(async () => void (await online.account.keepWithGoogle(BACK_FROM_GOOGLE, async () => 'back')));
+    await waitFor(() => expect(seen.account.state.kind).toBe('member'));
+    await settled();
+    expect(seen.locale).toBe('es');
+    expect(cloud.state.written).toEqual(['es']);
+    expect(cloud.state.language).toBe('es');
+  });
+
+  it('holds a choice made with no network on the phone, and sends it once when the network is back', async () => {
+    const cloud = theCloud(member);
+    const { seen } = mount(phoneOf(cloud).services);
+    await waitFor(() => expect(seen.account.state.kind).toBe('member'));
+    await settled();
+    act(() => network.set(false));
+    cloud.state.down = true;
+    act(() => seen.setLocale('ru'));
+    await settled();
+    expect(seen.locale).toBe('ru');
+    expect(cloud.state.written).toEqual([]);
+    expect(kv.get('ratrace:language-choice')).toBe('ru');
+    cloud.state.down = false;
+    act(() => network.set(true));
+    await waitFor(() => expect(cloud.state.written).toEqual(['ru']));
+    await waitFor(() => expect(kv.get('ratrace:language-choice')).toBeUndefined());
+  });
+
+  it('sends a choice left on the phone by the last start', async () => {
+    kv.set('ratrace:language-choice', 'es');
+    const cloud = theCloud(member);
+    mount(phoneOf(cloud).services);
+    await waitFor(() => expect(cloud.state.written).toEqual(['es']));
+    await waitFor(() => expect(kv.get('ratrace:language-choice')).toBeUndefined());
+  });
+
+  it('lets a choice still waiting on the phone win over the language of the account signing in, and tells the account', async () => {
+    kv.set('ratrace.lastAccount', 'guest-1');
+    kv.set('ratrace:language-choice', 'ru');
+    const cloud = theCloud(member);
+    cloud.state.language = 'es';
+    const { seen } = mount(phoneOf(cloud).services);
+    await waitFor(() => expect(cloud.state.written).toEqual(['ru']));
+    await settled();
+    // The account's language is not followed: the game stays in the one it is in (a test's phone starts in English, whatever it kept).
+    expect(seen.locale).toBe('en');
+    expect(cloud.state.language).toBe('ru');
   });
 
   it('leaves the language alone when the same player opens the game again', async () => {

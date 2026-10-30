@@ -214,8 +214,9 @@ export type PushTarget = string | { expo: string };
  */
 export interface Community {
   /** `avatar` is the rat the player chose, as kept in the profile (`rat_<colour>`), or null for none yet. */
+  /** `language`: the one the player chose, null where they never did. */
   me(): Promise<{ nickname: string | null; friendCode: string; avatar: string | null; language?: string | null } | null>;
-  /** Keeps the language the player chose with their account, for the next device they sign in on. */
+  /** Keeps the language the player chose with their account, noted as chosen, for the next device they sign in on. False if it could not. */
   setLanguage?(language: string): Promise<boolean>;
   /** `taken`: someone has that name. `refused`: the name is not accepted. */
   rename(nickname: string): Promise<'ok' | 'taken' | 'refused' | 'failed'>;

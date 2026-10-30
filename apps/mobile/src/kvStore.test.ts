@@ -52,7 +52,7 @@ vi.mock('expo-sqlite/kv-store', () => {
   };
 });
 
-const { KvStore, kvForget, kvForgotten } = await import('./kvStore');
+const { KvStore, kvForget, kvForgotten, kvLanguageChoice } = await import('./kvStore');
 
 const OLD = 'ratrace:runs';
 const INDEX = 'ratrace:runs:index';
@@ -329,10 +329,21 @@ describe('the step that ends a life, with 63 lives on the phone', () => {
   });
 });
 
+describe('the language chosen and not yet kept with the account', () => {
+  it('is noted until it is sent, the last one chosen', () => {
+    expect(kvLanguageChoice.read()).toBeNull();
+    kvLanguageChoice.write('es');
+    kvLanguageChoice.write('ru');
+    expect(kvLanguageChoice.read()).toBe('ru');
+    kvLanguageChoice.clear();
+    expect(kvLanguageChoice.read()).toBeNull();
+  });
+});
+
 describe('a player who deleted their account', () => {
   it('leaves nothing of theirs beside the store: every finished life, the session, the round planned, the lists for the account, whose it was, a trip to Google', async () => {
     // Every finished life by its key, and the index, whether or not the list could show it: a life that cannot be read is the player's all the same.
-    const theirs = ['ratrace:session:sb-ref-auth-token', 'ratrace:session:sb-ref-auth-token-code-verifier', 'ratrace:basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:keeping-account', OLD, INDEX, keyOf('a'), keyOf('unreadable')];
+    const theirs = ['ratrace:session:sb-ref-auth-token', 'ratrace:session:sb-ref-auth-token-code-verifier', 'ratrace:basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:language-choice', 'ratrace:keeping-account', OLD, INDEX, keyOf('a'), keyOf('unreadable')];
     // The phone's own: the language chosen, what was said to the notices (a no is never asked again), the install counted; and the life in progress
     // and the profile, which the game clears through the store (the profile keeping its settings).
     const phones = ['ratrace:locale', 'ratrace:push', 'ratrace:installed', 'ratrace:game', 'ratrace:profile', 'something:else'];

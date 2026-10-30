@@ -297,13 +297,43 @@ export const kvLastAccount = {
   },
 };
 
+/**
+ * The language the player chose and the account has not said it kept (`languageChoices` of `online/language.ts`): noted so that it survives no network
+ * and the page's leaving for its own language, a new document. Gone once it is sent, and with an account deleted.
+ */
+const LANGUAGE_CHOICE = 'ratrace:language-choice';
+
+export const kvLanguageChoice = {
+  read: (): string | null => {
+    try {
+      return localStorage.getItem(LANGUAGE_CHOICE);
+    } catch {
+      return null;
+    }
+  },
+  write: (language: string): void => {
+    try {
+      localStorage.setItem(LANGUAGE_CHOICE, language);
+    } catch {
+      // A browser that keeps nothing: the choice is sent now or not at all.
+    }
+  },
+  clear: (): void => {
+    try {
+      localStorage.removeItem(LANGUAGE_CHOICE);
+    } catch {
+      // The same: read again, it is sent again, which changes nothing.
+    }
+  },
+};
+
 /** The lists of lives the account was still to be told of (`givenUpIn` and `refusedIn` of `online/over.ts`, in `kvText`). */
 const ACCOUNT_LISTS = ['ratrace:given-up', 'ratrace:refused'];
 
 /**
  * Takes out of the browser what is left of a player whose account was deleted, beside what the game clears through the store (the life in progress,
  * and the profile, which keeps its settings): every finished life in the database, whether or not the list could show it, the account's session (the client's `sb-…` keys), the round being planned, the lists of lives the account was
- * to be told of, whose account it was, the phone's note of the notices, and a trip to Google noted. What is the browser's own stays: the language
+ * to be told of, whose account it was, a language not yet told to it, the phone's note of the notices, and a trip to Google noted. What is the browser's own stays: the language
  * chosen (its cookie), the offer to install the game. A browser that keeps nothing has nothing to take away.
  */
 export async function kvForget(): Promise<void> {
@@ -316,7 +346,7 @@ export async function kvForget(): Promise<void> {
       // A database the browser will not open: there are no lives in it to take away.
     }
   }
-  const theirs = (key: string) => key.startsWith('sb-') || key === BASKET || key === LAST_ACCOUNT || key === PUSH || ACCOUNT_LISTS.includes(key);
+  const theirs = (key: string) => key.startsWith('sb-') || key === BASKET || key === LAST_ACCOUNT || key === LANGUAGE_CHOICE || key === PUSH || ACCOUNT_LISTS.includes(key);
   try {
     for (const key of Object.keys(localStorage)) if (theirs(key)) localStorage.removeItem(key);
   } catch {

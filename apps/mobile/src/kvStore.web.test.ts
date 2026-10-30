@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, SavedGame } from '@ratrace/core/session/types';
 import { LocalStore } from '../../web/src/session/indexeddb';
-import { kvBasket, kvForget, kvForgotten, kvKeeping, kvLanguage, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
+import { kvBasket, kvForget, kvForgotten, kvKeeping, kvLanguage, kvLanguageChoice, kvLastAccount, KvStore, kvPush, kvSession, kvText } from './kvStore';
 
 /*
  * On the web the app keeps the player's things where the Next web keeps them: the same IndexedDB (`ratrace`, its three stores), the same
@@ -84,6 +84,16 @@ describe('the keys of the browser', () => {
     expect(kvBasket.read()).toBeNull();
   });
 
+  it('notes the language chosen until it is sent, where the next document of the site can read it', () => {
+    expect(kvLanguageChoice.read()).toBeNull();
+    kvLanguageChoice.write('es');
+    kvLanguageChoice.write('ru');
+    expect(kvLanguageChoice.read()).toBe('ru');
+    expect(localStorage.getItem('ratrace:language-choice')).toBe('ru');
+    kvLanguageChoice.clear();
+    expect(kvLanguageChoice.read()).toBeNull();
+  });
+
   it('keeps the language in the NEXT_LOCALE cookie', () => {
     expect(kvLanguage.read()).toBeNull();
     kvLanguage.write('es');
@@ -159,7 +169,7 @@ describe('the keys of the browser', () => {
 
 describe('a player who deleted their account', () => {
   it('leaves nothing of theirs beside the database: the session, the round planned, the lists for the account, whose it was, a trip to Google', async () => {
-    for (const key of ['sb-ref-auth-token', 'sb-ref-auth-token-code-verifier', 'ratrace.basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:push']) localStorage.setItem(key, 'x');
+    for (const key of ['sb-ref-auth-token', 'sb-ref-auth-token-code-verifier', 'ratrace.basket', 'ratrace:given-up', 'ratrace:refused', 'ratrace.lastAccount', 'ratrace:language-choice', 'ratrace:push']) localStorage.setItem(key, 'x');
     sessionStorage.setItem('ratrace:keeping-account', '1');
     // The browser's own: the language chosen, the offer to install (its visits and a no), and what is not the game's.
     kvLanguage.write('es');

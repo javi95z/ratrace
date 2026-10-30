@@ -139,6 +139,23 @@ test('closing ends every socket upgraded, one that never joined a channel too', 
   await cloud.listen(0);
 });
 
+test('a profile\'s language, through the game\'s own client: nobody\'s choice until the player makes it, whether or not the profile is there yet', async () => {
+  const phone = await connectSupabase(url, FAKE_KEY, { storage: memory(), autoRefresh: false });
+  const guest = await phone.signInAsGuest();
+  if (guest === null) throw new Error('no guest was made');
+  await phone.ensureProfile(guest.id, 'ru');
+  expect((await phone.community.me())?.language).toBeNull();
+  expect(await phone.community.setLanguage?.('es')).toBe(true);
+  expect((await phone.community.me())?.language).toBe('es');
+  const second = await connectSupabase(url, FAKE_KEY, { storage: memory(), autoRefresh: false });
+  const other = await second.signInAsGuest();
+  if (other === null) throw new Error('no guest was made');
+  // The choice comes before the profile: it is there all the same, and making the profile leaves it.
+  expect(await second.community.setLanguage?.('ru')).toBe(true);
+  await second.ensureProfile(other.id, 'en');
+  expect((await second.community.me())?.language).toBe('ru');
+});
+
 test('an account deleted through the game\'s own client: the player and everything of theirs go, and the phone is signed out of it', async () => {
   const storage = memory();
   const phone = await connectSupabase(url, FAKE_KEY, { storage, autoRefresh: false });
