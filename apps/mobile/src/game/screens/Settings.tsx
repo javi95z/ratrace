@@ -454,7 +454,7 @@ function SignOutAsk({ onCancel }: { onCancel(): void }) {
 }
 
 /**
- * Deleting the account: last in the settings, and quiet (Google Play asks that a player can delete their account in the app; the legal page says so,
+ * Deleting the account: last in the front door's settings, never in a life's, and quiet (Google Play asks that a player can delete their account in the app; the legal page says so,
  * `#delete`). Offered only where there is an account to delete, a guest's or a member's. Asked first, in a sheet that says plainly what goes and
  * that it cannot be undone; once the server says the account is gone the device forgets the player and the game starts again on the front door
  * (`useAccount().deleteAccount`). The sheet stays while a deletion is under way, the account gone offline under it, until the game starts again.
@@ -532,7 +532,7 @@ function DeleteSheet({ open, onClose, deleteAccount }: { open: boolean; onClose(
   );
 }
 
-/** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */
+/** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. Deleting the account is left to the front door's. */
 export function Preferences() {
   return (
     <View style={{ gap: 8 }}>
@@ -541,7 +541,6 @@ export function Preferences() {
       {/* The keys, on the web (game/KeyboardHelp.tsx); nothing on the phone. */}
       <KeyboardGuide />
       <AccountBlock signOut />
-      <DeleteAccount />
     </View>
   );
 }

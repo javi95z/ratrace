@@ -89,24 +89,29 @@ async function playerWithThings() {
 describe('deleting the account, in the settings', () => {
   it('is offered last, quietly, to a guest and to a member, and not at all where there is no account to delete', () => {
     for (const state of [GUEST, MEMBER]) {
-      renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(state).account });
+      renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount(state).account });
       const buttons = screen.getAllByRole('button');
       expect(buttons.at(-1)?.textContent, state.kind).toBe('Delete account');
       cleanup();
     }
-    renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount({ kind: 'offline' }).account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount({ kind: 'offline' }).account });
     expect(screen.queryByRole('button', DELETE)).toBeNull();
     cleanup();
     // An account that cannot be deleted from here offers nothing to press.
-    renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST, true, false).account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount(GUEST, true, false).account });
     expect(screen.queryByRole('button', DELETE)).toBeNull();
     cleanup();
     // And none in a game with no cloud behind it.
-    renderGame(<Preferences />, memoryServices());
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, memoryServices());
     expect(screen.queryByRole('button', DELETE)).toBeNull();
   });
 
-  it('is last in the settings of the front door too, after the switches, above the version', () => {
+  it('is not offered in the settings of a life in progress', () => {
+    renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST).account });
+    expect(screen.queryByRole('button', DELETE)).toBeNull();
+  });
+
+  it('is last in the settings of the front door, after the switches, above the version', () => {
     renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount(GUEST).account });
     const sheet = sheetTitled('Settings');
     const button = within(sheet).getByRole('button', DELETE);
@@ -117,7 +122,7 @@ describe('deleting the account, in the settings', () => {
 
   it('asks first, in a sheet that says plainly what goes and that it cannot be undone; Cancel deletes nothing', async () => {
     const { account, asked } = fakeAccount(GUEST);
-    renderGame(<Preferences />, { ...memoryServices(), account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account });
     fireEvent.click(screen.getByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     for (const goes of ['every life and record', 'your name in the rankings', 'your friends', 'your games with others', 'your notices', 'cannot be undone']) expect(sheet.textContent).toContain(goes);
@@ -131,7 +136,7 @@ describe('deleting the account, in the settings', () => {
   it('deletes once asked twice, takes the player off the device and keeps the device\'s own settings, and lands on the front door as on a first visit', async () => {
     const services = await playerWithThings();
     const { account, asked } = fakeAccount(MEMBER);
-    renderGame(<Preferences />, { ...services, account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...services, account });
     fireEvent.click(screen.getByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
@@ -154,7 +159,7 @@ describe('deleting the account, in the settings', () => {
   it('says so in the sheet when the account could not be deleted, and leaves everything on the device as it was', async () => {
     const services = await playerWithThings();
     const { account } = fakeAccount(GUEST, false);
-    renderGame(<Preferences />, { ...services, account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...services, account });
     fireEvent.click(screen.getByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
@@ -171,7 +176,7 @@ describe('deleting the account, in the settings', () => {
   it('sends once however often it is pressed: the button waits, and says so, while the server answers', async () => {
     let answer: (done: boolean) => void = () => undefined;
     const { account, asked } = fakeAccount(GUEST, new Promise<boolean>((resolve) => (answer = resolve)));
-    renderGame(<Preferences />, { ...memoryServices(), account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account });
     fireEvent.click(screen.getByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     const yes = within(sheet).getByRole('button', { name: 'Delete forever' });
@@ -193,7 +198,7 @@ describe('deleting the account, in the settings', () => {
   it('works over the real account: the project forgets the player, and the game starts again with a new guest', async () => {
     const project = accountCloud();
     const services = await playerWithThings();
-    renderGame(<Preferences />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
     fireEvent.click(await screen.findByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
@@ -206,7 +211,7 @@ describe('deleting the account, in the settings', () => {
     for (const deleted of [false, true]) {
       const forget = vi.fn(async () => undefined);
       const saves: AccountSaves = { status: () => 'saved', offer: () => null, subscribe: () => () => {}, onDeviceChanged: () => () => {}, takeOffer: async () => false, declineOffer: async () => {}, forget };
-      renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST, deleted).account, saves });
+      renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount(GUEST, deleted).account, saves });
       fireEvent.click(screen.getByRole('button', DELETE));
       fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
       if (deleted) await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
@@ -224,7 +229,7 @@ describe('deleting the account, in the settings', () => {
       },
     });
     const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    renderGame(<Preferences />, { ...services, store: broken, account: fakeAccount(GUEST).account });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...services, store: broken, account: fakeAccount(GUEST).account });
     fireEvent.click(screen.getByRole('button', DELETE));
     fireEvent.click(within(sheetTitled('Delete your account?')).getByRole('button', { name: 'Delete forever' }));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/en'), { timeout: 5_000 });
@@ -239,7 +244,7 @@ describe('deleting the account, in the settings', () => {
     const project = accountCloud();
     project.state.lostAnswers = 1;
     const services = await playerWithThings();
-    renderGame(<Preferences />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...services, account: new SupabaseAccount(async () => project.cloud, () => null, () => undefined) });
     fireEvent.click(await screen.findByRole('button', DELETE));
     const sheet = sheetTitled('Delete your account?');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
@@ -276,7 +281,7 @@ describe('deleting the account, in the settings', () => {
     let clock = 1_000;
     const deps = { newId: () => `phone-${(ids += 1)}`, newSeed: () => `seed-phone-${ids}`, now: () => (clock += 1) };
     await new LocalSessions(device, content, lives, deps).start('nurse');
-    renderGame(<Preferences />, { ...servicesOver(online, deps), tapGuardMs: 0 });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...servicesOver(online, deps), tapGuardMs: 0 });
     // The guest's life goes up to their account, as any does.
     await waitFor(() => expect(project.held('guest-1').games).toHaveLength(1));
     fireEvent.click(await screen.findByRole('button', DELETE));
@@ -292,7 +297,7 @@ describe('deleting the account, in the settings', () => {
     ['es', 'Borrar la cuenta', '¿Borrar tu cuenta?', 'Borrar para siempre'],
     ['ru', 'Удалить аккаунт', 'Удалить аккаунт?', 'Удалить навсегда'],
   ] as const)('speaks %s', (locale, button, title, yes) => {
-    renderGame(<Preferences />, { ...memoryServices(), account: fakeAccount(GUEST).account }, locale);
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: fakeAccount(GUEST).account }, locale);
     // A text is cut into one piece for each typeface it needs (Russian's spaces are the pixel face's), so it is read whole from the page.
     const said = (role: string, words: string) => screen.getAllByRole(role).find((element) => element.textContent === words);
     fireEvent.click(said('button', button) as HTMLElement);

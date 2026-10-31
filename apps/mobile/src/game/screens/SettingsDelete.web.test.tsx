@@ -3,7 +3,7 @@ import type { Account, AccountState } from '@ratrace/online/types';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame, router } from '../../testing/render';
-import { Preferences } from './Settings';
+import { HomeSettingsSheet } from './Settings';
 
 /*
  * Deleting the account on the web: the other tabs of the site, and the installed game beside them, hold the player in their memory and share the
@@ -47,7 +47,7 @@ describe('deleting the account, with other tabs open', () => {
     const told: unknown[] = [];
     const otherTab = new BroadcastChannel('ratrace:forgotten');
     otherTab.onmessage = (event) => told.push(event.data);
-    renderGame(<Preferences />, { ...memoryServices(), account: deletable() });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: deletable() });
     fireEvent.click(screen.getByRole('button', { name: 'Delete account' }));
     const sheet = screen.getByRole('heading', { name: 'Delete your account?' }).closest('[aria-modal="true"]') as HTMLElement;
     fireEvent.click(within(sheet).getByRole('button', { name: 'Delete forever' }));
@@ -59,7 +59,7 @@ describe('deleting the account, with other tabs open', () => {
   });
 
   it('loads the page again when another tab deleted the account, once', async () => {
-    renderGame(<Preferences />, { ...memoryServices(), account: deletable() });
+    renderGame(<HomeSettingsSheet open onClose={() => undefined} />, { ...memoryServices(), account: deletable() });
     const anotherTab = new BroadcastChannel('ratrace:forgotten');
     anotherTab.postMessage({ from: 'another-tab' });
     await waitFor(() => expect(reloaded.count).toBe(1));
