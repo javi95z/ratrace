@@ -422,8 +422,6 @@
     "first": "Впервые!",
     "record": "Новый рекорд! Прежний — в {age, plural, one {# год} few {# года} many {# лет} other {# года}}",
     "headline": "{name} — в {age, plural, one {# год} few {# года} many {# лет} other {# года}}!",
-    "at": "В {age, plural, one {# год} few {# года} many {# лет} other {# года}}",
-    "also": "А ещё",
     "go": "Вперёд!",
     "share": "Поделиться",
     "shareText": "{headline} Сможешь лучше? Сыграй в The Rat Race:",

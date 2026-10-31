@@ -337,15 +337,11 @@ test('the scene of a milestone reached for the first time ever is the first step
   expect(screen.getByRole('dialog').textContent).toContain('3 of 3');
 });
 
-test('the scene of a milestone in a later life is its banner under the Hud, the step\'s badges left to their reward sheet (accepted in the scene)', async () => {
-  render(<SceneView name="celebrate-milestone-banner" />);
-  const [banner, ...rest] = await screen.findAllByRole('status', {}, WAIT);
-  expect(rest).toEqual([]);
-  expect(banner.textContent).toContain('100k net worth');
-  expect(banner.textContent).toContain('At 26');
-  expect(banner.textContent).not.toContain('New record');
-  expect(banner.textContent).not.toContain('Viral by mistake');
-  expect(screen.queryByRole('dialog')).toBeNull();
+test('the scene of a milestone in a later life is a step of the reward sheet, as a badge is, with nothing of it left in the result', async () => {
+  render(<SceneView name="celebrate-milestone-later" />);
+  const title = await screen.findByRole('heading', { name: '100k net worth at 26!' }, WAIT);
+  expect((title.closest('[aria-modal="true"]') as HTMLElement).textContent).not.toContain('New record');
+  expect(screen.queryByRole('status')).toBeNull();
 });
 
 test('the scenes of the cards are drawn by the card stage itself, each at its card, nothing taken', async () => {

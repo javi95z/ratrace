@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAskReview, useGame } from '../context';
 import { acceptReward, rewardAccepted } from '../rewardsAccepted';
 import { EscapeMoment, firstEscapeOf } from './EscapeMoment';
-import { MilestoneBanner, useCelebration } from './Milestones';
+import { useCelebration } from './Milestones';
 import { RewardSheet, type GoodMoment, type Reward } from './Rewards';
 
 /** The rarest badge first. */
@@ -15,8 +15,8 @@ const RARER = ['legendary', 'rare', 'uncommon', 'common'] as const;
  * What the step on screen brought. The life's first way out of the rat race has the whole screen before anything else (EscapeMoment.tsx), and the
  * player is asked then to rate the game in its store (game/askReview.ts). The rest in one standard sheet over its result, a step at a time
  * (Rewards.tsx): the way out (won again) and the first million first
- * (the moments the round stops for, momentsOf), then the milestones of the life that have the whole screen, then the badges earned for the first
- * time ever, the rarest first, then the lives unlocked. A milestone's banner stops nothing and stays with the result (Milestones.tsx). The lives a
+ * (the moments the round stops for, momentsOf), then the milestones of the life, then the badges earned for the first
+ * time ever, the rarest first, then the lives unlocked. The lives a
  * life's last step unlocked wait for its end (End.tsx), where one can begin at once. It says what the session and the round store reported;
  * whether a badge was earned, or a milestone reached, is never judged here. `seen` is what a scene shows as accepted already.
  */
@@ -24,7 +24,6 @@ export function Celebrations({ seen = [] }: { seen?: readonly string[] }) {
   const earned = useGame(useShallow((s) => s.earned));
   const unlocked = useGame(useShallow((s) => s.unlocked));
   const reached = useGame(useShallow((s) => s.reached));
-  const lifeId = useGame((s) => s.lifeId) ?? '';
   const gameId = useGame((s) => s.gameId) ?? null;
   const over = useGame((s) => s.view?.finished === true);
   // The way out and the first million the step brought, as one string so that the round is drawn again only when they change.
@@ -65,7 +64,6 @@ export function Celebrations({ seen = [] }: { seen?: readonly string[] }) {
 
   return (
     <>
-      {plan.where === 'banner' ? <MilestoneBanner plan={{ ...plan, badges: [] }} lifeId={lifeId} /> : null}
       {out ? (
         <EscapeMoment
           open={escaping}

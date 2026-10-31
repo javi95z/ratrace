@@ -422,8 +422,6 @@
     "first": "First time ever!",
     "record": "New record! Your best was {age}",
     "headline": "{name} at {age}!",
-    "at": "At {age}",
-    "also": "Also reached",
     "go": "Onwards!",
     "share": "Share",
     "shareText": "{headline} Can you beat it? Play The Rat Race:",

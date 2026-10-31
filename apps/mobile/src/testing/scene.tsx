@@ -144,8 +144,7 @@ function HiddenStage({ children }: { children: ReactNode }) {
 const ACCEPTED: readonly string[] = Object.keys(BADGE_RARITY);
 
 /**
- * What a step earned once its reward sheet is accepted (`celebrate-earned`): nothing is left of it in the result, where a milestone's banner stands
- * (`celebrate-milestone-banner`), 12 under the Hud's figures (Play's `paddingTop: 4` and the page's gap of 8, the web's `pt-3`). The web's shot takes
+ * What a step earned once its reward sheet is accepted (`celebrate-earned`): nothing is left of it in the result, 12 under the Hud's figures (Play's `paddingTop: 4` and the page's gap of 8, the web's `pt-3`). The web's shot takes
  * everything else of the stage out (`CELEBRATIONS_ONLY`); its page presses the sheet's button, which the phone's Celebrations is given as its initial
  * state.
  */
@@ -268,9 +267,9 @@ export const SCENE_SCREENS: SceneScreens = {
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
-  // A milestone of the life (Milestones.tsx, the phone's own: the Next web had none) is drawn as the badges are: its whole screen over the Hud of the
-  // card that reached it, as a legendary badge's, or its banner where the result of the card has it (`celebrate-milestone-banner`).
-  celebrate: (scene) => (scene.name === 'celebrate-earned' || scene.name === 'celebrate-milestone-banner' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
+  // A milestone of the life (Milestones.tsx, the phone's own: the Next web had none) is drawn as the badges are: a step of the sheet over the Hud of the
+  // card that reached it, as a legendary badge's.
+  celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
   records: (scene) => <Records opened={scene.sheet} />,
   collection: (scene) => <Collection tab={collectionTabOf(scene)} />,
   challenge: () => <WeeklyChallenge />,

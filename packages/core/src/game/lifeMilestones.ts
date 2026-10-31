@@ -221,25 +221,16 @@ export interface Carried {
 export type Celebration =
   /** No milestone: the badges are shown as they always were. */
   | { where: 'badges' }
-  /**
-   * `moment`: inside the moment that already has the screen for the first million or the way out. `sheet`: the whole screen. `banner`: a card
-   * that rises with the step's result and stops nothing.
-   */
-  | ({ where: 'moment' | 'sheet' | 'banner' } & Carried);
+  /** `moment`: inside the moment that already has the screen for the first million or the way out. `sheet`: a step of the round's reward sheet. */
+  | ({ where: 'moment' | 'sheet' } & Carried);
 
-/**
- * Where the milestones a step reached are shown, and with what. A step with a big milestone, or a legendary badge, has the whole screen; any
- * other is a banner. A room never stops for one: its clock runs for everyone. `moment` is the moment the screen already stops for, if any.
- */
-export function celebrationOf({ reached, earned, legendary, moment, inRoom }: { reached: readonly Reached[]; earned: readonly string[]; legendary: (badgeId: string) => boolean; moment: 'escape' | 'million' | null; inRoom: boolean }): Celebration {
+/** Where the milestones a step reached are shown, and with what. `moment` is the moment the screen already stops for, if any. */
+export function celebrationOf({ reached, earned, moment }: { reached: readonly Reached[]; earned: readonly string[]; moment: 'escape' | 'million' | null }): Celebration {
   if (reached.length === 0) return { where: 'badges' };
   const covered = moment === 'escape' ? 'escaped' : moment === 'million' ? 'worth1m' : null;
   const held = covered === null ? undefined : reached.find((each) => each.id === covered);
   const order = [...reached].sort((a, b) => (a.size === b.size ? 0 : a.size === 'big' ? -1 : 1));
   const lead = held ?? order[0];
   const others = order.filter((each) => each !== lead);
-  const badges = [...earned];
-  if (held) return { where: 'moment', lead, others, badges };
-  const big = !inRoom && (reached.some((each) => each.size === 'big') || earned.some(legendary));
-  return { where: big ? 'sheet' : 'banner', lead, others, badges };
+  return { where: held ? 'moment' : 'sheet', lead, others, badges: [...earned] };
 }

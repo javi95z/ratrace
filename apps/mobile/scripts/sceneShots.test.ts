@@ -207,7 +207,7 @@ test('the picture\'s sheet is compared whole: the web\'s link that saves its fil
 test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the stage of the round and the bar of its next step', () => {
   // And the two whose sheet a screen not ported yet opens, drawn over the Hud alone: an amount moved to savings, a legendary badge. And the
   // milestones of a life, celebrated as the badges are: the phone's own, which the Next web never drew, so their shot has nothing there to compare.
-  const huds = SCENES.filter((scene) => scene.name.startsWith('hud-') || ['amount-savings', 'celebrate-legendary', 'celebrate-milestone', 'celebrate-milestone-banner'].includes(scene.name));
+  const huds = SCENES.filter((scene) => scene.name.startsWith('hud-') || ['amount-savings', 'celebrate-legendary', 'celebrate-milestone', 'celebrate-milestone-later'].includes(scene.name));
   expect(huds.length).toBeGreaterThan(0);
   for (const scene of huds) expect(webRules(scene), scene.name).toBe(HUD_ONLY);
   expect(HUD_ONLY).toBe('#round-stage, #round-actions { display: none !important; }');

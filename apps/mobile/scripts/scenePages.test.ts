@@ -191,8 +191,7 @@ test('a sheet that a screen not ported yet opens is drawn beside the Hud on both
   // The phone: the Hud as Play mounts it, and the same sheet beside it; the badge's stage mounted where it draws nothing in the page.
   expect(app).toContain('amount: () => <><HudScene /><SavingsSheet /></>,');
   expect(app).toContain("<AmountSheet title={amount('save')} max={cash} onClose={nothing} onConfirm={refused} />");
-  // A milestone's banner (the phone's own, which the web never drew) is where the badges' small cards are.
-  expect(app).toContain("celebrate: (scene) => (scene.name === 'celebrate-earned' || scene.name === 'celebrate-milestone-banner' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),");
+  expect(app).toContain("celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),");
 });
 
 test('a step\'s result is drawn with its rewards taken in: the web\'s page presses its own button to move on, the phone\'s Celebrations is told every badge was accepted', () => {

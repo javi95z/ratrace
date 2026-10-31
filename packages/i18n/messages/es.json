@@ -422,8 +422,6 @@
     "first": "¡Por primera vez!",
     "record": "¡Nuevo récord! Tu mejor marca: {age}",
     "headline": "¡{name} a los {age}!",
-    "at": "A los {age}",
-    "also": "También",
     "go": "¡A por más!",
     "share": "Compartir",
     "shareText": "{headline} ¿Lo superas? Juega a The Rat Race:",

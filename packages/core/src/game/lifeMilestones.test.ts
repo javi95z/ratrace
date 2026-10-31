@@ -158,32 +158,23 @@ describe('the youngest age of each milestone in the lives finished', () => {
 });
 
 describe('what a step shows', () => {
-  const legendary = (id: string) => id === 'legend';
   const medium: Reached = { id: 'home', age: 30, best: 28, size: 'medium' };
   const big: Reached = { id: 'worth100k', age: 26, best: null, size: 'big' };
 
   it('leaves badges alone where no milestone was reached', () => {
-    expect(celebrationOf({ reached: [], earned: ['a'], legendary, moment: null, inRoom: false })).toEqual({ where: 'badges' });
+    expect(celebrationOf({ reached: [], earned: ['a'], moment: null })).toEqual({ where: 'badges' });
   });
 
-  it('carries the badges of the step in the milestone, which leads', () => {
-    expect(celebrationOf({ reached: [medium], earned: ['a'], legendary, moment: null, inRoom: false })).toEqual({ where: 'banner', lead: medium, others: [], badges: ['a'] });
-    expect(celebrationOf({ reached: [medium, big], earned: [], legendary, moment: null, inRoom: false })).toEqual({ where: 'sheet', lead: big, others: [medium], badges: [] });
-  });
-
-  it('makes a legendary badge and a milestone one big screen', () => {
-    expect(celebrationOf({ reached: [medium], earned: ['legend'], legendary, moment: null, inRoom: false })).toMatchObject({ where: 'sheet', lead: medium, badges: ['legend'] });
-  });
-
-  it('never stops a room: a big moment rises as a banner there', () => {
-    expect(celebrationOf({ reached: [big], earned: ['legend'], legendary, moment: null, inRoom: true })).toMatchObject({ where: 'banner', lead: big });
+  it('gives every milestone a step of the sheet, the biggest leading, the badges after it', () => {
+    expect(celebrationOf({ reached: [medium], earned: ['a'], moment: null })).toEqual({ where: 'sheet', lead: medium, others: [], badges: ['a'] });
+    expect(celebrationOf({ reached: [medium, big], earned: [], moment: null })).toEqual({ where: 'sheet', lead: big, others: [medium], badges: [] });
   });
 
   it('hands everything to the moment that already has the screen for the first million or the way out', () => {
     const million: Reached = { id: 'worth1m', age: 40, best: 38, size: 'medium' };
-    expect(celebrationOf({ reached: [medium, million], earned: ['a'], legendary, moment: 'million', inRoom: false })).toEqual({ where: 'moment', lead: million, others: [medium], badges: ['a'] });
+    expect(celebrationOf({ reached: [medium, million], earned: ['a'], moment: 'million' })).toEqual({ where: 'moment', lead: million, others: [medium], badges: ['a'] });
     // A moment of another kind carries nothing.
-    expect(celebrationOf({ reached: [medium], earned: [], legendary, moment: 'million', inRoom: false }).where).toBe('banner');
+    expect(celebrationOf({ reached: [medium], earned: [], moment: 'million' }).where).toBe('sheet');
   });
 });
 

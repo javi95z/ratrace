@@ -170,6 +170,12 @@ describe('the ledger of a round', () => {
     expect(title.querySelector('[data-sprite^="anim.wheel"]')).not.toBeNull();
   });
 
+  it('draws no empty box where the round wrote no line', async () => {
+    await inPlay({ events: (all) => all.filter((event) => event.kind !== 'ledger') });
+    expect(screen.queryByRole('table', { name: 'What came in and went out' })).toBeNull();
+    expect(screen.getByText('Cash now')).toBeTruthy();
+  });
+
   it('shows every line the round wrote, in the order it wrote them: the money in in teal, the money out in wine', async () => {
     await inPlay();
     const lines = linesOf(resolved().events);

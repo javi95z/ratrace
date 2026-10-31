@@ -335,13 +335,16 @@ export function Resolve() {
         <Note key={i} note={note} />
       ))}
 
-      <Panel>
-        <View role="table" aria-label={t('ledger')}>
-          {lines.map((line, i) => (
-            <LedgerLine key={i} line={line.line} label={text.ledger[line.line]} amount={line.amount} at={i} />
-          ))}
-        </View>
-      </Panel>
+      {/* No lines, no ledger: an empty box says nothing. */}
+      {lines.length > 0 ? (
+        <Panel>
+          <View role="table" aria-label={t('ledger')}>
+            {lines.map((line, i) => (
+              <LedgerLine key={i} line={line.line} label={text.ledger[line.line]} amount={line.amount} at={i} />
+            ))}
+          </View>
+        </Panel>
+      ) : null}
 
       {/* Where the round leaves the player, and what is said of it: under the first screen of a phone, put in once the ledger is on it (the
           coins and the counts wait for the ledger to roll, far longer, from when the page came). */}

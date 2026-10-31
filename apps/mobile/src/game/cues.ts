@@ -108,7 +108,7 @@ export type HeardMilestones = Heard & Pick<RoundState, 'reached'>;
 /**
  * The cues of a change of the round with its milestones heard (lifeMilestones.ts; the web had none, so this is the phone's own, beside the web's
  * `cuesFor`): a milestone reached rings for the step, in place of its badges' ring, as it is shown in their place. The whole screen gets the
- * million's fanfare (a legendary badge carried in it, its own); a banner, the coin. A moment that already has the floor (the way out, the first
+ * million's fanfare (a legendary badge carried in it, its own); any other, the coin. A moment that already has the floor (the way out, the first
  * million, a bankruptcy) keeps it. `milestone` says the step reached one, to be felt as a success.
  */
 export function stepCues(state: HeardMilestones, before: HeardMilestones): { cues: Cue[]; milestone: boolean } {

@@ -83,7 +83,7 @@ export const SCENES: readonly Scene[] = [
   { name: 'celebrate-legendary', locale: 'en' },
   { name: 'celebrate-earned', locale: 'en' },
   { name: 'celebrate-milestone', locale: 'en' },
-  { name: 'celebrate-milestone-banner', locale: 'en' },
+  { name: 'celebrate-milestone-later', locale: 'en' },
   { name: 'challenge-practice', locale: 'en' },
   { name: 'legal', locale: 'en' },
   { name: 'finance-lifestyle', locale: 'en', tab: 'lifestyle' },
@@ -273,7 +273,7 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   // The same step again: the engineer worth 100k for the first time in any life, with both badges of the step inside its whole screen.
   'celebrate-milestone': { life: 'engineer', round: 3, stage: 'news', seed: 'screen-seed-62473', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   // And in a player's later life: 100k reached younger before, MrFeast met before, so a banner with the 100k's badge in it.
-  'celebrate-milestone-banner': { life: 'engineer', round: 3, stage: 'news', seed: 'screen-seed-62473', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  'celebrate-milestone-later': { life: 'engineer', round: 3, stage: 'news', seed: 'screen-seed-62473', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   'challenge-practice': null,
   legal: null,
   // The finances of play-finance-r6's sixth round, at the way of life: how the engineer works, the round's focus, how and where she lives, her
@@ -527,7 +527,7 @@ export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-ne
 export const FAULTS: ReadonlySet<string> = new Set(['play-fault']);
 
 /** Badges a scene's player earned in an earlier life, so the scene's step does not earn them for the first time. */
-const BADGES_HELD: Readonly<Record<string, readonly string[]>> = { 'celebrate-milestone-banner': ['celeb_mrfeast'] };
+const BADGES_HELD: Readonly<Record<string, readonly string[]>> = { 'celebrate-milestone-later': ['celeb_mrfeast'] };
 
 /**
  * Where a scene's game keeps the milestones of lives (core's lifeMilestones.ts), where that is not a book of its own in memory: none at all for the
@@ -536,7 +536,7 @@ const BADGES_HELD: Readonly<Record<string, readonly string[]>> = { 'celebrate-mi
  */
 export function sceneMilestones(name: string): MilestoneKeep | null | undefined {
   if (name === 'celebrate-legendary' || name === 'celebrate-earned' || name.startsWith('moment-')) return null;
-  if (name !== 'celebrate-milestone-banner') return undefined;
+  if (name !== 'celebrate-milestone-later') return undefined;
   const keep = memoryMilestones();
   keep.save(withBests(EMPTY_BOOK, { worth100k: 22 }));
   return keep;
