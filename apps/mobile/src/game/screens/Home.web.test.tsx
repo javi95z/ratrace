@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Home } from './Home';
@@ -71,6 +71,8 @@ describe('the front door on the web', () => {
     expect(screen.queryByRole('menu')).toBeNull();
     fireEvent.click(square);
     await screen.findByRole('menu');
+    // The square takes its new press once React's effects have run, which a finger always comes after; the menu can be found just before.
+    await act(async () => undefined);
     fireEvent.click(square);
     expect(screen.queryByRole('menu')).toBeNull();
   });

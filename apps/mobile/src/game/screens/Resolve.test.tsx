@@ -203,10 +203,8 @@ describe('the ledger of a round', () => {
     // A rise is one run of its delay and its own 280 ms (the kit's `useRise`): the lines' are 280, 360, 440…
     const runs = rea.assigned.filter((one) => one.kind === 'timing' && one.to === 1).map((one) => one.duration);
     for (let i = 0; i < lines.length; i++) expect(runs, `line ${i + 1}`).toContain(i * 80 + 280);
-    // The first is up once its own 280 ms have run, while the last still waits for its turn.
+    // Every line is up in the end. How long each waits is held by its run above: a look at the clock here would say how busy the machine was.
     const drawn = () => within(ledger()).getAllByRole('row').map((row) => (row.parentElement as HTMLElement).style.opacity);
-    await waitFor(() => expect(drawn()[0]).toBe('1'));
-    expect(drawn()[lines.length - 1]).toBe('0');
     await waitFor(() => expect(drawn().every((opacity) => opacity === '1')).toBe(true));
   });
 
