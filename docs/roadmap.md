@@ -48,7 +48,6 @@ Ideas kept for later, from looking at Busybodies (playbusybodies.com, a cosy set
 - Characters who come back: the crypto brother-in-law, the boss, the landlord, with running jokes and consequences across a life.
 - Stories that remember: a rumour in the paper that comes true, or not, rounds later; a feud with a neighbour that ends well or badly.
 - Paid chapters: new lives or cities bought once (an inheritance, Silicon Valley, Japan in the 80s); never an edge in ranked.
-- A diorama on the front page: the pixel city alive behind it, the player's rat in it, day and night, rain in a crisis.
 - A newsletter, "El Diario de la Rueda", only when there is something new.
 - Pages for search: "for fans of Cashflow and BitLife", and questions answered on the front page.
 - A rat financial adviser to chat with (AI): appealing, but each message costs; later.
