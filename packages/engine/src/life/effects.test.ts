@@ -209,6 +209,13 @@ describe('applyEffects: family and lifestyle', () => {
     expect(p.extraExpensesAnnual).toBe(900_000);
   });
 
+  it('takes out an insurance, kept and paid for from then on as one the player took out', () => {
+    const p = after({ insure: 'home' });
+    expect(p.life.insurance.home).toBe(true);
+    expect(p.life.insurance.life).toBe(false);
+    expect(p.extraExpensesAnnual).toBeGreaterThan(player().extraExpensesAnnual);
+  });
+
   it('raises the lifestyle floor, pulling the tier up with it', () => {
     const p = after({ lifestyleFloor: 2 });
     expect(p.life.minLifestyleTier).toBe(2);

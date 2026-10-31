@@ -688,7 +688,7 @@ export const es: WordsText = {
       endings: {
         both: '{person:advisor} cobró dos bonus gracias a ti. Te manda una cesta cada Navidad.',
         fund: 'El fondo de {person:advisor} cobró su comisión todos y cada uno de los años. A él lo ascendieron.',
-        insurance: 'El seguro de {person:advisor} costó una fortuna con los años, y nunca pagó nada.',
+        insurance: '{person:advisor} se llevó una comisión por un seguro que podías tener sin él. Fue un buen año para él.',
         cold: '{person:advisor} se rindió contigo, y pasó a tus vecinos.',
         },
     },

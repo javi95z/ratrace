@@ -390,7 +390,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   founder_exit: [null, 'Half your money back, whatever the news.'],
   founder_second: ['She hugs you, and goes to find braver friends.', null, 'Three coffees, two calls. She signs her first client.'],
   advisor_fund: ['He slides the brochure back into a drawer full of brochures.', 'Bonds inside, and two percent a year on top, forever. He shakes your hand twice.', 'He sighs, and opens the boring form.'],
-  advisor_insurance: ['He makes a note in your file. You do not see what.', 'One more signature, and a payment every year for twenty years.', 'The same cover for a third of the price. He is hurt.'],
+  advisor_insurance: ['He makes a note in your file. You do not see what.', 'One signature, and his commission leaves your account. He shakes your hand.', 'An afternoon on the phone, the same cover, no commission. He is hurt.'],
   parents_help: ['They are proud of you, and a little hurt.', 'Your mother cries. Your father pretends not to.'],
   parents_care: ['A good home, with a garden. You visit on Sundays.', 'Evenings at their house, fewer hours at work, a carer in the mornings. Hard, and right.'],
   parents_inheritance: ['You keep the photo. The rest goes to the bank.', null, 'You kept their papers for years. No surprises.', null],

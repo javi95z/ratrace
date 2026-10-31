@@ -378,7 +378,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   founder_exit: [null, 'Recuperas la mitad, pase lo que pase.'],
   founder_second: ['Te abraza y se va a buscar amigos más valientes.', null, 'Tres cafés y dos llamadas. Firma su primer cliente.'],
   advisor_fund: ['Devuelve el folleto a un cajón lleno de folletos.', 'Dentro, bonos; encima, un dos por ciento al año, para siempre. Te da la mano dos veces.', 'Suspira y saca el formulario aburrido.'],
-  advisor_insurance: ['Apunta algo en tu ficha. No ves qué.', 'Otra firma, y un recibo cada año durante veinte años.', 'La misma cobertura por un tercio del precio. Se ofende.'],
+  advisor_insurance: ['Apunta algo en tu ficha. No ves qué.', 'Una firma, y su comisión sale de tu cuenta. Te da la mano.', 'Una tarde de llamadas, la misma cobertura y ninguna comisión. Se ofende.'],
   parents_help: ['Están orgullosos de ti, y un poco dolidos.', 'Tu madre llora. Tu padre hace como que no.'],
   parents_care: ['Una buena residencia, con jardín. Vas a verlos los domingos.', 'Tardes en su casa, media jornada y una cuidadora por las mañanas. Duro, y lo que toca.'],
   parents_inheritance: ['Te quedas con la foto. Lo demás, para el banco.', null, 'Llevaste sus papeles durante años. Ninguna sorpresa.', null],

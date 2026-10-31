@@ -179,7 +179,7 @@ describe('Russian', () => {
       recurring: [{ tag: 'in', kind: 'passive', annual: 100_000, roundsLeft: 2 }, { tag: 'out', kind: 'expense', annual: 50_000, roundsLeft: null }],
       moveCity: 'london', children: 2, buyItem: { itemId: 'watch_rolex', pricePct: 100 }, invest: { assetId: 'gold', amount: 500_000 },
       pension: 100_000, loan: 200_000, property: { typeId: 'studio', pricePct: 100, downPct: 20, rented: true }, refinance: 'variable', homeValue: 2_000_000,
-      lose: { pct: 30, what: 'deposit' }, lifestyleFloor: 2,
+      lose: { pct: 30, what: 'deposit' }, lifestyleFloor: 2, insure: 'home',
     });
     const money = (cents: number) => russian.fmt.money(indexed(cents, state.timeline[0]));
     expect(phrases).toEqual([
@@ -187,7 +187,7 @@ describe('Russian', () => {
       `+${money(100_000)}/год на 4 года`, `−${money(50_000)}/год`,
       'переезд в Лондон', '2 ребёнка', 'получаешь: Rolex Submariner', `Золото на ${money(500_000)}`,
       `+${money(100_000)} в пенсионный план`, `кредит на ${money(200_000)}`, 'покупаешь: студия под сдачу', 'ипотека теперь плавающая',
-      `цена жилья +${money(2_000_000)}`, 'теряешь 30%: сбережения', 'образ жизни не ниже: комфорт',
+      `цена жилья +${money(2_000_000)}`, 'теряешь 30%: сбережения', 'образ жизни не ниже: комфорт', 'страховка жилья',
     ]);
     expect(screens.effectPhrases(russian, state, { job: { leave: true }, partner: null, sellHome: true, refinance: 'fixed', lose: { pct: 50, what: 'crypto' } })).toEqual([
       'работы больше нет', 'расставание', 'ипотека теперь фиксированная', 'продаёшь своё жильё', 'теряешь 50%: крипта',

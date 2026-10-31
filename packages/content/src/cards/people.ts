@@ -130,16 +130,17 @@ export const peopleCards: CardDef[] = [
     { effects: { focus: 1, skills: { network: 1 }, ...warm('founder') } },
   ])),
 
-  // The bank's adviser: a "guaranteed" fund whose fee runs every year, and the bank's own insurance on a mortgage. A word in time saves it.
+  // The bank's adviser: a "guaranteed" fund whose fee runs every year, and home insurance through the bank. The cover is the real one either
+  // way, at its usual premium: the bank's commission buys not having to look for it, which is an afternoon's focus.
   card('advisor_fund', 'investing', { once: true, weight: MEET - 4, when: { minRound: 2, minNetWorth: usd(15_000) } }, person('advisor', [
     { effects: cold('advisor') },
     { effects: { invest: { assetId: 'treasury_short', amount: usd(10_000) }, recurring: [yearly('fund_fee', 'expense', 400, null)], ...warm('advisor', 'advisor_fund') } },
     { when: { minFinanceSkill: 2 }, effects: { invest: { assetId: 'msci_world', amount: usd(10_000) }, ...cold('advisor') } },
   ])),
-  card('advisor_insurance', 'housing', { once: true, weight: MEET - 3, when: { hasMortgage: true } }, person('advisor', [
+  card('advisor_insurance', 'housing', { once: true, weight: MEET - 3, when: { hasMortgage: true, uninsured: 'home' } }, person('advisor', [
     { effects: cold('advisor') },
-    { effects: { recurring: [yearly('bank_insurance', 'expense', 900, 10)], ...warm('advisor', 'advisor_insurance') } },
-    { effects: { recurring: [yearly('outside_insurance', 'expense', 350, 10)], ...cold('advisor') } },
+    { effects: { cash: usd(-2_500), insure: 'home', ...warm('advisor', 'advisor_insurance') } },
+    { effects: { focus: 1, insure: 'home', ...cold('advisor') } },
   ])),
 
   // The parents, in every life: help with a first home, care in their old age, and what they leave. Their story costs, whatever is

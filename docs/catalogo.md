@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.54.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.55.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -1314,7 +1314,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.landlord_damp.png" alt="Una mancha en el techo"> | **Una mancha en el techo**<br>Una mancha negra crece sobre la cama. don Julián la mira y dice que tiene «carácter». | 1. Aguantarte<br>2. Quejarte por escrito<br>3. Arreglarla tú |
 | <img src="../art/clean/cards/card.landlord_raise.png" alt="Una carta del casero"> | **Una carta del casero**<br>don Julián en la puerta con una carta. Sube el alquiler, dice, como sube todo. | 1. Pagar el nuevo alquiler<br>2. Negociar<br>3. Buscar otro piso |
 | <img src="../art/clean/cards/card.landlord_sale.png" alt="El piso, a precio de amigo"> | **El piso, a precio de amigo**<br>don Julián se jubila y se va a la costa. Prefiere venderte el piso a ti antes que a un desconocido. | 1. Seguir de alquiler<br>2. Comprarlo con hipoteca<br>3. Comprarlo al contado |
-| <img src="../art/clean/cards/card.advisor_insurance.png" alt="Un seguro con la hipoteca"> | **Un seguro con la hipoteca**<br>Para tu hipoteca, dice Borja, el banco recomienda encarecidamente su propio seguro. | 1. Dejarlo como está<br>2. Contratar el seguro del banco<br>3. Contratar la misma cobertura fuera |
+| <img src="../art/clean/cards/card.advisor_insurance.png" alt="Un seguro con la hipoteca"> | **Un seguro con la hipoteca**<br>Tu casa no tiene seguro, te avisa Borja. Un incendio correría de tu cuenta. El banco te lo hace hoy, con comisión. | 1. Seguir sin seguro<br>2. Firmar con el banco<br>3. Buscar la misma cobertura por tu cuenta |
 | <img src="../art/clean/cards/card.classmate_housewarming.png" alt="La inauguración del piso"> | **La inauguración del piso**<br>Copas en el piso que se acaba de comprar un compañero de clase. Te enseña la caldera como si fuera un recién nacido. | 1. Llevar una planta y volver a casa<br>2. Ponerte a mirar pisos tú también<br>3. Preguntarle cómo lo ha hecho |
 | <img src="../art/clean/cards/card.construction_own_house.png" alt="Una casa diseñada por ti"> | **Una casa diseñada por ti**<br>Llevas años dibujando casas para otros. Sale un solar, y el constructor de confianza te hace precio de gremio. | 1. Seguir dibujando para otros<br>2. Construir tu propia casa |
 | <img src="../art/clean/cards/card.realestate_hurried_seller.png" alt="Un vendedor con prisa"> | **Un vendedor con prisa**<br>Un vendedor tiene que irse antes de fin de mes y acepta cualquier oferta razonable. | 1. Que lo lleve un compañero<br>2. Avisar a tu cliente inversor<br>3. Comprarlo para vivir en él |

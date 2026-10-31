@@ -1280,10 +1280,10 @@ export const cards: Record<string, CardText> = {
     'Sign up',
     'Ask for an index fund instead',
   ]),
-  advisor_insurance: c('Insurance with the mortgage', 'For your mortgage, says {person:advisor}, the bank strongly recommends its own insurance.', [
-    'Keep things as they are',
-    'Take the bank\'s insurance',
-    'Buy the same cover elsewhere',
+  advisor_insurance: c('Insurance with the mortgage', 'Your home has no insurance, {person:advisor} points out. A fire would be all yours. The bank can sign you up today, for a commission.', [
+    'Stay uninsured',
+    'Sign with the bank',
+    'Find the same cover yourself',
   ]),
   parents_help: c('A little help', '{person:parents} have saved a little. If it helps with a deposit for a home of your own, it is yours.', [
     'Say you will manage',

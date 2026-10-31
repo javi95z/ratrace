@@ -831,6 +831,8 @@ export interface Effects {
   launder?: { feePct: number };
   /** The lodger moves out. */
   endLodger?: true;
+  /** Takes out this insurance, as the player's own order would: held and paid for until it is cancelled. Not health, which an illness can refuse. */
+  insure?: Exclude<InsuranceKind, 'health'>;
   /** Works from now on in this way. A card that says so is the boss's permission: see the flag `remote_work`. */
   workMode?: WorkMode;
   /** Prison, for this round and the rounds after it up to this many in all: no pay, no focus, status lost, and a rung on the way out. */

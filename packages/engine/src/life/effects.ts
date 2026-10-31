@@ -237,6 +237,7 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     life.evasion.evaded = [];
   }
   if (effects.endLodger === true) life.lodger = false;
+  if (effects.insure !== undefined) life.insurance[effects.insure] = true;
   if (effects.workMode !== undefined) {
     // The focus a way of working gives counts from the round it starts in.
     const before = focusBonusOf(p, at.content);

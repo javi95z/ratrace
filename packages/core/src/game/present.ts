@@ -248,6 +248,7 @@ export function effectTags(
   if (effects.bond) add('bad', t('bond', { years: effects.bond.rounds * content.yearsPerRound }));
   if (effects.workMode === 'remote') add('good', t('remote'));
   if (effects.endLodger) add('plain', t('endLodger'));
+  if (effects.insure) add('good', text.insurance[effects.insure]);
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
   if (effects.gift?.business) add('bad', t('giftBusiness'));
   if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));

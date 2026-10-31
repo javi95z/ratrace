@@ -1,7 +1,7 @@
 import { cardArtOf, cardPeople, metFlag, personArt } from '@ratrace/content';
 import { cardRarity, chancePct, effectTags, leadsOn, onlyCosts } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
-import { homeOf, previewCard, quoteItem } from '@ratrace/engine';
+import { homeOf, previewCard, quoteItem, quoteLiving } from '@ratrace/engine';
 import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
@@ -119,7 +119,8 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
   const option = def.options[index];
   // What the player is paid or pays every year: an outcome may end one of them.
   const owned = useGame((s) => s.view?.player.life.recurring);
-  const itemStatus = useItemStatus(useGame((s) => s.view));
+  const view = useGame((s) => s.view);
+  const itemStatus = useItemStatus(view);
   // The home an option would sell, named on its tag.
   const livedIn = useGame((s) => (s.view ? homeOf(s.view.player, words.content) : null));
   const written = cards[def.id].options[index];
@@ -143,6 +144,8 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
         ? t('thanksTrade')
         : null;
   const covers = preview.covered > 0 ? [{ tone: 'good' as const, text: t('covers', { amount: words.fmt.brief(preview.covered) }) }] : [];
+  // An insurance the option takes out goes on being paid for: its premium is said, or taking it looks free.
+  const premiums = option.effects?.insure && view ? [{ tone: 'bad' as const, text: effects('yearlyCost', { amount: words.fmt.brief(quoteLiving(words.content, view).insurance[option.effects.insure]) }) }] : [];
 
   return (
     <>
@@ -162,7 +165,7 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
       </View>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <ReadText size={13} lineHeight={13 * SNUG}>{lockWords(preview.lock)}</ReadText> : null}
-      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...covers]} dim={dim} more={leadsOn(words.content.cards, option) ? t('leadsOn') : undefined} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...premiums, ...covers]} dim={dim} more={leadsOn(words.content.cards, option) ? t('leadsOn') : undefined} />
       {(option.outcomes ?? []).map((outcome, k) => {
         const outcomeTags = (said: typeof outcome.effects) => {
           const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus, livedIn);

@@ -197,6 +197,11 @@ describe('effectTags', () => {
     ]);
   });
 
+  it('says which insurance an option takes out', () => {
+    expect(tags({ insure: 'home' })).toEqual([{ tone: 'good', text: 'Home insurance' }]);
+    expect(tags({ insure: 'home' }, 'es')).toEqual([{ tone: 'good', text: 'Seguro de hogar' }]);
+  });
+
   it('names the things an option brings', () => {
     expect(
       tags({

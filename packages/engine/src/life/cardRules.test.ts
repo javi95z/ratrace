@@ -28,7 +28,7 @@ const good: CardDef = {
         partner: { salaryPct: 80 }, children: 1, buyItem: { itemId: 'car_basic', pricePct: 60 },
         invest: { assetId: 'gold', amount: 100_000, bonusPct: 10 }, pension: 1_000, loan: 5_000,
         property: { typeId: 'studio', pricePct: 90, downPct: 20, rented: false }, refinance: 'fixed', sellHome: true, homeValue: 800_000,
-        lose: { what: 'crypto', pct: 30 }, lifestyleFloor: 2,
+        lose: { what: 'crypto', pct: 30 }, lifestyleFloor: 2, insure: 'home',
       },
       outcomes: [{ weight: 3, effects: { cash: 5 } }, { weight: 1, effects: { partner: null, job: { leave: true } } }],
     },
@@ -148,6 +148,7 @@ describe('validateContent: cards', () => {
     expect(effect({ children: 0 })).toEqual(['card offer option 1 needs children from 1 to 4']);
     expect(effect({ children: 5 })).toEqual(['card offer option 1 needs children from 1 to 4']);
     expect(effect({ lifestyleFloor: 4 })).toEqual(['card offer option 1 has a lifestyle floor that is not 0, 1, 2 or 3']);
+    expect(effect({ insure: 'health' as 'home' })).toEqual(['card offer option 1 takes out an insurance other than home or life']);
     expect(effect({ sellHome: 'yes' })).toEqual(['card offer option 1 needs true or false for sellHome']);
     expect(effect({ refinance: 'floating' })).toEqual(['card offer option 1 has an unknown refinance kind: floating']);
     expect(problems((c) => (c.options[1].effects = 'money'))).toEqual(['card offer option 1 has effects that are not a record']);

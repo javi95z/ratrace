@@ -152,6 +152,7 @@ export function validateCards(c: Content): string[] {
     suspicion: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a change of suspicion from -100 to 100'),
     amnesty: (value) => (isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for an amnesty'),
     endLodger: (value) => (value === true ? null : 'can only be true for a lodger moving out'),
+    insure: (value) => (value === 'home' || value === 'life' ? null : 'takes out an insurance other than home or life'),
     workMode: (value) => (value === 'office' || value === 'remote' || value === 'partTime' ? null : 'needs a way of working: office, remote or partTime'),
     launder: (value) => (isRecord(value) && isWhole(value.feePct) && within(value.feePct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for the fee of laundering'),
     jail: (value) => (isRecord(value) && isWhole(value.rounds) && within(value.rounds, 1, 3) ? null : 'needs from 1 to 3 rounds of prison'),

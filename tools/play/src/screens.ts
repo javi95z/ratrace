@@ -282,6 +282,7 @@ export function effectPhrases(pen: Pen, state: GameState, effects: Effects | und
   if (effects.homeValue) out.push(`${e.homeValue} ${fmt.signed(indexed(effects.homeValue, world))}`);
   if (effects.lose) out.push(e.lose(effects.lose.pct, effects.lose.what === 'deposit' ? e.savingsWord : text.assetClasses[effects.lose.what].toLowerCase()));
   if (effects.lifestyleFloor !== undefined) out.push(`${e.lifestyleFloor} ${text.lifestyleTiers[effects.lifestyleFloor].toLowerCase()}`);
+  if (effects.insure) out.push(text.insurance[effects.insure].toLowerCase());
   return out;
 }
 

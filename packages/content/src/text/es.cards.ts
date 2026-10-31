@@ -1280,10 +1280,10 @@ export const cards: Record<string, CardText> = {
     'Contratarlo',
     'Pedir un fondo indexado en su lugar',
   ]),
-  advisor_insurance: c('Un seguro con la hipoteca', 'Para tu hipoteca, dice {person:advisor}, el banco recomienda encarecidamente su propio seguro.', [
-    'Dejarlo como está',
-    'Contratar el seguro del banco',
-    'Contratar la misma cobertura fuera',
+  advisor_insurance: c('Un seguro con la hipoteca', 'Tu casa no tiene seguro, te avisa {person:advisor}. Un incendio correría de tu cuenta. El banco te lo hace hoy, con comisión.', [
+    'Seguir sin seguro',
+    'Firmar con el banco',
+    'Buscar la misma cobertura por tu cuenta',
   ]),
   parents_help: c('Una pequeña ayuda', '{person:parents} han ahorrado un poco. Si te ayuda con la entrada de una casa propia, es tuyo.', [
     'Decir que te apañarás',
