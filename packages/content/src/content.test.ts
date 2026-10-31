@@ -246,6 +246,8 @@ describe('the v1 content', () => {
   // A perk that does what an option does, only better, takes that option's place: the card shows one or the other, never both.
   // [card, the plain option, the option that does it better]; indexes stay where they were, as answers are kept by index.
   const UPGRADES: Array<[string, number, number]> = [
+  ['advisor_insurance', 1, 3],
+  ['inlaw_loan', 1, 3],
     ['career_raise', 2, 3],
     ['biz_freelance_gig', 1, 2],
     ['biz_self_employed', 1, 2],

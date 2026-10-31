@@ -33,7 +33,10 @@ it('carries each story on to its later cards, for a player who says yes', { time
     pick: (rules, view) => {
       const id = view.hand[view.answered];
       if (!Object.hasOwn(cardPeople, id)) return saver.pick(rules, view);
-      return previewCard(rules, view, id)[1]?.available ? 1 : 0;
+      const options = previewCard(rules, view, id);
+      // The loan asked of someone who stood by him is the same yes, signed for.
+      if (id === 'inlaw_loan' && options[3]?.available) return 3;
+      return options[1]?.available ? 1 : 0;
     },
   };
   const report = peopleReport(content, starting, seedsFor(20), [willing]);

@@ -1,4 +1,4 @@
-import { badges, businessArt, headlineVoice, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
+import { badges, businessArt, cardPeople, headlineVoice, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Milestone, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { CardDef, CardOption, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -185,6 +185,32 @@ export function leadsOn(cards: ReadonlyArray<CardDef>, option: CardOption): bool
   const shown = Object.fromEntries(Object.entries(option.effects).filter(([key]) => !['setFlags', 'clearFlags', 'onceMore'].includes(key)));
   if (!onlyCosts(shown)) return false;
   return (option.effects.setFlags ?? []).some((flag) => !/_(met|warm|cold)$/.test(flag) && cards.some((card) => card.when?.flags?.includes(flag)));
+}
+
+/** Whether a card's condition asks after any of these flags, either way. */
+function asksAfter(when: unknown, flags: ReadonlyArray<string>): boolean {
+  if (typeof when !== 'object' || when === null) return false;
+  return Object.entries(when).some(([key, value]) => {
+    if (key === 'flags' || key === 'notFlags') return (value as string[]).some((flag) => flags.includes(flag));
+    if (key === 'notRecentFlag') return flags.includes((value as { flag: string }).flag);
+    return asksAfter(value, flags);
+  });
+}
+
+/**
+ * How one of the people who come back will take an option, where a card still to come asks after it: said on the option, or nothing on it tells
+ * a choice that pays off later from one that does not. Never of a card that can no longer come, nor of a person no card asks after: it would be a promise of nothing.
+ */
+export function remembered(cards: ReadonlyArray<CardDef>, cardId: string, option: CardOption, seen: Readonly<Record<string, number>>): 'warm' | 'cold' | null {
+  const who = cardPeople[cardId]?.who;
+  if (who === undefined) return null;
+  const warm = `${who}_warm`;
+  const cold = `${who}_cold`;
+  const said = [option.effects, ...(option.outcomes ?? []).map((outcome) => outcome.effects)].flatMap((effects) => [...(effects?.setFlags ?? []), ...Object.values(effects?.onceMore ?? {})]);
+  const mood = said.includes(warm) ? 'warm' : said.includes(cold) ? 'cold' : null;
+  if (mood === null) return null;
+  const toCome = cards.some((card) => card.id !== cardId && !(card.once === true && Object.hasOwn(seen, card.id)) && [card.when, ...card.options.map((other) => other.when)].some((when) => asksAfter(when, [warm, cold])));
+  return toCome ? mood : null;
 }
 
 /**

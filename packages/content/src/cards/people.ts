@@ -55,17 +55,20 @@ export const peopleCards: CardDef[] = [
     { effects: { status: -1, ...cold('inlaw', 'inlaw_bubble') } },
   ])),
   card('inlaw_rug', 'investing', { once: true, weight: NEXT, when: after('inlaw_bubble') }, person('inlaw', [
-    { effects: { setFlags: ['inlaw_broke'] } },
+    { effects: cold('inlaw', 'inlaw_broke') },
     { effects: { focus: 1, ...warm('inlaw', 'inlaw_broke') } },
   ])),
   card('inlaw_loan', 'family', { once: true, weight: NEXT, when: after('inlaw_broke') }, person('inlaw', [
     { effects: cold('inlaw') },
-    { effects: { cash: usd(-5_000), ...warm('inlaw', 'inlaw_owes') } },
+    { when: { unless: { flags: ['inlaw_warm'] } }, effects: { cash: usd(-5_000), ...warm('inlaw', 'inlaw_owes') } },
     { effects: { cash: usd(-1_000), ...warm('inlaw') } },
+    // Stood by when the coin went, he signs for it, and a signature is paid in full (`inlaw_repay`).
+    { when: { flags: ['inlaw_warm'] }, effects: { cash: usd(-5_000), ...warm('inlaw', 'inlaw_owes', 'inlaw_signed') } },
   ])),
   card('inlaw_repay', 'family', { once: true, weight: NEXT, when: after('inlaw_owes', 2) }, person('inlaw', [
     { effects: { clearFlags: ['inlaw_owes'] }, outcomes: [{ weight: 60, effects: { cash: usd(5_000), setFlags: ['inlaw_repaid'] } }, { weight: 40, effects: { cash: usd(2_000), setFlags: ['inlaw_owes'] } }] },
     { effects: { status: 1, setFlags: ['inlaw_warm', 'inlaw_forgiven'], clearFlags: ['inlaw_cold', 'inlaw_owes'] } },
+    { when: { flags: ['inlaw_signed'] }, effects: { cash: usd(5_000), setFlags: ['inlaw_repaid'], clearFlags: ['inlaw_owes'] } },
   ])),
 
   // The boss: a weekend covered is remembered, with a rung abroad (no bonus on top: the rung is the reward, and no tax haven) and, in a recession's layoffs, her word; asked twice in vain, she stops asking.
@@ -139,8 +142,10 @@ export const peopleCards: CardDef[] = [
   ])),
   card('advisor_insurance', 'housing', { once: true, weight: MEET - 3, when: { hasMortgage: true, uninsured: 'home' } }, person('advisor', [
     { effects: cold('advisor') },
-    { effects: { cash: usd(-2_500), insure: 'home', ...warm('advisor', 'advisor_insurance') } },
+    { when: { unless: { flags: ['advisor_warm'] } }, effects: { cash: usd(-2_500), insure: 'home', ...warm('advisor', 'advisor_insurance') } },
     { effects: { focus: 1, insure: 'home', ...cold('advisor') } },
+    // Whoever took his fund pays a client's commission.
+    { when: { flags: ['advisor_warm'] }, effects: { cash: usd(-1_000), insure: 'home', ...warm('advisor', 'advisor_insurance') } },
   ])),
 
   // The parents, in every life: help with a first home, care in their old age, and what they leave. Their story costs, whatever is

@@ -471,6 +471,8 @@
     "asPlanned": "Sale como se espera",
     "lostStake": "Pierdes lo que pusiste",
     "leadsOn": "Tiene continuación",
+    "remembersWarm": "Puede ayudarte más adelante",
+    "remembersCold": "Puede costarte más adelante",
     "seeCareer": "Ver la carrera de {career}",
     "seeCity": "Ver {city} al lado de tu ciudad"
   },

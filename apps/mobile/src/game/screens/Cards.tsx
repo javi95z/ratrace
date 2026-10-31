@@ -1,5 +1,5 @@
 import { cardArtOf, cardPeople, metFlag, personArt } from '@ratrace/content';
-import { cardRarity, chancePct, effectTags, leadsOn, onlyCosts } from '@ratrace/core/game/present';
+import { cardRarity, chancePct, effectTags, leadsOn, onlyCosts, remembered } from '@ratrace/core/game/present';
 import type { EffectTag } from '@ratrace/core/game/present';
 import { homeOf, previewCard, quoteItem, quoteLiving } from '@ratrace/engine';
 import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
@@ -147,6 +147,10 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
   // An insurance the option takes out goes on being paid for: its premium is said, or taking it looks free.
   const premiums = option.effects?.insure && view ? [{ tone: 'bad' as const, text: effects('yearlyCost', { amount: words.fmt.brief(quoteLiving(words.content, view).insurance[option.effects.insure]) }) }] : [];
 
+  // What one of the people who come back will make of it, while a card to come asks after that: the reason to choose one way or the other.
+  const mood = remembered(words.content.cards, def.id, option, view?.player.life.seen ?? {});
+  const memories = mood === null ? [] : [{ tone: mood === 'warm' ? ('good' as const) : ('bad' as const), text: t(mood === 'warm' ? 'remembersWarm' : 'remembersCold') }];
+
   return (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
@@ -165,7 +169,7 @@ function Offer({ def, index, preview, world, partnered }: { def: CardDef; index:
       </View>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <ReadText size={13} lineHeight={13 * SNUG}>{lockWords(preview.lock)}</ReadText> : null}
-      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...premiums, ...covers]} dim={dim} more={leadsOn(words.content.cards, option) ? t('leadsOn') : undefined} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus, livedIn), ...premiums, ...covers, ...memories]} dim={dim} more={mood === null && leadsOn(words.content.cards, option) ? t('leadsOn') : undefined} />
       {(option.outcomes ?? []).map((outcome, k) => {
         const outcomeTags = (said: typeof outcome.effects) => {
           const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus, livedIn);

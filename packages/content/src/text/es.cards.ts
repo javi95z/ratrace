@@ -1223,10 +1223,12 @@ export const cards: Record<string, CardText> = {
     'Decirle que no',
     'Prestarle lo que necesita',
     'Darle un poco, como regalo',
+    'Prestárselo, con un papel firmado',
   ]),
   inlaw_repay: c('Un sobre con tu nombre', '{person:inlaw} tiene trabajo, un corte de pelo nuevo y un sobre con tu nombre.', [
     ['Coger el sobre', 'Todo, y el café lo paga él.', 'Una parte, y la promesa del resto.'],
     'Decirle que se lo quede',
+    'Darle el papel y coger el sobre',
   ]),
   boss_weekend: c('El proyecto del fin de semana', 'Viernes, seis de la tarde. {person:boss} te deja un archivador en la mesa: el cliente lo quiere el lunes.', [
     'Decir que tienes planes',
@@ -1284,6 +1286,7 @@ export const cards: Record<string, CardText> = {
     'Seguir sin seguro',
     'Firmar con el banco',
     'Buscar la misma cobertura por tu cuenta',
+    'Firmar con el banco, a precio de cliente',
   ]),
   parents_help: c('Una pequeña ayuda', '{person:parents} han ahorrado un poco. Si te ayuda con la entrada de una casa propia, es tuyo.', [
     'Decir que te apañarás',

@@ -123,10 +123,17 @@ async function swipe(x: number, velocityX = 0) {
 
 describe('the card waiting', () => {
   it('says of an option that only costs that it has more to come, and nothing of passing', async () => {
-    await onTheCards(await dealt('nurse', 'inlaw_coin'));
-    const written = text.cards.inlaw_coin.options;
+    await onTheCards(await dealt('nurse', 'founder_more', (view) => ({ ...view, player: { ...view.player, cash: 5_000_000 } })));
+    const written = text.cards.founder_more.options;
     expect(screen.getByRole('button', { name: new RegExp(written[1].label) }).textContent).toContain('To be continued');
     expect(screen.getByRole('button', { name: new RegExp(written[0].label) }).textContent).not.toContain('To be continued');
+  });
+
+  it('says of each way of answering a person what it may bring later', async () => {
+    await onTheCards(await dealt('nurse', 'inlaw_rug'));
+    const written = text.cards.inlaw_rug.options;
+    expect(screen.getByRole('button', { name: new RegExp(written[0].label) }).textContent).toContain('May cost you later');
+    expect(screen.getByRole('button', { name: new RegExp(written[1].label) }).textContent).toContain('May pay off later');
   });
 
   it('shows the card, where it is in the hand, and every choice that can be taken as a button', async () => {

@@ -471,6 +471,8 @@
     "asPlanned": "Goes as expected",
     "lostStake": "You lose what you put in",
     "leadsOn": "To be continued",
+    "remembersWarm": "May pay off later",
+    "remembersCold": "May cost you later",
     "seeCareer": "See the {career} career",
     "seeCity": "See {city} beside your city"
   },
