@@ -51,7 +51,7 @@ describe('asking the server to play a game again', () => {
     const held = (reply.body as { versions: string[] }).versions;
     expect(reply.body).toEqual({ error: 'unknown-version', versions: held });
     expect(held).toContain(`${ENGINE_VERSION}/${CONTENT_VERSION}`);
-    expect(held).toContain('0.36.0/1.37.0');
+    expect(held).toContain('0.38.0/1.39.0');
     // Retired rules are not held by the server (`retired.json`), though the site and the app still finish a life under them.
     expect(held).not.toContain('0.35.0/1.36.0');
     expect(held).not.toContain('9.9.9/' + CONTENT_VERSION);

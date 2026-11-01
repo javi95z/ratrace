@@ -7,10 +7,10 @@ import { MemoryStore } from './memory';
 import { SAVE_FORMAT } from './types';
 import type { SavedGame } from './types';
 
-const OLD = { engine: '0.36.0', content: '1.37.0' };
+const OLD = { engine: '0.38.0', content: '1.39.0' };
 const rules = GAMES[`${OLD.engine}/${OLD.content}`] as unknown as OlderRules;
 
-/** A life begun under the rules of 0.36 / 1.37, as a page on those rules saved it: a round in. */
+/** A life begun under the rules of 0.38 / 1.39, as a page on those rules saved it: a round in. */
 function oldSave() {
   const start = rules.lives.find((life) => life.id === 'nurse')?.start;
   const fresh = rules.replayLife(rules.content, start, 'older-seed', []);

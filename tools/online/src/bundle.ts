@@ -102,10 +102,10 @@ export function registrySource(files: readonly string[], current: string, since?
 
 /**
  * The oldest engine a game with others may still be in. A room is begun on the current rules and keeps them, so the rooms function holds only
- * the versions of rooms not yet over (the oldest, 0.36.0, a room left playing on 2026-10-16): with every version it passed Supabase's 5 MB
+ * the versions of rooms not yet over (the oldest, 0.38.0; the room left playing on 0.36.0 on 2026-10-16 is closed as stale at its next look): with every version it passed Supabase's 5 MB
  * for a function's code. Raise it only once no room open or playing is older (`select engine_version from rooms where status in ('open', 'playing')`).
  */
-export const ROOMS_SINCE = '0.36.0';
+export const ROOMS_SINCE = '0.38.0';
 
 /**
  * The bundles the server's functions hold: every one in the folder but the retired (`retired.json`). A function's code must stay under
