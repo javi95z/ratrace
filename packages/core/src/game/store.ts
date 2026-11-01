@@ -376,6 +376,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         waiting = null;
         shown(view, result, kept);
       } catch (error) {
+        // No round waits now, and what opening the life again does to the basket is not a change to send: it would play the round the life is in.
+        waiting = null;
         await refused(error);
       } finally {
         waiting = null;

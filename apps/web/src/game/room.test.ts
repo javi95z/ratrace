@@ -417,6 +417,32 @@ describe('the room a page follows', () => {
     expect(host.rooms.getState()).toMatchObject({ missed: 2, room: { round: 3 } });
     expect(gameOf(host.rooms).getState()).toMatchObject({ stage: 'news', moved: true });
     expect(gameOf(host.rooms).getState().view?.round).toBe(3);
+    // Opened again as it stands, the round it is in has not been played for the player.
+    const seen = await host.rooms.getState().refresh().then(() => host.rooms.getState().room);
+    expect(seen?.members.find((member) => member.me)?.ready).toBe(false);
+  });
+
+  it('plays no round for a player whose page wakes with the time-up of a round that has already turned', async () => {
+    const w = world();
+    const host = w.page(HOST, w.deaf(HOST));
+    await host.rooms.getState().open('nurse', 90);
+    await w.server.ask(B, { action: 'join', code: host.rooms.getState().room?.code, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+    await host.rooms.getState().start();
+    await settle();
+    const room = host.rooms.getState().room?.id as string;
+    // Left on the finances, with the round not played.
+    await toFinance(gameOf(host.rooms));
+    // The phone sleeps and the clock plays the round; it wakes, and its own clock of that round goes off before it has heard.
+    w.server.wait(90_000 + 5_000);
+    await w.server.ask(B, { action: 'state', roomId: room });
+    w.clock.now += 90_000 + 5_000;
+    await w.advance(0);
+    await settle();
+    await host.rooms.getState().refresh();
+    await settle();
+    expect(host.rooms.getState().room?.round).toBe(1);
+    expect(host.rooms.getState().room?.members.find((member) => member.me)?.ready).toBe(false);
+    expect(gameOf(host.rooms).getState().view?.round).toBe(1);
   });
 
   it('lets go of the room and the life of an account that is no longer the one signed in', async () => {

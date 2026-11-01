@@ -241,6 +241,8 @@ export class RoomSession implements GameSession {
   private tail: Promise<unknown> = Promise.resolve();
   private ofGallery: string[] = [];
   private kept = false;
+  /** The step the round waiting for the others was sent at, or null when this session has sent none. */
+  private sentAt: number | null = null;
 
   constructor(
     readonly roomId: string,
@@ -300,28 +302,36 @@ export class RoomSession implements GameSession {
   playRound(choices: RoundChoices): Promise<StepResult> {
     return this.queue(async (api) => {
       const round = this.life.view.round;
-      const reply = await api.submit(this.roomId, this.life.step, choices.orders);
-      if (reply === 'moved') throw new StaleSession();
-      this.deps.onRoom(reply.room);
-      if (reply.result !== null) return this.took(reply.result);
-      // Ready, and waiting for the others: the round turns for everyone at once, and its result comes then.
-      await this.deps.turned(round);
-      const now = await api.view(this.roomId);
-      // Only the round played is shown as played. A page that woke rounds later opens the life as it stands; the room says how many the clock played.
-      if (now === 'gone' || now.view.round !== round + 1) throw new StaleSession();
-      return this.became(now);
+      const at = this.life.step;
+      this.sentAt = at;
+      try {
+        const reply = await api.submit(this.roomId, at, choices.orders);
+        if (reply === 'moved') throw new StaleSession();
+        this.deps.onRoom(reply.room);
+        if (reply.result !== null) return await this.took(reply.result);
+        // Ready, and waiting for the others: the round turns for everyone at once, and its result comes then.
+        await this.deps.turned(round);
+        const now = await api.view(this.roomId);
+        // Only the round played is shown as played. A page that woke rounds later opens the life as it stands; the room says how many the clock played.
+        if (now === 'gone' || now.view.round !== round + 1) throw new StaleSession();
+        return await this.became(now);
+      } finally {
+        this.sentAt = null;
+      }
     });
   }
 
   /**
    * The orders of the round already played, sent again while the room waits for the others: outside the queue, which the waiting round holds.
-   * The life's step is the one the round was sent at, so a round that has turned since is refused, and changes nothing.
+   * They go at the step the round was sent at, never the life's own: a round that has turned since is refused and changes nothing, and with no
+   * round sent from this session there is nothing to amend, so a change can never play the round the life has come to.
    */
   async amendRound(choices: RoundChoices): Promise<boolean> {
     const api = this.api();
-    if (api === null) return false;
+    const at = this.sentAt;
+    if (api === null || at === null) return false;
     try {
-      const reply = await api.submit(this.roomId, this.life.step, choices.orders);
+      const reply = await api.submit(this.roomId, at, choices.orders);
       if (reply === 'moved') return false;
       this.deps.onRoom(reply.room);
       return true;
