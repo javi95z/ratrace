@@ -286,8 +286,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
    * round at all. Then the life cannot be planned from here, and the screen says so: a button that does nothing, on a
    * card's result or anywhere, would be a dead end.
    */
-  const plan = (view: GameView, gameId: string | null): ReturnType<typeof settle> | null => {
+  const plan = (view: GameView, gameId: string | null, kept: Order[] | null = null): ReturnType<typeof settle> | null => {
     try {
+      if (kept !== null) return settle(view, kept);
       if (gameId === null) return settle(view, []);
       // A round whose basket was never made begins with its defaults; one the player made, emptied or not, as they left it.
       return settle(view, basket.load(gameId, view.round) ?? roundDefaults(content, view, session?.rules ?? ENGINE_VERSION));
@@ -380,13 +381,13 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         waiting = null;
         await refused(error);
       } finally {
-        waiting = null;
         set({ busy: false });
       }
     };
 
     const open = (opened: GameSession) => {
       session = opened;
+      waiting = null;
       const view = opened.view();
       const base = {
         ...blank,
@@ -407,8 +408,11 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
       // Orders planned for this round before the page was closed are taken up again, as the engine still allows them.
       else {
-        const planned = plan(view, opened.gameId);
+        // A round already played opens with the orders the server keeps, which can still change: nothing is sent for opening it.
+        const kept = opened.keptOrders?.() ?? null;
+        const planned = plan(view, opened.gameId, kept);
         set(planned === null ? { ...base, stage: 'finance', fault: true } : { ...base, stage: 'finance', ...planned });
+        if (kept !== null && planned !== null) waiting = planned.orders;
       }
     };
 
@@ -625,7 +629,11 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         set({ busy: true });
         try {
           const result = await session.catchUp();
-          if (result !== null) shown(view, result);
+          if (result !== null) {
+            // The round that waited has turned: what empties the basket now is not a change to send.
+            waiting = null;
+            shown(view, result);
+          }
         } catch (error) {
           await refused(error);
         } finally {

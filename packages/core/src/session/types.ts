@@ -57,6 +57,8 @@ export interface GameSession {
    * turns. True once the server keeps them, false where it does not (the round turned, or a server of before). Left out, a played round is final.
    */
   amendRound?(choices: RoundChoices): Promise<boolean>;
+  /** For a life in a room opened on a round already played: the orders the server keeps for it. Null when no round waits. Left out, none ever does. */
+  keptOrders?(): Order[] | null;
 }
 
 /**

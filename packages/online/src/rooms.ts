@@ -256,6 +256,7 @@ export function roomsApi(call: RoomsCall): RoomsApi {
         record: body.record as unknown as RoomLife['record'],
         events: Array.isArray(body.events) ? (body.events as RoomLife['events']) : [],
         run: runOf(body.run),
+        kept: Array.isArray(body.kept) ? (body.kept as NonNullable<RoomLife['kept']>) : null,
       };
       return life;
     },

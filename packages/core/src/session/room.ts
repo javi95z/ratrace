@@ -147,6 +147,8 @@ export interface RoomLife {
   record: LifeRecord;
   events: GameEvent[];
   run: RankedRun | null;
+  /** The orders the server keeps for the round in play, once the member has played it. Null or left out otherwise, and where a server of before does not say. */
+  kept?: Order[] | null;
 }
 
 /** The server would not, in a word of its own: `in-a-room`, `full`, `started`, `other-version`... `roomId` names the room in the way, if one is. */
@@ -241,8 +243,8 @@ export class RoomSession implements GameSession {
   private tail: Promise<unknown> = Promise.resolve();
   private ofGallery: string[] = [];
   private kept = false;
-  /** The step the round waiting for the others was sent at, or null when this session has sent none. */
-  private sentAt: number | null = null;
+  /** The step the round waiting for the others was sent at, or null when none waits. */
+  private sentAt: number | null;
 
   constructor(
     readonly roomId: string,
@@ -252,7 +254,10 @@ export class RoomSession implements GameSession {
     private readonly content: Content,
     private readonly lives: ReadonlyArray<LifeDef>,
     private readonly deps: RoomSessionDeps,
-  ) {}
+  ) {
+    // Opened on a round already played, from this page or an earlier one: what the server keeps can still be changed.
+    this.sentAt = life.kept ? life.step : null;
+  }
 
   get rules(): string | undefined {
     return this.life.engineVersion;
@@ -291,6 +296,10 @@ export class RoomSession implements GameSession {
     return this.life.record.journal.story.milestones;
   }
 
+  keptOrders(): Order[] | null {
+    return this.sentAt === null ? null : (this.life.kept ?? null);
+  }
+
   answerCard(option: number): Promise<StepResult> {
     return this.queue(async (api) => {
       const reply = await api.card(this.roomId, this.life.step, option);
@@ -315,8 +324,9 @@ export class RoomSession implements GameSession {
         // Only the round played is shown as played. A page that woke rounds later opens the life as it stands; the room says how many the clock played.
         if (now === 'gone' || now.view.round !== round + 1) throw new StaleSession();
         return await this.became(now);
-      } finally {
+      } catch (error) {
         this.sentAt = null;
+        throw error;
       }
     });
   }
@@ -324,7 +334,7 @@ export class RoomSession implements GameSession {
   /**
    * The orders of the round already played, sent again while the room waits for the others: outside the queue, which the waiting round holds.
    * They go at the step the round was sent at, never the life's own: a round that has turned since is refused and changes nothing, and with no
-   * round sent from this session there is nothing to amend, so a change can never play the round the life has come to.
+   * round waiting there is nothing to amend, so a change can never play the round the life has come to.
    */
   async amendRound(choices: RoundChoices): Promise<boolean> {
     const api = this.api();
@@ -381,6 +391,7 @@ export class RoomSession implements GameSession {
   /** Takes the life as the server shows it whole: after a round the page waited for. */
   private async became(now: RoomLife): Promise<StepResult> {
     this.life = now;
+    this.sentAt = now.kept ? now.step : null;
     return { view: now.view, events: now.events, ...(await this.told()) };
   }
 

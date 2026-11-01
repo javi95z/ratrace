@@ -1188,6 +1188,8 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
         // What the last step did: the round a member waited for, or the one the clock played for them.
         events: played.last?.events ?? [],
         earned: played.last?.earned ?? [],
+        // The orders kept for the round in play, once the member has played it: a page opened again takes them up, and may still change them.
+        kept: me.ready_round === room.round ? ((await deps.loadOrders(room.id, room.round))[userId] ?? null) : null,
         ...(run ? { run } : {}),
       },
     };

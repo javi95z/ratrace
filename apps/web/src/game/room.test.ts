@@ -422,6 +422,46 @@ describe('the room a page follows', () => {
     expect(seen?.members.find((member) => member.me)?.ready).toBe(false);
   });
 
+  it('takes up, on a page opened again, the orders the round was played with, and counts what is changed there', async () => {
+    const { host, b, ...w } = await playing();
+    const room = host.rooms.getState().room?.id as string;
+    await toFinance(gameOf(host.rooms));
+    const first = { type: 'buy', assetId: 'sp500', amount: 10_000 } as const;
+    const second = { type: 'buy', assetId: 'sp500', amount: 20_000 } as const;
+    expect(gameOf(host.rooms).getState().addOrder(first)).toBe(true);
+    void gameOf(host.rooms).getState().play();
+    await settle();
+    // The app is closed and opened again, with the round played and the others still choosing.
+    const again = w.page(HOST);
+    await again.rooms.getState().boot();
+    await settle();
+    const life = gameOf(again.rooms);
+    expect(life.getState().stage).toBe('finance');
+    expect(life.getState().orders).toEqual([first]);
+    // What it opened with is what the server keeps: nothing was sent for opening, and the room is as it was.
+    expect(again.rooms.getState().room?.members.find((member) => member.me)?.ready).toBe(true);
+    life.getState().removeOrder(0);
+    expect(life.getState().addOrder(second)).toBe(true);
+    await settle();
+    await toFinance(gameOf(b.rooms));
+    await gameOf(b.rooms).getState().play();
+    await settle();
+    expect(w.server.logOf(HOST, room)[0].orders).toEqual([second]);
+    expect(again.rooms.getState().room?.round).toBe(1);
+  });
+
+  it('opens a round not yet played as the player left it, keeping nothing to amend', async () => {
+    const { host, ...w } = await playing();
+    const again = w.page(HOST);
+    await again.rooms.getState().boot();
+    await settle();
+    await toFinance(gameOf(again.rooms));
+    expect(gameOf(again.rooms).getState().addOrder({ type: 'buy', assetId: 'sp500', amount: 10_000 })).toBe(true);
+    await settle();
+    expect(again.rooms.getState().room?.members.find((member) => member.me)?.ready).toBe(false);
+    expect(host.rooms.getState().room?.round).toBe(0);
+  });
+
   it('plays no round for a player whose page wakes with the time-up of a round that has already turned', async () => {
     const w = world();
     const host = w.page(HOST, w.deaf(HOST));
